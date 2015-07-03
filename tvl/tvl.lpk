@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="tvl"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="8">
+      <Item1>
+        <Filename Value="tvl_uapplaunch.pas"/>
+        <UnitName Value="tvl_uapplaunch"/>
+      </Item1>
+      <Item2>
+        <Filename Value="tvl_udatabinder.pas"/>
+        <UnitName Value="tvl_udatabinder"/>
+      </Item2>
+      <Item3>
+        <Filename Value="tvl_udatabinders.pas"/>
+        <UnitName Value="tvl_udatabinders"/>
+      </Item3>
+      <Item4>
+        <Filename Value="tvl_ibindings.pas"/>
+        <UnitName Value="tvl_ibindings"/>
+      </Item4>
+      <Item5>
+        <Filename Value="tvl_ubehavebinder.pas"/>
+        <UnitName Value="tvl_ubehavebinder"/>
+      </Item5>
+      <Item6>
+        <Filename Value="tvl_ubehavebinders.pas"/>
+        <UnitName Value="tvl_ubehavebinders"/>
+      </Item6>
+      <Item7>
+        <Filename Value="tvl_ugridbinders.pas"/>
+        <UnitName Value="tvl_ugridbinders"/>
+      </Item7>
+      <Item8>
+        <Filename Value="tvl_utallybinders.pas"/>
+        <UnitName Value="tvl_utallybinders"/>
+      </Item8>
+    </Files>
+    <RequiredPkgs Count="4">
+      <Item1>
+        <PackageName Value="SynEdit"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="trl"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="FCL"/>
+      </Item4>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

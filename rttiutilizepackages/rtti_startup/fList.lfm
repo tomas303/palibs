@@ -1,0 +1,59 @@
+object ListForm: TListForm
+  Left = 839
+  Height = 240
+  Top = 236
+  Width = 320
+  Caption = 'Form1'
+  ClientHeight = 240
+  ClientWidth = 320
+  LCLVersion = '1.3'
+  object pnRunEdit: TPanel
+    Left = 0
+    Height = 33
+    Top = 207
+    Width = 320
+    Align = alBottom
+    Caption = 'pnRunEdit'
+    ClientHeight = 33
+    ClientWidth = 320
+    TabOrder = 0
+    object btnAdd: TButton
+      Left = 62
+      Height = 25
+      Top = 4
+      Width = 75
+      Anchors = [akTop, akRight]
+      Caption = 'Add'
+      OnClick = btnAddClick
+      TabOrder = 0
+    end
+    object btnEdit: TButton
+      Left = 150
+      Height = 25
+      Top = 3
+      Width = 75
+      Anchors = [akTop, akRight]
+      Caption = 'Edit'
+      OnClick = btnEditClick
+      TabOrder = 1
+    end
+    object btnDelete: TButton
+      Left = 238
+      Height = 25
+      Top = 4
+      Width = 75
+      Anchors = [akTop, akRight]
+      Caption = 'Delete'
+      TabOrder = 2
+    end
+  end
+  object lbList: TListBox
+    Left = 0
+    Height = 207
+    Top = 0
+    Width = 320
+    Align = alClient
+    ItemHeight = 0
+    TabOrder = 1
+  end
+end

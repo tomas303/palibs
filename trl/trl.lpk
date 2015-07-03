@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="trl"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="6">
+      <Item1>
+        <Filename Value="trl_dicontainer.pas"/>
+        <UnitName Value="trl_dicontainer"/>
+      </Item1>
+      <Item2>
+        <Filename Value="trl_irttibroker.pas"/>
+        <UnitName Value="trl_irttibroker"/>
+      </Item2>
+      <Item3>
+        <Filename Value="trl_urttibroker.pas"/>
+        <UnitName Value="trl_urttibroker"/>
+      </Item3>
+      <Item4>
+        <Filename Value="trl_ipersist.pas"/>
+        <UnitName Value="trl_ipersist"/>
+      </Item4>
+      <Item5>
+        <Filename Value="trl_upersistxml.pas"/>
+        <UnitName Value="trl_upersistxml"/>
+      </Item5>
+      <Item6>
+        <Filename Value="trl_ifactory.pas"/>
+        <UnitName Value="trl_ifactory"/>
+      </Item6>
+    </Files>
+    <RequiredPkgs Count="1">
+      <Item1>
+        <PackageName Value="FCL"/>
+      </Item1>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

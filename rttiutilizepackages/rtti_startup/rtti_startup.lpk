@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="rtti_startup"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <MsgFileName Value=""/>
+        </CompilerMessages>
+        <CompilerPath Value="$(CompPath)"/>
+      </Other>
+    </CompilerOptions>
+    <Files Count="9">
+      <Item1>
+        <Filename Value="uStartForm.pas"/>
+        <UnitName Value="uStartForm"/>
+      </Item1>
+      <Item2>
+        <Filename Value="iStart.pas"/>
+        <UnitName Value="iStart"/>
+      </Item2>
+      <Item3>
+        <Filename Value="rtti_startup.pas"/>
+        <UnitName Value="rtti_startup"/>
+      </Item3>
+      <Item4>
+        <Filename Value="fList.pas"/>
+        <UnitName Value="fList"/>
+      </Item4>
+      <Item5>
+        <Filename Value="rtti_startup_lib.pas"/>
+        <UnitName Value="rtti_startup_lib"/>
+      </Item5>
+      <Item6>
+        <Filename Value="fGrid.pas"/>
+        <UnitName Value="fGrid"/>
+      </Item6>
+      <Item7>
+        <Filename Value="uRBApp.pas"/>
+        <UnitName Value="uRBApp"/>
+      </Item7>
+      <Item8>
+        <Filename Value="uStart.pas"/>
+        <UnitName Value="uStart"/>
+      </Item8>
+      <Item9>
+        <Filename Value="uStartup_DIContainer.pas"/>
+        <UnitName Value="uStartup_DIContainer"/>
+      </Item9>
+    </Files>
+    <Type Value="RunAndDesignTime"/>
+    <RequiredPkgs Count="4">
+      <Item1>
+        <PackageName Value="rtti_serializer"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="rtti_idebinder"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="rtti_broker"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="FCL"/>
+      </Item4>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
