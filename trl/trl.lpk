@@ -6,10 +6,10 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="7">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -34,6 +34,10 @@
         <Filename Value="trl_ifactory.pas"/>
         <UnitName Value="trl_ifactory"/>
       </Item6>
+      <Item7>
+        <Filename Value="trl_upersist.pas"/>
+        <UnitName Value="trl_upersist"/>
+      </Item7>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

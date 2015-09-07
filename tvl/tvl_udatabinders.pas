@@ -5,7 +5,7 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType, trl_urttibroker,
-  Menus, SynEdit, trl_ipersist;
+  Menus, SynEdit, trl_ipersist, trl_upersist;
 
 type
 
@@ -19,11 +19,9 @@ type
   private
     fControl: TWinControl;
     fDataItem: IRBDataItem;
-    fListIndex: integer;
     fDataQuery: IPersistQuery;
     fChangeEvents: TBinderChangeEvents;
   protected
-    property ListIndex: integer read fListIndex;
     property DataQuery: IPersistQuery read fDataQuery;
     procedure BindControl; virtual; abstract;
     procedure UnbindControl; virtual;
@@ -33,9 +31,7 @@ type
     destructor Destroy; override;
     procedure DataToControl; virtual; abstract;
     procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem;
-      const ADataQuery: IPersistQuery); overload;
-    procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem;
-      AListIndex: integer; const ADataQuery: IPersistQuery); overload;
+      const ADataQuery: IPersistQuery);
     procedure RegisterChangeEvent(AEvent: TBinderChangeEvent);
     procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent);
     property Control: TWinControl read fControl;
@@ -50,7 +46,6 @@ type
     procedure OnChangeHandler(Sender: TObject);
   protected
     procedure BindControl; override;
-    procedure UnbindControl; override;
     property Control: TCustomEdit read GetControl;
   public
     procedure DataToControl; override;
@@ -97,6 +92,7 @@ type
     procedure DataToOffer; virtual; abstract;
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     property Control: TCustomComboBox read GetControl;
   public
     procedure DataToControl; override;
@@ -191,6 +187,7 @@ type
     fCellValueData: IRBData;
     fCellBinder: TEditBinder;
     fObjectData: IRBData;
+    function GetAsMany: IPersistMany;
     function GetControl: TCustomStringGrid;
     procedure FillRowFromObject(ARow: integer; AObjectData: IRBData);
     procedure EmptyRow(ARow: integer);
@@ -207,6 +204,7 @@ type
   protected
     procedure BindControl; override;
     property Control: TCustomStringGrid read GetControl;
+    property AsMany: IPersistMany read GetAsMany;
   public
     procedure DataToControl; override;
   end;
@@ -271,10 +269,7 @@ end;
 
 procedure TMemoBinder.OnChangeHandler(Sender: TObject);
 begin
-  if ListIndex = -1 then
-    DataItem.AsString := Control.Text;
-  //else
-  //  DataItem.AsStringList[ListIndex] := Control.Text;
+  DataItem.AsString := Control.Text;
   NotifyChangeEvents;
 end;
 
@@ -285,10 +280,7 @@ end;
 
 procedure TMemoBinder.DataToControl;
 begin
-  if ListIndex = -1 then
-    Control.Text := DataItem.AsString;
-  //else
-  //  Control.Text := DataItem.AsStringList[ListIndex];
+  Control.Text := DataItem.AsString;
 end;
 
 { TBoolBinder }
@@ -300,10 +292,7 @@ end;
 
 procedure TBoolBinder.OnChangeHandler(Sender: TObject);
 begin
-  if ListIndex = -1 then
-    DataItem.AsBoolean := Control.State = cbChecked;
-  //else
-  //  DataItem.AsBooleanList[ListIndex] := Control.State = cbChecked;
+  DataItem.AsBoolean := Control.State = cbChecked;
   NotifyChangeEvents;
 end;
 
@@ -314,20 +303,10 @@ end;
 
 procedure TBoolBinder.DataToControl;
 begin
-  if ListIndex = -1 then
-  begin
-    if DataItem.AsBoolean then
-      Control.State := cbChecked
-    else
-      Control.State := cbUnchecked;
-  end
+  if DataItem.AsBoolean then
+    Control.State := cbChecked
   else
-  begin
-    //if DataItem.AsBooleanList[ListIndex] then
-    //  Control.State := cbChecked
-    //else
-      Control.State := cbUnchecked;
-  end;
+    Control.State := cbUnchecked;
 end;
 
 { TOfferEnumBinder }
@@ -621,10 +600,7 @@ begin
   if Control.ItemIndex <> -1 then
   begin
     mOfferIndex := NativeInt(Control.Items.Objects[Control.ItemIndex]);
-    if ListIndex = -1 then
-      DataItem.AsObject := fOffer[mOfferIndex]
-    //else
-    //  DataItem.AsObjectList[ListIndex] := fOffer[mOfferIndex];
+    DataItem.AsObject := fOffer[mOfferIndex]
   end;
 end;
 
@@ -633,10 +609,7 @@ var
   i: integer;
   mO, mOffErO: TObject;
 begin
-  if ListIndex = -1 then
-    mO := DataItem.AsObject;
-  //else
-  //  mO := DataItem.AsObjectList[ListIndex];
+  mO := DataItem.AsObject;
   for i := 0 to fOffer.Count - 1 do begin
     mOffErO := fOffer[i];
     if mOfferO = mO then
@@ -712,6 +685,13 @@ begin
   Control.AutoComplete := True;
 end;
 
+procedure TOfferBinder.UnbindControl;
+begin
+  Control.OnChange := nil;
+  Control.WindowProc := fOldWndProc;
+  inherited UnbindControl;
+end;
+
 procedure TOfferBinder.DataToControl;
 begin
   DataToOffer;
@@ -758,6 +738,17 @@ end;
 function TListBinder.GetControl: TCustomStringGrid;
 begin
   Result := inherited Control as TCustomStringGrid;
+end;
+
+function TListBinder.GetAsMany: IPersistMany;
+begin
+  if DataItem.IsObject then
+    Result := DataItem.AsObject as IPersistMany
+  else
+  if DataItem.IsInterface then
+    Result := DataItem.AsInterface as IPersistMany
+  else
+    raise Exception.Create('not object nor interface property for TLIST, unable retrieve IPersistMany');
 end;
 
 procedure TListBinder.FillRowFromObject(ARow: integer; AObjectData: IRBData);
@@ -838,16 +829,24 @@ end;
 
 procedure TListBinder.OnColRowDeletedHandler(Sender: TObject;
   IsColumn: Boolean; sIndex, tIndex: Integer);
+var
+  mFrom, mCount: integer;
 begin
-  //if DataItem.ListCount = 0 then
-  //  Exit;
-  //DataItem.ListCount := DataItem.ListCount - 1;
+  if AsMany.Count = 0 then
+    Exit;
+  mFrom := sIndex - 1;
+  mCount := tIndex - sIndex + 1;
+  while (mCount > 0) and (mFrom <= AsMany.Count - 1) do
+  begin
+    AsMany.Delete(mFrom);
+    Dec(mCount);
+  end;
 end;
 
 procedure TListBinder.OnColRowInsertedHandler(Sender: TObject;
   IsColumn: Boolean; sIndex, tIndex: Integer);
 begin
-//  DataItem.ListCount := DataItem.ListCount + 1;
+  AsMany.Count := AsMany.Count + 1;
 end;
 
 procedure TListBinder.OnEditingDoneHandler(Sender: TObject);
@@ -859,7 +858,7 @@ begin
   if fCellBinder.DataItem.IsObject then
     DataToControl
   else
-    Control.Cells[Control.Col, Control.Row] := fCellBinder.DataItem.AsString;
+    Control.Cells[Control.Col, Control.Row] := AsMany.AsString[Control.Row - 1]; //  fCellBinder.DataItem.AsString;
 end;
 
 procedure TListBinder.OnSelectEditorHandler(Sender: TObject; aCol,
@@ -870,21 +869,18 @@ var
 begin
   mOldEd := fCellEditor;
   FreeAndNil(fCellBinder);
-  //if fDataItem.IsObject and not fDataItem.IsReference then
-  //begin
-  //  fObjectData := TRBData.Create(fDataItem.AsObjectList[aRow - 1]);
-  //  mDataItem := fObjectData[aCol];
-  //  fCellEditor := CreateEditor(mDataItem);
-  //  fCellBinder := CreateBinder(mDataItem);
-  //  fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
-  //end
-  //else
+  if fDataItem.IsObject {and not fDataItem.IsReference} then
   begin
-    mDataItem := fDataItem;
-    fCellEditor := CreateEditor(mDataItem);
-    fCellBinder := CreateBinder(mDataItem);
-    fCellBinder.Bind(fCellEditor, mDataItem, aRow - 1, fDataQuery);
+    fObjectData := TRBData.Create(AsMany.AsObject[aRow - 1]);
+    mDataItem := fObjectData[aCol];
+  end
+  else
+  begin
+    mDataItem := TPersistManyDataItem.Create(AsMany, aRow - 1);
   end;
+  fCellEditor := CreateEditor(mDataItem);
+  fCellBinder := CreateBinder(mDataItem);
+  fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
   Editor := fCellEditor;
   mOldEd.Free;
 end;
@@ -894,10 +890,8 @@ procedure TListBinder.OnKeyDownHandler(Sender: TObject; var Key: Word;
 begin
   if (Key = VK_DELETE) and (Shift = [ssCtrl]) then
   begin
-    if Control.Row = Control.RowCount - Control.FixedRows then
-    begin
+    if Control.Row >= Control.FixedRows then
       Control.H_DoOPDeleteColRow(False, Control.Row);
-    end;
     Key := 0;
   end else
     inherited;
@@ -908,7 +902,7 @@ var
   mData: IRBData;
   i: integer;
 begin
-//  Control.RowCount := 1 + DataItem.ListCount;
+  Control.RowCount := 1 + AsMany.Count;
   Control.FixedRows := 1;
   Control.FixedCols := 0;
   if DataItem.IsObject then
@@ -939,17 +933,17 @@ procedure TListBinder.DataToControl;
 var
   i: integer;
 begin
-//  for i := 0 to DataItem.ListCount - 1 do
-//  begin
-//    if DataItem.IsObject then
-//    begin
-////      FillRowFromObject(i + 1, DataItem.AsObjectList[i] as IRBData);
-//    end
-//    else
-//    begin
-//      Control.Cells[0, i + 1] := DataItem.AsStringList[i];
-//    end;
-//  end;
+  for i := 0 to AsMany.Count - 1 do
+  begin
+    if DataItem.IsObject then
+    begin
+      FillRowFromObject(i + 1, AsMany.AsIRBData[i]);
+    end
+    else
+    begin
+      Control.Cells[0, i + 1] := AsMany.AsString[i];
+    end;
+  end;
 end;
 
 { TTextBinder }
@@ -961,10 +955,7 @@ end;
 
 procedure TTextBinder.OnChangeHandler(Sender: TObject);
 begin
-  if ListIndex = -1 then
-    DataItem.AsString := Control.Text;
-  //else
-  //  DataItem.AsStringList[ListIndex] := Control.Text;
+  DataItem.AsString := Control.Text;
   NotifyChangeEvents;
 end;
 
@@ -973,18 +964,9 @@ begin
   Control.OnChange := @OnChangeHandler;
 end;
 
-procedure TTextBinder.UnbindControl;
-begin
-  //Control.OnChange := nil;
-  inherited UnbindControl;
-end;
-
 procedure TTextBinder.DataToControl;
 begin
-  if ListIndex = -1 then
-    Control.Text := DataItem.AsString;
-  //else
-  //  Control.Text := DataItem.AsStringList[ListIndex];
+  Control.Text := DataItem.AsString
 end;
 
 { TEditBinder }
@@ -1016,16 +998,8 @@ end;
 procedure TEditBinder.Bind(const AControl: TWinControl;
   const ADataItem: IRBDataItem; const ADataQuery: IPersistQuery);
 begin
-  Bind(AControl, ADataItem, -1, ADataQuery);
-end;
-
-procedure TEditBinder.Bind(const AControl: TWinControl;
-  const ADataItem: IRBDataItem; AListIndex: integer;
-  const ADataQuery: IPersistQuery);
-begin
   fControl := AControl;
   fDataItem := ADataItem;
-  fListIndex := AListIndex;
   fDataQuery := ADataQuery;
   BindControl;
   DataToControl;
