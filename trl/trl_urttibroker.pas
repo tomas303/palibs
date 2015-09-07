@@ -40,6 +40,7 @@ type
     function GetName: string;
     function GetClassName: string;
     function GetIsObject: Boolean;
+    function GetIsInterface: Boolean;
     function GetTypeKind: TTypeKind;
     function GetAsPersist: string; virtual;
     procedure SetAsPersist(AValue: string); virtual;
@@ -65,6 +66,7 @@ type
     property Name: string read GetName;
     property ClassName: string read GetClassName;
     property IsObject: Boolean read GetIsObject;
+    property IsInterface: Boolean read GetIsInterface;
     property TypeKind: TTypeKind read GetTypeKind;
     property AsPersist: string read GetAsPersist write SetAsPersist;
     property AsString: string read GetAsString write SetAsString;
@@ -608,6 +610,11 @@ end;
 function TRBDataItem.GetIsObject: Boolean;
 begin
   Result := TypeKind in [tkClass, tkObject];
+end;
+
+function TRBDataItem.GetIsInterface: Boolean;
+begin
+  Result := TypeKind in [tkInterface, tkInterfaceRaw];
 end;
 
 function TRBDataItem.GetAsString: string;
