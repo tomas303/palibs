@@ -187,6 +187,7 @@ type
     fCellValueData: IRBData;
     fCellBinder: TEditBinder;
     fObjectData: IRBData;
+    fOldEd: TWinControl;
     function GetAsMany: IPersistMany;
     function GetControl: TCustomStringGrid;
     procedure FillRowFromObject(ARow: integer; AObjectData: IRBData);
@@ -203,6 +204,7 @@ type
     procedure OnKeyDownHandler(Sender: TObject; var Key: Word; Shift: TShiftState);
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     property Control: TCustomStringGrid read GetControl;
     property AsMany: IPersistMany read GetAsMany;
   public
@@ -864,10 +866,10 @@ end;
 procedure TListBinder.OnSelectEditorHandler(Sender: TObject; aCol,
   aRow: Integer; var Editor: TWinControl);
 var
-  mOldEd: TWinControl;
   mDataItem: IRBDataItem;
 begin
-  mOldEd := fCellEditor;
+  fOldEd.Free;
+  fOldEd := fCellEditor;
   FreeAndNil(fCellBinder);
   if aRow >= Control.FixedRows then begin
     if fDataItem.IsObject {and not fDataItem.IsReference} then
@@ -882,9 +884,10 @@ begin
     fCellEditor := CreateEditor(mDataItem);
     fCellBinder := CreateBinder(mDataItem);
     fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
-    Editor := fCellEditor;
-  end;
-  mOldEd.Free;
+  end
+  else
+    fCellEditor := nil;
+  Editor := fCellEditor;
 end;
 
 procedure TListBinder.OnKeyDownHandler(Sender: TObject; var Key: Word;
@@ -929,6 +932,12 @@ begin
   Control.OnSelectEditor := @OnSelectEditorHandler;
   Control.OnKeyDown := @OnKeyDownHandler;
   Control.H_OnEditingDone := @OnEditingDoneHandler;
+end;
+
+procedure TListBinder.UnbindControl;
+begin
+  fOldEd.Free;
+  inherited UnbindControl;
 end;
 
 procedure TListBinder.DataToControl;
