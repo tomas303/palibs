@@ -59,7 +59,10 @@ type
     procedure SetAsIRBData(AIndex: integer; AValue: IRBData); virtual; abstract;
     function GetAsObject(AIndex: integer): TObject; virtual; abstract;
     procedure SetAsObject(AIndex: integer; AValue: TObject); virtual; abstract;
+    function GetEnumName(AValue: integer): string;
+    function GetEnumNameCount: integer;
     //
+    function ItemTypeInfo: PTypeInfo;
     function GetCount: integer;
     function GetItem(AIndex: integer): TItem;
     procedure SetCount(AValue: integer);
@@ -171,6 +174,21 @@ destructor TPersistMany<TItem>.Destroy;
 begin
   FreeAndNil(fData);
   inherited;
+end;
+
+function TPersistMany<TItem>.GetEnumName(AValue: integer): string;
+begin
+  Result := typinfo.GetEnumName(ItemTypeInfo, AValue);
+end;
+
+function TPersistMany<TItem>.GetEnumNameCount: integer;
+begin
+  Result := typinfo.GetEnumNameCount(ItemTypeInfo);
+end;
+
+function TPersistMany<TItem>.ItemTypeInfo: PTypeInfo;
+begin
+  Result := TypeInfo(TItem);
 end;
 
 function TPersistMany<TItem>.GetCount: integer;
@@ -292,12 +310,12 @@ end;
 
 function TPersistManyDataItem.GetEnumName(AValue: integer): string;
 begin
-
+  Result := fPersistMany.EnumName[AValue];
 end;
 
 function TPersistManyDataItem.GetEnumNameCount: integer;
 begin
-
+  Result := fPersistMany.EnumNameCount;
 end;
 
 function TPersistManyDataItem.GetAsPtrInt: PtrInt;

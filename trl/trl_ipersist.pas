@@ -20,6 +20,8 @@ type
     function GetCount: integer;
     function GetAsPersist(AIndex: integer): string;
     function GetAsString(AIndex: integer): string;
+    function GetEnumName(AValue: integer): string;
+    function GetEnumNameCount: integer;
     procedure SetAsIRBData(AIndex: integer; AValue: IRBData);
     procedure SetAsObject(AIndex: integer; AValue: TObject);
     procedure SetCount(AValue: integer);
@@ -31,6 +33,8 @@ type
     property AsObject[AIndex: integer]: TObject read GetAsObject write SetAsObject;
     property AsIRBData[AIndex: integer]: IRBData read GetAsIRBData write SetAsIRBData;
     procedure Delete(AIndex: integer);
+    property EnumNameCount: integer read GetEnumNameCount;
+    property EnumName[AValue: integer]: string read GetEnumName;
   end;
 
   { IPersistMany }
