@@ -869,19 +869,21 @@ var
 begin
   mOldEd := fCellEditor;
   FreeAndNil(fCellBinder);
-  if fDataItem.IsObject {and not fDataItem.IsReference} then
-  begin
-    fObjectData := TRBData.Create(AsMany.AsObject[aRow - 1]);
-    mDataItem := fObjectData[aCol];
-  end
-  else
-  begin
-    mDataItem := TPersistManyDataItem.Create(AsMany, aRow - 1);
+  if aRow >= Control.FixedRows then begin
+    if fDataItem.IsObject {and not fDataItem.IsReference} then
+    begin
+      fObjectData := TRBData.Create(AsMany.AsObject[aRow - 1]);
+      mDataItem := fObjectData[aCol];
+    end
+    else
+    begin
+      mDataItem := TPersistManyDataItem.Create(AsMany, aRow - 1);
+    end;
+    fCellEditor := CreateEditor(mDataItem);
+    fCellBinder := CreateBinder(mDataItem);
+    fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
+    Editor := fCellEditor;
   end;
-  fCellEditor := CreateEditor(mDataItem);
-  fCellBinder := CreateBinder(mDataItem);
-  fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
-  Editor := fCellEditor;
   mOldEd.Free;
 end;
 
