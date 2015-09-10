@@ -5,7 +5,7 @@ unit trl_upersist;
 interface
 
 uses
-  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo;
+  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker;
 
 type
 
@@ -49,19 +49,20 @@ type
  TPersistMany<TItem> = class(TInterfacedObject, IPersistMany, IPersistMany<TItem>)
   private
     fData: TFPGList<TItem>;
+    function GetAsPersistDataClass: IRBData;
   protected
-    // IRBMany
     function GetAsPersist(AIndex: integer): string; virtual; abstract;
     procedure SetAsPersist(AIndex: integer; AValue: string); virtual; abstract;
     function GetAsString(AIndex: integer): string; virtual; abstract;
     procedure SetAsString(AIndex: integer; AValue: string); virtual; abstract;
-    function GetAsIRBData(AIndex: integer): IRBData; virtual; abstract;
-    procedure SetAsIRBData(AIndex: integer; AValue: IRBData); virtual; abstract;
-    function GetAsObject(AIndex: integer): TObject; virtual; abstract;
-    procedure SetAsObject(AIndex: integer; AValue: TObject); virtual; abstract;
+    function GetAsObject(AIndex: integer): TObject; virtual;
+    procedure SetAsObject(AIndex: integer; AValue: TObject); virtual;
     function GetEnumName(AValue: integer): string;
     function GetEnumNameCount: integer;
+    function GetIsObject: Boolean;
     //
+    function GetAsPersistData(AIndex: integer): IRBData; virtual;
+    procedure SetAsPersistData(AIndex: integer; AValue: IRBData); virtual;
     function ItemTypeInfo: PTypeInfo;
     function GetCount: integer;
     function GetItem(AIndex: integer): TItem;
@@ -73,10 +74,22 @@ type
     property AsPersist[AIndex: integer]: string read GetAsPersist write SetAsPersist;
     property AsString[AIndex: integer]: string read GetAsString write SetAsString;
     property AsObject[AIndex: integer]: TObject read GetAsObject write SetAsObject;
-    property AsIRBData[AIndex: integer]: IRBData read GetAsIRBData write SetAsIRBData;
+    property AsPersistData[AIndex: integer]: IRBData read GetAsPersistData write SetAsPersistData;
+    property AsPersistDataClass: IRBData read GetAsPersistDataClass;
+    property IsObject: Boolean read GetIsObject;
   public
     constructor Create;
     destructor Destroy; override;
+  end;
+
+  { TPersistManyObjects }
+
+  TPersistManyObjects<TObjItem: TObject> = class(TPersistMany<TObjItem>)
+  protected
+    function GetAsObject(AIndex: integer): TObject; override;
+    procedure SetAsObject(AIndex: integer; AValue: TObject); override;
+    function GetAsPersistData(AIndex: integer): IRBData; override;
+    procedure SetAsPersistData(AIndex: integer; AValue: IRBData); override;
   end;
 
   { TPersistManyIntegers }
@@ -176,6 +189,35 @@ begin
   inherited;
 end;
 
+function TPersistMany<TItem>.GetIsObject: Boolean;
+begin
+  Result := ItemTypeInfo^.Kind in [tkClass, tkObject];
+end;
+
+function TPersistMany<TItem>.GetAsPersistData(AIndex: integer): IRBData;
+begin
+  Result := nil;
+end;
+
+procedure TPersistMany<TItem>.SetAsPersistData(AIndex: integer; AValue: IRBData
+  );
+begin
+end;
+
+function TPersistMany<TItem>.GetAsPersistDataClass: IRBData;
+begin
+  Result := TRBData.Create(GetTypeData(ItemTypeInfo)^.ClassType);
+end;
+
+function TPersistMany<TItem>.GetAsObject(AIndex: integer): TObject;
+begin
+  Result := nil;
+end;
+
+procedure TPersistMany<TItem>.SetAsObject(AIndex: integer; AValue: TObject);
+begin
+end;
+
 function TPersistMany<TItem>.GetEnumName(AValue: integer): string;
 begin
   Result := typinfo.GetEnumName(ItemTypeInfo, AValue);
@@ -216,6 +258,35 @@ begin
   fData.Delete(AIndex);
 end;
 
+{ TPersistManyObjects<TItem> }
+
+function TPersistManyObjects<TObjItem>.GetAsObject(AIndex: integer): TObject;
+begin
+  if AIndex > Count - 1 then
+    Count := AIndex + 1;
+  if Item[AIndex] = nil then
+    Item[AIndex]:= TObjItem.Create;
+  Result := Item[AIndex];
+end;
+
+procedure TPersistManyObjects<TObjItem>.SetAsObject(AIndex: integer;
+  AValue: TObject);
+begin
+  if Item[AIndex] <> nil then
+    Item[AIndex].Free;
+  Item[AIndex] := AValue as TObjItem;
+end;
+
+function TPersistManyObjects<TObjItem>.GetAsPersistData(AIndex: integer): IRBData;
+begin
+  Result := TRBData.Create(AsObject[AIndex]);
+end;
+
+procedure TPersistManyObjects<TObjItem>.SetAsPersistData(AIndex: integer; AValue: IRBData);
+begin
+  AsObject[AIndex] := AValue.UnderObject;
+end;
+
 { TPersistManyDataItem }
 
 function TPersistManyDataItem.GetName: string;
@@ -230,7 +301,7 @@ end;
 
 function TPersistManyDataItem.GetIsObject: Boolean;
 begin
-
+  Result := fPersistMany.IsObject;
 end;
 
 function TPersistManyDataItem.GetIsInterface: Boolean;
@@ -285,12 +356,12 @@ end;
 
 function TPersistManyDataItem.GetAsObject: TObject;
 begin
-
+  Result := fPersistMany.AsObject[fIndex];
 end;
 
 procedure TPersistManyDataItem.SetAsObject(AValue: TObject);
 begin
-
+  fPersistMany.AsObject[fIndex] := AValue;
 end;
 
 function TPersistManyDataItem.GetAsVariant: Variant;

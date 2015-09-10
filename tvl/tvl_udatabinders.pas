@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
-  Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType, trl_urttibroker,
+  Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist;
 
 type
@@ -860,7 +860,7 @@ begin
   if fCellBinder.DataItem.IsObject then
     DataToControl
   else
-    Control.Cells[Control.Col, Control.Row] := AsMany.AsString[Control.Row - 1]; //  fCellBinder.DataItem.AsString;
+    Control.Cells[Control.Col, Control.Row] := fCellBinder.DataItem.AsString;
 end;
 
 procedure TListBinder.OnSelectEditorHandler(Sender: TObject; aCol,
@@ -872,14 +872,10 @@ begin
   fOldEd := fCellEditor;
   FreeAndNil(fCellBinder);
   if aRow >= Control.FixedRows then begin
-    if fDataItem.IsObject {and not fDataItem.IsReference} then
-    begin
-      fObjectData := TRBData.Create(AsMany.AsObject[aRow - 1]);
+    mDataItem := TPersistManyDataItem.Create(AsMany, aRow - 1);
+    if mDataItem.IsObject then begin
+      fObjectData := AsMany.AsPersistData[aRow - 1];
       mDataItem := fObjectData[aCol];
-    end
-    else
-    begin
-      mDataItem := TPersistManyDataItem.Create(AsMany, aRow - 1);
     end;
     fCellEditor := CreateEditor(mDataItem);
     fCellBinder := CreateBinder(mDataItem);
@@ -910,9 +906,9 @@ begin
   Control.RowCount := 1 + AsMany.Count;
   Control.FixedRows := 1;
   Control.FixedCols := 0;
-  if DataItem.IsObject then
+  if AsMany.IsObject then
   begin
-    mData := TRBData.Create(DataItem.AsClass);
+    mData := AsMany.AsPersistDataClass;
     Control.ColCount := mData.Count;
     for i := 0 to mData.Count - 1 do
     begin
@@ -922,7 +918,7 @@ begin
   else
   begin
     Control.ColCount := 1;
-    Control.Cells[0,0] := 'Value';
+    Control.Cells[0,0] := DataItem.Name;
   end;
   // on the end, otherway are called when assign collcount - rowcount
   Control.AutoFillColumns := True;
@@ -946,9 +942,9 @@ var
 begin
   for i := 0 to AsMany.Count - 1 do
   begin
-    if DataItem.IsObject then
+    if AsMany.IsObject then
     begin
-      FillRowFromObject(i + 1, AsMany.AsIRBData[i]);
+      FillRowFromObject(i + 1, AsMany.AsPersistData[i]);
     end
     else
     begin
