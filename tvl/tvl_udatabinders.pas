@@ -5,7 +5,7 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
-  Menus, SynEdit, trl_ipersist, trl_upersist;
+  Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages;
 
 type
 
@@ -188,6 +188,8 @@ type
     fCellBinder: TEditBinder;
     fObjectData: IRBData;
     fOldEd: TWinControl;
+    fOldWndProc: TWndMethod;
+    procedure ControlWndProc(var TheMessage: TLMessage);
     function GetAsMany: IPersistMany;
     function GetControl: TCustomStringGrid;
     procedure FillRowFromObject(ARow: integer; AObjectData: IRBData);
@@ -742,6 +744,21 @@ begin
   Result := inherited Control as TCustomStringGrid;
 end;
 
+procedure TListBinder.ControlWndProc(var TheMessage: TLMessage);
+begin
+  case TheMessage.Msg of
+    TVLM_GRIDSETPOS:
+      begin
+        if TheMessage.WParam <> -1 then
+          Control.Row := TheMessage.WParam;
+        if TheMessage.LParam <> -1 then
+          Control.Col := TheMessage.LParam;
+      end;
+    else
+      fOldWndProc(TheMessage);
+  end;
+end;
+
 function TListBinder.GetAsMany: IPersistMany;
 begin
   if DataItem.IsObject then
@@ -849,6 +866,7 @@ procedure TListBinder.OnColRowInsertedHandler(Sender: TObject;
   IsColumn: Boolean; sIndex, tIndex: Integer);
 begin
   AsMany.Count := AsMany.Count + 1;
+  PostMessage(Control.Handle, TVLM_GRIDSETPOS, -1, Control.FixedCols);
 end;
 
 procedure TListBinder.OnEditingDoneHandler(Sender: TObject);
@@ -903,6 +921,8 @@ var
   mData: IRBData;
   i: integer;
 begin
+  fOldWndProc := Control.WindowProc;
+  Control.WindowProc := @ControlWndProc;
   Control.RowCount := 1 + AsMany.Count;
   Control.FixedRows := 1;
   Control.FixedCols := 0;
@@ -933,6 +953,7 @@ end;
 procedure TListBinder.UnbindControl;
 begin
   fOldEd.Free;
+  Control.WindowProc := fOldWndProc;
   inherited UnbindControl;
 end;
 
