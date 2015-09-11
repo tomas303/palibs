@@ -382,8 +382,13 @@ begin
 end;
 
 procedure TListBinder.TTextEditor.msg_SetValue(var Msg: TGridMessage);
+var
+  mSkipEnd: Boolean;
 begin
+  mSkipEnd := Text = '';
   Text := Msg.Value;
+  if mSkipEnd then
+    SelStart := Length(Text) + 1;
 end;
 
 constructor TListBinder.TTextEditor.Create(AOwner: TComponent);
@@ -564,8 +569,13 @@ begin
 end;
 
 procedure TListBinder.TOfferEditor.msg_SetValue(var Msg: TGridMessage);
+var
+  mSkipEnd: Boolean;
 begin
+  mSkipEnd := Text = '';
   Text := Msg.Value;
+  if mSkipEnd then
+    SelStart := Length(Text) + 1;
 end;
 
 constructor TListBinder.TOfferEditor.Create(AOwner: TComponent);
