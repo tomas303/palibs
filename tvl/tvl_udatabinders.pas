@@ -5,7 +5,8 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
-  Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages;
+  Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
+  Forms;
 
 type
 
@@ -227,6 +228,14 @@ type
     property H_OnEditingDone: TNotifyEvent read GetH_OnEditingDone write SetH_OnEditingDone;
   end;
 
+  { TWinControlHelper }
+
+  TWinControlHelper = class helper for TWinControl
+  public
+    function H_FindNextControl(CurrentControl: TWinControl; GoForward,
+      CheckTabStop, CheckParent: Boolean): TWinControl;
+  end;
+
   { TGridHelper }
 
   TGridHelper = class helper for TCustomGrid
@@ -251,6 +260,14 @@ type
   public
     property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
   end;
+
+{ TWinControlHelper }
+
+function TWinControlHelper.H_FindNextControl(CurrentControl: TWinControl;
+  GoForward, CheckTabStop, CheckParent: Boolean): TWinControl;
+begin
+  Result := FindNextControl(CurrentControl, GoForward, CheckTabStop, CheckParent);
+end;
 
 { TControlHelper }
 
@@ -916,14 +933,29 @@ end;
 
 procedure TListBinder.OnKeyDownHandler(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  mNextControl: TWinControl;
+  mParentF: TCustomForm;
 begin
   if (Key = VK_DELETE) and (Shift = [ssCtrl]) then
   begin
     if Control.Row >= Control.FixedRows then
       Control.H_DoOPDeleteColRow(False, Control.Row);
     Key := 0;
-  end else
-    inherited;
+  end
+  else if (Key = VK_TAB) and (Shift = [ssCtrl]) then
+  begin
+    mParentF := GetParentForm(Control);
+    if mParentF <> nil then
+    begin
+      mNextControl := mParentF.H_FindNextControl(Control, True, True, False);
+      if mNextControl <> nil then begin
+        mNextControl.SetFocus;
+        Key := 0;
+      end
+    end;
+  end;
+  inherited;
 end;
 
 procedure TListBinder.BindControl;
