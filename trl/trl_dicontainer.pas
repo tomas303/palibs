@@ -21,7 +21,7 @@ type
   TDICustomContainer = class
   public
     function Locate(AClass: TClass): pointer; virtual; overload; abstract;
-    function Locate(AInterface: TGUID): pointer; virtual; overload; abstract;
+    function Locate(AInterface: TGUID; const AID: string = ''): pointer; virtual; overload; abstract;
     function Locate(const AClass: string): pointer; virtual; overload; abstract;
   end;
 
@@ -39,17 +39,35 @@ type
       Value: variant;
       ValueClass: TClass;
       VGuid: TGuid;
+      ID: string;
     public
       function Create(const AName: string; AValue: variant): TInjectProp; overload;
       function Create(const AName: string; AValue: TClass): TInjectProp; overload;
-      function Create(const AName: string; const AValue: TGuid): TInjectProp; overload;
+      function Create(const AName: string; const AValue: TGuid; const AID: string = ''): TInjectProp; overload;
       class operator =(a, b: TInjectProp): Boolean;
     end;
 
   private type
 
-    TImplementations = class(TFPGList<string>)
+    { TImplementation }
+
+    TImplementation = record
+      Guid: TGuid;
+      ID: string;
+    public
+      function Create(const AGuid: TGuid): TImplementation; overload;
+      function Create(const AGuid: TGuid; const AID: string): TImplementation; overload;
+      class operator =(a, b: TImplementation): Boolean;
     end;
+
+  private type
+
+    { TImplementations }
+
+    TImplementations = class(TFPGList<TImplementation>)
+    end;
+
+    { TInjectProps }
 
     TInjectProps = class(TFPGList<TInjectProp>)
     end;
@@ -63,22 +81,22 @@ type
     fSingleHold: Boolean;
     procedure SetCreateKind(AValue: TDIRegCreateKind);
   protected
-    function Implements(AIntf: TGuid): Boolean;
+    function Implements(AIntf: TGuid; const AID: string): Boolean;
     function Instantiate(AClass: TClass): Boolean; virtual; abstract; overload;
     function Instantiate(const AClass: string): Boolean; virtual; abstract; overload;
     procedure Inject(AInstance: TObject);
-    procedure AddSupportedInterfaces(AInterfaces: array of TGUID);
+    procedure AddSupportedInterfaces(AInterfaces: array of TImplementation);
     function NewObject: TObject; virtual; abstract;
     procedure FreeSingleObject;
   public
     constructor Create;
     destructor Destroy; override;
     function Make: pointer; overload;
-    function Make(AInterface: TGUID): pointer; overload;
+    function Make(AInterface: TGUID; const AID: string): pointer; overload;
     procedure InjectProps(AProps: array of TInjectProp);
     procedure InjectProp(const AName: string; const AValue: string); overload;
     procedure InjectProp(const AName: string; AValue: TClass); overload;
-    procedure InjectProp(const AName: string; const AValue: TGuid); overload;
+    procedure InjectProp(const AName: string; const AValue: TGuid; const AID: string = ''); overload;
     property CreateKind: TDIRegCreateKind read fCreateKind write SetCreateKind;
   end;
 
@@ -92,7 +110,7 @@ type
     function Instantiate(AClass: TClass): Boolean; override; overload;
     function Instantiate(const AClass: string): Boolean; override; overload;
   public
-    constructor Create(AClass: TClass; AInterfaces: array of TGUID);
+    constructor Create(AClass: TClass; AInterfaces: array of TImplementation);
   end;
 
   { TDI_TDIObjectReg }
@@ -105,7 +123,7 @@ type
     function Instantiate(AClass: TClass): Boolean; override; overload;
     function Instantiate(const AClass: string): Boolean; override; overload;
   public
-    constructor Create(AClass: TDIClass; AInterfaces: array of TGUID);
+    constructor Create(AClass: TDIClass; AInterfaces: array of TImplementation);
   end;
 
   { TDI_TComponentReg }
@@ -120,7 +138,7 @@ type
     function Instantiate(const AClass: string): Boolean; override; overload;
   public
     constructor Create(AClass: TComponentClass; AOwner: TComponent;
-      AInterfaces: array of TGUID);
+      AInterfaces: array of TImplementation);
   end;
 
 
@@ -135,31 +153,31 @@ type
     fRegs: TDIRegs;
   protected
     function Find(AClass: TClass): TDIReg; overload;
-    function Find(AInterface: TGUID): TDIReg; overload;
+    function Find(AInterface: TGUID; const AID: string): TDIReg; overload;
     function Find(const AClass: string): TDIReg; overload;
     procedure CheckRegNotExists(AClass: TClass);
     function RegisterReg(AReg: TDIReg): TDIReg;
-    function NewReg(AClass: TClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind): TDIReg; overload;
-    function NewReg(AClass: TDIClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind): TDIReg; overload;
-    function NewReg(AClass: TComponentClass; AOwner: TComponent; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind): TDIReg; overload;
+    function NewReg(AClass: TClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind): TDIReg; overload;
+    function NewReg(AClass: TDIClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind): TDIReg; overload;
+    function NewReg(AClass: TComponentClass; AOwner: TComponent; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind): TDIReg; overload;
   public
     constructor Create;
     destructor Destroy; override;
     function Locate(AClass: TClass): pointer; override; overload;
-    function Locate(AInterface: TGUID): pointer; override; overload;
+    function Locate(AInterface: TGUID; const AID: string = ''): pointer; override; overload;
     function Locate(const AClass: string): pointer; override; overload;
     // TObject
     function Add(const AClass: TClass; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
-    function Add(const AClass: TClass; AInterface: TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
-    function Add(const AClass: TClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const AClass: TClass; AInterface: TGUID; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const AClass: TClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
     // TDIObject
     function Add(const AClass: TDIClass; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
-    function Add(const AClass: TDIClass; AInterface: TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
-    function Add(const AClass: TDIClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const AClass: TDIClass; AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const AClass: TDIClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
     // TComponent
     function Add(const AClass: TComponentClass; AOwner: TComponent; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
-    function Add(const AClass: TComponentClass; AOwner: TComponent; AInterface: TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
-    function Add(const AClass: TComponentClass; AOwner: TComponent; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const AClass: TComponentClass; AOwner: TComponent; AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const AClass: TComponentClass; AOwner: TComponent; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
   end;
 
   TReg<T> = class(TDIReg)
@@ -190,6 +208,26 @@ implementation
 
 class function TReg<T>.Locate(AContainer: TDIContainer): T;
 begin
+end;
+
+{ TDIReg.TImplementation }
+
+function TDIReg.TImplementation.Create(const AGuid: TGuid): TImplementation;
+begin
+  Result.Guid := AGuid;
+  Result.ID := '';
+end;
+
+function TDIReg.TImplementation.Create(const AGuid: TGuid; const AID: string
+  ): TImplementation;
+begin
+  Result.Guid := AGuid;
+  Result.ID := AID;
+end;
+
+class operator TDIReg.TImplementation. = (a, b: TImplementation): Boolean;
+begin
+  Result := CompareMem(@a.Guid, @b.Guid, SizeOf(TGuid)) and (a.ID = b.ID);
 end;
 
 { TDIFactory }
@@ -239,7 +277,7 @@ begin
 end;
 
 constructor TDI_TDIObjectReg.Create(AClass: TDIClass;
-  AInterfaces: array of TGUID);
+  AInterfaces: array of TImplementation);
 begin
   inherited Create;
   fClass := AClass;
@@ -263,7 +301,7 @@ begin
   Result := fClass.ClassName = AClass;
 end;
 
-constructor TDI_TObjectReg.Create(AClass: TClass; AInterfaces: array of TGUID);
+constructor TDI_TObjectReg.Create(AClass: TClass; AInterfaces: array of TImplementation);
 begin
   inherited Create;
   fClass := AClass;
@@ -288,7 +326,7 @@ begin
 end;
 
 constructor TDI_TComponentReg.Create(AClass: TComponentClass; AOwner: TComponent;
-  AInterfaces: array of TGUID);
+  AInterfaces: array of TImplementation);
 begin
   inherited Create;
   fClass := AClass;
@@ -317,11 +355,12 @@ begin
   Result.ValueCLass := AValue;
 end;
 
-function TDIReg.TInjectProp.Create(const AName: string; const AValue: TGuid
-  ): TInjectProp;
+function TDIReg.TInjectProp.Create(const AName: string; const AValue: TGuid;
+  const AID: string = ''): TInjectProp;
 begin
   Result.Name := AName;
   Result.VGuid := AValue;
+  Result.ID := AID;
 end;
 
 class operator TDIReg.TInjectProp. = (a, b: TInjectProp): Boolean;
@@ -340,9 +379,9 @@ begin
   fCreateKind := AValue;
 end;
 
-function TDIReg.Implements(AIntf: TGuid): Boolean;
+function TDIReg.Implements(AIntf: TGuid; const AID: string): Boolean;
 begin
-  Result := fImplementations.IndexOf(GUIDToString(AIntf)) > -1;
+  Result := fImplementations.IndexOf(TImplementation.Create(AIntf, AID)) > -1;
 end;
 
 procedure TDIReg.Inject(AInstance: TObject);
@@ -369,7 +408,7 @@ begin
         end;
       tkInterface:
         begin
-          mInterface := fDIC.Locate(mIP.VGuid);
+          mInterface := fDIC.Locate(mIP.VGuid, mIP.ID);
           mRBItem.AsInterface := mInterface;
         end;
     else
@@ -379,13 +418,13 @@ begin
   end;
 end;
 
-procedure TDIReg.AddSupportedInterfaces(AInterfaces: array of TGUID);
+procedure TDIReg.AddSupportedInterfaces(AInterfaces: array of TImplementation);
 var
-  mGuid: TGUID;
+  mImpl: TImplementation;
 begin
-  for mGuid in AInterfaces do
+  for mImpl in AInterfaces do
   begin
-    fImplementations.Add(GUIDToString(mGuid));
+    fImplementations.Add(mImpl);
   end;
 end;
 
@@ -428,19 +467,19 @@ begin
   end;
 end;
 
-function TDIReg.Make(AInterface: TGUID): pointer;
+function TDIReg.Make(AInterface: TGUID; const AID: string): pointer;
 var
   m: TObject;
 begin
   Result := nil;
+  if not Implements(AInterface, AID) then
+    raise Exception.Create('not registered to implement interface');
   if (fCreateKind = ckSingle) and (fSingleObject <> nil) then
   begin
     fSingleObject.GetInterfaceWeak(AInterface, Result);
   end
   else
   begin
-    if not Implements(AInterface) then
-      raise Exception.Create('not registered to implement interface');
     m := Make;
     try
       if not m.GetInterfaceWeak(AInterface, Result) then
@@ -481,9 +520,9 @@ begin
   fInjectProps.Add(TInjectProp.Create(AName, AValue));
 end;
 
-procedure TDIReg.InjectProp(const AName: string; const AValue: TGuid);
+procedure TDIReg.InjectProp(const AName: string; const AValue: TGuid; const AID: string = '');
 begin
-  fInjectProps.Add(TInjectProp.Create(AName, AValue));
+  fInjectProps.Add(TInjectProp.Create(AName, AValue, AID));
 end;
 
 { TDIContainer }
@@ -503,14 +542,14 @@ begin
   end;
 end;
 
-function TDIContainer.Find(AInterface: TGUID): TDIReg;
+function TDIContainer.Find(AInterface: TGUID; const AID: string): TDIReg;
 var
   mReg: TDIReg;
 begin
   Result := nil;
   for mReg in fRegs do
   begin
-    if mReg.Implements(AInterface) then
+    if mReg.Implements(AInterface, AID) then
     begin
       Result := mReg;
       Break;
@@ -546,7 +585,7 @@ begin
   Result.fDIC := Self;
 end;
 
-function TDIContainer.NewReg(AClass: TClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind
+function TDIContainer.NewReg(AClass: TClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind
   ): TDIReg;
 begin
   CheckRegNotExists(AClass);
@@ -554,7 +593,7 @@ begin
   Result.CreateKind := ACreateKind;
 end;
 
-function TDIContainer.NewReg(AClass: TDIClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind
+function TDIContainer.NewReg(AClass: TDIClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind
   ): TDIReg;
 begin
   CheckRegNotExists(AClass);
@@ -563,7 +602,7 @@ begin
 end;
 
 function TDIContainer.NewReg(AClass: TComponentClass; AOwner: TComponent;
-  AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind): TDIReg;
+  AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind): TDIReg;
 begin
   CheckRegNotExists(AClass);
   Result := RegisterReg(TDI_TComponentReg.Create(AClass, AOwner, AInterfaces));
@@ -591,14 +630,14 @@ begin
   Result := mReg.Make;
 end;
 
-function TDIContainer.Locate(AInterface: TGUID): pointer;
+function TDIContainer.Locate(AInterface: TGUID; const AID: string = ''): pointer;
 var
   mReg: TDIReg;
 begin
-  mReg := Find(AInterface);
+  mReg := Find(AInterface, AID);
   if mReg = nil then
     raise Exception.Create('registration not found');
-  Result := mReg.Make(AInterface);
+  Result := mReg.Make(AInterface, AID);
 end;
 
 function TDIContainer.Locate(const AClass: string): pointer;
@@ -616,12 +655,12 @@ begin
   Result := NewReg(AClass, [], ACreateKind);
 end;
 
-function TDIContainer.Add(const AClass: TClass; AInterface: TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
+function TDIContainer.Add(const AClass: TClass; AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
 begin
-  Result := NewReg(AClass, [AInterface], ACreateKind);
+  Result := NewReg(AClass, [TDIReg.TImplementation.Create(AInterface, AID)], ACreateKind);
 end;
 
-function TDIContainer.Add(const AClass: TClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
+function TDIContainer.Add(const AClass: TClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
 begin
   Result := NewReg(AClass, AInterfaces, ACreateKind);
 end;
@@ -631,12 +670,12 @@ begin
   Result := NewReg(AClass, [], ACreateKind);
 end;
 
-function TDIContainer.Add(const AClass: TDIClass; AInterface: TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
+function TDIContainer.Add(const AClass: TDIClass; AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
 begin
-  Result := NewReg(AClass, [AInterface], ACreateKind);
+  Result := NewReg(AClass, [TDIReg.TImplementation.Create(AInterface, AID)], ACreateKind);
 end;
 
-function TDIContainer.Add(const AClass: TDIClass; AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind = ckTransient
+function TDIContainer.Add(const AClass: TDIClass; AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind = ckTransient
   ): TDIReg;
 begin
   Result := NewReg(AClass, AInterfaces, ACreateKind);
@@ -649,13 +688,13 @@ begin
 end;
 
 function TDIContainer.Add(const AClass: TComponentClass; AOwner: TComponent;
-  AInterface: TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
+  AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
 begin
-  Result := NewReg(AClass, AOwner, [AInterface], ACreateKind);
+  Result := NewReg(AClass, AOwner, [TDIReg.TImplementation.Create(AInterface, AID)], ACreateKind);
 end;
 
 function TDIContainer.Add(const AClass: TComponentClass; AOwner: TComponent;
-  AInterfaces: array of TGUID; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
+  AInterfaces: array of TDIReg.TImplementation; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
 begin
   Result := NewReg(AClass, AOwner, AInterfaces, ACreateKind);
 end;
