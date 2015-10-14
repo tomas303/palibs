@@ -6,7 +6,7 @@ uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
-  Forms;
+  Forms, trl_ipersiststore;
 
 type
 
@@ -631,7 +631,7 @@ begin
   if Control.ItemIndex <> -1 then
   begin
     mOfferIndex := NativeInt(Control.Items.Objects[Control.ItemIndex]);
-    DataItem.AsObject := fOffer[mOfferIndex]
+    DataItem.AsObject := fOffer[mOfferIndex].UnderObject;
   end;
 end;
 
@@ -642,7 +642,7 @@ var
 begin
   mO := DataItem.AsObject;
   for i := 0 to fOffer.Count - 1 do begin
-    mOffErO := fOffer[i];
+    mOffErO := fOffer[i].UnderObject;
     if mOfferO = mO then
     begin
       Control.ItemIndex := i;
@@ -659,11 +659,11 @@ var
 begin
   for i := 0 to fOffer.Count - 1 do
   begin
-    mData := fOffer.AsData[i];
+    mData := fOffer[i];
     if not SameText(mData[0].Name, 'id') or (mData.Count = 1) then
-      Control.Items.AddObject(fOffer.AsData[i][0].AsString, TObject(i))
+      Control.Items.AddObject(fOffer[i][0].AsString, TObject(i))
     else
-      Control.Items.AddObject(fOffer.AsData[i][1].AsString, TObject(i));
+      Control.Items.AddObject(fOffer[i][1].AsString, TObject(i));
   end;
 end;
 
@@ -795,6 +795,8 @@ begin
     Result := DataItem.AsInterface as IPersistMany
   else
     raise Exception.Create('not object nor interface property for TLIST, unable retrieve IPersistMany');
+  if Result = nil then
+    raise Exception.Create(DataItem.Name + ' is not assigned');
 end;
 
 procedure TListBinder.FillRowFromObject(ARow: integer; AObjectData: IRBData);

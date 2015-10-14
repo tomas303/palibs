@@ -8,7 +8,8 @@ interface
 
 uses
   trl_dicontainer, trl_irttibroker, trl_urttibroker, trl_ipersist, 
-  trl_upersistxml, trl_ifactory, trl_upersist, LazarusPackageIntf;
+  trl_upersistxml, trl_ifactory, trl_upersist, trl_upersiststore, 
+  trl_ipersiststore, LazarusPackageIntf;
 
 implementation
 

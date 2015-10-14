@@ -69,6 +69,7 @@ type
       function GetItems(AIndex: integer): IRBDataItem;
       function FindItem(const AName: string): IRBDataItem;
       function GetUnderObject: TObject;
+      procedure SetUnderObject(AValue: TObject);
       procedure Assign(const AData: IRBData);
       property Count: integer read GetCount;
       property ClassName: string read GetClassName;
@@ -76,7 +77,7 @@ type
       property Items[AIndex: integer]: IRBDataItem read GetItems; default;
       property ItemByName[const AName: string]: IRBDataItem read GetItemByName;
       property ItemIndex[const AName: string]: integer read GetItemIndex;
-      property UnderObject: TObject read GetUnderObject;
+      property UnderObject: TObject read GetUnderObject write SetUnderObject;
     end;
 
 implementation

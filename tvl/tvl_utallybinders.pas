@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, grids, controls, fgl,
-  StdCtrls, trl_irttibroker, tvl_ibindings, trl_ipersist, tvl_ugridbinders;
+  StdCtrls, trl_irttibroker, tvl_ibindings, trl_ipersist, tvl_ugridbinders,
+  trl_ipersiststore;
 
 
 type
@@ -190,7 +191,7 @@ end;
 
 function TDrawGridBinder2.GetDataItem(ACol, ARow: integer): IRBDataItem;
 begin
-  Result := DataList.AsData[ARow][ACol];
+  Result := DataList[ARow][ACol];
 end;
 
 function TDrawGridBinder2.GetColumnHeader(ACol: integer): string;
@@ -245,7 +246,7 @@ begin
   ComboBox.Clear;
   for i := 0 to DataList.Count - 1 do
   begin
-    ComboBox.Items.Add(DataList.AsData[i][fDataItemIndex].AsString);
+    ComboBox.Items.Add(DataList[i][fDataItemIndex].AsString);
   end;
 end;
 
@@ -279,7 +280,7 @@ begin
   ListBox.Clear;
   for i := 0 to DataList.Count - 1 do
   begin
-    ListBox.Items.Add(DataList.AsData[i][fDataItemIndex].AsString);
+    ListBox.Items.Add(DataList[i][fDataItemIndex].AsString);
   end;
 end;
 
@@ -330,7 +331,7 @@ begin
     Result := ''
   else begin
     if (ARow >= 0) and (ARow < fDataList.Count) then
-      Result := fDataList.AsData[ARow][fDataItemIndex].AsString
+      Result := fDataList[ARow][fDataItemIndex].AsString
     else
       Result := '';
   end;
@@ -439,7 +440,7 @@ begin
   if mIndex = -1 then
     Result := nil
   else
-    Result := fDataList.AsData[mIndex];
+    Result := fDataList[mIndex];
 end;
 
 class function TTallyBinder.New(const AListControl: TWinControl; const AContext: IRBBinderContext;

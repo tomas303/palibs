@@ -5,7 +5,8 @@ unit trl_dicontainer;
 interface
 
 uses
-  Classes, SysUtils, fgl, typinfo, trl_irttibroker, trl_urttibroker, trl_ifactory;
+  Classes, SysUtils, fgl, typinfo, trl_irttibroker, trl_urttibroker, trl_ifactory,
+  variants;
 
 type
 
@@ -32,6 +33,8 @@ type
   TDIReg = class
   public type
 
+    TOnInjectEvent = procedure(const AItem: IRBDataItem) of object;
+
     { TInjectProp }
 
     TInjectProp = record
@@ -40,10 +43,14 @@ type
       ValueClass: TClass;
       VGuid: TGuid;
       ID: string;
+      OnInject: TOnInjectEvent;
     public
+      procedure Clear;
       function Create(const AName: string; AValue: variant): TInjectProp; overload;
       function Create(const AName: string; AValue: TClass; const AID: string = ''): TInjectProp; overload;
       function Create(const AName: string; const AValue: TGuid; const AID: string = ''): TInjectProp; overload;
+      function Create(const AName: string; AOnInject: TOnInjectEvent): TInjectProp; overload;
+    public
       class operator =(a, b: TInjectProp): Boolean;
     end;
 
@@ -97,6 +104,7 @@ type
     procedure InjectProp(const AName: string; const AValue: string); overload;
     procedure InjectProp(const AName: string; AValue: TClass; const AID: string = ''); overload;
     procedure InjectProp(const AName: string; const AValue: TGuid; const AID: string = ''); overload;
+    procedure InjectProp(const AName: string; const AOnInject: TOnInjectEvent); overload;
     property CreateKind: TDIRegCreateKind read fCreateKind write SetCreateKind;
     property ID: string read fID write fID;
   end;
@@ -279,8 +287,19 @@ end;
 
 { TDIReg.TInjectProp }
 
+procedure TDIReg.TInjectProp.Clear;
+begin
+  Name := '';
+  Value := Null;
+  ValueClass := nil;
+  VGuid := GUID_NULL;
+  ID := '';
+  OnInject := nil;
+end;
+
 function TDIReg.TInjectProp.Create(const AName: string; AValue: variant): TInjectProp;
 begin
+  Result.Clear;
   Result.Name := AName;
   Result.Value := AValue;
 end;
@@ -288,6 +307,7 @@ end;
 function TDIReg.TInjectProp.Create(const AName: string; AValue: TClass;
   const AID: string = ''): TInjectProp;
 begin
+  Result.Clear;
   Result.Name := AName;
   Result.ValueCLass := AValue;
   Result.ID := AID;
@@ -296,9 +316,18 @@ end;
 function TDIReg.TInjectProp.Create(const AName: string; const AValue: TGuid;
   const AID: string = ''): TInjectProp;
 begin
+  Result.Clear;
   Result.Name := AName;
   Result.VGuid := AValue;
   Result.ID := AID;
+end;
+
+function TDIReg.TInjectProp.Create(const AName: string;
+  AOnInject: TOnInjectEvent): TInjectProp;
+begin
+  Result.Clear;
+  Result.Name := AName;
+  Result.OnInject := AOnInject;
 end;
 
 class operator TDIReg.TInjectProp. = (a, b: TInjectProp): Boolean;
@@ -339,30 +368,43 @@ var
   mIP: TInjectProp;
   mObject: TObject;
   mInterface: IUnknown;
+  i: integer;
+  mcname: string;
+  miname:string;
 begin
+  mcname := ainstance.ClassName;
   mRB := TRBData.Create(AInstance, True);
   for mIP in fInjectProps do
   begin
-    mRBItem := mRB.FindItem(mIP.Name);
-    if mRBItem = nil then
-      raise Exception.Create('property not found');
-    case mRBItem.TypeKind of
-      tkClassRef:
-        mRBItem.AsPtrInt := PtrInt(mIP.ValueClass);
-      tkClass:
-        begin
-          mObject := fDIC.Locate(mIP.ValueClass, mIP.ID);
-          mRBItem.AsObject := mObject;
+    for i := 0 to mRB.Count - 1 do begin
+      mRBItem := mRB.Items[i];
+      miname:=mRBItem.Name;
+      if mIP.Name = mRBItem.Name then begin
+        case mRBItem.TypeKind of
+          tkClassRef:
+            //if mIP.ValueClass <> nil then
+              mRBItem.AsPtrInt := PtrInt(mIP.ValueClass);
+          tkClass:
+            //if mIP.ValueClass <> nil then
+            begin
+              mObject := fDIC.Locate(mIP.ValueClass, mIP.ID);
+              mRBItem.AsObject := mObject;
+            end;
+          tkInterface:
+            //if not CompareMem(@mIP.VGuid, @GUID_NULL, SizeOf(mIP.VGuid)) then
+            begin
+              mInterface := fDIC.Locate(mIP.VGuid, mIP.ID);
+              mRBItem.AsInterface := mInterface;
+            end;
+        else
+          //if not VarIsNull(mIP.Value) then
+            mRBItem.AsVariant := mIP.Value;
         end;
-      tkInterface:
-        begin
-          mInterface := fDIC.Locate(mIP.VGuid, mIP.ID);
-          mRBItem.AsInterface := mInterface;
-        end;
-    else
-      mRBItem.AsVariant := mIP.Value;
+      end;
+      // event
+      if ((mIP.Name = mRBItem.Name) or (mIP.Name = '')) and Assigned(mIP.OnInject) then
+        mIP.OnInject(mRBItem);
     end;
-
   end;
 end;
 
@@ -418,10 +460,11 @@ end;
 function TDIReg.Make(AInterface: TGUID; const AID: string): pointer;
 var
   m: TObject;
+  mClassName: string;
 begin
   Result := nil;
   if not Implements(AInterface, AID) then
-    raise Exception.Create('not registered to implement interface');
+    raise Exception.Create('not registered to implement interface ' + GUIDToString(AInterface));
   if (fCreateKind = ckSingle) and (fSingleObject <> nil) then
   begin
     fSingleObject.GetInterfaceWeak(AInterface, Result);
@@ -430,11 +473,12 @@ begin
   begin
     m := Make;
     try
+      mClassName := m.ClassName;
       if not m.GetInterfaceWeak(AInterface, Result) then
       begin
         if fCreateKind = ckTransient then
           m.Free;
-        raise Exception.Create('do not support interface');
+        raise Exception.Create(mClassName + ' do not support interface ' + GUIDToString(AInterface));
       end;
       if fCreateKind = ckSingle then
       begin
@@ -472,6 +516,12 @@ end;
 procedure TDIReg.InjectProp(const AName: string; const AValue: TGuid; const AID: string = '');
 begin
   fInjectProps.Add(TInjectProp.Create(AName, AValue, AID));
+end;
+
+procedure TDIReg.InjectProp(const AName: string; const AOnInject: TOnInjectEvent
+  );
+begin
+  fInjectProps.Add(TInjectProp.Create(AName, AOnInject));
 end;
 
 { TDIContainer }

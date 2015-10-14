@@ -198,6 +198,7 @@ type
     function GetClassType: TClass;
     function GetData: TRBDataItemList;
     function GetItemIndex(const AName: string): integer;
+    procedure SetUnderObject(AValue: TObject);
     property DataList: TRBDataItemList read GetData;
     procedure FillData;
     function CreateRBData(const APropInfo: PPropInfo): TRBDataItem;
@@ -223,7 +224,8 @@ type
     property Items[AIndex: integer]: IRBDataItem read GetItems; default;
     property ItemByName[const AName: string]: IRBDataItem read GetItemByName;
     property ItemIndex[const AName: string]: integer read GetItemIndex;
-    property UnderObject: TObject read GetUnderObject;
+  published
+    property UnderObject: TObject read GetUnderObject write SetUnderObject;
   end;
 
 implementation
@@ -732,6 +734,13 @@ end;
 function TRBData.GetItemIndex(const AName: string): integer;
 begin
   Result := FindItemIndex(AName);
+end;
+
+procedure TRBData.SetUnderObject(AValue: TObject);
+begin
+  FreeAndNil(fDataList);
+  fObject := AValue;
+  fClass := fObject.ClassType;
 end;
 
 procedure TRBData.FillData;

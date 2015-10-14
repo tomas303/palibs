@@ -6,11 +6,12 @@ uses
   trl_irttibroker, trl_ipersist, trl_ifactory,
   trl_urttibroker,
   DOM, XMLRead, XMLWrite, xpath,
-  SysUtils, fgl;
+  SysUtils, fgl, trl_ipersiststore;
 
 const
   cSID = 'SID';
   cRefID = 'refid';
+  cRefClass = 'refclass';
   cValue = 'Value';
   cRoot = 'root';
   cStoreSettings = 'storesettings';
@@ -20,44 +21,8 @@ const
 type
 
   { TXmlStore }
-  TXmlStore = class(TInterfacedObject, IPersistStore, IPersistQuery)
+  TXmlStore = class(TInterfacedObject, IPersistStoreDevice)
   private type
-
-    { TLoadCache }
-
-    TLoadCache = class
-    private type
-      TCache = specialize TFPGMap<integer, TObject>;
-    private
-      fCache: TCache;
-    public
-      constructor Create;
-      destructor Destroy; override;
-      procedure Add(AID: integer; AObject: TObject);
-      procedure Remove(AID: integer);
-      function Find(AID: integer): TObject;
-    end;
-
-    TSID = string;
-
-    { TStoreCache }
-
-    TStoreCache = class
-    private type
-      TSIDCache = specialize TFPGMap<TSID, TObject>;
-      TObjCache = specialize TFPGMap<Pointer, TSID>;
-    private
-      fSIDCache: TSIDCache;
-      fObjCache: TObjCache;
-    public
-      constructor Create;
-      destructor Destroy; override;
-      function FindObject(const ASID: TSID): TObject;
-      function FindSID(const AObject: TObject): TSID;
-      procedure Add(const ASID: TSID; const AObject: TObject);
-      procedure Remove(const ASID: TSID); overload;
-      procedure Remove(const AObject: TObject); overload;
-    end;
 
     { TSIDManager }
 
@@ -76,11 +41,9 @@ type
       cListItemTag = 'i';
       cListItemNilTag = 'n';
   private
-    fFactory: IFactory;
+    fFactory: IPersistFactory;
     fFile: string;
     fDoc: TXMLDocument;
-    fLoadCache: TLoadCache;
-    fStoreCache: TStoreCache;
     fSIDMgr: TSIDManager;
     function GetDoc: TXMLDocument;
     function GetDataClassEl(const ADataClassName: string; ACanCreate: Boolean): TDOMElement;
@@ -98,12 +61,16 @@ type
     procedure SaveDataItemMemo(AStoreEl: TDOMElement; const AName, AValue: string);
     procedure SaveDataItemObject(AStoreEl: TDOMElement; const AName: string;
       const AValue: TObject; AIsReference: Boolean);
+    procedure SaveDataItemRef(AStoreEl: TDOMElement; const AName: string;
+      const AValue: IPersistRef);
     procedure SaveDataList(AStoreEl: TDOMElement; ADataItem: IRBDataItem);
     procedure SaveData(AStoreEl: TDOMElement; AData: IRBData);
     //load
     function LoadDataItemValue(AStoreEl: TDOMElement; const AName: string): string;
     function LoadDataItemMemo(AStoreEl: TDOMElement; const AName: string): string;
-    function LoadDataItemObject(AStoreEl: TDOMElement; const ADataItem: IRBDataItem): TObject;
+    procedure LoadDataItemObject(AStoreEl: TDOMElement; const AData: IRBData);
+    procedure LoadDataItemRef(AStoreEl: TDOMElement; const AName: string;
+      const AValue: IPersistRef);
     procedure LoadDataList(AStoreEl: TDOMElement; ADataItem: IRBDataItem);
     procedure LoadData(AStoreEl: TDOMElement; AData: IRBData);
   protected
@@ -113,19 +80,19 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure AfterConstruction; override;
-    // IRBStore
-    procedure Save(AData: TObject);
-    procedure Save(AData: IRBData);
-    function  Load(const AClass: string; const AProperty, AValue: string): TObject;
-    function LoadList(const AClass: string): IPersistList;
+    // IPersistStoreDevice
+    procedure Load(const ASID: TSID; AData: IRBData);
+    procedure Save(const ASID: TSID; AData: IRBData);
+    procedure Delete(const ASID: TSID);
+    function NewSID: TSID;
+    function GetSIDClass(const ASID: TSID): string;
+    procedure Open;
+    procedure Close;
     procedure Flush;
-    procedure Delete(AData: TObject);
-    procedure Delete(AData: IRBData);
-
     // IRBDataQuery
     function Retrive(const AClass: string): IPersistList;
   published
-    property Factory: IFactory read fFactory write fFactory;
+    property Factory: IPersistFactory read fFactory write fFactory;
     property XMLFile: string read fFile write fFile;
   end;
 
@@ -179,121 +146,7 @@ end;
 function TXmlStore.TSIDManager.New: TSID;
 begin
   inc(fLast);
-  Result := IntToStr(fLast);
-end;
-
-{ TXmlStore.TStoreCache }
-
-constructor TXmlStore.TStoreCache.Create;
-begin
-  fSIDCache := TSIDCache.Create;
-  fObjCache := TObjCache.Create;
-end;
-
-destructor TXmlStore.TStoreCache.Destroy;
-begin
-  FreeAndNil(fSIDCache);
-  FreeAndNil(fObjCache);
-  inherited Destroy;
-end;
-
-function TXmlStore.TStoreCache.FindObject(const ASID: TSID): TObject;
-var
-  mIndex: integer;
-begin
-  mIndex := fSIDCache.IndexOf(ASID);
-  if mIndex = -1 then
-    Result := nil
-  else
-    Result := fSIDCache.Data[mIndex];
-end;
-
-function TXmlStore.TStoreCache.FindSID(const AObject: TObject): TSID;
-var
-  mIndex: integer;
-begin
-  mIndex := fObjCache.IndexOf(AObject);
-  if mIndex = -1 then
-    Result := ''
-  else
-    Result := fObjCache.Data[mIndex];
-end;
-
-procedure TXmlStore.TStoreCache.Add(const ASID: TSID; const AObject: TObject);
-begin
-  fSIDCache.Add(ASID, AObject);
-  fObjCache.Add(AObject, ASID);
-end;
-
-procedure TXmlStore.TStoreCache.Remove(const ASID: TSID);
-var
-  mIndex: integer;
-  mObj: TObject;
-begin
-  mIndex := fSIDCache.IndexOf(ASID);
-  if mIndex <> -1 then
-  begin
-    mObj := fSIDCache.Data[mIndex];
-    fSIDCache.Delete(mIndex);
-    mIndex := fObjCache.IndexOf(mObj);
-    if mIndex <> -1 then
-    begin
-      fObjCache.Delete(mIndex);
-    end;
-    mObj.Free;
-  end;
-end;
-
-procedure TXmlStore.TStoreCache.Remove(const AObject: TObject);
-var
-  mIndex: integer;
-  mSID: TSID;
-begin
-  mIndex := fObjCache.IndexOf(AObject);
-  if mIndex <> -1 then
-  begin
-    mSID := fObjCache.Data[mIndex];
-    fObjCache.Delete(mIndex);
-    mIndex := fSIDCache.IndexOf(mSID);
-    if mIndex <> -1 then
-    begin
-      fSIDCache.Delete(mIndex);
-    end;
-  end;
-  AObject.Free;
-end;
-
-{ TXmlStore.TLoadCache }
-
-constructor TXmlStore.TLoadCache.Create;
-begin
-  fCache := TCache.Create;
-end;
-
-destructor TXmlStore.TLoadCache.Destroy;
-begin
-  FreeAndNil(fCache);
-  inherited Destroy;
-end;
-
-procedure TXmlStore.TLoadCache.Add(AID: integer; AObject: TObject);
-begin
-  fCache.Add(AID, AObject);
-end;
-
-procedure TXmlStore.TLoadCache.Remove(AID: integer);
-begin
-  fCache.Remove(AID);
-end;
-
-function TXmlStore.TLoadCache.Find(AID: integer): TObject;
-var
-  mIndex: integer;
-begin
-  Result := nil;
-  mIndex := fCache.IndexOf(AID);
-  if mIndex <> -1 then
-    Result := fCache.Data[mIndex];
+  Result := fLast;
 end;
 
 { EXMLStore }
@@ -349,17 +202,8 @@ end;
 
 function TXmlStore.GetDoc: TXMLDocument;
 begin
-  if fDoc = nil then
-  begin
-    if (fFile <> '') and FileExists(fFile) then
-      ReadXMLFile(fDoc, fFile);
-    if fDoc = nil then
-    begin
-      fDoc := TXMLDocument.Create;
-      fDoc.AppendChild(fDoc.CreateElement(cRoot));
-    end;
-    fSIDMgr.Load(fDoc);
-  end;
+  if fDoc= nil then
+    raise exception.Create('not opend');
   Result := fDoc;
 end;
 
@@ -370,14 +214,11 @@ var
 begin
   for i := 0 to AData.Count - 1 do
   begin
-    //if AData[i].IsListCounter then
-    //  Continue;
-    //if AData[i].IsNotStored then
-    //  Continue;
-    //if AData[i].IsList then
-    //  SaveDataList(AStoreEl, AData[i])
-    //else
-    if AData[i].IsObject then
+    if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistMany) then
+      SaveDataList(AStoreEl, AData[i])
+    else if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistRef) then
+        SaveDataItemRef(AStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+    else if AData[i].IsObject then
     begin
       if AData[i].AsObject <> nil then
       begin
@@ -401,20 +242,24 @@ procedure TXmlStore.LoadData(AStoreEl: TDOMElement; AData: IRBData);
 var
   i: integer;
   mObjStoreEl: TDOMElement;
+  mData: IRBData;
 begin
   for i := 0 to AData.Count - 1 do
   begin
-    //if AData[i].IsListCounter then
-    //  Continue;
-    //if AData[i].IsList then
-    //  LoadDataList(AStoreEl, AData[i])
-    //else
+    if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistMany) then
+      LoadDataList(AStoreEl, AData[i])
+    else
+    if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistRef) then
+        LoadDataItemRef(AStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+    else
     if AData[i].IsObject then
     begin
       mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
       if mObjStoreEl = nil then
         Continue;
-      AData[i].AsObject := LoadDataItemObject(mObjStoreEl, AData[i]);
+      mData := fFactory.CreateObject(AData[i].ClassName);
+      mData.UnderObject := AData[i].AsObject;
+      LoadDataItemObject(mObjStoreEl, mData);
     end
     else
     //if AData[i].IsMemo then
@@ -447,41 +292,21 @@ begin
   Result := mMemoNode.TextContent;
 end;
 
-function TXmlStore.LoadDataItemObject(AStoreEl: TDOMElement; const ADataItem: IRBDataItem): TObject;
+procedure TXmlStore.LoadDataItemObject(AStoreEl: TDOMElement; const AData: IRBData);
+begin
+  LoadData(AStoreEl, AData);
+end;
+
+procedure TXmlStore.LoadDataItemRef(AStoreEl: TDOMElement; const AName: string;
+  const AValue: IPersistRef);
 var
   mSID: TSID;
   mRefStoreEl: TDOMElement;
   mData: IRBData;
 begin
-  Result := nil;
-  //if ADataItem.IsReference then
-  //begin
-  //  if AStoreEl.AttribStrings[cRefID] <> '' then
-  //  begin
-  //    mSID := AStoreEl.AttribStrings[cRefID];
-  //    if mSID = '' then
-  //      Exit;
-  //    Result := fStoreCache.FindObject(mSID);
-  //    if Result = nil then
-  //    begin
-  //      mRefStoreEl := FindStoreElForSID(mSID);
-  //      if mRefStoreEl = nil then
-  //        EXMLStore.CannotFindReferencedSID(AStoreEl.NodeName, mSID);
-  //      Result := fFactory.CreateObject(mRefStoreEl.ParentNode.NodeName);
-  //      if Supports(Result, IRBData) then
-  //        mData := Result as IRBData
-  //      else begin
-  //        mData := TRBData.Create(Result);
-  //      end;
-  //      LoadData(mRefStoreEl, mData);
-  //      fStoreCache.Add(mSID, Result);
-  //    end;
-  //  end;
-  //end
-  //else
+  if AStoreEl.AttribStrings[cRefID] <> '' then
   begin
-    Result := fFactory.CreateObject(ADataItem.ClassName);
-    LoadData(AStoreEl, Result as IRBData);
+    AValue.SID := AStoreEl.AttribStrings[cRefID];
   end;
 end;
 
@@ -490,26 +315,32 @@ var
   mStoreEl: TDOMElement;
   mStoreItemEl: TDOMElement;
   i: integer;
+  mMany: IPersistMany;
 begin
-//  Assert(ADataItem.IsList);
-  //mStoreEl := AStoreEl.FindNode(ADataItem.Name) as TDOMElement;
-  //if mStoreEl = nil then
-  //  Exit;
-  //ADataItem.ListCount := mStoreEl.ChildNodes.Count;
-  //for i := 0 to mStoreEl.ChildNodes.Count - 1 do
-  //begin
-  //  mStoreItemEl := mStoreEl.ChildNodes[i] as TDOMElement;
-  //  if ADataItem.IsObject then
-  //  begin
-  //    // only when ID is stored, otherwise is nil
-  //    if mStoreItemEl.NodeName = cListItemNilTag then
-  //      ADataItem.AsObjectList[i] := nil
-  //    else
-  //      ADataItem.AsObjectList[i] := LoadDataItemObject(mStoreItemEl, ADataItem);
-  //  end
-  //  else
-  //    ADataItem.AsPersistList[i] := LoadDataItemValue(mStoreItemEl, cValue);
-  //end;
+  if ADataItem.IsObject then
+    mMany := ADataItem.AsObject as IPersistMany
+  else if ADataItem.IsInterface then
+    mMany := ADataItem.AsInterface as IPersistMany
+  else
+    raise Exception.Create('not list');
+  mStoreEl := AStoreEl.FindNode(ADataItem.Name) as TDOMElement;
+  if mStoreEl = nil then
+    Exit;
+  mMany.Count := mStoreEl.ChildNodes.Count;
+  for i := 0 to mStoreEl.ChildNodes.Count - 1 do
+  begin
+    mStoreItemEl := mStoreEl.ChildNodes[i] as TDOMElement;
+    if mMany.IsObject then
+    begin
+      // only when ID is stored, otherwise is nil
+      if mStoreItemEl.NodeName = cListItemNilTag then
+        mMany.AsObject[i] := nil
+      else
+        LoadDataItemObject(mStoreItemEl, mMany.AsPersistData[i]);
+    end
+    else
+      mMany.AsPersist[i] := LoadDataItemValue(mStoreItemEl, cValue);
+  end;
 end;
 
 function TXmlStore.GetDataClassEl(const ADataClassName: string;
@@ -594,66 +425,6 @@ begin
     EXMLStore.ClassForNameNotExists(AName);
 end;
 
-function TXmlStore.LoadList(const AClass: string): IPersistList;
-var
-  mClassEl: TDOMElement;
-  mStoreEl: TDOMElement;
-  i: integer;
-  mObj: TObject;
-  mSID: TSID;
-  mData: IRBData;
-begin
-  //Result := TRBDataList.Create;
-  //mClassEl := GetDataClassEl(AClass, True);
-  //for i := 0 to mClassEl.ChildNodes.Count - 1 do
-  //begin
-  //  mStoreEl := mClassEl.ChildNodes[i] as TDOMElement;
-  //  mSID := mStoreEl.AttribStrings[cSID];
-  //  if mSID = '' then
-  //    EXMLStore.CannotAddItemWithoutSIDToList(AClass);
-  //  mObj := fStoreCache.FindObject(mSID);
-  //  if mObj = nil then
-  //  begin
-  //    mObj := fFactory.CreateObject(AClass);
-  //    if Supports(mObj, IRBData) then
-  //      mData := mObj as IRBData
-  //    else begin
-  //      mData := TRBData.Create(mObj);
-  //    end;
-  //    LoadData(mStoreEl, mData);
-  //    fStoreCache.Add(mSID, mObj);
-  //  end;
-  //  Result.Add(mObj);
-  //end;
-end;
-
-function TXmlStore.Load(const AClass: string; const AProperty, AValue: string): TObject;
-var
-  mStoreEl: TDOMElement;
-  mData: IRBData;
-  mSID: TSID;
-begin
-  Result := nil;
-  mStoreEl := FindElement(Doc.DocumentElement, './' + AClass + '[@' + AProperty + '=''' + AValue + '''');
-  if mStoreEl <> nil then begin
-    mSID := mStoreEl.AttribStrings[cSID];
-    if mSID = '' then
-      EXMLStore.CannotAddItemWithoutSIDToList(AClass);
-    Result := fStoreCache.FindObject(mSID);
-    if Result = nil then
-    begin
-      Result := fFactory.CreateObject(AClass);
-      if Supports(Result, IRBData) then
-        mData := Result as IRBData
-      else begin
-        mData := TRBData.Create(Result);
-      end;
-      LoadData(mStoreEl, mData);
-      fStoreCache.Add(mSID, Result);
-    end;
-  end;
-end;
-
 procedure TXmlStore.SaveDataItemValue(AStoreEl: TDOMElement; const AName,
   AValue: string);
 begin
@@ -681,19 +452,39 @@ procedure TXmlStore.SaveDataItemObject(AStoreEl: TDOMElement;
   const AName: string; const AValue: TObject; AIsReference: Boolean);
 var
   mSID: TSID;
+  mData: IRBData;
 begin
-  if AIsReference then
-  begin
-    if AValue <> nil then
-    begin
-      mSID := fStoreCache.FindSID(AValue);
-      SaveDataItemValue(AStoreEl, cRefID, mSID);
+  //if AIsReference then
+  //begin
+  //  if AValue <> nil then
+  //  begin
+  //    mSID := fStoreCache.FindSID(AValue);
+  //    SaveDataItemValue(AStoreEl, cRefID, mSID);
+  //  end;
+  //end
+  //else
+  //begin
+    if AValue <> nil then begin
+      mData := fFactory.CreateObject(AValue.ClassName);
+      mData.UnderObject := AValue;
+      SaveData(AStoreEl, mData);
     end;
-  end
-  else
+  //end;
+end;
+
+procedure TXmlStore.SaveDataItemRef(AStoreEl: TDOMElement; const AName: string;
+  const AValue: IPersistRef);
+var
+  mObjStoreEl: TDOMElement;
+begin
+  if AValue <> nil then
   begin
-    if AValue <> nil then
-      SaveData(AStoreEl, AValue as IRBData);
+    //if AValue.SID.IsClear then
+    //  fStore.Save
+    mObjStoreEl := Doc.CreateElement(AName);
+    AStoreEl.AppendChild(mObjStoreEl);
+    SaveDataItemValue(mObjStoreEl, cRefClass, AValue.Data.ClassName);
+    SaveDataItemValue(mObjStoreEl, cRefID, AValue.SID);
   end;
 end;
 
@@ -702,47 +493,54 @@ var
   mStoreEl: TDOMElement;
   mStoreItemEl: TDOMElement;
   i: integer;
+  mMany: IPersistMany;
 begin
-  //Assert(ADataItem.IsList);
-  //if ADataItem.ListCount = 0 then
-  // Exit;
-  //mStoreEl := Doc.CreateElement(ADataItem.Name);
-  //AStoreEl.AppendChild(mStoreEl);
-  //for i := 0 to ADataItem.ListCount - 1 do
-  //begin
-  //  // create element for store list item
-  //  if ADataItem.IsObject and (ADataItem.AsObjectList[i] = nil) then
-  //  begin
-  //    mStoreItemEl := Doc.CreateElement(cListItemNilTag);
-  //    mStoreEl.AppendChild(mStoreItemEl);
-  //  end else begin
-  //    mStoreItemEl := Doc.CreateElement(cListItemTag);
-  //    mStoreEl.AppendChild(mStoreItemEl);
-  //    // store data
-  //    if ADataItem.IsObject then
-  //      SaveDataItemObject(mStoreItemEl, ADataItem.Name, ADataItem.AsObjectList[i], ADataItem.IsReference)
-  //    else
-  //      SaveDataItemValue(mStoreItemEl, cValue, ADataItem.AsPersistList[i]);
-  //  end;
-  //end;
+  if ADataItem.IsObject then
+    mMany := ADataItem.AsObject as IPersistMany
+  else if ADataItem.IsInterface then
+    mMany := ADataItem.AsInterface as IPersistMany
+  else
+    raise Exception.Create('not list');
+  if mMany.Count = 0 then
+   Exit;
+  mStoreEl := Doc.CreateElement(ADataItem.Name);
+  AStoreEl.AppendChild(mStoreEl);
+  for i := 0 to mMany.Count - 1 do
+  begin
+    // create element for store list item
+    if mMany.IsObject and (mMany.AsObject[i] = nil) then
+    begin
+      mStoreItemEl := Doc.CreateElement(cListItemNilTag);
+      mStoreEl.AppendChild(mStoreItemEl);
+    end else begin
+      mStoreItemEl := Doc.CreateElement(cListItemTag);
+      mStoreEl.AppendChild(mStoreItemEl);
+      // store data
+      if mMany.IsObject then
+        SaveDataItemObject(mStoreItemEl, ADataItem.Name, mMany.AsObject[i], {ADataItem.IsReference}False)
+      else
+        SaveDataItemValue(mStoreItemEl, cValue, mMany.AsPersist[i]);
+    end;
+  end;
 end;
 
-procedure TXmlStore.Save(AData: IRBData);
+procedure TXmlStore.Load(const ASID: TSID; AData: IRBData);
+var
+  mStoreEl: TDOMElement;
+begin
+  mStoreEl := FindElement(Doc.DocumentElement, './' + AData.ClassName + '/' + cListItemTag + '[@' + cSID + '=''' + ASID + ''']');
+  if mStoreEl <> nil then begin
+    LoadData(mStoreEl, AData);
+  end;
+end;
+
+procedure TXmlStore.Save(const ASID: TSID; AData: IRBData);
 var
   mClassEl: TDOMElement;
   mStoreEl: TDOMElement;
-  mSID: TSID;
-  mIsNew: Boolean;
 begin
-  mSID := fStoreCache.FindSID(AData.UnderObject);
-  mIsNew := False;
-  if mSID = '' then
-  begin
-    mSID := fSIDMgr.New;
-    mIsNew := True;
-  end;
   mClassEl := GetDataClassEl(AData.ClassName, True);
-  mStoreEl := FindStoreElForSID(mClassEl, mSID);
+  mStoreEl := FindStoreElForSID(mClassEl, ASID);
   // when store, remove old data and create all new
   if mStoreEl <> nil then
   begin
@@ -751,11 +549,49 @@ begin
   end;
   mStoreEl := Doc.CreateElement(cListItemTag);
   mClassEl.AppendChild(mStoreEl);
-  mStoreEl.AttribStrings[cSID] := mSID;
+  mStoreEl.AttribStrings[cSID] := ASID;
   //
   SaveData(mStoreEl, AData);
-  if mIsNew then
-    fStoreCache.Add(mSID, AData.UnderObject);
+end;
+
+procedure TXmlStore.Delete(const ASID: TSID);
+begin
+
+end;
+
+function TXmlStore.NewSID: TSID;
+begin
+  Result := fSIDMgr.New;
+end;
+
+function TXmlStore.GetSIDClass(const ASID: TSID): string;
+var
+  mStoreEl: TDOMElement;
+begin
+  Result := '';
+  mStoreEl := FindStoreElForSID(ASID);
+  if mStoreEl <> nil then
+    Result := mStoreEl.ParentNode.NodeName;
+end;
+
+procedure TXmlStore.Open;
+begin
+  if fDoc <> nil then
+    raise Exception.Create('already opened');
+  if (fFile <> '') and FileExists(fFile) then
+    ReadXMLFile(fDoc, fFile);
+  if fDoc = nil then
+  begin
+    fDoc := TXMLDocument.Create;
+    fDoc.AppendChild(fDoc.CreateElement(cRoot));
+  end;
+  fSIDMgr.Load(fDoc);
+end;
+
+procedure TXmlStore.Close;
+begin
+  Flush;
+  FreeAndNil(fDoc);
 end;
 
 procedure TXmlStore.Flush;
@@ -764,44 +600,14 @@ begin
   WriteXMLFile(Doc, fFile);
 end;
 
-procedure TXmlStore.Delete(AData: TObject);
-begin
-  if Supports(AData, IRBData) then
-    Delete(AData as IRBData)
-  else begin
-    Delete(TRBData.Create(AData));
-  end;
-end;
-
-procedure TXmlStore.Delete(AData: IRBData);
-var
-  mClassEl: TDOMElement;
-  mStoreEl: TDOMElement;
-  mSID: TSID;
-begin
-  mSID := fStoreCache.FindSID(AData.UnderObject);
-  if mSID = '' then
-  begin
-    // without SID - not stored
-    Exit;
-  end;
-  mClassEl := GetDataClassEl(AData.ClassName, True);
-  mStoreEl := FindStoreElForSID(mClassEl, mSID);
-  // remove data
-  if mStoreEl = nil then
-    raise EXMLStore.CreateFmt('Delete - no element find for %s[%s]', [AData.ClassName, mSID]);
-  mStoreEl.ParentNode.DetachChild(mStoreEl);
-  mStoreEl.Free;
-end;
-
 function TXmlStore.Retrive(const AClass: string): IPersistList;
 begin
-  Result := LoadList(AClass);
+  //Result := OLDLoadList(AClass);
 end;
 
 constructor TXmlStore.Create(AFactory: IFactory; const AFile: string);
 begin
-  fFactory := AFactory;
+//  fFactory := AFactory;
   fFile := AFile;
   Create;
 end;
@@ -815,28 +621,14 @@ destructor TXmlStore.Destroy;
 begin
   Flush;
   FreeAndNil(fSIDMgr);
-  FreeAndNil(fLoadCache);
-  FreeAndNil(fStoreCache);
   inherited Destroy;
 end;
 
 procedure TXmlStore.AfterConstruction;
 begin
   inherited AfterConstruction;
-  fLoadCache := TLoadCache.Create;
-  fStoreCache := TStoreCache.Create;
   fSIDMgr := TSIDManager.Create;
 end;
-
-procedure TXmlStore.Save(AData: TObject);
-begin
-  if Supports(AData, IRBData) then
-    Save(AData as IRBData)
-  else begin
-    Save(TRBData.Create(AData));
-  end;
-end;
-
 
 end.
 

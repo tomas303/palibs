@@ -3,7 +3,7 @@ unit tvl_ibindings;
 interface
 
 uses
-  trl_irttibroker, trl_ipersist, Controls;
+  trl_irttibroker, trl_ipersist, trl_ipersiststore, Controls;
 
 type
 

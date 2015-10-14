@@ -5,7 +5,7 @@ unit trl_ifactory;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, trl_irttibroker;
 
 type
 
