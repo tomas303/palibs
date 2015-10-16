@@ -27,11 +27,26 @@ type
     class operator Add(const A: string; const B: TSID): string;
   end;
 
+
+  { ISIDList }
+
+  ISIDList = interface
+  ['{0F1BB78E-6627-43CC-8145-65E81D67AB6C}']
+    function GetCount: integer;
+    function GetItems(AIndex: integer): TSID;
+    procedure SetCount(AValue: integer);
+    procedure SetItems(AIndex: integer; AValue: TSID);
+    property Count: integer read GetCount write SetCount;
+    property Items[AIndex: integer]: TSID read GetItems write SetItems; default;
+  end;
+
   { IPersistFactory }
 
   IPersistFactory = interface
   ['{66F2248D-87D0-49D8-ACBF-DA19CC862A11}']
     function CreateObject(const AClass: string): IRBData;
+    function Create(const AClass: string; const AID: string = ''): TObject; overload;
+    function Create(AInterface: TGUID; const AID: string = ''): IUnknown; overload;
   end;
 
   { IPersistStore }
@@ -89,11 +104,26 @@ type
     procedure InsertData(AIndex: Integer; const AData: IRBData);
   end;
 
+  { IPersistRefList }
+
+  IPersistRefList = interface
+  ['{0264926F-FC8E-4421-9001-0DD67E0E7373}']
+    function GetCount: integer;
+    function GetData(AIndex: integer): IRBData;
+    function GetItems(AIndex: integer): IPersistRef;
+    procedure SetCount(AValue: integer);
+    procedure SetItems(AIndex: integer; AValue: IPersistRef);
+    property Count: integer read GetCount write SetCount;
+    property Items[AIndex: integer]: IPersistRef read GetItems write SetItems; default;
+    property Data[AIndex: integer]: IRBData read GetData;
+  end;
+
   { IPersistQuery }
 
   IPersistQuery = interface
   ['{4A8B3A3E-562B-4E61-9513-8DFBC3CB7BC6}']
     function Retrive(const AClass: string): IPersistList;
+    function SelectClass(const AClass: string): IPersistRefList;
   end;
 
   IPersistStoreDevice = interface
@@ -109,6 +139,7 @@ type
     procedure Open;
     procedure Close;
     procedure Flush;
+    function GetSIDs(const AClass: string): ISIDList;
 
   end;
 

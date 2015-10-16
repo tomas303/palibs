@@ -10,12 +10,35 @@ uses
 
 type
 
+  { TSIDList }
+
+  TSIDList = class(TInterfacedObject, ISIDList)
+  protected type
+    TSIDItems = class(TFPGList<TSID>)
+    end;
+  private
+    fItems: TSIDItems;
+  protected
+    // ISIDList
+    function GetCount: integer;
+    function GetItems(AIndex: integer): TSID;
+    procedure SetCount(AValue: integer);
+    procedure SetItems(AIndex: integer; AValue: TSID);
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    property Count: integer read GetCount write SetCount;
+    property Items[AIndex: integer]: TSID read GetItems write SetItems; default;
+  end;
+
   { TPersistFactory }
 
   TPersistFactory = class(TDIFactory, IPersistFactory)
   protected
     // IPersistFactory
     function CreateObject(const AClass: string): IRBData;
+    function Create(const AClass: string; const AID: string = ''): TObject; overload;
+    function Create(AInterface: TGUID; const AID: string = ''): IUnknown; overload;
   end;
 
 
@@ -62,18 +85,19 @@ type
     fClassName: string;
   protected
     // IPersistRef
+    function GetClassName: string; virtual; abstract;
     function GetData: IRBData;
     function GetSID: TSID;
     function GetStore: IPersistStore;
+    procedure SetClassName(AValue: string);
     procedure SetData(AValue: IRBData);
     procedure SetSID(AValue: TSID);
     procedure SetStore(AValue: IPersistStore);
     property Data: IRBData read GetData;
-    property Store: IPersistStore read GetStore write SetStore;
     property SID: TSID read GetSID write SetSID;
-  protected
-    function GetClassName: string; virtual; abstract;
-    property ClassName: string read GetClassName;
+  published
+    property Store: IPersistStore read GetStore write SetStore;
+    property ClassName: string read GetClassName write SetClassName;
   end;
 
   TPersistRef<TItem: TObject> = class(TPersistRef, IPersistRef<TItem>)
@@ -85,6 +109,28 @@ type
     property Item: TItem read GetItem write SetItem;
   protected
     function GetClassName: string; override;
+  end;
+
+  { TPersistRefList }
+
+  TPersistRefList = class(TInterfacedObject, IPersistRefList)
+  private type
+    TRefListItems = TFPGInterfacedObjectList<IPersistRef>;
+  private
+    fItems: TRefListItems;
+  protected
+  // IPersistRefList
+    function GetCount: integer;
+    function GetData(AIndex: integer): IRBData;
+    function GetItems(AIndex: integer): IPersistRef;
+    procedure SetCount(AValue: integer);
+    procedure SetItems(AIndex: integer; AValue: IPersistRef);
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    property Count: integer read GetCount write SetCount;
+    property Items[AIndex: integer]: IPersistRef read GetItems write SetItems; default;
+    property Data[AIndex: integer]: IRBData read GetData;
   end;
 
 
@@ -110,6 +156,7 @@ type
     property SID[const AData: IRBData]: TSID read GetSID;
     // IPersistQuery
     function Retrive(const AClass: string): IPersistList;
+    function SelectClass(const AClass: string): IPersistRefList;
   published
     property Factory: IPersistFactory read fFactory write fFactory;
     property Device: IPersistStoreDevice read fDevice write fDevice;
@@ -135,7 +182,85 @@ begin
   fItem := AValue;
 end;
 
+{ TSIDList }
+
+function TSIDList.GetCount: integer;
+begin
+  Result := fItems.Count;
+end;
+
+function TSIDList.GetItems(AIndex: integer): TSID;
+begin
+  Result := fItems[AIndex];
+end;
+
+procedure TSIDList.SetCount(AValue: integer);
+begin
+  fItems.Count := AValue;
+end;
+
+procedure TSIDList.SetItems(AIndex: integer; AValue: TSID);
+begin
+  fItems[AIndex] := AValue;
+end;
+
+procedure TSIDList.BeforeDestruction;
+begin
+  FreeAndNil(fItems);
+  inherited BeforeDestruction;
+end;
+
+procedure TSIDList.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fItems := TSIDItems.Create;
+end;
+
+{ TPersistRefList }
+
+function TPersistRefList.GetCount: integer;
+begin
+  Result := fItems.Count;
+end;
+
+function TPersistRefList.GetData(AIndex: integer): IRBData;
+begin
+  Result := Items[AIndex].Data;
+end;
+
+function TPersistRefList.GetItems(AIndex: integer): IPersistRef;
+begin
+  Result := fItems[AIndex];
+end;
+
+procedure TPersistRefList.SetCount(AValue: integer);
+begin
+  fItems.Count := AValue;
+end;
+
+procedure TPersistRefList.SetItems(AIndex: integer; AValue: IPersistRef);
+begin
+  fItems[AIndex] := AValue;
+end;
+
+procedure TPersistRefList.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fItems := TRefListItems.Create;
+end;
+
+procedure TPersistRefList.BeforeDestruction;
+begin
+  FreeAndNil(fItems);
+  inherited BeforeDestruction;
+end;
+
 { TPersistRef }
+
+procedure TPersistRef.SetClassName(AValue: string);
+begin
+
+end;
 
 function TPersistRef.GetData: IRBData;
 begin
@@ -290,6 +415,17 @@ begin
   Result := Container.Locate(IRBData, AClass);
 end;
 
+function TPersistFactory.Create(const AClass: string; const AID: string
+  ): TObject;
+begin
+  Result := Container.Locate(AClass, AID);
+end;
+
+function TPersistFactory.Create(AInterface: TGUID; const AID: string): IUnknown;
+begin
+  Result := Container.Locate(AInterface, AID);
+end;
+
 { TPersistStore }
 
 function TPersistStore.New(const AClass: string): IRBData;
@@ -368,6 +504,21 @@ end;
 function TPersistStore.Retrive(const AClass: string): IPersistList;
 begin
   Result := (fDevice as IPersistQuery).Retrive(AClass);
+end;
+
+function TPersistStore.SelectClass(const AClass: string): IPersistRefList;
+var
+  mSIDs: ISIDList;
+  i: integer;
+begin
+  Result := Factory.Create(IPersistRefList) as IPersistRefList;
+  mSIDs := Device.GetSIDs(AClass);
+  Result.Count := mSIDs.Count;
+  for i := 0 to mSIDs.Count - 1 do
+  begin
+    Result[i] := Factory.Create(IPersistRef) as IPersistRef;
+    Result[i].SID := mSIDs[i];
+  end;
 end;
 
 end.

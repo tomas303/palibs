@@ -89,6 +89,7 @@ type
     procedure Open;
     procedure Close;
     procedure Flush;
+    function GetSIDs(const AClass: string): ISIDList;
     // IRBDataQuery
     function Retrive(const AClass: string): IPersistList;
   published
@@ -598,6 +599,22 @@ procedure TXmlStore.Flush;
 begin
   fSIDMgr.Save(Doc);
   WriteXMLFile(Doc, fFile);
+end;
+
+function TXmlStore.GetSIDs(const AClass: string): ISIDList;
+var
+  mClassEl: TDOMElement;
+  i: integer;
+begin
+  Result := Factory.Create(ISIDList) as ISIDList;
+  mClassEl := GetDataClassEl(AClass, False);
+  if mClassEl = nil then
+    Exit;
+  Result.Count := mClassEl.ChildNodes.Count;
+  for i :=  0 to mClassEl.ChildNodes.Count - 1 do
+  begin
+    Result[i] := (mClassEl.ChildNodes[i] as TDOMElement).AttribStrings[cSID];
+  end;
 end;
 
 function TXmlStore.Retrive(const AClass: string): IPersistList;

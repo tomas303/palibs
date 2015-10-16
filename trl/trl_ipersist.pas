@@ -57,13 +57,6 @@ type
     property Item[AIndex: integer]: TItem read GetItem write SetItem; default;
   end;
 
-  IPersistManyGeneric<TItem> = interface
-  ['{CF48D77E-197A-4783-AF7D-181453D8539F}']
-    function GetItem(AIndex: integer): TItem;
-    procedure SetItem(AIndex: integer; AValue: TItem);
-    property Item[AIndex: integer]: TItem read GetItem write SetItem; default;
-  end;
-
   { IPersistManyIntegers }
 
   IPersistManyIntegers = interface(IPersistMany<integer>)
