@@ -657,7 +657,7 @@ var
 begin
   mReg := Find(AClass, AID);
   if mReg = nil then
-    raise Exception.Create('registration not found');
+    raise Exception.CreateFmt('registration for class %s not found', [AClass]);
   Result := mReg.Make;
 end;
 

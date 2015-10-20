@@ -14,13 +14,12 @@ type
   TDataSlotsItem = class
     fBinder: TEditBinder;
     fDataItem: IRBDataItem;
-    fDataQuery: IPersistQuery;
   private
     function NewBinder(AContainer: TWinControl): TEditBinder;
     function FindControl(AContainer: TWinControl): TWinControl;
   public
     destructor Destroy; override;
-    procedure Bind(const AContainer: TWinControl; const ADataItem: IRBDataItem; const ADataQuery: IPersistQuery);
+    procedure Bind(const AContainer: TWinControl; const ADataItem: IRBDataItem);
     procedure DataChange;
   end;
 
@@ -32,7 +31,6 @@ type
   private
     fItems: TDataEditItems;
     fData: IRBData;
-    fDataQuery: IPersistQuery;
     fContainer: TWinControl;
     procedure ActualizeItems;
     function GetData: IRBData;
@@ -45,7 +43,7 @@ type
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-    procedure Bind(const AContainer: TWinControl; const AData: IRBData; const ADataQuery: IPersistQuery);
+    procedure Bind(const AContainer: TWinControl; const AData: IRBData);
     procedure DataChange;
     property Data: IRBData read GetData write SetData;
   public  //for now not persist
@@ -60,7 +58,7 @@ type
     fDataSlots: TDataSlots;
   protected
     // IRBDataBinder
-    procedure Bind(AContainer: TWinControl; const AData: IRBData; const ADataQuery: IPersistQuery);
+    procedure Bind(AContainer: TWinControl; const AData: IRBData);
     procedure DataChange;
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
@@ -107,7 +105,7 @@ begin
       Result := TMemoBinder.Create;
   end;
   if Assigned(Result) then
-    Result.Bind(mControl, fDataItem, fDataQuery);
+    Result.Bind(mControl, fDataItem);
 end;
 
 function TDataSlotsItem.FindControl(AContainer: TWinControl): TWinControl;
@@ -143,11 +141,10 @@ begin
 end;
 
 procedure TDataSlotsItem.Bind(const AContainer: TWinControl;
-  const ADataItem: IRBDataItem; const ADataQuery: IPersistQuery);
+  const ADataItem: IRBDataItem);
 begin
   FreeAndNil(fBinder);
   fDataItem := ADataItem;
-  fDataQuery := ADataQuery;
   fBinder := NewBinder(AContainer);
   DataChange;
 end;
@@ -179,7 +176,7 @@ begin
   for i := 0 to fData.Count - 1 do
   begin
     Items[i] := TDataSlotsItem.Create;
-    Items[i].Bind(fContainer, fData[i], fDataQuery);
+    Items[i].Bind(fContainer, fData[i]);
   end;
 end;
 
@@ -210,12 +207,10 @@ begin
   inherited BeforeDestruction;
 end;
 
-procedure TDataSlots.Bind(const AContainer: TWinControl; const AData: IRBData;
-  const ADataQuery: IPersistQuery);
+procedure TDataSlots.Bind(const AContainer: TWinControl; const AData: IRBData);
 begin
   fContainer := AContainer;
   fData := AData;
-  fDataQuery := ADataQuery;
   ActualizeItems;
 end;
 
@@ -235,12 +230,11 @@ begin
   inherited Destroy;
 end;
 
-procedure TRBDataBinder.Bind(AContainer: TWinControl; const AData: IRBData;
-  const ADataQuery: IPersistQuery);
+procedure TRBDataBinder.Bind(AContainer: TWinControl; const AData: IRBData);
 begin
   FreeAndNil(fDataSlots);
   fDataSlots := TDataSlots.Create;
-  fDataSlots.Bind(AContainer, AData, ADataQuery);
+  fDataSlots.Bind(AContainer, AData);
 end;
 
 procedure TRBDataBinder.DataChange;

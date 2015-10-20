@@ -96,7 +96,6 @@ type
   private
     fGrid: TCustomDrawGrid;
     fGridData: IGridData;
-    fDataQuery: IPersistQuery;
     fCellEditor: TWinControl;
     fCellBinder: TEditBinder;
   protected
@@ -118,7 +117,7 @@ type
     procedure OnEditingDoneHandler(Sender: TObject);
   public
     destructor Destroy; override;
-    procedure Bind(AGrid: TCustomDrawGrid; AGridData: IGridData; ADataQuery: IPersistQuery);
+    procedure Bind(AGrid: TCustomDrawGrid; AGridData: IGridData);
     procedure DataToControl;
     property CellDataItem[ACellCol, ACellRow: integer]: IRBDataItem read GetCellDataItem;
   end;
@@ -590,7 +589,7 @@ begin
   //if mDataItem.IsList then
   //  fCellBinder.Bind(fCellEditor, mDataItem, aRow - 1, fDataQuery)
   //else
-    fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
+    fCellBinder.Bind(fCellEditor, mDataItem);
   Editor := fCellEditor;
   mOldEd.Free;
 end;
@@ -661,14 +660,13 @@ begin
   inherited Destroy;
 end;
 
-procedure TGridBinder.Bind(AGrid: TCustomDrawGrid; AGridData: IGridData; ADataQuery: IPersistQuery);
+procedure TGridBinder.Bind(AGrid: TCustomDrawGrid; AGridData: IGridData);
 var
   mData: IRBData;
   i: integer;
 begin
   fGrid := AGrid;
   fGridData := AGridData;
-  fDataQuery := ADataQuery;
   // grid layout (top row for captions)
   Grid.RowCount := 1 + fGridData.DataRowCount;
   if not Grid.Columns.Enabled then

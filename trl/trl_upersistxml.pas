@@ -90,8 +90,6 @@ type
     procedure Close;
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
-    // IRBDataQuery
-    function Retrive(const AClass: string): IPersistList;
   published
     property Factory: IPersistFactory read fFactory write fFactory;
     property XMLFile: string read fFile write fFile;
@@ -253,7 +251,8 @@ begin
     if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistRef) then
     begin
       mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
-      LoadDataItemRef(mObjStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+      if mObjStoreEl <> nil then
+        LoadDataItemRef(mObjStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
     end
     else
     if AData[i].IsObject then
@@ -619,11 +618,6 @@ begin
   begin
     Result[i] := (mClassEl.ChildNodes[i] as TDOMElement).AttribStrings[cSID];
   end;
-end;
-
-function TXmlStore.Retrive(const AClass: string): IPersistList;
-begin
-  //Result := OLDLoadList(AClass);
 end;
 
 constructor TXmlStore.Create(AFactory: IFactory; const AFile: string);

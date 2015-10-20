@@ -7,22 +7,11 @@ uses
 
 type
 
-  { IRBBinderContext }
-
-  IRBBinderContext = interface
-  ['{39F9470D-08ED-49CB-B0F7-2E11ED80316C}']
-    function GetDataQuery: IPersistQuery;
-    function GetDataStore: IPersistStore;
-    property DataQuery: IPersistQuery read GetDataQuery;
-    property DataStore: IPersistStore read GetDataStore;
-  end;
-
   { IRBDataBinder }
 
   IRBDataBinder = interface
   ['{015ECE02-6F9E-4071-BDCE-63BD11F6FAD9}']
-    procedure Bind(AContainer: TWinControl; const AData: IRBData;
-      const ADataQuery: IPersistQuery);
+    procedure Bind(AContainer: TWinControl; const AData: IRBData);
     procedure DataChange;
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
@@ -31,8 +20,7 @@ type
 
   IRBTallyBinder = interface
   ['{15291FE4-A0AC-11E3-82F7-08002721C44F}']
-    procedure Bind(const AListControl: TWinControl; const AContext: IRBBinderContext;
-      const AClass: TClass);
+    procedure Bind(const AListControl: TWinControl; const AClassName: string);
     procedure Reload;
     function GetCurrentData: IRBData;
     property CurrentData: IRBData read GetCurrentData;

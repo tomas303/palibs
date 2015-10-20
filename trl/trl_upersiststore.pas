@@ -126,6 +126,8 @@ type
     procedure SetCount(AValue: integer);
     procedure SetItems(AIndex: integer; AValue: IPersistRef);
     function IndexOfData(const AData: IRBData): integer;
+    procedure Delete(AIndex: integer);
+    procedure Insert(AIndex: integer; const AValue: IPersistRef);
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -149,14 +151,12 @@ type
     procedure Save(AData: IRBData);
     procedure Delete(AData: IRBData);
     function Load(const ASID: TSID): IRBData; overload;
-    function LoadList(const AClass: string): IPersistList;
     function GetSID(const AData: IRBData): TSID;
     procedure Open;
     procedure Close;
     procedure Flush;
     property SID[const AData: IRBData]: TSID read GetSID;
     // IPersistQuery
-    function Retrive(const AClass: string): IPersistList;
     function SelectClass(const AClass: string): IPersistRefList;
   published
     property Factory: IPersistFactory read fFactory write fFactory;
@@ -257,6 +257,16 @@ begin
       Break;
     end;
   end;
+end;
+
+procedure TPersistRefList.Delete(AIndex: integer);
+begin
+  fItems.Delete(AIndex);
+end;
+
+procedure TPersistRefList.Insert(AIndex: integer; const AValue: IPersistRef);
+begin
+  fItems.Insert(AIndex, AValue);
 end;
 
 procedure TPersistRefList.AfterConstruction;
@@ -511,11 +521,6 @@ begin
   fCache.Add(ASID, Result);
 end;
 
-function TPersistStore.LoadList(const AClass: string): IPersistList;
-begin
-  Result := (fDevice as IPersistQuery).Retrive(AClass);
-end;
-
 function TPersistStore.GetSID(const AData: IRBData): TSID;
 begin
   Result := fCache.FindSID(AData);
@@ -534,11 +539,6 @@ end;
 procedure TPersistStore.Flush;
 begin
   fDevice.Flush;
-end;
-
-function TPersistStore.Retrive(const AClass: string): IPersistList;
-begin
-  Result := (fDevice as IPersistQuery).Retrive(AClass);
 end;
 
 function TPersistStore.SelectClass(const AClass: string): IPersistRefList;

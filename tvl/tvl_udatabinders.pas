@@ -20,10 +20,8 @@ type
   private
     fControl: TWinControl;
     fDataItem: IRBDataItem;
-    fDataQuery: IPersistQuery;
     fChangeEvents: TBinderChangeEvents;
   protected
-    property DataQuery: IPersistQuery read fDataQuery;
     procedure BindControl; virtual; abstract;
     procedure UnbindControl; virtual;
     procedure NotifyChangeEvents;
@@ -31,8 +29,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure DataToControl; virtual; abstract;
-    procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem;
-      const ADataQuery: IPersistQuery);
+    procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem);
     procedure RegisterChangeEvent(AEvent: TBinderChangeEvent);
     procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent);
     property Control: TWinControl read fControl;
@@ -931,7 +928,7 @@ begin
     end;
     fCellEditor := CreateEditor(mDataItem);
     fCellBinder := CreateBinder(mDataItem);
-    fCellBinder.Bind(fCellEditor, mDataItem, fDataQuery);
+    fCellBinder.Bind(fCellEditor, mDataItem);
   end
   else
     fCellEditor := nil;
@@ -1073,11 +1070,10 @@ begin
 end;
 
 procedure TEditBinder.Bind(const AControl: TWinControl;
-  const ADataItem: IRBDataItem; const ADataQuery: IPersistQuery);
+  const ADataItem: IRBDataItem);
 begin
   fControl := AControl;
   fDataItem := ADataItem;
-  fDataQuery := ADataQuery;
   BindControl;
   DataToControl;
 end;

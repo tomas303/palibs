@@ -21,32 +21,34 @@ type
   TTallyBinder = class(TInterfacedObject, IRBTallyBinder)
   private
     fControl: TWinControl;
-    fContext: IRBBinderContext;
-    fClass: TClass;
+    fClassName: string;
     fClassData: IRBData;
-    fDataList: IPersistList;
+    fDataList: IPersistRefList;
+    fStore: IPersistStore;
+    fFactory: IPersistFactory;
   protected
     property Control: TWinControl read fControl;
-    property DataList: IPersistList read fDataList;
+    property DataList: IPersistRefList read fDataList;
     property ClassData: IRBData read fClassData;
     procedure BindControl; virtual; abstract;
     procedure RefreshData; virtual; abstract;
     function GetCurrentListIndex: integer; virtual; abstract;
   public
     //procedure DataToControl; virtual; abstract;
-    procedure Bind(const AListControl: TWinControl; const AContext: IRBBinderContext;
-      const AClass: TClass);
+    procedure Bind(const AListControl: TWinControl; const AClassName: string);
     procedure Reload;
     function GetCurrentData: IRBData;
-    class function New(const AListControl: TWinControl; const AContext: IRBBinderContext;
-      const AClass: TClass): IRBTallyBinder;
+    class function New(const AListControl: TWinControl; const AClassName: string): IRBTallyBinder;
+  published
+    property Store: IPersistStore read fStore write fStore;
+    property Factory: IPersistFactory read fFactory write fFactory;
   end;
 
 
   TGridColumnBinder = class
   private
     fColumn: TGridColumn;
-    fDataList: IPersistList;
+    fDataList: IPersistRefList;
     fDataItemIndex: integer;
     fDataItemName: string;
     fClassData: IRBData;
@@ -55,7 +57,7 @@ type
     procedure ResetDataItemIndex;
   public
     function GetData(const ARow: integer): string;
-    procedure Bind(const AColumn: TGridColumn; const ADataList: IPersistList; AClassData: IRBData);
+    procedure Bind(const AColumn: TGridColumn; const ADataList: IPersistRefList; AClassData: IRBData);
   end;
 
   TGridColumnBinders = specialize TFPGObjectList<TGridColumnBinder>;
@@ -148,8 +150,8 @@ var
 begin
   mData := GetCurrentData;
   if mData <> nil then begin
-    fContext.DataStore.Delete(mData);
-    fContext.DataStore.Flush;
+    Store.Delete(mData);
+    Store.Flush;
   end;
   DataList.Delete(ARow);
 end;
@@ -172,9 +174,14 @@ end;
 procedure TDrawGridBinder2.InsertRow(ARow: integer);
 var
   mData: IRBData;
+  mRef: IPersistRef;
 begin
-  mData := ClassData.ClassType.Create as IRBData;
-  DataList.InsertData(ARow, mData);
+  //mData := ClassData.ClassType.Create as IRBData;
+  //DataList.Insert(ARow, mData);
+  mData := Store.New(ClassData.ClassName);
+  mRef := Factory.Create(IPersistRef) as IPersistRef;
+  mRef.Data := mData;
+  DataList.Insert(ARow, mRef);
 end;
 
 procedure TDrawGridBinder2.EditRow(ARow: integer);
@@ -183,15 +190,15 @@ var
 begin
   mData := GetCurrentData;
   if mData <> nil then begin
-    fContext.DataStore.Save(mData);
-    fContext.DataStore.Flush;
+    Store.Save(mData);
+    Store.Flush;
   end;
 end;
 
 
 function TDrawGridBinder2.GetDataItem(ACol, ARow: integer): IRBDataItem;
 begin
-  Result := DataList[ARow][ACol];
+  Result := DataList.Data[ARow][ACol];
 end;
 
 function TDrawGridBinder2.GetColumnHeader(ACol: integer): string;
@@ -217,7 +224,7 @@ end;
 
 procedure TDrawGridBinder2.RefreshData;
 begin
-  fGES.Bind(Grid, Self, fContext.DataQuery);
+  fGES.Bind(Grid, Self);
   fGES.DataToControl;
 end;
 
@@ -246,7 +253,7 @@ begin
   ComboBox.Clear;
   for i := 0 to DataList.Count - 1 do
   begin
-    ComboBox.Items.Add(DataList[i][fDataItemIndex].AsString);
+    ComboBox.Items.Add(DataList.Data[i][fDataItemIndex].AsString);
   end;
 end;
 
@@ -280,7 +287,7 @@ begin
   ListBox.Clear;
   for i := 0 to DataList.Count - 1 do
   begin
-    ListBox.Items.Add(DataList[i][fDataItemIndex].AsString);
+    ListBox.Items.Add(DataList.Data[i][fDataItemIndex].AsString);
   end;
 end;
 
@@ -331,14 +338,14 @@ begin
     Result := ''
   else begin
     if (ARow >= 0) and (ARow < fDataList.Count) then
-      Result := fDataList[ARow][fDataItemIndex].AsString
+      Result := fDataList.Data[ARow][fDataItemIndex].AsString
     else
       Result := '';
   end;
 end;
 
 procedure TGridColumnBinder.Bind(const AColumn: TGridColumn;
-  const ADataList: IPersistList; AClassData: IRBData);
+  const ADataList: IPersistRefList; AClassData: IRBData);
 begin
   fColumn := AColumn;
   fDataList := ADataList;
@@ -414,13 +421,11 @@ end;
 
 { TTallyBinder }
 
-procedure TTallyBinder.Bind(const AListControl: TWinControl; const AContext: IRBBinderContext;
-  const AClass: TClass);
+procedure TTallyBinder.Bind(const AListControl: TWinControl; const AClassName: string);
 begin
   fControl := AListControl;
   //fDataList := ADataList;
-  fContext := AContext;
-  fClass := AClass;
+  fClassName := AClassName;
 //  fClassData := TRBData.Create(fClass, True);
   BindControl;
   Reload;
@@ -428,7 +433,7 @@ end;
 
 procedure TTallyBinder.Reload;
 begin
-  fDataList := fContext.DataQuery.Retrive(fClass.ClassName);
+  fDataList := (Store as IPersistQuery).SelectClass(fClassName);
   RefreshData;
 end;
 
@@ -440,11 +445,10 @@ begin
   if mIndex = -1 then
     Result := nil
   else
-    Result := fDataList[mIndex];
+    Result := fDataList.Data[mIndex];
 end;
 
-class function TTallyBinder.New(const AListControl: TWinControl; const AContext: IRBBinderContext;
-  const AClass: TClass): IRBTallyBinder;
+class function TTallyBinder.New(const AListControl: TWinControl; const AClassName: string): IRBTallyBinder;
 begin
   if AListControl is TCustomDrawGrid then
     //Result := TDrawGridBinder.Create
@@ -457,7 +461,7 @@ begin
       Result := TComboBoxBinder.Create
   else
     raise EListBinder.CreateFmt('For %s not existis binder', [AListControl.ClassName]);
-  Result.Bind(AListControl, AContext, AClass);
+  Result.Bind(AListControl, AClassName);
 end;
 
 end.

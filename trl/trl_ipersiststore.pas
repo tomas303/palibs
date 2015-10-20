@@ -58,7 +58,6 @@ type
     procedure Save(AData: IRBData);
     procedure Delete(AData: IRBData);
     function Load(const ASID: TSID): IRBData; overload;
-    //function LoadList(const AClass: string): IPersistList;
     function GetSID(const AData: IRBData): TSID;
     property SID[const AData: IRBData]: TSID read GetSID;
     procedure Open;
@@ -91,22 +90,6 @@ type
     property Item: TItem read GetItem write SetItem;
   end;
 
-  { IPersistList }
-
-  IPersistList = interface
-  ['{0595894D-FA51-4111-9A75-B5EF6C77FBD7}']
-    function GetCount: integer;
-    function GetItems(AIndex: integer): IRBData;
-    function GetMonikers(AIndex: integer): IPersistMoniker;
-    procedure SetItems(AIndex: integer; AValue: IRBData);
-    procedure SetMonikers(AIndex: integer; AValue: IPersistMoniker);
-    property Items[AIndex: integer]: IRBData read GetItems write SetItems; default;
-    property Monikers[AIndex: integer]: IPersistMoniker read GetMonikers write SetMonikers;
-    property Count: integer read GetCount;
-    procedure Delete(AIndex: Integer);
-    procedure InsertData(AIndex: Integer; const AData: IRBData);
-  end;
-
   { IPersistRefList }
 
   IPersistRefList = interface
@@ -117,6 +100,8 @@ type
     function IndexOfData(const AData: IRBData): integer;
     procedure SetCount(AValue: integer);
     procedure SetItems(AIndex: integer; AValue: IPersistRef);
+    procedure Delete(AIndex: integer);
+    procedure Insert(AIndex: integer; const AData: IPersistRef);
     property Count: integer read GetCount write SetCount;
     property Items[AIndex: integer]: IPersistRef read GetItems write SetItems; default;
     property Data[AIndex: integer]: IRBData read GetData;
@@ -126,7 +111,6 @@ type
 
   IPersistQuery = interface
   ['{4A8B3A3E-562B-4E61-9513-8DFBC3CB7BC6}']
-    function Retrive(const AClass: string): IPersistList;
     function SelectClass(const AClass: string): IPersistRefList;
   end;
 
