@@ -251,7 +251,10 @@ begin
       LoadDataList(AStoreEl, AData[i])
     else
     if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistRef) then
-        LoadDataItemRef(AStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+    begin
+      mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
+      LoadDataItemRef(mObjStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+    end
     else
     if AData[i].IsObject then
     begin
@@ -307,7 +310,8 @@ var
 begin
   if AStoreEl.AttribStrings[cRefID] <> '' then
   begin
-    AValue.SID := AStoreEl.AttribStrings[cRefID];
+    mSID := AStoreEl.AttribStrings[cRefID];
+    AValue.SID := mSID;
   end;
 end;
 

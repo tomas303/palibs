@@ -103,13 +103,15 @@ type
 
   TOfferObjectRefBinder = class(TOfferBinder)
   private
-    fOffer: IPersistList;
+    fOffer: IPersistRefList;
+    function GetAsRef: IPersistRef;
   protected
     procedure FillOffer; override;
     procedure OfferToData; override;
     procedure DataToOffer; override;
   protected
     procedure FillControlItems;
+    property AsRef: IPersistRef read GetAsRef;
   end;
 
   { TOfferEnumBinder }
@@ -617,9 +619,14 @@ end;
 
 { TOfferObjectRefBinder }
 
+function TOfferObjectRefBinder.GetAsRef: IPersistRef;
+begin
+  Result := DataItem.AsInterface as IPersistRef;
+end;
+
 procedure TOfferObjectRefBinder.FillOffer;
 begin
-  fOffer := DataQuery.Retrive(DataItem.ClassName);
+  fOffer := (AsRef.Store as IPersistQuery).SelectClass(AsRef.ClassName);
   Control.Items.Clear;
   FillControlItems;
 end;
@@ -631,25 +638,23 @@ begin
   if Control.ItemIndex <> -1 then
   begin
     mOfferIndex := NativeInt(Control.Items.Objects[Control.ItemIndex]);
-    DataItem.AsObject := fOffer[mOfferIndex].UnderObject;
+    AsRef.SID := fOffer[mOfferIndex].SID;
   end;
 end;
 
 procedure TOfferObjectRefBinder.DataToOffer;
 var
   i: integer;
-  mO, mOffErO: TObject;
 begin
-  mO := DataItem.AsObject;
-  for i := 0 to fOffer.Count - 1 do begin
-    mOffErO := fOffer[i].UnderObject;
-    if mOfferO = mO then
+  Control.ItemIndex := -1;
+  for i := 0 to fOffer.Count - 1 do
+  begin
+    if AsRef.SID = fOffer[i].SID then
     begin
       Control.ItemIndex := i;
-      Exit;
+      Break;
     end;
   end;
-  Control.ItemIndex := -1;
 end;
 
 procedure TOfferObjectRefBinder.FillControlItems;
@@ -659,11 +664,11 @@ var
 begin
   for i := 0 to fOffer.Count - 1 do
   begin
-    mData := fOffer[i];
+    mData := fOffer[i].Data;
     if not SameText(mData[0].Name, 'id') or (mData.Count = 1) then
-      Control.Items.AddObject(fOffer[i][0].AsString, TObject(i))
+      Control.Items.AddObject(mData[0].AsString, TObject(i))
     else
-      Control.Items.AddObject(fOffer[i][1].AsString, TObject(i));
+      Control.Items.AddObject(mData[1].AsString, TObject(i));
   end;
 end;
 

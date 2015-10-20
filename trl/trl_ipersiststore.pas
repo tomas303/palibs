@@ -70,15 +70,18 @@ type
 
   IPersistRef = interface
   ['{9602E374-F6CE-4D2A-BB31-E2224B4BACE5}']
+    function GetClassName: string;
     function GetData: IRBData;
     function GetSID: TSID;
     function GetStore: IPersistStore;
+    procedure SetClassName(AValue: string);
     procedure SetData(AValue: IRBData);
     procedure SetSID(AValue: TSID);
     procedure SetStore(AValue: IPersistStore);
     property Data: IRBData read GetData write SetData;
     property Store: IPersistStore read GetStore write SetStore;
     property SID: TSID read GetSID write SetSID;
+    property ClassName: string read GetClassName write SetClassName;
   end;
 
   IPersistRef<TItem> = interface(IPersistRef)
@@ -111,6 +114,7 @@ type
     function GetCount: integer;
     function GetData(AIndex: integer): IRBData;
     function GetItems(AIndex: integer): IPersistRef;
+    function IndexOfData(const AData: IRBData): integer;
     procedure SetCount(AValue: integer);
     procedure SetItems(AIndex: integer; AValue: IPersistRef);
     property Count: integer read GetCount write SetCount;

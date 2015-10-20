@@ -86,11 +86,11 @@ begin
     else
     if mControl is TCustomComboBox then
     begin
-      //if fDataItem.IsObject and fDataItem.IsReference then
-      //begin
-      //  Result := TOfferObjectRefBinder.Create;
-      //end
-      //else
+      if (fDataItem.IsInterface) and Supports(fDataItem.AsInterface, IPersistRef) then
+      begin
+        Result := TOfferObjectRefBinder.Create;
+      end
+      else
       if fDataItem.EnumNameCount > 0 then
       begin
         Result := TOfferEnumBinder.Create;

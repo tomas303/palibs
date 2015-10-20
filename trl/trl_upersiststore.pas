@@ -85,7 +85,7 @@ type
     fClassName: string;
   protected
     // IPersistRef
-    function GetClassName: string; virtual; abstract;
+    function GetClassName: string; virtual;
     function GetData: IRBData;
     function GetSID: TSID;
     function GetStore: IPersistStore;
@@ -95,14 +95,14 @@ type
     procedure SetStore(AValue: IPersistStore);
     property Data: IRBData read GetData;
     property SID: TSID read GetSID write SetSID;
+    property ClassName: string read GetClassName write SetClassName;
+  public
+    procedure AfterConstruction; override;
   published
     property Store: IPersistStore read GetStore write SetStore;
-    property ClassName: string read GetClassName write SetClassName;
   end;
 
   TPersistRef<TItem: TObject> = class(TPersistRef, IPersistRef<TItem>)
-  private
-    fItem: TItem;
   protected
     function GetItem: TItem;
     procedure SetItem(AValue: TItem);
@@ -125,6 +125,7 @@ type
     function GetItems(AIndex: integer): IPersistRef;
     procedure SetCount(AValue: integer);
     procedure SetItems(AIndex: integer; AValue: IPersistRef);
+    function IndexOfData(const AData: IRBData): integer;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -174,12 +175,12 @@ end;
 
 function TPersistRef<TItem>.GetItem: TItem;
 begin
-  Result := fItem;
+  Result := Data.UnderObject as TItem;
 end;
 
 procedure TPersistRef<TItem>.SetItem(AValue: TItem);
 begin
-  fItem := AValue;
+  Data.UnderObject := AValue;
 end;
 
 { TSIDList }
@@ -243,6 +244,21 @@ begin
   fItems[AIndex] := AValue;
 end;
 
+function TPersistRefList.IndexOfData(const AData: IRBData): integer;
+var
+  i: integer;
+begin
+  Result := -1;
+  for i := 0 to Count- 1 do
+  begin
+    if Data[i] = AData then
+    begin
+      Result := i;
+      Break;
+    end;
+  end;
+end;
+
 procedure TPersistRefList.AfterConstruction;
 begin
   inherited AfterConstruction;
@@ -259,13 +275,24 @@ end;
 
 procedure TPersistRef.SetClassName(AValue: string);
 begin
+  fData := nil;
+  fSID.Clear;
+  fClassName := AValue;
+end;
 
+function TPersistRef.GetClassName: string;
+begin
+  Result := fClassName;
 end;
 
 function TPersistRef.GetData: IRBData;
 begin
   if fData = nil then begin
-    fData := fStore.Load(fSID);
+    if not fSID.IsClear then
+      fData := fStore.Load(fSID)
+    else
+    if fClassName <> '' then
+      fData := fStore.New(fClassName)
   end;
   Result := fData;
 end;
@@ -290,12 +317,20 @@ end;
 
 procedure TPersistRef.SetSID(AValue: TSID);
 begin
+  fData := nil;
+  fClassName := '';
   fSID := AValue;
 end;
 
 procedure TPersistRef.SetStore(AValue: IPersistStore);
 begin
   fStore := AValue;
+end;
+
+procedure TPersistRef.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fSID.Clear;
 end;
 
 { TStoreCache.TDataRecord }
@@ -440,7 +475,6 @@ begin
   mSID := fCache.FindSID(AData);
   if mSID.IsClear then
     raise exception.Create('cannot load object - not in cache');
-  fCache.Remove(AData);
   fDevice.Load(mSID, AData);
 end;
 
@@ -464,6 +498,7 @@ begin
   if mSID.IsClear then
     raise exception.Create('delete sid not in cache');
   fDevice.Delete(mSID);
+  fCache.Remove(AData);
 end;
 
 function TPersistStore.Load(const ASID: TSID): IRBData;
