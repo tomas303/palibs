@@ -424,9 +424,8 @@ end;
 procedure TTallyBinder.Bind(const AListControl: TWinControl; const AClassName: string);
 begin
   fControl := AListControl;
-  //fDataList := ADataList;
   fClassName := AClassName;
-//  fClassData := TRBData.Create(fClass, True);
+  fClassData := Factory.CreateObject(fClassName) as IRBData;
   BindControl;
   Reload;
 end;
