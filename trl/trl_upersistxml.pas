@@ -69,8 +69,7 @@ type
     function LoadDataItemValue(AStoreEl: TDOMElement; const AName: string): string;
     function LoadDataItemMemo(AStoreEl: TDOMElement; const AName: string): string;
     procedure LoadDataItemObject(AStoreEl: TDOMElement; const AData: IRBData);
-    procedure LoadDataItemRef(AStoreEl: TDOMElement; const AName: string;
-      const AValue: IPersistRef);
+    procedure LoadDataItemRef(AStoreEl: TDOMElement; const AValue: IPersistRef);
     procedure LoadDataList(AStoreEl: TDOMElement; ADataItem: IRBDataItem);
     procedure LoadData(AStoreEl: TDOMElement; AData: IRBData);
   protected
@@ -252,7 +251,7 @@ begin
     begin
       mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
       if mObjStoreEl <> nil then
-        LoadDataItemRef(mObjStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+        LoadDataItemRef(mObjStoreEl, AData[i].AsInterface as IPersistRef)
     end
     else
     if AData[i].IsObject then
@@ -300,8 +299,7 @@ begin
   LoadData(AStoreEl, AData);
 end;
 
-procedure TXmlStore.LoadDataItemRef(AStoreEl: TDOMElement; const AName: string;
-  const AValue: IPersistRef);
+procedure TXmlStore.LoadDataItemRef(AStoreEl: TDOMElement; const AValue: IPersistRef);
 var
   mSID: TSID;
   mRefStoreEl: TDOMElement;
@@ -343,6 +341,9 @@ begin
         LoadDataItemObject(mStoreItemEl, mMany.AsPersistData[i]);
     end
     else
+    if Supports(mMany, IPersistManyRefs) then
+      LoadDataItemRef(mStoreItemEl, mMany.AsInterface[i] as IPersistRef)
+    else
       mMany.AsPersist[i] := LoadDataItemValue(mStoreItemEl, cValue);
   end;
 end;
@@ -358,8 +359,8 @@ begin
       Result := Doc.CreateElement(ADataClassName);
       Doc.DocumentElement.AppendChild(Result);
     end
-    else
-      EXMLStore.ClassNotExists(ADataClassName);
+    //else
+    //  EXMLStore.ClassNotExists(ADataClassName);
   end;
 end;
 
@@ -481,7 +482,7 @@ procedure TXmlStore.SaveDataItemRef(AStoreEl: TDOMElement; const AName: string;
 var
   mObjStoreEl: TDOMElement;
 begin
-  if AValue <> nil then
+  if (AValue <> nil) and (AValue.Data <> nil) then
   begin
     //if AValue.SID.IsClear then
     //  fStore.Save
@@ -516,12 +517,17 @@ begin
     begin
       mStoreItemEl := Doc.CreateElement(cListItemNilTag);
       mStoreEl.AppendChild(mStoreItemEl);
-    end else begin
+    end
+    else
+    if Supports(mMany, IPersistManyRefs) then
+     SaveDataItemRef(mStoreEl, cListItemTag, mMany.AsInterface[i] as IPersistRef)
+    else
+    begin
       mStoreItemEl := Doc.CreateElement(cListItemTag);
       mStoreEl.AppendChild(mStoreItemEl);
       // store data
       if mMany.IsObject then
-        SaveDataItemObject(mStoreItemEl, ADataItem.Name, mMany.AsObject[i], {ADataItem.IsReference}False)
+        SaveDataItemObject(mStoreItemEl, ADataItem.Name, mMany.AsObject[i], False)
       else
         SaveDataItemValue(mStoreItemEl, cValue, mMany.AsPersist[i]);
     end;

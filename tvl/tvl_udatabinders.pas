@@ -96,9 +96,9 @@ type
     procedure DataToControl; override;
   end;
 
-  { TOfferObjectRefBinder }
+  { TOfferRefBinder }
 
-  TOfferObjectRefBinder = class(TOfferBinder)
+  TOfferRefBinder = class(TOfferBinder)
   private
     fOffer: IPersistRefList;
     function GetAsRef: IPersistRef;
@@ -614,21 +614,21 @@ begin
   fSupport.EditingDone;
 end;
 
-{ TOfferObjectRefBinder }
+{ TOfferRefBinder }
 
-function TOfferObjectRefBinder.GetAsRef: IPersistRef;
+function TOfferRefBinder.GetAsRef: IPersistRef;
 begin
   Result := DataItem.AsInterface as IPersistRef;
 end;
 
-procedure TOfferObjectRefBinder.FillOffer;
+procedure TOfferRefBinder.FillOffer;
 begin
   fOffer := (AsRef.Store as IPersistQuery).SelectClass(AsRef.ClassName);
   Control.Items.Clear;
   FillControlItems;
 end;
 
-procedure TOfferObjectRefBinder.OfferToData;
+procedure TOfferRefBinder.OfferToData;
 var
   mOfferIndex: NativeInt;
 begin
@@ -639,7 +639,7 @@ begin
   end;
 end;
 
-procedure TOfferObjectRefBinder.DataToOffer;
+procedure TOfferRefBinder.DataToOffer;
 var
   i: integer;
 begin
@@ -654,7 +654,7 @@ begin
   end;
 end;
 
-procedure TOfferObjectRefBinder.FillControlItems;
+procedure TOfferRefBinder.FillControlItems;
 var
   i: NativeInt;
   mData: IRBData;
@@ -842,11 +842,11 @@ end;
 function TListBinder.CreateEditor(const ADataItem: IRBDataItem): TWinControl;
 begin
   Result := nil;
-  //if ADataItem.IsObject and ADataItem.IsReference then
-  //begin
-  //  Result := TOfferEditor.Create(Control);
-  //end
-  //else
+  if Supports(AsMany, IPersistManyRefs) then
+  begin
+    Result := TOfferEditor.Create(Control);
+  end
+  else
   begin
     if ADataItem.EnumNameCount > 0 then
     begin
@@ -862,11 +862,11 @@ end;
 function TListBinder.CreateBinder(const ADataItem: IRBDataItem): TEditBinder;
 begin
   Result := nil;
-  //if ADataItem.IsObject and ADataItem.IsReference then
-  //begin
-  //  Result := TOfferObjectRefBinder.Create;
-  //end
-  //else
+  if Supports(AsMany, IPersistManyRefs) then
+  begin
+    Result := TOfferRefBinder.Create;
+  end
+  else
   if ADataItem.EnumNameCount > 0 then
   begin
     Result := TOfferEnumBinder.Create;
@@ -906,6 +906,11 @@ begin
     Exit;
   if fCellBinder.DataItem = nil then
     Exit;
+  if Supports(fCellBinder.DataItem.AsInterface, IPersistRef) then
+  begin
+    Control.Cells[Control.Col, Control.Row] := (fCellBinder.DataItem.AsInterface as IPersistRef).Data[0].AsString;
+  end
+  else
   if fCellBinder.DataItem.IsObject then
     DataToControl
   else
@@ -1006,9 +1011,19 @@ end;
 procedure TListBinder.DataToControl;
 var
   i: integer;
+  mData: IRBData;
 begin
   for i := 0 to AsMany.Count - 1 do
   begin
+    if Supports(AsMany, IPersistManyRefs) then
+    begin
+      mData := (AsMany.AsInterface[i] as IPersistRef).Data;
+      if mData <> nil then
+        Control.Cells[0, i + 1] := mData[0].AsString
+      else
+        Control.Cells[0, i + 1] := '';
+    end
+    else
     if AsMany.IsObject then
     begin
       FillRowFromObject(i + 1, AsMany.AsPersistData[i]);

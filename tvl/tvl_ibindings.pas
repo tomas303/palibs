@@ -12,6 +12,7 @@ type
   IRBDataBinder = interface
   ['{015ECE02-6F9E-4071-BDCE-63BD11F6FAD9}']
     procedure Bind(AContainer: TWinControl; const AData: IRBData);
+    procedure Unbind;
     procedure DataChange;
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
@@ -21,6 +22,7 @@ type
   IRBTallyBinder = interface
   ['{15291FE4-A0AC-11E3-82F7-08002721C44F}']
     procedure Bind(const AListControl: TWinControl; const AClassName: string);
+    procedure Unbind;
     procedure Reload;
     function GetCurrentData: IRBData;
     property CurrentData: IRBData read GetCurrentData;

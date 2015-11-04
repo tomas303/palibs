@@ -31,11 +31,13 @@ type
     property DataList: IPersistRefList read fDataList;
     property ClassData: IRBData read fClassData;
     procedure BindControl; virtual; abstract;
+    procedure UnbindControl; virtual; abstract;
     procedure RefreshData; virtual; abstract;
     function GetCurrentListIndex: integer; virtual; abstract;
   public
     //procedure DataToControl; virtual; abstract;
     procedure Bind(const AListControl: TWinControl; const AClassName: string);
+    procedure Unbind;
     procedure Reload;
     function GetCurrentData: IRBData;
     class function New(const AListControl: TWinControl; const AClassName: string): IRBTallyBinder;
@@ -80,6 +82,7 @@ type
     procedure DrawCellEventHandler(Sender: TObject; aCol, aRow: Integer; aRect: TRect; aState:TGridDrawState);
     property Grid: TCustomDrawGrid read GetGrid;
     procedure BindControl; override;
+    procedure UnbindControl; override;
     procedure RefreshData; override;
     function GetCurrentListIndex: integer; override;
   public
@@ -105,6 +108,7 @@ type
     fGES: TGridBinder;
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     procedure RefreshData; override;
     function GetCurrentListIndex: integer; override;
   protected
@@ -124,6 +128,7 @@ type
     procedure RefreshData; override;
     property ListBox: TCustomListBox read GetListBox;
     procedure BindControl; override;
+    procedure UnbindControl; override;
     function GetCurrentListIndex: integer; override;
   end;
 
@@ -137,6 +142,7 @@ type
     procedure RefreshData; override;
     property ComboBox: TCustomComboBox read GetComboBox;
     procedure BindControl; override;
+    procedure UnbindControl; override;
     function GetCurrentListIndex: integer; override;
   end;
 
@@ -222,6 +228,11 @@ begin
   fGES := TGridBinder.Create;
 end;
 
+procedure TDrawGridBinder2.UnbindControl;
+begin
+  FreeAndNil(fGES);
+end;
+
 procedure TDrawGridBinder2.RefreshData;
 begin
   fGES.Bind(Grid, Self);
@@ -268,6 +279,10 @@ begin
   end;
 end;
 
+procedure TComboBoxBinder.UnbindControl;
+begin
+end;
+
 function TComboBoxBinder.GetCurrentListIndex: integer;
 begin
   Result := ComboBox.ItemIndex;
@@ -300,6 +315,10 @@ begin
     if fDataItemIndex = -1 then
       fDataItemIndex := 0;
   end;
+end;
+
+procedure TListBoxBinder.UnbindControl;
+begin
 end;
 
 function TListBoxBinder.GetCurrentListIndex: integer;
@@ -396,6 +415,11 @@ begin
   Grid.OnDrawCell := @DrawCellEventHandler;
 end;
 
+procedure TDrawGridBinder.UnbindControl;
+begin
+  Grid.OnDrawCell := nil;
+end;
+
 procedure TDrawGridBinder.RefreshData;
 begin
   Grid.RowCount := Grid.FixedRows + DataList.Count;
@@ -428,6 +452,14 @@ begin
   fClassData := Factory.CreateObject(fClassName) as IRBData;
   BindControl;
   Reload;
+end;
+
+procedure TTallyBinder.Unbind;
+begin
+  UnbindControl;
+  fControl := nil;
+  fClassName := '';
+  fClassData := nil;
 end;
 
 procedure TTallyBinder.Reload;

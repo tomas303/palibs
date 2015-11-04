@@ -5,7 +5,8 @@ unit trl_upersist;
 interface
 
 uses
-  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker;
+  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker,
+  trl_ipersiststore;
 
 type
 
@@ -60,6 +61,9 @@ type
     function GetEnumName(AValue: integer): string;
     function GetEnumNameCount: integer;
     function GetIsObject: Boolean;
+    function GetAsInterface(AIndex: integer): IUnknown; virtual;
+    procedure SetAsInterface(AIndex: integer; AValue: IUnknown); virtual;
+    function GetClassName: string; virtual;
     //
     function GetAsPersistData(AIndex: integer): IRBData; virtual;
     procedure SetAsPersistData(AIndex: integer; AValue: IRBData); virtual;
@@ -74,9 +78,11 @@ type
     property AsPersist[AIndex: integer]: string read GetAsPersist write SetAsPersist;
     property AsString[AIndex: integer]: string read GetAsString write SetAsString;
     property AsObject[AIndex: integer]: TObject read GetAsObject write SetAsObject;
+    property AsInterface[AIndex: integer]: IUnknown read GetAsInterface write SetAsInterface;
     property AsPersistData[AIndex: integer]: IRBData read GetAsPersistData write SetAsPersistData;
     property AsPersistDataClass: IRBData read GetAsPersistDataClass;
     property IsObject: Boolean read GetIsObject;
+    property ClassName: string read GetClassName;
   public
     constructor Create;
     destructor Destroy; override;
@@ -194,6 +200,11 @@ begin
   Result := ItemTypeInfo^.Kind in [tkClass, tkObject];
 end;
 
+function TPersistMany<TItem>.GetAsInterface(AIndex: integer): IUnknown;
+begin
+  Result := nil;
+end;
+
 function TPersistMany<TItem>.GetAsPersistData(AIndex: integer): IRBData;
 begin
   Result := nil;
@@ -207,6 +218,15 @@ end;
 function TPersistMany<TItem>.GetAsPersistDataClass: IRBData;
 begin
   Result := TRBData.Create(GetTypeData(ItemTypeInfo)^.ClassType);
+end;
+
+function TPersistMany<TItem>.GetClassName: string;
+begin
+  Result := '';
+end;
+
+procedure TPersistMany<TItem>.SetAsInterface(AIndex: integer; AValue: IUnknown);
+begin
 end;
 
 function TPersistMany<TItem>.GetAsObject(AIndex: integer): TObject;
@@ -296,7 +316,7 @@ end;
 
 function TPersistManyDataItem.GetClassName: string;
 begin
-
+  Result := fPersistMany.ClassName;
 end;
 
 function TPersistManyDataItem.GetIsObject: Boolean;
@@ -401,12 +421,12 @@ end;
 
 function TPersistManyDataItem.GetAsInterface: IUnknown;
 begin
-
+  Result := fPersistMany.AsInterface[fIndex];
 end;
 
 procedure TPersistManyDataItem.SetAsInterface(AValue: IUnknown);
 begin
-
+  fPersistMany.AsInterface[fIndex] := AValue;
 end;
 
 constructor TPersistManyDataItem.Create(const APersistMany: IPersistMany;

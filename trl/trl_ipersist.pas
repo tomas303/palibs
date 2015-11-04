@@ -22,15 +22,18 @@ type
 
   IPersistMany = interface
   ['{2C47DA7F-FEA7-4E37-965C-82176B12A721}']
+    function GetAsInterface(AIndex: integer): IUnknown;
     function GetAsPersistData(AIndex: integer): IRBData;
     function GetAsObject(AIndex: integer): TObject;
     function GetAsPersistDataClass: IRBData;
     function GetAsPersist(AIndex: integer): string;
     function GetAsString(AIndex: integer): string;
+    function GetClassName: string;
     function GetCount: integer;
     function GetEnumName(AValue: integer): string;
     function GetEnumNameCount: integer;
     function GetIsObject: Boolean;
+    procedure SetAsInterface(AIndex: integer; AValue: IUnknown);
     procedure SetAsPersistData(AIndex: integer; AValue: IRBData);
     procedure SetAsObject(AIndex: integer; AValue: TObject);
     procedure SetCount(AValue: integer);
@@ -42,10 +45,12 @@ type
     property AsObject[AIndex: integer]: TObject read GetAsObject write SetAsObject;
     property AsPersistData[AIndex: integer]: IRBData read GetAsPersistData write SetAsPersistData;
     property AsPersistDataClass: IRBData read GetAsPersistDataClass;
+    property AsInterface[AIndex: integer]: IUnknown read GetAsInterface write SetAsInterface;
     procedure Delete(AIndex: integer);
     property EnumNameCount: integer read GetEnumNameCount;
     property EnumName[AValue: integer]: string read GetEnumName;
     property IsObject: Boolean read GetIsObject;
+    property ClassName: string read GetClassName;
   end;
 
   { IPersistMany }

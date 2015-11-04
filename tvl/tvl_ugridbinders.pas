@@ -531,7 +531,7 @@ begin
   Result := nil;
   //if ADataItem.IsObject and ADataItem.IsReference then
   //begin
-  //  Result := TOfferObjectRefBinder.Create;
+  //  Result := TOfferRefBinder.Create;
   //end
   //else
   if ADataItem.EnumNameCount > 0 then

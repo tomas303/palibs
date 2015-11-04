@@ -59,6 +59,7 @@ type
   protected
     // IRBDataBinder
     procedure Bind(AContainer: TWinControl; const AData: IRBData);
+    procedure Unbind;
     procedure DataChange;
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
@@ -86,7 +87,7 @@ begin
     begin
       if (fDataItem.IsInterface) and Supports(fDataItem.AsInterface, IPersistRef) then
       begin
-        Result := TOfferObjectRefBinder.Create;
+        Result := TOfferRefBinder.Create;
       end
       else
       if fDataItem.EnumNameCount > 0 then
@@ -235,6 +236,11 @@ begin
   FreeAndNil(fDataSlots);
   fDataSlots := TDataSlots.Create;
   fDataSlots.Bind(AContainer, AData);
+end;
+
+procedure TRBDataBinder.Unbind;
+begin
+  FreeAndNil(fDataSlots);
 end;
 
 procedure TRBDataBinder.DataChange;

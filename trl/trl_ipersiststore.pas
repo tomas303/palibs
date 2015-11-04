@@ -131,6 +131,19 @@ type
 
   end;
 
+  { IPersistManyRefs }
+
+  IPersistManyRefs = interface(IPersistMany<IPersistRef>)
+  ['{55766680-2912-4680-8B30-8908573E263C}']
+    function GetFactory: IPersistFactory;
+    procedure SetFactory(AValue: IPersistFactory);
+    property Factory: IPersistFactory read GetFactory write SetFactory;
+  end;
+
+  IPersistManyRefs<TItem: TObject> = interface(IPersistManyRefs)
+  ['{A276B6FA-D582-4071-90A0-EF2AFE861152}']
+  end;
+
 implementation
 
 { TSID }

@@ -385,37 +385,44 @@ begin
     for i := 0 to mRB.Count - 1 do begin
       mRBItem := mRB.Items[i];
       miname:=mRBItem.Name;
-      if mIP.Name = mRBItem.Name then begin
-        case mRBItem.TypeKind of
-          tkClassRef:
-            //if mIP.ValueClass <> nil then
-              mRBItem.AsPtrInt := PtrInt(mIP.ValueClass);
-          tkClass:
-            //if mIP.ValueClass <> nil then
-            begin
-              if mIP.Container <> nil then
-                mObject := mIP.Container.Locate(mIP.ValueClass, mIP.ID)
-              else
-                mObject := fDIC.Locate(mIP.ValueClass, mIP.ID);
-              mRBItem.AsObject := mObject;
-            end;
-          tkInterface:
-            //if not CompareMem(@mIP.VGuid, @GUID_NULL, SizeOf(mIP.VGuid)) then
-            begin
-              if mIP.Container <> nil then
-                mInterface := mIP.Container.Locate(mIP.VGuid, mIP.ID)
-              else
-                mInterface := fDIC.Locate(mIP.VGuid, mIP.ID);
-              mRBItem.AsInterface := mInterface;
-            end;
-        else
-          //if not VarIsNull(mIP.Value) then
-            mRBItem.AsVariant := mIP.Value;
+      try
+        if mIP.Name = mRBItem.Name then begin
+          case mRBItem.TypeKind of
+            tkClassRef:
+              //if mIP.ValueClass <> nil then
+                mRBItem.AsPtrInt := PtrInt(mIP.ValueClass);
+            tkClass:
+              //if mIP.ValueClass <> nil then
+              begin
+                if mIP.Container <> nil then
+                  mObject := mIP.Container.Locate(mIP.ValueClass, mIP.ID)
+                else
+                  mObject := fDIC.Locate(mIP.ValueClass, mIP.ID);
+                mRBItem.AsObject := mObject;
+              end;
+            tkInterface:
+              //if not CompareMem(@mIP.VGuid, @GUID_NULL, SizeOf(mIP.VGuid)) then
+              begin
+                if mIP.Container <> nil then
+                  mInterface := mIP.Container.Locate(mIP.VGuid, mIP.ID)
+                else
+                  mInterface := fDIC.Locate(mIP.VGuid, mIP.ID);
+                mRBItem.AsInterface := mInterface;
+              end;
+          else
+            //if not VarIsNull(mIP.Value) then
+              mRBItem.AsVariant := mIP.Value;
+          end;
+        end;
+        // event
+        if ((mIP.Name = mRBItem.Name) or (mIP.Name = '')) and Assigned(mIP.OnInject) then
+          mIP.OnInject(mRBItem);
+
+      except
+        on E: Exception do begin
+          raise Exception.Create(E.Message + ' on property ' + mRBItem.Name);
         end;
       end;
-      // event
-      if ((mIP.Name = mRBItem.Name) or (mIP.Name = '')) and Assigned(mIP.OnInject) then
-        mIP.OnInject(mRBItem);
     end;
   end;
 end;

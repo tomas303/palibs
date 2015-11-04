@@ -3,7 +3,8 @@ unit trl_urttibroker;
 interface
 
 uses
-  trl_irttibroker, TypInfo, SysUtils, Classes, StrUtils, fgl, contnrs;
+  trl_irttibroker, TypInfo, SysUtils, Classes, StrUtils, fgl, contnrs,
+  trl_ipersist, trl_ipersiststore;
 
 type
 
@@ -865,8 +866,31 @@ end;
 procedure TRBData.Assign(const AData: IRBData);
 var
   i, j: integer;
+  mSourceMany, mTargetMany: IPersistMany;
+  mSourceRef, mTargetRef: IPersistRef;
 begin
   for i := 0 to Count - 1 do begin
+    if Items[i].IsInterface and Supports(Items[i].AsInterface, IPersistMany) then
+    begin
+      mSourceMany := AData[i].AsInterface as IPersistMany;
+      mTargetMany := Items[i].AsInterface as IPersistMany;
+      mTargetMany.Count := mSourceMany.Count;
+      for j := 0 to mSourceMany.Count - 1 do
+      begin
+        if Supports(mTargetMany.AsInterface[j], IPersistRef) then
+          (mTargetMany.AsInterface[j] as IPersistRef).Data := (mSourceMany.AsInterface[j] as IPersistRef).Data
+        else
+          mTargetMany.AsPersistData[j].Assign(mSourceMany.AsPersistData[j]);
+      end;
+    end
+    else
+    if Items[i].IsInterface and Supports(Items[i].AsInterface, IPersistRef) then
+    begin
+      mSourceRef := AData[i].AsInterface as IPersistRef;
+      mTargetRef := Items[i].AsInterface as IPersistRef;
+      mTargetRef.Data := mSourceRef.Data;
+    end
+    else
     if Items[i].IsObject then
     begin
       AssignObject(AData[i].AsObject, Items[i].AsObject);

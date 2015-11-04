@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, trl_ipersiststore, trl_ifactory, trl_irttibroker,
-  trl_dicontainer, fgl;
+  trl_dicontainer, fgl, trl_upersist;
 
 type
 
@@ -164,6 +164,28 @@ type
     property Cache: TStoreCache read fCache write fCache;
   end;
 
+  { TPersistManyRefs }
+
+  TPersistManyRefs = class(TPersistMany<IPersistRef>, IPersistManyRefs)
+  private
+    fFactory: IPersistFactory;
+  protected
+    function GetAsInterface(AIndex: integer): IUnknown; override;
+    procedure SetAsInterface(AIndex: integer; AValue: IUnknown); override;
+    function GetAsPersistData(AIndex: integer): IRBData; override;
+    procedure SetAsPersistData(AIndex: integer; AValue: IRBData); override;
+  protected
+    function GetFactory: IPersistFactory;
+    procedure SetFactory(AValue: IPersistFactory);
+  published
+    property Factory: IPersistFactory read GetFactory write SetFactory;
+  end;
+
+  TPersistManyRefs<TItem: TObject> = class(TPersistManyRefs, IPersistManyRefs<TItem>)
+  protected
+    function GetClassName: string; override;
+  end;
+
 implementation
 
 { TPersistRef<TItem> }
@@ -181,6 +203,50 @@ end;
 procedure TPersistRef<TItem>.SetItem(AValue: TItem);
 begin
   Data.UnderObject := AValue;
+end;
+
+{ TPersistManyRefs }
+
+function TPersistManyRefs.GetAsInterface(AIndex: integer): IUnknown;
+begin
+  if AIndex > Count - 1 then
+    Count := AIndex + 1;
+  if Item[AIndex] = nil then
+  begin
+    Item[AIndex] := Factory.Create(IPersistRef) as IPersistRef;
+    Item[AIndex].ClassName := ClassName;
+  end;
+  Result := Item[AIndex];
+end;
+
+procedure TPersistManyRefs.SetAsInterface(AIndex: integer; AValue: IUnknown);
+begin
+  Item[AIndex] := AValue as IPersistRef;
+end;
+
+function TPersistManyRefs.GetAsPersistData(AIndex: integer): IRBData;
+begin
+  Result := (AsInterface[AIndex] as IPersistRef).Data;
+end;
+
+procedure TPersistManyRefs.SetAsPersistData(AIndex: integer; AValue: IRBData);
+begin
+  (AsInterface[AIndex] as IPersistRef).Data := AValue;
+end;
+
+function TPersistManyRefs.GetFactory: IPersistFactory;
+begin
+  Result := fFactory;
+end;
+
+procedure TPersistManyRefs.SetFactory(AValue: IPersistFactory);
+begin
+  fFactory := AValue;
+end;
+
+function TPersistManyRefs<TItem>.GetClassName: string;
+begin
+  Result := TItem.ClassName;
 end;
 
 { TSIDList }
