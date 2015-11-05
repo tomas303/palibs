@@ -548,17 +548,21 @@ procedure TXmlStore.Save(const ASID: TSID; AData: IRBData);
 var
   mClassEl: TDOMElement;
   mStoreEl: TDOMElement;
+  mOriginalEl: TDOMElement;
 begin
   mClassEl := GetDataClassEl(AData.ClassName, True);
-  mStoreEl := FindStoreElForSID(mClassEl, ASID);
-  // when store, remove old data and create all new
-  if mStoreEl <> nil then
-  begin
-    mStoreEl.ParentNode.DetachChild(mStoreEl);
-    mStoreEl.Free;
-  end;
   mStoreEl := Doc.CreateElement(cListItemTag);
-  mClassEl.AppendChild(mStoreEl);
+  mOriginalEl := FindStoreElForSID(mClassEl, ASID);
+  if mOriginalEl <> nil then
+  begin
+    mClassEl.InsertBefore(mStoreEl, mOriginalEl);
+    mOriginalEl.ParentNode.DetachChild(mOriginalEl);
+    mOriginalEl.Free;
+  end
+  else
+  begin
+    mClassEl.AppendChild(mStoreEl);
+  end;
   mStoreEl.AttribStrings[cSID] := ASID;
   //
   SaveData(mStoreEl, AData);
