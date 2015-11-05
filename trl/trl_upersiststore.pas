@@ -523,6 +523,8 @@ end;
 
 function TPersistFactory.CreateObject(const AClass: string): IRBData;
 begin
+  if AClass = '' then
+    raise Exception.Create('Try create IRBData object with empty class');
   Result := Container.Locate(IRBData, AClass);
 end;
 
@@ -581,7 +583,10 @@ function TPersistStore.Load(const ASID: TSID): IRBData;
 var
   mClass: string;
 begin
+  Result := nil;
   mClass := fDevice.GetSIDClass(ASID);
+  if mClass = '' then
+    Exit;
   Result := New(mClass);
   fDevice.Load(ASID, Result);
   fCache.Add(ASID, Result);

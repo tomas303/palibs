@@ -569,8 +569,29 @@ begin
 end;
 
 procedure TXmlStore.Delete(const ASID: TSID);
+var
+  mStoreEl: TDOMElement;
+  mXPV: TXPathVariable;
+  i: integer;
+  mNode: TDOMNode;
 begin
-
+  mXPV := EvaluateXPathExpression('//*[@' + cRefID + '=''' + ASID + ''']', Doc.DocumentElement);
+  try
+    for i := 0 to mXPV.AsNodeSet.Count - 1 do
+    begin
+      mNode := TDOMNode(mXPV.AsNodeSet[i]);
+      mNode.ParentNode.RemoveChild(mNode);
+      mNode.Free;
+    end;
+  finally
+    mXPV.Free;
+  end;
+  mStoreEl := FindStoreElForSID(ASID);
+  if mStoreEl <> nil then
+  begin
+    mStoreEl.ParentNode.DetachChild(mStoreEl);
+    mStoreEl.Free;
+  end;
 end;
 
 function TXmlStore.NewSID: TSID;
