@@ -5,7 +5,7 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, tvl_udatabinders, Grids, SynEdit, trl_ipersist, tvl_ibindings,
-  trl_ipersiststore;
+  trl_ipersiststore, EditBtn;
 
 type
 
@@ -82,6 +82,9 @@ begin
   begin
     if mControl is TCustomEdit then
       Result := TTextBinder.Create
+    else
+    if mControl is TCustomEditButton then
+      Result := TTextBtnBinder.Create
     else
     if mControl is TCustomComboBox then
     begin

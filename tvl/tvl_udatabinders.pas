@@ -6,7 +6,7 @@ uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
-  Forms, trl_ipersiststore;
+  Forms, trl_ipersiststore, EditBtn;
 
 type
 
@@ -45,6 +45,19 @@ type
   protected
     procedure BindControl; override;
     property Control: TCustomEdit read GetControl;
+  public
+    procedure DataToControl; override;
+  end;
+
+  { TTextBtnBinder }
+
+  TTextBtnBinder = class(TEditBinder)
+  private
+    function GetControl: TCustomEditButton;
+    procedure OnChangeHandler(Sender: TObject);
+  protected
+    procedure BindControl; override;
+    property Control: TCustomEditButton read GetControl;
   public
     procedure DataToControl; override;
   end;
@@ -259,6 +272,29 @@ type
   public
     property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
   end;
+
+{ TTextBtnBinder }
+
+function TTextBtnBinder.GetControl: TCustomEditButton;
+begin
+  Result := inherited Control as TCustomEditButton;
+end;
+
+procedure TTextBtnBinder.OnChangeHandler(Sender: TObject);
+begin
+  DataItem.AsString := Control.Text;
+  NotifyChangeEvents;
+end;
+
+procedure TTextBtnBinder.BindControl;
+begin
+  Control.OnChange := @OnChangeHandler;
+end;
+
+procedure TTextBtnBinder.DataToControl;
+begin
+  Control.Text := DataItem.AsString
+end;
 
 { TWinControlHelper }
 
