@@ -31,6 +31,7 @@ type
   IRBBehavioralBinder = interface
   ['{8FA26A2F-57D6-44FA-B824-EACAC24E5FA3}']
     procedure Bind(AContainer: TWinControl);
+    procedure Unbind;
   end;
 
 

@@ -6,11 +6,12 @@ interface
 
 uses
   Controls, ComCtrls, LMessages, Forms, SysUtils, StdCtrls, Menus, types,
-  classes, ExtCtrls;
+  classes, ExtCtrls, LCLProc, lclintf, fgl;
 
 const
   LM_BEHAVEBINDER = LM_USER + $99000;
   LM_DISCONECTWINDOWPROC = LM_BEHAVEBINDER + 01;
+  LM_FOCUSCONTROLONPAGE = LM_BEHAVEBINDER + 02;
 
 type
 
@@ -63,10 +64,14 @@ type
   { TPageControlBehaveBinder }
 
   TPageControlBehaveBinder = class(TBehaveBinder)
+  private type
+    TPageActiveControls = specialize TFPGMap<integer, pointer>;
   private
     fPageIndex: Integer;
     fFirstVisiblePassed: Boolean;
+    fActiveControls: TPageActiveControls;
     function GetControl: TPageControl;
+    function GetActiveControl: TWinControl;
     function IsActiveControlOnActivePage: Boolean;
     procedure FocusActualPageControl;
     procedure SetFirstVisiblePage;
@@ -76,6 +81,8 @@ type
   public
     procedure BindControl; override;
     property Control: TPageControl read GetControl;
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   end;
 
   { TPopupMenuBinder }
@@ -574,30 +581,61 @@ begin
   Result := inherited Control as TPageControl;
 end;
 
+function TPageControlBehaveBinder.GetActiveControl: TWinControl;
+var
+  mForm: TCustomForm;
+begin
+  Result := nil;
+  mForm := FindForm;
+  if mForm = nil then
+    Exit;
+  Result := mForm.ActiveControl;
+end;
+
 procedure TPageControlBehaveBinder.DoControlWndProc(var TheMessage: TLMessage
   );
+var
+  mControl: TWinControl;
 begin
+  //DebugLn('msg->%d', [TheMessage.Msg]);
   case TheMessage.Msg of
+    LM_SETFOCUS:
+      begin
+        mControl := GetActiveControl;
+        if mControl <> Control then
+          fActiveControls.KeyData[Control.PageIndex] := mControl;
+      end;
     48206:
+      // on PageIndex change will focus first or last focused control
+      // on given tabsheed
       begin
         if TLMNotify(TheMessage).NMHdr^.code = TCN_SELCHANGE then
         begin
           fPageIndex := Control.PageIndex;
           inherited;
-          if fPageIndex <> Control.PageIndex then
-            FocusActualPageControl;
+          if (fPageIndex <> Control.PageIndex) then
+          begin
+            PostMessage(Control.Handle, LM_FOCUSCONTROLONPAGE, 0, 0)
+          end
         end else
           inherited;
       end;
-    LM_SHOWWINDOW:
+    //LM_SHOWWINDOW is received only on first show
+    LM_PAINT:
       begin
+        // on first show will set first control on tabsheet as active
         inherited;
-        if Control.Visible and not fFirstVisiblePassed then
+        if not fFirstVisiblePassed and Control.Visible then
         begin
           fFirstVisiblePassed := True;
           SetFirstVisiblePage;
+          PostMessage(Control.Handle, LM_FOCUSCONTROLONPAGE, 0, 0);
         end;
-      end
+      end;
+    LM_FOCUSCONTROLONPAGE:
+      begin
+        FocusActualPageControl;
+      end;
   else
     inherited;
   end;
@@ -608,12 +646,30 @@ begin
 
 end;
 
+procedure TPageControlBehaveBinder.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fActiveControls := TPageActiveControls.Create;
+end;
+
+procedure TPageControlBehaveBinder.BeforeDestruction;
+begin
+  FreeAndNil(fActiveControls);
+  inherited BeforeDestruction;
+end;
+
 function TPageControlBehaveBinder.IsActiveControlOnActivePage: Boolean;
 var
   mControl: TWinControl;
+  mForm: TCustomForm;
 begin
   Result := False;
-  mControl := FindForm.ActiveControl.Parent;
+  mForm := FindForm;
+  if mForm = nil then
+    Exit;
+  if mForm.ActiveControl = nil then
+    Exit;
+  mControl := mForm.ActiveControl.Parent;
   while mControl <> nil do begin
     if mControl = Control.ActivePage then
     begin
@@ -629,27 +685,40 @@ var
   mControl, mFocControl: TWinControl;
   mTabOrder: integer;
   i: integer;
+  mInd: integer;
 begin
   if not IsActiveControlOnActivePage then
   begin
-    mTabOrder := MaxInt;
     mFocControl := nil;
-    for i := 0 to Control.ActivePage.ControlCount - 1 do
+    mInd := fActiveControls.IndexOf(Control.TabIndex);
+    if (mInd <> -1) and (fActiveControls.Data[mInd] <> nil) then
+      mFocControl := TWinControl(fActiveControls.Data[mInd]);
+    if (mFocControl <> nil) and mFocControl.CanFocus then
+      mFocControl.SetFocus
+    else
     begin
-      if not (Control.ActivePage.Controls[i] is TWinControl) then
-        Continue;
-      mControl := Control.ActivePage.Controls[i] as TWinControl;
-      if not mControl.CanFocus or not mControl.TabStop then
-        Continue;
-      if mControl.TabOrder < mTabOrder then
+      mTabOrder := MaxInt;
+      mFocControl := nil;
+      for i := 0 to Control.ActivePage.ControlCount - 1 do
       begin
-        mFocControl := mControl;
-        mTabOrder := mControl.TabOrder;
+        if not (Control.ActivePage.Controls[i] is TWinControl) then
+          Continue;
+        mControl := Control.ActivePage.Controls[i] as TWinControl;
+        if not mControl.CanFocus or not mControl.TabStop then
+          Continue;
+        if mControl.TabOrder < mTabOrder then
+        begin
+          mFocControl := mControl;
+          mTabOrder := mControl.TabOrder;
+        end;
       end;
-    end;
-    if mFocControl <> nil then
-    begin
-      mFocControl.SetFocus;
+      if mFocControl <> nil then
+      begin
+        if mFocControl.CanFocus then
+        begin
+          mFocControl.SetFocus;
+        end;
+      end;
     end;
   end;
 end;

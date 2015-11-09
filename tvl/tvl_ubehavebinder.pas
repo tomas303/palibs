@@ -21,13 +21,14 @@ type
   protected
     // IRBBehavioralBinder
     procedure Bind(AContainer: TWinControl);
+    procedure Unbind;
   protected
     procedure ActualizeItems;
     procedure MakeBinders(AContainer: TWinControl);
     procedure AddBinderForControl(AControl: TWinControl);
   public
-    constructor Create;
-    destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   end;
 
 implementation
@@ -38,6 +39,11 @@ procedure TRBBehavioralBinder.Bind(AContainer: TWinControl);
 begin
   fContainer := AContainer;
   ActualizeItems;
+end;
+
+procedure TRBBehavioralBinder.Unbind;
+begin
+  fBinders.Clear;
 end;
 
 procedure TRBBehavioralBinder.ActualizeItems;
@@ -69,15 +75,16 @@ begin
   end;
 end;
 
-constructor TRBBehavioralBinder.Create;
+procedure TRBBehavioralBinder.AfterConstruction;
 begin
+  inherited AfterConstruction;
   fBinders := TBehaveBinderItems.Create;
 end;
 
-destructor TRBBehavioralBinder.Destroy;
+procedure TRBBehavioralBinder.BeforeDestruction;
 begin
   FreeAndNil(fBinders);
-  inherited Destroy;
+  inherited BeforeDestruction;
 end;
 
 end.
