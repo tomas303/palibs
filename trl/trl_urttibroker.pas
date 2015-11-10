@@ -41,6 +41,7 @@ type
     function GetName: string;
     function GetClassName: string;
     function GetIsObject: Boolean;
+    function GetIsMemo: Boolean;
     function GetIsInterface: Boolean;
     function GetTypeKind: TTypeKind;
     function GetAsPersist: string; virtual;
@@ -67,6 +68,7 @@ type
     property Name: string read GetName;
     property ClassName: string read GetClassName;
     property IsObject: Boolean read GetIsObject;
+    property IsMemo: Boolean read GetIsMemo;
     property IsInterface: Boolean read GetIsInterface;
     property TypeKind: TTypeKind read GetTypeKind;
     property AsPersist: string read GetAsPersist write SetAsPersist;
@@ -613,6 +615,11 @@ end;
 function TRBDataItem.GetIsObject: Boolean;
 begin
   Result := TypeKind in [tkClass, tkObject];
+end;
+
+function TRBDataItem.GetIsMemo: Boolean;
+begin
+  Result := SameText(cMemoStringType, fPropInfo^.PropType^.Name);
 end;
 
 function TRBDataItem.GetIsInterface: Boolean;

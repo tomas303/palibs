@@ -7,7 +7,11 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker;
 
+const
+  cMemoStringType = 'TMemoString';
+
 type
+  TMemoString = type string;
 
   { IPersistMoniker }
 
@@ -33,6 +37,7 @@ type
     function GetEnumName(AValue: integer): string;
     function GetEnumNameCount: integer;
     function GetIsObject: Boolean;
+    function GetIsMemo: Boolean;
     procedure SetAsInterface(AIndex: integer; AValue: IUnknown);
     procedure SetAsPersistData(AIndex: integer; AValue: IRBData);
     procedure SetAsObject(AIndex: integer; AValue: TObject);
@@ -50,6 +55,7 @@ type
     property EnumNameCount: integer read GetEnumNameCount;
     property EnumName[AValue: integer]: string read GetEnumName;
     property IsObject: Boolean read GetIsObject;
+    property IsMemo: Boolean read GetIsMemo;
     property ClassName: string read GetClassName;
   end;
 

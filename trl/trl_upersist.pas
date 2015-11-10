@@ -20,6 +20,7 @@ type
     function GetName: string;
     function GetClassName: string;
     function GetIsObject: Boolean;
+    function GetIsMemo: Boolean;
     function GetIsInterface: Boolean;
     function GetTypeKind: TTypeKind;
     function GetAsPersist: string;
@@ -61,6 +62,7 @@ type
     function GetEnumName(AValue: integer): string;
     function GetEnumNameCount: integer;
     function GetIsObject: Boolean;
+    function GetIsMemo: Boolean;
     function GetAsInterface(AIndex: integer): IUnknown; virtual;
     procedure SetAsInterface(AIndex: integer; AValue: IUnknown); virtual;
     function GetClassName: string; virtual;
@@ -82,6 +84,7 @@ type
     property AsPersistData[AIndex: integer]: IRBData read GetAsPersistData write SetAsPersistData;
     property AsPersistDataClass: IRBData read GetAsPersistDataClass;
     property IsObject: Boolean read GetIsObject;
+    property IsMemo: Boolean read GetIsMemo;
     property ClassName: string read GetClassName;
   public
     constructor Create;
@@ -198,6 +201,11 @@ end;
 function TPersistMany<TItem>.GetIsObject: Boolean;
 begin
   Result := ItemTypeInfo^.Kind in [tkClass, tkObject];
+end;
+
+function TPersistMany<TItem>.GetIsMemo: Boolean;
+begin
+  Result := SameText(ItemTypeInfo^.Name, cMemoStringType);
 end;
 
 function TPersistMany<TItem>.GetAsInterface(AIndex: integer): IUnknown;
@@ -322,6 +330,11 @@ end;
 function TPersistManyDataItem.GetIsObject: Boolean;
 begin
   Result := fPersistMany.IsObject;
+end;
+
+function TPersistManyDataItem.GetIsMemo: Boolean;
+begin
+  Result := fPersistMany.IsMemo;
 end;
 
 function TPersistManyDataItem.GetIsInterface: Boolean;

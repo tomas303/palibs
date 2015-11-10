@@ -225,10 +225,10 @@ begin
         SaveDataItemObject(mObjStoreEl, AData[i].Name, AData[i].AsObject, {AData[i].IsReference} False);
       end;
     end
-    //else if AData[i].IsMemo then
-    //begin
-    //  SaveDataItemMemo(AStoreEl, AData[i].Name, AData[i].AsPersist);
-    //end
+    else if AData[i].IsMemo then
+    begin
+      SaveDataItemMemo(AStoreEl, AData[i].Name, AData[i].AsPersist);
+    end
     else
     begin
       SaveDataItemValue(AStoreEl, AData[i].Name, AData[i].AsPersist);
@@ -264,11 +264,11 @@ begin
       LoadDataItemObject(mObjStoreEl, mData);
     end
     else
-    //if AData[i].IsMemo then
-    //begin
-    //  AData[i].AsPersist := LoadDataItemMemo(AStoreEl, AData[i].Name);
-    //end
-    //else
+    if AData[i].IsMemo then
+    begin
+      AData[i].AsPersist := LoadDataItemMemo(AStoreEl, AData[i].Name);
+    end
+    else
     begin
       AData[i].AsPersist := LoadDataItemValue(AStoreEl, AData[i].Name);
     end;
@@ -287,7 +287,7 @@ var
   mMemoNode: TDOMCDATASection;
 begin
   Result := '';
-  mStoreEl := FindElement(AStoreEl, './' + cMemo);
+  mStoreEl := FindElement(AStoreEl, './' + AName);
   if mStoreEl = nil then
     Exit;
   mMemoNode := mStoreEl.ChildNodes[0] as TDOMCDATASection;
@@ -445,8 +445,7 @@ var
 begin
   if AValue <> '' then
   begin
-    mStoreEl := Doc.CreateElement(cMemo);
-    mStoreEl.AttribStrings[AName] := '';
+    mStoreEl := Doc.CreateElement(AName);
     AStoreEl.AppendChild(mStoreEl);
     mMemoNode := Doc.CreateCDATASection(AValue);
     mStoreEl.AppendChild(mMemoNode);

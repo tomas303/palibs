@@ -18,6 +18,7 @@ type
       function GetName: string;
       function GetClassName: string;
       function GetIsObject: Boolean;
+      function GetIsMemo: Boolean;
       function GetIsInterface: Boolean;
       function GetTypeKind: TTypeKind;
       function GetAsPersist: string;
@@ -42,6 +43,7 @@ type
       property Name: string read GetName;
       property ClassName: string read GetClassName;
       property IsObject: Boolean read GetIsObject;
+      property IsMemo: Boolean read GetIsMemo;
       property IsInterface: Boolean read GetIsInterface;
       property TypeKind: TTypeKind read GetTypeKind;
       property AsPersist: string read GetAsPersist write SetAsPersist;
