@@ -22,7 +22,7 @@ type
     fDataItem: IRBDataItem;
     fChangeEvents: TBinderChangeEvents;
   protected
-    procedure BindControl; virtual; abstract;
+    procedure BindControl; virtual;
     procedure UnbindControl; virtual;
     procedure NotifyChangeEvents;
   public
@@ -44,6 +44,7 @@ type
     procedure OnChangeHandler(Sender: TObject);
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     property Control: TCustomEdit read GetControl;
   public
     procedure DataToControl; override;
@@ -57,6 +58,7 @@ type
     procedure OnChangeHandler(Sender: TObject);
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     property Control: TCustomEditButton read GetControl;
   public
     procedure DataToControl; override;
@@ -70,6 +72,7 @@ type
     procedure OnChangeHandler(Sender: TObject);
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     property Control: TCustomSynEdit read GetControl;
   public
     procedure DataToControl; override;
@@ -83,6 +86,7 @@ type
     procedure OnChangeHandler(Sender: TObject);
   protected
     procedure BindControl; override;
+    procedure UnbindControl; override;
     property Control: TCustomCheckBox read GetControl;
   public
     procedure DataToControl; override;
@@ -288,7 +292,14 @@ end;
 
 procedure TTextBtnBinder.BindControl;
 begin
+  inherited;
   Control.OnChange := @OnChangeHandler;
+end;
+
+procedure TTextBtnBinder.UnbindControl;
+begin
+  Control.OnChange := nil;
+  inherited UnbindControl;
 end;
 
 procedure TTextBtnBinder.DataToControl;
@@ -331,7 +342,14 @@ end;
 
 procedure TMemoBinder.BindControl;
 begin
+  inherited;
   Control.OnChange := @OnChangeHandler;
+end;
+
+procedure TMemoBinder.UnbindControl;
+begin
+  Control.OnChange := nil;
+  inherited UnbindControl;
 end;
 
 procedure TMemoBinder.DataToControl;
@@ -354,7 +372,14 @@ end;
 
 procedure TBoolBinder.BindControl;
 begin
+  inherited;
   Control.OnChange := @OnChangeHandler;
+end;
+
+procedure TBoolBinder.UnbindControl;
+begin
+  Control.OnChange := nil;
+  inherited UnbindControl;
 end;
 
 procedure TBoolBinder.DataToControl;
@@ -747,6 +772,7 @@ end;
 
 procedure TOfferBinder.BindControl;
 begin
+  inherited;
   FillOffer;
   Control.OnChange := @OnChangeHandler;
   fOldWndProc := Control.WindowProc;
@@ -825,8 +851,13 @@ begin
 end;
 
 function TListBinder.GetAsMany: IPersistMany;
+var
+  m: boolean;
+  mm: string;
 begin
-  if DataItem.IsObject then
+  mm := self.ClassName;
+  m := DataItem.IsObject;
+  if m then
     Result := DataItem.AsObject as IPersistMany
   else
   if DataItem.IsInterface then
@@ -942,7 +973,7 @@ begin
     Exit;
   if fCellBinder.DataItem = nil then
     Exit;
-  if Supports(fCellBinder.DataItem.AsInterface, IPersistRef) then
+  if fCellBinder.DataItem.IsInterface and Supports(fCellBinder.DataItem.AsInterface, IPersistRef) then
   begin
     Control.Cells[Control.Col, Control.Row] := (fCellBinder.DataItem.AsInterface as IPersistRef).Data[0].AsString;
   end
@@ -1039,6 +1070,11 @@ end;
 
 procedure TListBinder.UnbindControl;
 begin
+  Control.OnColRowInserted := nil;
+  Control.OnColRowDeleted := nil;
+  Control.OnSelectEditor := nil;
+  Control.OnKeyDown := nil;
+  Control.H_OnEditingDone := nil;
   fOldEd.Free;
   Control.WindowProc := fOldWndProc;
   inherited UnbindControl;
@@ -1086,7 +1122,14 @@ end;
 
 procedure TTextBinder.BindControl;
 begin
+  inherited;
   Control.OnChange := @OnChangeHandler;
+end;
+
+procedure TTextBinder.UnbindControl;
+begin
+  Control.OnChange := nil;
+  inherited UnbindControl;
 end;
 
 procedure TTextBinder.DataToControl;
@@ -1095,6 +1138,10 @@ begin
 end;
 
 { TEditBinder }
+
+procedure TEditBinder.BindControl;
+begin
+end;
 
 procedure TEditBinder.UnbindControl;
 begin
