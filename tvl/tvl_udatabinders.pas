@@ -1060,7 +1060,8 @@ begin
   Control.OnSelectEditor := nil;
   Control.OnKeyDown := nil;
   Control.H_OnEditingDone := nil;
-  fOldEd.Free;
+  FreeAndNil(fOldEd);
+  FreeAndNil(fCellBinder);
   inherited UnbindControl;
 end;
 
