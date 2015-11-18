@@ -9,7 +9,7 @@ interface
 uses
   tvl_uapplaunch, tvl_udatabinder, tvl_udatabinders, tvl_ibindings, 
   tvl_ubehavebinder, tvl_ubehavebinders, tvl_ugridbinders, tvl_utallybinders, 
-  tvl_messages, tvl_iedit, LazarusPackageIntf;
+  tvl_messages, tvl_iedit, tvl_ucontrolbinder, LazarusPackageIntf;
 
 implementation
 

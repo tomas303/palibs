@@ -6,7 +6,7 @@ uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
-  Forms, trl_ipersiststore, EditBtn;
+  Forms, trl_ipersiststore, EditBtn, tvl_ucontrolbinder;
 
 type
 
@@ -16,23 +16,23 @@ type
 
   { TEditBinder }
 
-  TEditBinder = class
+  TEditBinder = class(TControlBinder)
   private
-    fControl: TWinControl;
     fDataItem: IRBDataItem;
     fChangeEvents: TBinderChangeEvents;
+    function GetControl: TWinControl;
   protected
-    procedure BindControl; virtual;
-    procedure UnbindControl; virtual;
+    procedure BindControl; override;
+    procedure UnbindControl; override;
     procedure NotifyChangeEvents;
+    property Control: TWinControl read GetControl;
   public
     constructor Create;
     destructor Destroy; override;
     procedure DataToControl; virtual; abstract;
-    procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem);
+    procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem); reintroduce;
     procedure RegisterChangeEvent(AEvent: TBinderChangeEvent);
     procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent);
-    property Control: TWinControl read fControl;
     property DataItem: IRBDataItem read fDataItem;
   end;
 
@@ -97,10 +97,8 @@ type
   TOfferBinder = class(TEditBinder)
   private
     fKeyDownItemIndex: integer;
-    fOldWndProc: TWndMethod;
     function GetControl: TCustomComboBox;
     procedure OnChangeHandler(Sender: TObject);
-    procedure ControlWndProc(var TheMessage: TLMessage);
   protected
     procedure FillOffer; virtual; abstract;
     procedure OfferToData; virtual; abstract;
@@ -108,6 +106,7 @@ type
   protected
     procedure BindControl; override;
     procedure UnbindControl; override;
+    procedure DoControlWndProc(var TheMessage: TLMessage); override;
     property Control: TCustomComboBox read GetControl;
   public
     procedure DataToControl; override;
@@ -161,6 +160,7 @@ type
       procedure GetGrid(var Msg: TGridMessage);
     public
       constructor Create(AEditor: TWinControl);
+      destructor Destroy; override;
     end;
 
     { TOfferEditor }
@@ -205,8 +205,6 @@ type
     fCellBinder: TEditBinder;
     fObjectData: IRBData;
     fOldEd: TWinControl;
-    fOldWndProc: TWndMethod;
-    procedure ControlWndProc(var TheMessage: TLMessage);
     function GetAsMany: IPersistMany;
     function GetControl: TCustomStringGrid;
     procedure FillRowFromObject(ARow: integer; AObjectData: IRBData);
@@ -224,6 +222,7 @@ type
   protected
     procedure BindControl; override;
     procedure UnbindControl; override;
+    procedure DoControlWndProc(var TheMessage: TLMessage); override;
     property Control: TCustomStringGrid read GetControl;
     property AsMany: IPersistMany read GetAsMany;
   public
@@ -613,6 +612,12 @@ begin
   fEditor.WindowProc := @EditorWndProc;
 end;
 
+destructor TListBinder.TGridEditorSupport.Destroy;
+begin
+  fEditor.WindowProc := fOldWndProc;
+  inherited Destroy;
+end;
+
 { TListBinder.TOfferEditor }
 
 procedure TListBinder.TOfferEditor.KeyDown(var Key: Word; Shift: TShiftState);
@@ -755,7 +760,21 @@ begin
   NotifyChangeEvents;
 end;
 
-procedure TOfferBinder.ControlWndProc(var TheMessage: TLMessage);
+procedure TOfferBinder.BindControl;
+begin
+  inherited;
+  FillOffer;
+  Control.OnChange := @OnChangeHandler;
+  Control.AutoComplete := True;
+end;
+
+procedure TOfferBinder.UnbindControl;
+begin
+  Control.OnChange := nil;
+  inherited UnbindControl;
+end;
+
+procedure TOfferBinder.DoControlWndProc(var TheMessage: TLMessage);
 begin
   case TheMessage.Msg of
     LM_KEYDOWN:
@@ -767,24 +786,7 @@ begin
         OnChangeHandler(Control);
       end;
   end;
-  fOldWndProc(TheMessage);
-end;
-
-procedure TOfferBinder.BindControl;
-begin
   inherited;
-  FillOffer;
-  Control.OnChange := @OnChangeHandler;
-  fOldWndProc := Control.WindowProc;
-  Control.WindowProc := @ControlWndProc;
-  Control.AutoComplete := True;
-end;
-
-procedure TOfferBinder.UnbindControl;
-begin
-  Control.OnChange := nil;
-  Control.WindowProc := fOldWndProc;
-  inherited UnbindControl;
 end;
 
 procedure TOfferBinder.DataToControl;
@@ -833,21 +835,6 @@ end;
 function TListBinder.GetControl: TCustomStringGrid;
 begin
   Result := inherited Control as TCustomStringGrid;
-end;
-
-procedure TListBinder.ControlWndProc(var TheMessage: TLMessage);
-begin
-  case TheMessage.Msg of
-    TVLM_GRIDSETPOS:
-      begin
-        if TheMessage.WParam <> -1 then
-          Control.Row := TheMessage.WParam;
-        if TheMessage.LParam <> -1 then
-          Control.Col := TheMessage.LParam;
-      end;
-    else
-      fOldWndProc(TheMessage);
-  end;
 end;
 
 function TListBinder.GetAsMany: IPersistMany;
@@ -1039,8 +1026,6 @@ var
   mData: IRBData;
   i: integer;
 begin
-  fOldWndProc := Control.WindowProc;
-  Control.WindowProc := @ControlWndProc;
   Control.RowCount := 1 + AsMany.Count;
   Control.FixedRows := 1;
   Control.FixedCols := 0;
@@ -1076,8 +1061,22 @@ begin
   Control.OnKeyDown := nil;
   Control.H_OnEditingDone := nil;
   fOldEd.Free;
-  Control.WindowProc := fOldWndProc;
   inherited UnbindControl;
+end;
+
+procedure TListBinder.DoControlWndProc(var TheMessage: TLMessage);
+begin
+  case TheMessage.Msg of
+    TVLM_GRIDSETPOS:
+      begin
+        if TheMessage.WParam <> -1 then
+          Control.Row := TheMessage.WParam;
+        if TheMessage.LParam <> -1 then
+          Control.Col := TheMessage.LParam;
+      end;
+    else
+      inherited;
+  end;
 end;
 
 procedure TListBinder.DataToControl;
@@ -1139,12 +1138,19 @@ end;
 
 { TEditBinder }
 
+function TEditBinder.GetControl: TWinControl;
+begin
+  Result := inherited Control as TWinControl;
+end;
+
 procedure TEditBinder.BindControl;
 begin
+  inherited;
 end;
 
 procedure TEditBinder.UnbindControl;
 begin
+  inherited;
 end;
 
 procedure TEditBinder.NotifyChangeEvents;
@@ -1162,7 +1168,6 @@ end;
 
 destructor TEditBinder.Destroy;
 begin
-  UnbindControl;
   FreeAndNil(fChangeEvents);
   inherited Destroy;
 end;
@@ -1170,9 +1175,8 @@ end;
 procedure TEditBinder.Bind(const AControl: TWinControl;
   const ADataItem: IRBDataItem);
 begin
-  fControl := AControl;
   fDataItem := ADataItem;
-  BindControl;
+  inherited Bind(AControl);
   DataToControl;
 end;
 

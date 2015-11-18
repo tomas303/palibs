@@ -5,7 +5,7 @@ unit tvl_ubehavebinder;
 interface
 
 uses
-  SysUtils, tvl_ibindings, tvl_ubehavebinders,
+  SysUtils, tvl_ibindings, tvl_ucontrolbinder, tvl_ubehavebinders,
   Controls, ComCtrls, fgl;
 
 type
@@ -14,7 +14,7 @@ type
 
   TRBBehavioralBinder = class(TInterfacedObject, IRBBehavioralBinder)
   private type
-    TBehaveBinderItems = specialize TFPGObjectList<TBehaveBinder>;
+    TBehaveBinderItems = specialize TFPGObjectList<TControlBinder>;
   private
     fBinders: TBehaveBinderItems;
     fContainer: TWinControl;
@@ -66,7 +66,7 @@ end;
 
 procedure TRBBehavioralBinder.AddBinderForControl(AControl: TWinControl);
 var
-  mBinder: TBehaveBinder;
+  mBinder: TControlBinder;
 begin
   if AControl is TCustomTabControl then begin
     mBinder := TPageControlBehaveBinder.Create;
