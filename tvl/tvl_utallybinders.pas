@@ -6,8 +6,7 @@ interface
 
 uses
   Classes, SysUtils, grids, controls, fgl,
-  StdCtrls, trl_irttibroker, tvl_ibindings, trl_ipersist, tvl_ugridbinders,
-  trl_ipersiststore;
+  StdCtrls, trl_irttibroker, tvl_ibindings, trl_ipersist, tvl_ugridbinders;
 
 
 type

@@ -4,7 +4,7 @@ interface
 
 uses
   trl_irttibroker, TypInfo, SysUtils, Classes, StrUtils, fgl, contnrs,
-  trl_ipersist, trl_ipersiststore;
+  trl_ipersist;
 
 type
 

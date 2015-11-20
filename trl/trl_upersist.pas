@@ -5,8 +5,7 @@ unit trl_upersist;
 interface
 
 uses
-  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker,
-  trl_ipersiststore;
+  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker;
 
 type
 

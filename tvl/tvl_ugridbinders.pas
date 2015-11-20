@@ -6,8 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Grids, controls, LCLProc, LCLType,
-  lmessages, StdCtrls, MaskEdit, trl_irttibroker, trl_ipersist, tvl_udatabinders,
-  trl_ipersiststore;
+  lmessages, StdCtrls, MaskEdit, trl_irttibroker, trl_ipersist, tvl_udatabinders;
 
 type
 

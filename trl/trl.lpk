@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="8">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -42,10 +42,6 @@
         <Filename Value="trl_upersiststore.pas"/>
         <UnitName Value="trl_upersiststore"/>
       </Item8>
-      <Item9>
-        <Filename Value="trl_ipersiststore.pas"/>
-        <UnitName Value="trl_ipersiststore"/>
-      </Item9>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

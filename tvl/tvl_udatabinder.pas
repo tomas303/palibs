@@ -5,7 +5,7 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, tvl_udatabinders, Grids, SynEdit, trl_ipersist, tvl_ibindings,
-  trl_ipersiststore, EditBtn;
+  EditBtn;
 
 type
 

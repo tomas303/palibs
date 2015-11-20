@@ -6,7 +6,7 @@ uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
-  Forms, trl_ipersiststore, EditBtn, tvl_ucontrolbinder;
+  Forms, EditBtn, tvl_ucontrolbinder;
 
 type
 

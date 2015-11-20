@@ -6,7 +6,7 @@ uses
   trl_irttibroker, trl_ipersist, trl_ifactory,
   trl_urttibroker,
   DOM, XMLRead, XMLWrite, xpath,
-  SysUtils, fgl, trl_ipersiststore;
+  SysUtils, fgl;
 
 const
   cSID = 'SID';
