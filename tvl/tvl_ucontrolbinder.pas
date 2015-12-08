@@ -120,37 +120,37 @@ begin
 end;
 
 procedure TControlBinder.ControlWndProc(var TheMessage: TLMessage);
-begin
-  if not (Control is TWinControl)
-     or (TheMessage.msg = $1328)  // donot know but when pagecontrol on this message call IsControlMouseMsg, then result is AV in there
-     or not (Control as TWinControl).H_IsControlMouseMsg(TheMessage) then
-  begin
-    //DbgOut(Control.ClassName + '.' + Control.Name + ' ' + inttostr(TheMessage.msg));
-    DoControlWndProc(TheMessage);
-  end
-  else
-    fOldWndProc(TheMessage);
-end;
-
-procedure TControlBinder.DoControlWndProc(var TheMessage: TLMessage);
 var
   mMsg: TLMBBWINDOWPROC absolute TheMessage;
 begin
-  case TheMessage.Msg of
-    LM_DISCONECTWINDOWPROC:
-      begin
-        if (mMsg.DisposedProc^.Code = TMethod(fOldWndProc).Code)
-           and (mMsg.DisposedProc^.Data = TMethod(fOldWndProc).Data) then
-        begin
-          fOldWndProc := TWndMethod(mMsg.StoredProc^);
-          mMsg.Result := 1;
-        end
-        else
-          fOldWndProc(TheMessage);
-      end;
+  if TheMessage.msg = LM_DISCONECTWINDOWPROC then
+  begin
+    if (mMsg.DisposedProc^.Code = TMethod(fOldWndProc).Code)
+       and (mMsg.DisposedProc^.Data = TMethod(fOldWndProc).Data) then
+    begin
+      fOldWndProc := TWndMethod(mMsg.StoredProc^);
+      mMsg.Result := 1;
+    end
+    else
+      fOldWndProc(TheMessage);
+  end
   else
-    fOldWndProc(TheMessage);
+  begin
+    if not (Control is TWinControl)
+       or (TheMessage.msg = $1328)  // donot know but when pagecontrol on this message call IsControlMouseMsg, then result is AV in there
+       or not (Control as TWinControl).H_IsControlMouseMsg(TheMessage) then
+    begin
+      //DbgOut(Control.ClassName + '.' + Control.Name + ' ' + inttostr(TheMessage.msg));
+      DoControlWndProc(TheMessage);
+    end
+    else
+      fOldWndProc(TheMessage);
   end;
+end;
+
+procedure TControlBinder.DoControlWndProc(var TheMessage: TLMessage);
+begin
+  fOldWndProc(TheMessage);
 end;
 
 procedure TControlBinder.BindControl;

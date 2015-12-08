@@ -144,20 +144,33 @@ type
     { TGridEditorSupport }
 
     TGridEditorSupport = class
+    protected type
+
+      TOnGetEditorSupportGrid = function: TCustomGrid of object;
+
+      { TSupportBinder }
+
+      TSupportBinder = class(TControlBinder)
+      protected
+        fOnEditorSupportGrid: TOnGetEditorSupportGrid;
+        procedure DoControlWndProc(var TheMessage: TLMessage); override;
+      public
+        property OnEditorSupportGrid: TOnGetEditorSupportGrid read fOnEditorSupportGrid write fOnEditorSupportGrid;
+      end;
+
     private
       fEditor: TWinControl;
-      fOldWndProc: TWndMethod;
       fGrid: TCustomGrid;
       fCol, fRow:Integer;
-      fff: integer;
+      fSupportBinder: TSupportBinder;
     protected
-      procedure EditorWndProc(var TheMessage: TLMessage);
       procedure KeyDown(var Key : Word; Shift : TShiftState);
       procedure EditingDone;
       function GetRect: TRect;
       procedure SetGrid(var Msg: TGridMessage);
       procedure SetPos(var Msg: TGridMessage);
       procedure GetGrid(var Msg: TGridMessage);
+      function GetEditorSupportGridEvent: TCustomGrid;
     public
       constructor Create(AEditor: TWinControl);
       destructor Destroy; override;
@@ -275,6 +288,27 @@ type
   public
     property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
   end;
+
+{ TListBinder.TGridEditorSupport.TSupportBinder }
+
+procedure TListBinder.TGridEditorSupport.TSupportBinder.DoControlWndProc(
+  var TheMessage: TLMessage);
+begin
+  case TheMessage.Msg of
+    LM_KEYDOWN:
+      begin
+        Exit;
+      end;
+    LM_CLEAR,
+    LM_CUT,
+    LM_PASTE:
+      begin
+        if (OnEditorSupportGrid <> nil) and (OnEditorSupportGrid.H_EditorIsReadOnly) then
+          exit;
+      end;
+  end;
+  inherited DoControlWndProc(TheMessage);
+end;
 
 { TTextBtnBinder }
 
@@ -430,7 +464,8 @@ end;
 procedure TListBinder.TTextEditor.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited KeyDown(Key,Shift);
-  fSupport.KeyDown(Key, Shift);
+  if fSupport <> nil then
+    fSupport.KeyDown(Key, Shift);
 end;
 
 procedure TListBinder.TTextEditor.DoSetBounds(ALeft, ATop, AWidth,
@@ -438,23 +473,29 @@ procedure TListBinder.TTextEditor.DoSetBounds(ALeft, ATop, AWidth,
 var
   m: TRect;
 begin
-  m := fSupport.GetRect;
-  inherited DoSetBounds(m.Left, m.Top, m.Right - m.Left + 1, m.Bottom - m.Top + 1);
+  if fSupport <> nil then begin
+    m := fSupport.GetRect;
+    inherited DoSetBounds(m.Left, m.Top, m.Right - m.Left + 1, m.Bottom - m.Top + 1);
+  end else
+    inherited;
 end;
 
 procedure TListBinder.TTextEditor.msg_SetGrid(var Msg: TGridMessage);
 begin
-  fSupport.SetGrid(Msg);
+  if fSupport <> nil then
+    fSupport.SetGrid(Msg);
 end;
 
 procedure TListBinder.TTextEditor.msg_SetPos(var Msg: TGridMessage);
 begin
-  fSupport.SetPos(Msg);
+  if fSupport <> nil then
+    fSupport.SetPos(Msg);
 end;
 
 procedure TListBinder.TTextEditor.msg_GetGrid(var Msg: TGridMessage);
 begin
-  fSupport.GetGrid(Msg);
+  if fSupport <> nil then
+    fSupport.GetGrid(Msg);
 end;
 
 procedure TListBinder.TTextEditor.msg_SetValue(var Msg: TGridMessage);
@@ -469,8 +510,8 @@ end;
 
 constructor TListBinder.TTextEditor.Create(AOwner: TComponent);
 begin
-  fSupport := TGridEditorSupport.Create(Self);
   inherited Create(AOwner);
+  fSupport := TGridEditorSupport.Create(Self);
   AutoSize := false;
   BorderStyle := bsNone;
 end;
@@ -484,29 +525,11 @@ end;
 procedure TListBinder.TTextEditor.EditingDone;
 begin
   inherited EditingDone;
-  fSupport.EditingDone;
+  if fSupport <> nil then
+    fSupport.EditingDone;
 end;
 
 { TListBinder.TGridEditorSupport }
-
-procedure TListBinder.TGridEditorSupport.EditorWndProc(var TheMessage: TLMessage
-  );
-begin
-  case TheMessage.Msg of
-    LM_KEYDOWN:
-      begin
-        Exit;
-      end;
-    LM_CLEAR,
-    LM_CUT,
-    LM_PASTE:
-      begin
-        if (fGrid <> nil) and (fGrid.H_EditorIsReadOnly) then
-          exit;
-      end;
-  end;
-  fOldWndProc(TheMessage);
-end;
 
 procedure TListBinder.TGridEditorSupport.KeyDown(var Key: Word;
   Shift: TShiftState);
@@ -605,16 +628,23 @@ begin
   Msg.Options:= EO_IMPLEMENTED;
 end;
 
+function TListBinder.TGridEditorSupport.GetEditorSupportGridEvent: TCustomGrid;
+begin
+  Result := fGrid;
+end;
+
 constructor TListBinder.TGridEditorSupport.Create(AEditor: TWinControl);
 begin
   fEditor := AEditor;
-  fOldWndProc := fEditor.WindowProc;
-  fEditor.WindowProc := @EditorWndProc;
+  fSupportBinder := TSupportBinder.Create;
+  fSupportBinder.OnEditorSupportGrid := @GetEditorSupportGridEvent;
+  fSupportBinder.Bind(fEditor);
 end;
 
 destructor TListBinder.TGridEditorSupport.Destroy;
 begin
-  fEditor.WindowProc := fOldWndProc;
+  fSupportBinder.Unbind;
+  FreeAndNil(fSupportBinder);
   inherited Destroy;
 end;
 
@@ -623,7 +653,8 @@ end;
 procedure TListBinder.TOfferEditor.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited KeyDown(Key,Shift);
-  fSupport.KeyDown(Key, Shift);
+  if fSupport <> nil then
+    fSupport.KeyDown(Key, Shift);
 end;
 
 procedure TListBinder.TOfferEditor.DoSetBounds(ALeft, ATop, AWidth,
@@ -631,23 +662,29 @@ procedure TListBinder.TOfferEditor.DoSetBounds(ALeft, ATop, AWidth,
 var
   m: TRect;
 begin
-  m := fSupport.GetRect;
-  inherited DoSetBounds(m.Left, m.Top, m.Right - m.Left + 1, m.Bottom - m.Top + 1);
+  if fSupport <> nil then begin
+    m := fSupport.GetRect;
+    inherited DoSetBounds(m.Left, m.Top, m.Right - m.Left + 1, m.Bottom - m.Top + 1);
+  end else
+    inherited;
 end;
 
 procedure TListBinder.TOfferEditor.msg_SetGrid(var Msg: TGridMessage);
 begin
-  fSupport.SetGrid(Msg);
+  if fSupport <> nil then
+    fSupport.SetGrid(Msg);
 end;
 
 procedure TListBinder.TOfferEditor.msg_SetPos(var Msg: TGridMessage);
 begin
-  fSupport.SetPos(Msg);
+  if fSupport <> nil then
+    fSupport.SetPos(Msg);
 end;
 
 procedure TListBinder.TOfferEditor.msg_GetGrid(var Msg: TGridMessage);
 begin
-  fSupport.GetGrid(Msg);
+  if fSupport <> nil then
+    fSupport.GetGrid(Msg);
 end;
 
 procedure TListBinder.TOfferEditor.msg_SetValue(var Msg: TGridMessage);
@@ -662,8 +699,8 @@ end;
 
 constructor TListBinder.TOfferEditor.Create(AOwner: TComponent);
 begin
-  fSupport := TGridEditorSupport.Create(Self);
   inherited Create(AOwner);
+  fSupport := TGridEditorSupport.Create(Self);
   AutoSize := false;
   BorderStyle := bsNone;
 end;
@@ -677,7 +714,8 @@ end;
 procedure TListBinder.TOfferEditor.EditingDone;
 begin
   inherited EditingDone;
-  fSupport.EditingDone;
+  if fSupport <> nil then
+    fSupport.EditingDone;
 end;
 
 { TOfferRefBinder }
