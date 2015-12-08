@@ -653,8 +653,9 @@ end;
 procedure TListBinder.TOfferEditor.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited KeyDown(Key,Shift);
-  if fSupport <> nil then
-    fSupport.KeyDown(Key, Shift);
+  if not DroppedDown then
+     if fSupport <> nil then
+        fSupport.KeyDown(Key, Shift);
 end;
 
 procedure TListBinder.TOfferEditor.DoSetBounds(ALeft, ATop, AWidth,
