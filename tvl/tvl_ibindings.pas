@@ -16,7 +16,7 @@ type
     procedure DataChange;
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
-    property AData: IRBData read GetData write SetData;
+    property Data: IRBData read GetData write SetData;
   end;
 
   IRBTallyBinder = interface
