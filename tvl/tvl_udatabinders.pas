@@ -1008,6 +1008,7 @@ begin
     DataToControl
   else
     Control.Cells[Control.Col, Control.Row] := fCellBinder.DataItem.AsString;
+  FreeAndNil(fCellBinder);
 end;
 
 procedure TListBinder.OnSelectEditorHandler(Sender: TObject; aCol,
