@@ -194,7 +194,68 @@ type
     property AddClass: TClass write SetAddClass;
   end;
 
+  { TDIOwner }
+
+  TDIOwner = class(TComponent)
+  {
+  solve problem of interfaces on TComponent - which is freed manually, but
+  link from other place are not zeroed ... and crash when hit inc/dec code
+  so before free such owner will clear all published interfaces on childs
+  }
+  protected
+    procedure Clear(const AComp: TComponent; AFreedInstance: TObject = nil);
+    procedure ClearChilds(AFreedInstance: TObject = nil);
+    procedure Notification(AComponent: TComponent;
+      Operation: TOperation); override;
+  published
+    destructor Destroy; override;
+  end;
+
 implementation
+
+{ TDIOwner }
+
+procedure TDIOwner.Clear(const AComp: TComponent; AFreedInstance: TObject = nil);
+var
+  mRB: IRBData;
+  mRBItem: IRBDataItem;
+  i: integer;
+begin
+  mRB := TRBData.Create(AComp, True);
+  for i := 0 to mRB.Count - 1 do begin
+    mRBItem := mRB.Items[i];
+    case mRBItem.TypeKind of
+      tkInterface:
+      begin
+        if mRBItem.AsInterface <> nil then begin
+          if (AFreedInstance = nil) or ((mRBItem.AsInterface as TObject) = AFreedInstance) then
+            mRBItem.AsInterface := nil;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TDIOwner.ClearChilds(AFreedInstance: TObject = nil);
+var
+  i: integer;
+begin
+  for i := 0 to ComponentCount - 1 do
+    Clear(Components[i], AFreedInstance);
+end;
+
+procedure TDIOwner.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if Operation = opRemove then
+    ClearChilds(AComponent);
+  inherited Notification(AComponent, Operation);
+end;
+
+destructor TDIOwner.Destroy;
+begin
+  ClearChilds;
+  inherited Destroy;
+end;
 
 { TDIReg.TImplementation }
 
