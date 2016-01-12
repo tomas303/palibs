@@ -163,7 +163,7 @@ end;
 procedure TDataSlots.SetData(AValue: IRBData);
 begin
   fData := AValue;
-  DataChange;
+  ActualizeItems;
 end;
 
 function TDataSlots.GetItemsCount({AIndex: Integer}): integer;
