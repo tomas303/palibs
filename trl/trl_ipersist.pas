@@ -98,7 +98,6 @@ type
     class operator Add(const A: string; const B: TSID): string;
   end;
 
-
   { ISIDList }
 
   ISIDList = interface
@@ -131,8 +130,11 @@ type
     function Load(const ASID: TSID): IRBData; overload;
     function GetSID(const AData: IRBData): TSID;
     property SID[const AData: IRBData]: TSID read GetSID;
-    procedure Open;
-    procedure Close;
+    procedure Open; overload;
+    procedure Open(const AFile: string); overload;
+    procedure Open(const AStream: TStream); overload;
+    procedure Close; overload;
+    procedure Close(const AStream: TStream); overload;
     procedure Flush;
   end;
 
@@ -195,8 +197,11 @@ type
     //function GetSIDSForClass(const AClass: string): array of ASID;
     function NewSID: TSID;
     function GetSIDClass(const ASID: TSID): string;
-    procedure Open;
-    procedure Close;
+    procedure Open; overload;
+    procedure Open(const AFile: string); overload;
+    procedure Open(const AStream: TStream); overload;
+    procedure Close; overload;
+    procedure Close(const AStream: TStream); overload;
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
 

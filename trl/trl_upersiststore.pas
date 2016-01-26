@@ -152,8 +152,11 @@ type
     procedure Delete(AData: IRBData);
     function Load(const ASID: TSID): IRBData; overload;
     function GetSID(const AData: IRBData): TSID;
-    procedure Open;
-    procedure Close;
+    procedure Open; overload;
+    procedure Open(const AFile: string); overload;
+    procedure Open(const AStream: TStream); overload;
+    procedure Close; overload;
+    procedure Close(const AStream: TStream); overload;
     procedure Flush;
     property SID[const AData: IRBData]: TSID read GetSID;
     // IPersistQuery
@@ -602,9 +605,24 @@ begin
   fDevice.Open;
 end;
 
+procedure TPersistStore.Open(const AFile: string);
+begin
+  fDevice.Open(AFile);
+end;
+
+procedure TPersistStore.Open(const AStream: TStream);
+begin
+  fDevice.Open(AStream);
+end;
+
 procedure TPersistStore.Close;
 begin
   fDevice.Close;
+end;
+
+procedure TPersistStore.Close(const AStream: TStream);
+begin
+  fDevice.Close(AStream);
 end;
 
 procedure TPersistStore.Flush;

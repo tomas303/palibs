@@ -6,7 +6,7 @@ uses
   trl_irttibroker, trl_ipersist, trl_ifactory,
   trl_urttibroker,
   DOM, XMLRead, XMLWrite, xpath,
-  SysUtils, fgl;
+  SysUtils, fgl, classes, base64;
 
 const
   cSID = 'SID';
@@ -59,8 +59,8 @@ type
     //save
     procedure SaveDataItemValue(AStoreEl: TDOMElement; const AName, AValue: string);
     procedure SaveDataItemMemo(AStoreEl: TDOMElement; const AName, AValue: string);
-    procedure SaveDataItemObject(AStoreEl: TDOMElement; const AName: string;
-      const AValue: TObject; AIsReference: Boolean);
+    procedure SaveDataItemStream(AStoreEl: TDOMElement; AValue: TStream);
+    procedure SaveDataItemObject(AStoreEl: TDOMElement; const AValue: TObject; AIsReference: Boolean);
     procedure SaveDataItemRef(AStoreEl: TDOMElement; const AName: string;
       const AValue: IPersistRef);
     procedure SaveDataList(AStoreEl: TDOMElement; ADataItem: IRBDataItem);
@@ -68,11 +68,13 @@ type
     //load
     function LoadDataItemValue(AStoreEl: TDOMElement; const AName: string): string;
     function LoadDataItemMemo(AStoreEl: TDOMElement; const AName: string): string;
+    procedure LoadDataItemStream(AStoreEl: TDOMElement; const AName: string; AValue: TStream);
     procedure LoadDataItemObject(AStoreEl: TDOMElement; const AData: IRBData);
     procedure LoadDataItemRef(AStoreEl: TDOMElement; const AValue: IPersistRef);
     procedure LoadDataList(AStoreEl: TDOMElement; ADataItem: IRBDataItem);
     procedure LoadData(AStoreEl: TDOMElement; AData: IRBData);
   protected
+    procedure CheckOpen;
     property Doc: TXMLDocument read GetDoc;
   public
     constructor Create(AFactory: IFactory; const AFile: string);
@@ -85,8 +87,12 @@ type
     procedure Delete(const ASID: TSID);
     function NewSID: TSID;
     function GetSIDClass(const ASID: TSID): string;
-    procedure Open;
-    procedure Close;
+    procedure Open; overload;
+    procedure Open(const AFile: string); overload;
+    procedure Open(const AStream: TStream); overload;
+    procedure Close; overload;
+    procedure Close(const AStream: TStream); overload;
+
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
   published
@@ -222,7 +228,7 @@ begin
       begin
         mObjStoreEl := Doc.CreateElement(AData[i].Name);
         AStoreEl.AppendChild(mObjStoreEl);
-        SaveDataItemObject(mObjStoreEl, AData[i].Name, AData[i].AsObject, {AData[i].IsReference} False);
+        SaveDataItemObject(mObjStoreEl, AData[i].AsObject, {AData[i].IsReference} False);
       end;
     end
     else if AData[i].IsMemo then
@@ -256,12 +262,18 @@ begin
     else
     if AData[i].IsObject then
     begin
-      mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
-      if mObjStoreEl = nil then
-        Continue;
-      mData := fFactory.CreateObject(AData[i].ClassName);
-      mData.UnderObject := AData[i].AsObject;
-      LoadDataItemObject(mObjStoreEl, mData);
+      if AData[i].AsObject is TStream then begin
+        LoadDataItemStream(AStoreEl, AData[i].Name, AData[i].AsObject as TStream);
+      end
+      else
+      begin
+        mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
+        if mObjStoreEl = nil then
+          Continue;
+        mData := fFactory.CreateObject(AData[i].ClassName);
+        mData.UnderObject := AData[i].AsObject;
+        LoadDataItemObject(mObjStoreEl, mData);
+      end;
     end
     else
     if AData[i].IsMemo then
@@ -273,6 +285,12 @@ begin
       AData[i].AsPersist := LoadDataItemValue(AStoreEl, AData[i].Name);
     end;
   end;
+end;
+
+procedure TXmlStore.CheckOpen;
+begin
+  if fDoc <> nil then
+    raise Exception.Create('already opened');
 end;
 
 function TXmlStore.LoadDataItemValue(AStoreEl: TDOMElement; const AName: string): string;
@@ -292,6 +310,33 @@ begin
     Exit;
   mMemoNode := mStoreEl.ChildNodes[0] as TDOMCDATASection;
   Result := mMemoNode.TextContent;
+end;
+
+procedure TXmlStore.LoadDataItemStream(AStoreEl: TDOMElement;
+  const AName: string; AValue: TStream);
+var
+  mStoreEl: TDOMElement;
+  mMemoNode: TDOMCDATASection;
+  mInstream: TBytesStream;
+  mDecoder: TBase64DecodingStream;
+begin
+  mStoreEl := FindElement(AStoreEl, './' + AName);
+  if mStoreEl = nil then begin
+    AValue.Size := 0;
+    Exit;
+  end;
+  mMemoNode := mStoreEl.ChildNodes[0] as TDOMCDATASection;
+  mInstream := TBytesStream.Create(TEncoding.ASCII.GetBytes(mMemoNode.TextContent));
+  try
+    mDecoder := TBase64DecodingStream.Create(mInstream);
+    try
+      AValue.CopyFrom(mDecoder, mDecoder.Size);
+    finally
+      mDecoder.Free;
+    end;
+  finally
+    mInstream.Free;
+  end;
 end;
 
 procedure TXmlStore.LoadDataItemObject(AStoreEl: TDOMElement; const AData: IRBData);
@@ -452,28 +497,47 @@ begin
   end;
 end;
 
+procedure TXmlStore.SaveDataItemStream(AStoreEl: TDOMElement; AValue: TStream);
+var
+  mMemoNode: TDOMCDATASection;
+  mValue: DOMString;
+  mEncoder: TBase64EncodingStream;
+  mEncoded: TBytesStream;
+begin
+  if AValue <> nil then
+  begin
+    mEncoded := TBytesStream.Create;
+    try
+      mEncoder := TBase64EncodingStream.Create(mEncoded);
+      try
+        AValue.Position := 0;
+        mEncoder.CopyFrom(AValue, AValue.Size);
+      finally
+        mEncoder.Free;
+      end;
+      mValue := TEncoding.ASCII.GetString(mEncoded.Bytes, 0, mEncoded.Size);
+      mMemoNode := Doc.CreateCDATASection(mValue);
+      AStoreEl.AppendChild(mMemoNode);
+    finally
+      mEncoded.Free;
+    end;
+  end;
+end;
+
 procedure TXmlStore.SaveDataItemObject(AStoreEl: TDOMElement;
-  const AName: string; const AValue: TObject; AIsReference: Boolean);
+  const AValue: TObject; AIsReference: Boolean);
 var
   mSID: TSID;
   mData: IRBData;
 begin
-  //if AIsReference then
-  //begin
-  //  if AValue <> nil then
-  //  begin
-  //    mSID := fStoreCache.FindSID(AValue);
-  //    SaveDataItemValue(AStoreEl, cRefID, mSID);
-  //  end;
-  //end
-  //else
-  //begin
-    if AValue <> nil then begin
-      mData := fFactory.CreateObject(AValue.ClassName);
-      mData.UnderObject := AValue;
-      SaveData(AStoreEl, mData);
-    end;
-  //end;
+  if AValue is TStream then
+    SaveDataItemStream(AStoreEl, AValue as TStream)
+  else
+  if AValue <> nil then begin
+    mData := fFactory.CreateObject(AValue.ClassName);
+    mData.UnderObject := AValue;
+    SaveData(AStoreEl, mData);
+  end;
 end;
 
 procedure TXmlStore.SaveDataItemRef(AStoreEl: TDOMElement; const AName: string;
@@ -526,7 +590,7 @@ begin
       mStoreEl.AppendChild(mStoreItemEl);
       // store data
       if mMany.IsObject then
-        SaveDataItemObject(mStoreItemEl, ADataItem.Name, mMany.AsObject[i], False)
+        SaveDataItemObject(mStoreItemEl, mMany.AsObject[i], False)
       else
         SaveDataItemValue(mStoreItemEl, cValue, mMany.AsPersist[i]);
     end;
@@ -610,8 +674,7 @@ end;
 
 procedure TXmlStore.Open;
 begin
-  if fDoc <> nil then
-    raise Exception.Create('already opened');
+  CheckOpen;
   if (fFile <> '') and FileExists(fFile) then
     ReadXMLFile(fDoc, fFile);
   if fDoc = nil then
@@ -622,16 +685,38 @@ begin
   fSIDMgr.Load(fDoc);
 end;
 
+procedure TXmlStore.Open(const AFile: string);
+begin
+  CheckOpen;
+  fFile := AFile;
+  Open;
+end;
+
+procedure TXmlStore.Open(const AStream: TStream);
+begin
+  CheckOpen;
+  ReadXMLFile(fDoc, AStream);
+end;
+
 procedure TXmlStore.Close;
 begin
   Flush;
   FreeAndNil(fDoc);
 end;
 
+procedure TXmlStore.Close(const AStream: TStream);
+begin
+  Flush;
+  WriteXMLFile(fDoc, AStream);
+  FreeAndNil(fDoc);
+end;
+
 procedure TXmlStore.Flush;
 begin
-  fSIDMgr.Save(Doc);
-  WriteXMLFile(Doc, fFile);
+  if (fFile <> '') and (fDoc <> nil) then begin
+    fSIDMgr.Save(Doc);
+    WriteXMLFile(Doc, fFile);
+  end;
 end;
 
 function TXmlStore.GetSIDs(const AClass: string): ISIDList;
