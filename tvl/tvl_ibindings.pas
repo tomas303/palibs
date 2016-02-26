@@ -14,6 +14,7 @@ type
     procedure Bind(AContainer: TWinControl; const AData: IRBData);
     procedure Unbind;
     procedure DataChange;
+    procedure Flush(AControl: TControl = nil);
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
     property Data: IRBData read GetData write SetData;

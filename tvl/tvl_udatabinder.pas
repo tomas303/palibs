@@ -5,29 +5,57 @@ interface
 uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, tvl_udatabinders, Grids, SynEdit, trl_ipersist, tvl_ibindings,
-  EditBtn;
+  EditBtn, trl_urttibroker;
 
 type
+  { TCustomDataSlotsItem }
+
+  TCustomDataSlotsItem = class
+  private
+    fDataItem: IRBDataItem;
+  protected
+    function FindControl(AContainer: TWinControl): TWinControl;
+    procedure DoBind(const AContainer: TWinControl; const ADataItem: IRBDataItem); virtual; abstract;
+    procedure DoDataChange; virtual; abstract;
+    procedure DoFlush(AControl: TControl = nil); virtual; abstract;
+  public
+    procedure Bind(const AContainer: TWinControl; const ADataItem: IRBDataItem);
+    procedure DataChange;
+    procedure Flush(AControl: TControl = nil);
+  end;
 
   { TDataSlotsItem }
 
-  TDataSlotsItem = class
-    fBinder: TEditBinder;
-    fDataItem: IRBDataItem;
+  TDataSlotsItem = class(TCustomDataSlotsItem)
   private
+    fBinder: TEditBinder;
     function NewBinder(AContainer: TWinControl): TEditBinder;
-    function FindControl(AContainer: TWinControl): TWinControl;
+  protected
+    procedure DoBind(const AContainer: TWinControl; const ADataItem: IRBDataItem); override;
+    procedure DoDataChange; override;
+    procedure DoFlush(AControl: TControl = nil); override;
   public
     destructor Destroy; override;
-    procedure Bind(const AContainer: TWinControl; const ADataItem: IRBDataItem);
-    procedure DataChange;
+  end;
+
+  { TObjectSlotsItem }
+
+  TObjectSlotsItem = class(TCustomDataSlotsItem)
+  private
+    fBinder: IRBDataBinder;
+    fData: IRBData;
+    fContainer: TWinControl;
+  protected
+    procedure DoBind(const AContainer: TWinControl; const ADataItem: IRBDataItem); override;
+    procedure DoDataChange; override;
+    procedure DoFlush(AControl: TControl = nil); override;
   end;
 
   { TDataSlots }
 
   TDataSlots = class
   private type
-   TDataEditItems = specialize TFPGObjectList<TDataSlotsItem>;
+   TDataEditItems = specialize TFPGObjectList<TCustomDataSlotsItem>;
   private
     fItems: TDataEditItems;
     fData: IRBData;
@@ -36,8 +64,8 @@ type
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
   private
-    function GetItems(AIndex: Integer{; APropIndex: integer}): TDataSlotsItem;
-    procedure SetItems(AIndex: Integer{; APropIndex: integer}; AValue: TDataSlotsItem);
+    function GetItems(AIndex: Integer{; APropIndex: integer}): TCustomDataSlotsItem;
+    procedure SetItems(AIndex: Integer{; APropIndex: integer}; AValue: TCustomDataSlotsItem);
     function GetItemsCount({AIndex: Integer}): integer;
     procedure SetItemsCount({AIndex: Integer;} AValue: integer);
   public
@@ -45,9 +73,10 @@ type
     procedure BeforeDestruction; override;
     procedure Bind(const AContainer: TWinControl; const AData: IRBData);
     procedure DataChange;
+    procedure Flush(AControl: TControl = nil);
     property Data: IRBData read GetData write SetData;
   public  //for now not persist
-    property Items[AIndex: integer]: TDataSlotsItem {index crbList + crbObject} read GetItems write SetItems; default;
+    property Items[AIndex: integer]: TCustomDataSlotsItem {index crbList + crbObject} read GetItems write SetItems; default;
     property ItemsCount: integer {index crbListCounter} read GetItemsCount write SetItemsCount;
   end;
 
@@ -61,6 +90,7 @@ type
     procedure Bind(AContainer: TWinControl; const AData: IRBData);
     procedure Unbind;
     procedure DataChange;
+    procedure Flush(AControl: TControl = nil);
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
     property AData: IRBData read GetData write SetData;
@@ -69,6 +99,30 @@ type
   end;
 
 implementation
+
+{ TObjectSlotsItem }
+
+procedure TObjectSlotsItem.DoBind(const AContainer: TWinControl;
+  const ADataItem: IRBDataItem);
+begin
+  fDataItem := ADataItem;
+  // need to create from factory
+  fData := TRBData.Create(fDataItem.AsObject);
+  fContainer := FindControl(AContainer);
+  fBinder := TRBDataBinder.Create;
+  fBinder.Bind(AContainer, fData);
+  DataChange;
+end;
+
+procedure TObjectSlotsItem.DoDataChange;
+begin
+  fBinder.DataChange;
+end;
+
+procedure TObjectSlotsItem.DoFlush(AControl: TControl);
+begin
+  fBinder.Flush(AControl);
+end;
 
 { TDataSlotsItem }
 
@@ -112,7 +166,36 @@ begin
     Result.Bind(mControl, fDataItem);
 end;
 
-function TDataSlotsItem.FindControl(AContainer: TWinControl): TWinControl;
+procedure TDataSlotsItem.DoBind(const AContainer: TWinControl;
+  const ADataItem: IRBDataItem);
+begin
+  FreeAndNil(fBinder);
+  fDataItem := ADataItem;
+  fBinder := NewBinder(AContainer);
+  DataChange;
+end;
+
+procedure TDataSlotsItem.DoDataChange;
+begin
+  if Assigned(fBinder) then
+    fBinder.DataToControl;
+end;
+
+procedure TDataSlotsItem.DoFlush(AControl: TControl);
+begin
+  if Assigned(fBinder) and ((AControl = nil) or (AControl = fBinder.Control)) then
+    fBinder.ControlToData;
+end;
+
+destructor TDataSlotsItem.Destroy;
+begin
+  FreeAndNil(fBinder);
+  inherited Destroy;
+end;
+
+{ TCustomDataSlotsItem }
+
+function TCustomDataSlotsItem.FindControl(AContainer: TWinControl): TWinControl;
 var
   i: integer;
 begin
@@ -132,30 +215,25 @@ begin
   end;
 end;
 
-destructor TDataSlotsItem.Destroy;
+procedure TCustomDataSlotsItem.DataChange;
 begin
-  FreeAndNil(fBinder);
-  inherited Destroy;
+  DoDataChange;
 end;
 
-procedure TDataSlotsItem.DataChange;
+procedure TCustomDataSlotsItem.Flush(AControl: TControl = nil);
 begin
-  if Assigned(fBinder) then
-    fBinder.DataToControl;
+  DoFlush(AControl);
 end;
 
-procedure TDataSlotsItem.Bind(const AContainer: TWinControl;
+procedure TCustomDataSlotsItem.Bind(const AContainer: TWinControl;
   const ADataItem: IRBDataItem);
 begin
-  FreeAndNil(fBinder);
-  fDataItem := ADataItem;
-  fBinder := NewBinder(AContainer);
-  DataChange;
+  DoBind(AContainer, ADataItem);
 end;
 
 { TDataSlots }
 
-function TDataSlots.GetItems(AIndex: Integer{; APropIndex: integer}): TDataSlotsItem;
+function TDataSlots.GetItems(AIndex: Integer{; APropIndex: integer}): TCustomDataSlotsItem;
 begin
   Result := fItems[AIndex];
 end;
@@ -179,7 +257,10 @@ begin
   ItemsCount := fData.Count;
   for i := 0 to fData.Count - 1 do
   begin
-    Items[i] := TDataSlotsItem.Create;
+    if fData[i].IsObject then
+      Items[i] := TObjectSlotsItem.Create
+    else
+      Items[i] := TDataSlotsItem.Create;
     Items[i].Bind(fContainer, fData[i]);
   end;
 end;
@@ -189,7 +270,7 @@ begin
   Result := fData;
 end;
 
-procedure TDataSlots.SetItems(AIndex: Integer{; APropIndex: integer}; AValue: TDataSlotsItem);
+procedure TDataSlots.SetItems(AIndex: Integer{; APropIndex: integer}; AValue: TCustomDataSlotsItem);
 begin
   fItems[AIndex] := AValue;
 end;
@@ -226,6 +307,14 @@ begin
     Items[i].DataChange;
 end;
 
+procedure TDataSlots.Flush(AControl: TControl = nil);
+var
+  i: Integer;
+begin
+  for i := 0 to ItemsCount - 1 do
+    Items[i].Flush(AControl);
+end;
+
 { TRBDataBinder }
 
 destructor TRBDataBinder.Destroy;
@@ -249,6 +338,11 @@ end;
 procedure TRBDataBinder.DataChange;
 begin
   fDataSlots.DataChange;
+end;
+
+procedure TRBDataBinder.Flush(AControl: TControl = nil);
+begin
+  fDataSlots.Flush(AControl);
 end;
 
 function TRBDataBinder.GetData: IRBData;

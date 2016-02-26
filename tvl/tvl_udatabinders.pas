@@ -25,14 +25,15 @@ type
     procedure BindControl; override;
     procedure UnbindControl; override;
     procedure NotifyChangeEvents;
-    property Control: TWinControl read GetControl;
   public
     constructor Create;
     destructor Destroy; override;
     procedure DataToControl; virtual; abstract;
+    procedure ControlToData; virtual; abstract;
     procedure Bind(const AControl: TWinControl; const ADataItem: IRBDataItem); reintroduce;
     procedure RegisterChangeEvent(AEvent: TBinderChangeEvent);
     procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent);
+    property Control: TWinControl read GetControl;
     property DataItem: IRBDataItem read fDataItem;
   end;
 
@@ -48,6 +49,7 @@ type
     property Control: TCustomEdit read GetControl;
   public
     procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
   { TTextBtnBinder }
@@ -62,6 +64,7 @@ type
     property Control: TCustomEditButton read GetControl;
   public
     procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
   { TMemoBinder }
@@ -76,6 +79,7 @@ type
     property Control: TCustomSynEdit read GetControl;
   public
     procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
   { TBoolBinder }
@@ -90,6 +94,7 @@ type
     property Control: TCustomCheckBox read GetControl;
   public
     procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
   { TOfferBinder }
@@ -110,6 +115,7 @@ type
     property Control: TCustomComboBox read GetControl;
   public
     procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
   { TOfferRefBinder }
@@ -240,6 +246,7 @@ type
     property AsMany: IPersistMany read GetAsMany;
   public
     procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
 implementation
@@ -340,6 +347,11 @@ begin
   Control.Text := DataItem.AsString
 end;
 
+procedure TTextBtnBinder.ControlToData;
+begin
+  DataItem.AsString := Control.Text;
+end;
+
 { TWinControlHelper }
 
 function TWinControlHelper.H_FindNextControl(CurrentControl: TWinControl;
@@ -390,6 +402,11 @@ begin
   Control.Text := DataItem.AsString;
 end;
 
+procedure TMemoBinder.ControlToData;
+begin
+  DataItem.AsString := Control.Text;
+end;
+
 { TBoolBinder }
 
 function TBoolBinder.GetControl: TCustomCheckBox;
@@ -421,6 +438,11 @@ begin
     Control.State := cbChecked
   else
     Control.State := cbUnchecked;
+end;
+
+procedure TBoolBinder.ControlToData;
+begin
+  DataItem.AsBoolean := Control.State = cbChecked;
 end;
 
 { TOfferEnumBinder }
@@ -833,6 +855,11 @@ begin
   DataToOffer;
 end;
 
+procedure TOfferBinder.ControlToData;
+begin
+  OfferToData;
+end;
+
 function TGridHelper.GetH_FastEditing: boolean;
 begin
   Result := FastEditing;
@@ -1147,6 +1174,10 @@ begin
   end;
 end;
 
+procedure TListBinder.ControlToData;
+begin
+end;
+
 { TTextBinder }
 
 function TTextBinder.GetControl: TCustomEdit;
@@ -1177,6 +1208,11 @@ begin
   Control.Text := DataItem.AsString
 end;
 
+procedure TTextBinder.ControlToData;
+begin
+  DataItem.AsString := Control.Text;
+end;
+
 { TEditBinder }
 
 function TEditBinder.GetControl: TWinControl;
@@ -1191,6 +1227,7 @@ end;
 
 procedure TEditBinder.UnbindControl;
 begin
+  ControlToData;
   inherited;
 end;
 
