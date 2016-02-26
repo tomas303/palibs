@@ -1,0 +1,52 @@
+object SimpleListForm: TSimpleListForm
+  Left = 370
+  Height = 431
+  Top = 59
+  Width = 325
+  ActiveControl = lbList
+  Caption = 'List'
+  ClientHeight = 431
+  ClientWidth = 325
+  LCLVersion = '1.7'
+  object lbList: TListBox
+    Left = 0
+    Height = 400
+    Top = 0
+    Width = 325
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ItemHeight = 0
+    ScrollWidth = 321
+    TabOrder = 0
+    TopIndex = -1
+  end
+  object btnAdd: TButton
+    Left = 88
+    Height = 25
+    Top = 406
+    Width = 75
+    Anchors = [akRight, akBottom]
+    Caption = '&Add'
+    OnClick = btnAddClick
+    TabOrder = 1
+  end
+  object btnEdit: TButton
+    Left = 168
+    Height = 25
+    Top = 406
+    Width = 75
+    Anchors = [akRight, akBottom]
+    Caption = '&Edit'
+    OnClick = btnEditClick
+    TabOrder = 2
+  end
+  object btnDelete: TButton
+    Left = 248
+    Height = 25
+    Top = 406
+    Width = 75
+    Anchors = [akRight, akBottom]
+    Caption = '&Delete'
+    OnClick = btnDeleteClick
+    TabOrder = 3
+  end
+end
