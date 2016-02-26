@@ -36,6 +36,7 @@ type
     function GetCount: integer;
     function GetEnumName(AValue: integer): string;
     function GetEnumNameCount: integer;
+    function GetIsInterface: Boolean;
     function GetIsObject: Boolean;
     function GetIsMemo: Boolean;
     procedure SetAsInterface(AIndex: integer; AValue: IUnknown);
@@ -55,6 +56,7 @@ type
     property EnumNameCount: integer read GetEnumNameCount;
     property EnumName[AValue: integer]: string read GetEnumName;
     property IsObject: Boolean read GetIsObject;
+    property IsInterface: Boolean read GetIsInterface;
     property IsMemo: Boolean read GetIsMemo;
     property ClassName: string read GetClassName;
   end;
