@@ -13,10 +13,10 @@ type
 
   IGUIKicker = interface
   ['{24C8F00C-52FA-403A-B07F-63C9BE78B747}']
-    procedure Start;
+    procedure StartUp;
+    procedure ShutDown;
     function GetMainForm: TForm;
-    procedure SetMainForm(AValue: TForm);
-    property MainForm: TForm read GetMainForm write SetMainForm;
+    property MainForm: TForm read GetMainForm;
   end;
 
   { TGUILauncher }
@@ -41,6 +41,7 @@ procedure TGUILauncher.CloseMainFormHandler(Sender: TObject;
 begin
   if CloseAction in [caHide, caFree] then
   begin
+    Kicker.ShutDown;
     Application.Terminate;
   end;
 end;
@@ -49,7 +50,7 @@ procedure TGUILauncher.Launch;
 begin
   Application.Initialize;
   Kicker.MainForm.AddHandlerClose(CloseMainFormHandler);
-  Kicker.Start;
+  Kicker.StartUp;
   Application.Run;
 end;
 

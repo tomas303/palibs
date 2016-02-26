@@ -5,7 +5,7 @@ unit tvl_iedit;
 interface
 
 uses
-  Classes, SysUtils, trl_irttibroker;
+  Classes, SysUtils, trl_irttibroker, Forms;
 
 type
   IEditData = interface
@@ -16,6 +16,14 @@ type
   IListData = interface
   ['{D2100F1E-5141-4935-98E5-19D2F6BE4BA4}']
      procedure List;
+  end;
+
+  IMainForm = interface
+  ['{C322BECE-AE6A-4A1B-9794-BCE551D0A82D}']
+    procedure StartUp;
+    procedure ShutDown;
+    function GetMainForm: TForm;
+    property MainForm: TForm read GetMainForm;
   end;
 
 implementation
