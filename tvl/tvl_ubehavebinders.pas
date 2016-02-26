@@ -404,7 +404,7 @@ begin
         begin
           fPageIndex := Control.PageIndex;
           inherited;
-          if (fPageIndex <> Control.PageIndex) then
+          if (Control.PageCount > 0) and (fPageIndex <> Control.PageIndex) then
           begin
             PostMessage(Control.Handle, LM_FOCUSCONTROLONPAGE, 0, 0)
           end
@@ -421,7 +421,8 @@ begin
           fFirstVisiblePassed := True;
           SetFirstVisiblePage;
           mh := Control.Handle;
-          PostMessage(Control.Handle, LM_FOCUSCONTROLONPAGE, 0, 0);
+          if Control.PageCount > 0 then
+            PostMessage(Control.Handle, LM_FOCUSCONTROLONPAGE, 0, 0);
         end;
       end;
     LM_FOCUSCONTROLONPAGE:
