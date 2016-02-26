@@ -33,7 +33,7 @@ type
 
   { TPersistFactory }
 
-  TPersistFactory = class(TDIFactory, IPersistFactory)
+  TPersistFactory = class(TCustomDIFactory, IPersistFactory)
   protected
     // IPersistFactory
     function CreateObject(const AClass: string): IRBData;

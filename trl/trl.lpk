@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="12">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -46,6 +46,18 @@
         <Filename Value="trl_icryptic.pas"/>
         <UnitName Value="trl_icryptic"/>
       </Item9>
+      <Item10>
+        <Filename Value="trl_processrunner.pas"/>
+        <UnitName Value="trl_processrunner"/>
+      </Item10>
+      <Item11>
+        <Filename Value="trl_idifactory.pas"/>
+        <UnitName Value="trl_idifactory"/>
+      </Item11>
+      <Item12>
+        <Filename Value="trl_udifactory.pas"/>
+        <UnitName Value="trl_udifactory"/>
+      </Item12>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

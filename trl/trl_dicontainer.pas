@@ -182,9 +182,9 @@ type
     function Add(const AClass: TComponentClass; AOwner: TComponent; AInterfaces: array of TGuid; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
   end;
 
-  { TDIFactory }
+  { TCustomDIFactory }
 
-  TDIFactory = class(TInterfacedObject)
+  TCustomDIFactory = class(TInterfacedObject)
   private
     fContainer: TDIContainer;
     procedure SetAddClass(AValue: TClass);
@@ -269,14 +269,14 @@ begin
   Result := CompareMem(@a.Guid, @b.Guid, SizeOf(TGuid));
 end;
 
-{ TDIFactory }
+{ TCustomDIFactory }
 
-procedure TDIFactory.SetAddClass(AValue: TClass);
+procedure TCustomDIFactory.SetAddClass(AValue: TClass);
 begin
   fContainer.Add(AValue);
 end;
 
-procedure TDIFactory.SetContainer(AValue: TDIContainer);
+procedure TCustomDIFactory.SetContainer(AValue: TDIContainer);
 begin
   fContainer := AValue;
 end;
