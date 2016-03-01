@@ -90,6 +90,7 @@ type
     procedure Open; overload;
     procedure Open(const AFile: string); overload;
     procedure Open(const AStream: TStream); overload;
+    procedure AfterOpen;
     procedure Close; overload;
     procedure Close(const AStream: TStream); overload;
 
@@ -682,7 +683,7 @@ begin
     fDoc := TXMLDocument.Create;
     fDoc.AppendChild(fDoc.CreateElement(cRoot));
   end;
-  fSIDMgr.Load(fDoc);
+  AfterOpen;
 end;
 
 procedure TXmlStore.Open(const AFile: string);
@@ -696,6 +697,12 @@ procedure TXmlStore.Open(const AStream: TStream);
 begin
   CheckOpen;
   ReadXMLFile(fDoc, AStream);
+  AfterOpen;
+end;
+
+procedure TXmlStore.AfterOpen;
+begin
+  fSIDMgr.Load(fDoc);
 end;
 
 procedure TXmlStore.Close;
@@ -706,7 +713,7 @@ end;
 
 procedure TXmlStore.Close(const AStream: TStream);
 begin
-  Flush;
+  fSIDMgr.Save(Doc);
   WriteXMLFile(fDoc, AStream);
   FreeAndNil(fDoc);
 end;
