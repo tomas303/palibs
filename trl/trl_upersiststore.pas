@@ -200,7 +200,10 @@ end;
 
 function TPersistRef<TItem>.GetItem: TItem;
 begin
-  Result := Data.UnderObject as TItem;
+  if Data = nil then
+    Result := nil
+  else
+    Result := Data.UnderObject as TItem;
 end;
 
 procedure TPersistRef<TItem>.SetItem(AValue: TItem);
