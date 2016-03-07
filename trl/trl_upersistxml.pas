@@ -236,6 +236,10 @@ begin
     begin
       SaveDataItemMemo(AStoreEl, AData[i].Name, AData[i].AsPersist);
     end
+    else if AData[i].IsInterface then
+    begin
+      //maybe in future some special interface
+    end
     else
     begin
       SaveDataItemValue(AStoreEl, AData[i].Name, AData[i].AsPersist);
@@ -280,6 +284,11 @@ begin
     if AData[i].IsMemo then
     begin
       AData[i].AsPersist := LoadDataItemMemo(AStoreEl, AData[i].Name);
+    end
+    else
+    if AData[i].IsInterface then
+    begin
+      //maybe in future some special interface
     end
     else
     begin
