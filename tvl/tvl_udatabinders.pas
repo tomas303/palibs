@@ -1152,6 +1152,9 @@ var
   i: integer;
   mData: IRBData;
 begin
+  // possible change of rowcount
+  UnbindControl;
+  BindControl;
   for i := 0 to AsMany.Count - 1 do
   begin
     if Supports(AsMany, IPersistManyRefs) then
