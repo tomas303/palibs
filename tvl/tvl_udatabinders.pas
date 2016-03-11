@@ -101,7 +101,7 @@ type
 
   TOfferBinder = class(TEditBinder)
   private
-    fKeyDownItemIndex: integer;
+    fKeyDownText: string;
     function GetControl: TCustomComboBox;
     procedure OnChangeHandler(Sender: TObject);
   protected
@@ -124,6 +124,7 @@ type
   private
     fOffer: IPersistRefList;
     function GetAsRef: IPersistRef;
+    function GetItemForCombo(AData: IRBData): string;
   protected
     procedure FillOffer; override;
     procedure OfferToData; override;
@@ -180,6 +181,8 @@ type
     public
       constructor Create(AEditor: TWinControl);
       destructor Destroy; override;
+      property Col: integer read fCol;
+      property Row: integer read fRow;
     end;
 
     { TOfferEditor }
@@ -224,6 +227,7 @@ type
     fCellBinder: TEditBinder;
     fObjectData: IRBData;
     fOldEd: TWinControl;
+    fCol, fRow: Integer;
     function GetAsMany: IPersistMany;
     function GetControl: TCustomStringGrid;
     procedure FillRowFromObject(ARow: integer; AObjectData: IRBData);
@@ -238,6 +242,7 @@ type
     procedure OnSelectEditorHandler(Sender: TObject; aCol, aRow: Integer;
       var Editor: TWinControl);
     procedure OnKeyDownHandler(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure OnSelectionHandler(Sender: TObject; aCol, aRow: Integer);
   protected
     procedure BindControl; override;
     procedure UnbindControl; override;
@@ -748,6 +753,14 @@ begin
   Result := DataItem.AsInterface as IPersistRef;
 end;
 
+function TOfferRefBinder.GetItemForCombo(AData: IRBData): string;
+begin
+  if not SameText(AData[0].Name, 'id') or (AData.Count = 1) then
+    Result := AData[0].AsString
+  else
+    Result := AData[1].AsString;
+end;
+
 procedure TOfferRefBinder.FillOffer;
 begin
   fOffer := (AsRef.Store as IPersistQuery).SelectClass(AsRef.ClassName);
@@ -758,11 +771,24 @@ end;
 procedure TOfferRefBinder.OfferToData;
 var
   mOfferIndex: NativeInt;
+  i: integer;
+  mData: IRBData;
+  mText: string;
 begin
   if Control.ItemIndex <> -1 then
   begin
     mOfferIndex := NativeInt(Control.Items.Objects[Control.ItemIndex]);
     AsRef.SID := fOffer[mOfferIndex].SID;
+  end else begin
+    mText := Control.Text;
+    for i := 0 to fOffer.Count - 1 do
+    begin
+      mData := fOffer[i].Data;
+      if GetItemForCombo(mData) = mText then
+      begin
+        AsRef.SID := fOffer[i].SID;
+      end;
+    end;
   end;
 end;
 
@@ -789,10 +815,7 @@ begin
   for i := 0 to fOffer.Count - 1 do
   begin
     mData := fOffer[i].Data;
-    if not SameText(mData[0].Name, 'id') or (mData.Count = 1) then
-      Control.Items.AddObject(mData[0].AsString, TObject(i))
-    else
-      Control.Items.AddObject(mData[1].AsString, TObject(i));
+    Control.Items.AddObject(GetItemForCombo(mData), TObject(i))
   end;
 end;
 
@@ -836,18 +859,37 @@ begin
 end;
 
 procedure TOfferBinder.DoControlWndProc(var TheMessage: TLMessage);
+var
+  mMsg: TLMKey;
+  mLMCmd: TLMCommand absolute TheMessage;
 begin
   case TheMessage.Msg of
-    LM_KEYDOWN:
-      fKeyDownItemIndex := Control.ItemIndex;
-    LM_KEYUP:
-      if fKeyDownItemIndex <> Control.ItemIndex then begin
+    CN_Command:
+      case mLMCmd.NotifyCode of
+        CBN_CLOSEUP:
+          begin
+            // when binded around combo in grid, by this is Grid.FRowAutoInserted
+            // reset to false ... otherwise adding of new row is prevented
+            // (do not now why I did it, but edit combo in grid has second binder,
+            // which prevent LM_KEYDOWN message to go further)
+            mMsg.Msg := CN_KEYDOWN;
+            mMsg.CharCode := VK_RETURN;
+            mMsg.KeyData := 0;
+            Control.Dispatch(mMsg);
+          end;
+      end;
+  end;
+  inherited;
+  case TheMessage.Msg of
+    LM_KEYDOWN, CN_KEYDOWN:
+      fKeyDownText := Control.Text;
+    LM_KEYUP, CN_KEYUP:
+      if fKeyDownText <> Control.Text then begin
         // key can cause autcomplete and via that change of ItemIndex
         // and this is not reported via OnChange event
         OnChangeHandler(Control);
       end;
   end;
-  inherited;
 end;
 
 procedure TOfferBinder.DataToControl;
@@ -1035,7 +1077,6 @@ begin
     DataToControl
   else
     Control.Cells[Control.Col, Control.Row] := fCellBinder.DataItem.AsString;
-  FreeAndNil(fCellBinder);
 end;
 
 procedure TListBinder.OnSelectEditorHandler(Sender: TObject; aCol,
@@ -1059,6 +1100,8 @@ begin
   else
     fCellEditor := nil;
   Editor := fCellEditor;
+  fCol := aCol;
+  fRow :=  aRow;
 end;
 
 procedure TListBinder.OnKeyDownHandler(Sender: TObject; var Key: Word;
@@ -1086,6 +1129,12 @@ begin
     end;
   end;
   inherited;
+end;
+
+procedure TListBinder.OnSelectionHandler(Sender: TObject; aCol, aRow: Integer);
+begin
+  if (fCol <> aCol) or (fRow <> aRow) then
+    FreeAndNil(fCellBinder);
 end;
 
 procedure TListBinder.BindControl;
