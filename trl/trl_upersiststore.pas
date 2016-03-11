@@ -357,14 +357,19 @@ end;
 
 procedure TPersistRef.SetClassName(AValue: string);
 begin
-  fData := nil;
-  fSID.Clear;
-  fClassName := AValue;
+  if AValue <> fClassName then begin
+    fData := nil;
+    fSID.Clear;
+    fClassName := AValue;
+  end;
 end;
 
 function TPersistRef.GetClassName: string;
 begin
-  Result := fClassName;
+  if Data <> nil then
+    Result := Data.ClassName
+  else
+    Result := fClassName;
 end;
 
 function TPersistRef.GetData: IRBData;
@@ -399,9 +404,11 @@ end;
 
 procedure TPersistRef.SetSID(AValue: TSID);
 begin
-  fData := nil;
-  fClassName := '';
-  fSID := AValue;
+  if GetSID <> AValue then begin
+    fData := nil;
+    fClassName := '';
+    fSID := AValue;
+  end;
 end;
 
 procedure TPersistRef.SetStore(AValue: IPersistStore);
