@@ -5,7 +5,7 @@ unit tvl_uapplaunch;
 interface
 
 uses
-  Classes, SysUtils, Forms;
+  Classes, SysUtils, Forms, tvl_iedit;
 
 type
 
@@ -15,8 +15,8 @@ type
   ['{24C8F00C-52FA-403A-B07F-63C9BE78B747}']
     procedure StartUp;
     procedure ShutDown;
-    function GetMainForm: TForm;
-    property MainForm: TForm read GetMainForm;
+    function GetMainForm: IMainForm;
+    property MainForm: IMainForm read GetMainForm;
   end;
 
   { TGUILauncher }
@@ -49,7 +49,7 @@ end;
 procedure TGUILauncher.Launch;
 begin
   Application.Initialize;
-  Kicker.MainForm.AddHandlerClose(CloseMainFormHandler);
+  Kicker.MainForm.ConnectCloseHandler(CloseMainFormHandler);
   Kicker.StartUp;
   Application.Run;
 end;

@@ -22,8 +22,7 @@ type
   ['{C322BECE-AE6A-4A1B-9794-BCE551D0A82D}']
     procedure StartUp;
     procedure ShutDown;
-    function GetMainForm: TForm;
-    property MainForm: TForm read GetMainForm;
+    procedure ConnectCloseHandler(OnCloseHandler: TCloseEvent);
   end;
 
 implementation
