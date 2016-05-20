@@ -651,6 +651,7 @@ begin
   for i := 0 to mSIDs.Count - 1 do
   begin
     Result[i] := Factory.Create(IPersistRef) as IPersistRef;
+    Result[i].Store := Self;
     Result[i].SID := mSIDs[i];
   end;
 end;
