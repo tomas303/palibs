@@ -14,7 +14,7 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Files Count="12">
+    <Files Count="14">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -63,11 +63,22 @@
         <Filename Value="trl_udifactory.pas"/>
         <UnitName Value="trl_udifactory"/>
       </Item12>
+      <Item13>
+        <Filename Value="trl_ilog.pas"/>
+        <UnitName Value="trl_ilog"/>
+      </Item13>
+      <Item14>
+        <Filename Value="trl_ulazlog.pas"/>
+        <UnitName Value="trl_ulazlog"/>
+      </Item14>
     </Files>
-    <RequiredPkgs Count="1">
+    <RequiredPkgs Count="2">
       <Item1>
-        <PackageName Value="FCL"/>
+        <PackageName Value="LazUtils"/>
       </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
