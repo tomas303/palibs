@@ -103,6 +103,7 @@ type
     function Make(AInterface: TGUID; const AID: string): pointer; overload;
     procedure InjectProps(AProps: array of TInjectProp);
     procedure InjectProp(const AName: string; const AValue: string); overload;
+    procedure InjectProp(const AName: string; const AValue: Boolean); overload;
     procedure InjectProp(const AName: string; AValue: TClass; const AID: string = ''; AContainer: TDICustomContainer = nil); overload;
     procedure InjectProp(const AName: string; const AValue: TGuid; const AID: string = ''; AContainer: TDICustomContainer = nil); overload;
     procedure InjectProp(const AName: string; const AOnInject: TOnInjectEvent); overload;
@@ -583,6 +584,11 @@ begin
 end;
 
 procedure TDIReg.InjectProp(const AName: string; const AValue: string);
+begin
+  fInjectProps.Add(TInjectProp.Create(AName, AValue));
+end;
+
+procedure TDIReg.InjectProp(const AName: string; const AValue: Boolean);
 begin
   fInjectProps.Add(TInjectProp.Create(AName, AValue));
 end;
