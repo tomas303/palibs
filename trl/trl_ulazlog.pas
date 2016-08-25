@@ -29,7 +29,7 @@ type
     procedure DebugLnExit(const s: string = ''); overload;
     procedure DebugLnExit(s: string; Args: array of const); overload;
   public
-    constructor Create;
+    procedure AfterConstruction; override;
     destructor Destroy; override;
   published
     property  LogName: String read GetLogName write SetLogName;
@@ -101,8 +101,9 @@ begin
   fLog.DebugLnExit(s, Args);
 end;
 
-constructor TLazLog.Create;
+procedure TLazLog.AfterConstruction;
 begin
+  inherited AfterConstruction;
   fLog := TLazLoggerFile.Create;
 end;
 
