@@ -20,10 +20,11 @@ type
     procedure SetCloseLogFileBetweenWrites(AValue: Boolean);
     procedure SetLogName(AValue: String);
     procedure SetUseStdOut(AValue: Boolean);
+    function AddTimeStamp(const s: string): string;
   protected
     // ILog
     procedure DebugLn(const s: string = ''); overload;
-    procedure DebugLn(const S: String; Args: array of const); overload;
+    procedure DebugLn(const s: String; Args: array of const); overload;
     procedure DebugLnEnter(const s: string = ''); overload;
     procedure DebugLnEnter(s: string; Args: array of const); overload;
     procedure DebugLnExit(const s: string = ''); overload;
@@ -71,34 +72,39 @@ begin
   fLog.UseStdOut := AValue;
 end;
 
-procedure TLazLog.DebugLn(const s: string);
+function TLazLog.AddTimeStamp(const s: string): string;
 begin
-  fLog.DebugLn(s);
+  Result := FormatDateTime('YYYY-MM-DD HH:NN:SS:ZZZ', Now) + ' ' + s;
 end;
 
-procedure TLazLog.DebugLn(const S: String; Args: array of const);
+procedure TLazLog.DebugLn(const s: string);
 begin
-  fLog.DebugLn(S, Args);
+  fLog.DebugLn(AddTimeStamp(s));
+end;
+
+procedure TLazLog.DebugLn(const s: String; Args: array of const);
+begin
+  fLog.DebugLn(AddTimeStamp(s), Args);
 end;
 
 procedure TLazLog.DebugLnEnter(const s: string);
 begin
-  fLog.DebugLnEnter(s);
+  fLog.DebugLnEnter(AddTimeStamp(s));
 end;
 
 procedure TLazLog.DebugLnEnter(s: string; Args: array of const);
 begin
-  fLog.DebugLnEnter(s, Args);
+  fLog.DebugLnEnter(AddTimeStamp(s), Args);
 end;
 
 procedure TLazLog.DebugLnExit(const s: string);
 begin
-  fLog.DebugLnExit(s);
+  fLog.DebugLnExit(AddTimeStamp(s));
 end;
 
 procedure TLazLog.DebugLnExit(s: string; Args: array of const);
 begin
-  fLog.DebugLnExit(s, Args);
+  fLog.DebugLnExit(AddTimeStamp(s), Args);
 end;
 
 procedure TLazLog.AfterConstruction;
