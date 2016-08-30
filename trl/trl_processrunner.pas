@@ -62,6 +62,7 @@ type
   protected
     procedure AddOrReplaceEnvVariable(const AName, AValue: string);
     procedure FillCurrentEnvVariables;
+    procedure FillEnvVariables(AEnvVariables: TStrings);
     procedure Execute; override;
   public
     constructor Create(AInfo: TProcessRunnerInfo; AOnSync: TProcessRunnerSync.TOnSyncEvent);
@@ -353,6 +354,16 @@ begin
   end;
 end;
 
+procedure TProcessRunnerThread.FillEnvVariables(AEnvVariables: TStrings);
+var
+  i: integer;
+begin
+  for i := 0 to AEnvVariables.Count - 1 do
+  begin
+    fProcess.Environment.Add(AEnvVariables[i]);
+  end;
+end;
+
 procedure TProcessRunnerThread.Execute;
 var
   mOutRead: integer;
@@ -361,6 +372,7 @@ var
   mFinishList: TStringList;
   mBatch: string;
   mExitCode: integer;
+  mev: string;
 begin
   mExitCode := 0;
   fCompileState := cpsNone;
@@ -377,7 +389,9 @@ begin
       {$ENDIF}
       fProcess.Executable := fInfo.Command;
       fProcess.Parameters.Assign(fInfo.Parameters);
-      fProcess.Environment.Assign(fInfo.Environment);
+      FillEnvVariables(fInfo.Environment);
+      //fProcess.Environment.Assign(fInfo.Environment);
+      mev := fProcess.Environment.Text;
       try
         fProcess.Execute;
         fCompileState := cpsResumed;

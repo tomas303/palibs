@@ -226,8 +226,9 @@ type
     fCellValueData: IRBData;
     fCellBinder: TEditBinder;
     fObjectData: IRBData;
-    fOldEd: TWinControl;
     fCol, fRow: Integer;
+    fOfferEditor: TOfferEditor;
+    fTextEditor: TTextEditor;
     function GetAsMany: IPersistMany;
     function GetControl: TCustomStringGrid;
     procedure FillRowFromObject(ARow: integer; AObjectData: IRBData);
@@ -249,6 +250,11 @@ type
     procedure DoControlWndProc(var TheMessage: TLMessage); override;
     property Control: TCustomStringGrid read GetControl;
     property AsMany: IPersistMany read GetAsMany;
+  protected
+    function GetOfferEditor: TOfferEditor;
+    function GetTextEditor: TTextEditor;
+    property OfferEditor: TOfferEditor read GetOfferEditor;
+    property TextEditor: TTextEditor read GetTextEditor;
   public
     procedure DataToControl; override;
     procedure ControlToData; override;
@@ -1006,17 +1012,17 @@ begin
   Result := nil;
   if Supports(AsMany, IPersistManyRefs) then
   begin
-    Result := TOfferEditor.Create(Control);
+    Result := OfferEditor;
   end
   else
   begin
     if ADataItem.EnumNameCount > 0 then
     begin
-      Result := TOfferEditor.Create(Control);
+      Result := OfferEditor;
     end
     else
     begin
-      Result := TTextEditor.Create(Control);
+      Result := TextEditor;
     end;
   end;
 end;
@@ -1037,6 +1043,20 @@ begin
   begin
     Result := TTextBinder.Create;
   end;
+end;
+
+function TListBinder.GetOfferEditor: TOfferEditor;
+begin
+  if fOfferEditor = nil then
+    fOfferEditor := TOfferEditor.Create(Control);
+  Result := fOfferEditor;
+end;
+
+function TListBinder.GetTextEditor: TTextEditor;
+begin
+  if fTextEditor = nil then
+    fTextEditor := TTextEditor.Create(Control);
+  Result := fTextEditor;
 end;
 
 procedure TListBinder.OnColRowDeletedHandler(Sender: TObject;
@@ -1084,8 +1104,6 @@ procedure TListBinder.OnSelectEditorHandler(Sender: TObject; aCol,
 var
   mDataItem: IRBDataItem;
 begin
-  fOldEd.Free;
-  fOldEd := fCellEditor;
   FreeAndNil(fCellBinder);
   if aRow >= Control.FixedRows then begin
     mDataItem := TPersistManyDataItem.Create(AsMany, aRow - 1);
@@ -1176,8 +1194,9 @@ begin
   Control.OnSelectEditor := nil;
   Control.OnKeyDown := nil;
   Control.H_OnEditingDone := nil;
-  FreeAndNil(fOldEd);
   FreeAndNil(fCellBinder);
+  FreeAndNil(fOfferEditor);
+  FreeAndNil(fTextEditor);
   inherited UnbindControl;
 end;
 
