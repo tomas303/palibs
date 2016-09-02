@@ -251,6 +251,8 @@ type
     property Control: TCustomStringGrid read GetControl;
     property AsMany: IPersistMany read GetAsMany;
   protected
+    procedure DispatchTextToEditor;
+    procedure SetRowAutoInsertToFalse;
     function GetOfferEditor: TOfferEditor;
     function GetTextEditor: TTextEditor;
     property OfferEditor: TOfferEditor read GetOfferEditor;
@@ -295,6 +297,8 @@ type
     procedure H_KeyDown(var Key : Word; Shift : TShiftState);
     procedure H_DoOPDeleteColRow(IsColumn: Boolean; index: Integer);
     property H_FastEditing: boolean read GetH_FastEditing write SetH_FastEditing;
+    function  H_GetEditText(ACol, ARow: Longint): string;
+    procedure H_SetOptions(const AValue: TGridOptions);
   end;
 
   { TCustomComboBoxHelper }
@@ -944,6 +948,16 @@ begin
   DoOPDeleteColRow(IsColumn, index);
 end;
 
+function TGridHelper.H_GetEditText(ACol, ARow: Longint): string;
+begin
+  Result := GetEditText(ACol, ARow);
+end;
+
+procedure TGridHelper.H_SetOptions(const AValue: TGridOptions);
+begin
+  Options := AValue;
+end;
+
 { TListBinder }
 
 function TListBinder.GetControl: TCustomStringGrid;
@@ -1210,8 +1224,56 @@ begin
         if TheMessage.LParam <> -1 then
           Control.Col := TheMessage.LParam;
       end;
+    LM_KEYDOWN:
+      begin
+        inherited;
+        if (TLMKey(TheMessage).CharCode = VK_V)
+           and ([ssModifier] = MsgKeyDataToShiftState(TLMKey(TheMessage).KeyData))
+        then begin
+          // in case of paste editor could be hidden, so clipboard
+          // is inserted into grid cell
+          DispatchTextToEditor;
+          SetRowAutoInsertToFalse;
+        end;
+      end;
     else
       inherited;
+  end;
+end;
+
+procedure TListBinder.DispatchTextToEditor;
+var
+  msg: TGridMessage;
+begin
+  if fCellEditor = nil then
+    Exit;
+  msg.LclMsg.msg := GM_SETVALUE;
+  msg.Grid := Control;
+  msg.Col := Control.Col;
+  msg.Row := Control.Row;
+  msg.Value := Control.H_GetEditText(Fcol, FRow);
+  fCellEditor.Dispatch(msg);
+end;
+
+procedure TListBinder.SetRowAutoInsertToFalse;
+var
+  mOptions: TGridOptions;
+begin
+  // will cause set of fRowAutoInsert to false (because after paste from clipoboard
+  // is not set to false and auto row insert do not work otherwise)
+  if goAutoAddRowsSkipContentCheck in Control.Options then
+  begin
+    mOptions := Control.Options - [goAutoAddRowsSkipContentCheck];
+    Control.H_SetOptions(mOptions);
+    mOptions := Control.Options + [goAutoAddRowsSkipContentCheck];
+    Control.H_SetOptions(mOptions);
+  end
+  else
+  begin
+    mOptions := Control.Options + [goAutoAddRowsSkipContentCheck];
+    Control.H_SetOptions(mOptions);
+    mOptions := Control.Options - [goAutoAddRowsSkipContentCheck];
+    Control.H_SetOptions(mOptions);
   end;
 end;
 
