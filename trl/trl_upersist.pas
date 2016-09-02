@@ -47,7 +47,7 @@ type
 
  { TPersistMany }
 
- TPersistMany<TItem> = class(TInterfacedObject, IPersistMany, IPersistMany<TItem>)
+ TPersistMany<TItem> = class(TInterfacedObject, IPersistMany, IPersistManyItems<TItem>)
   private
     fData: TFPGList<TItem>;
     function GetAsPersistDataClass: IRBData;
@@ -122,69 +122,7 @@ type
     procedure SetAsString(AIndex: integer; AValue: string); override;
   end;
 
-  { TPersistManyxxx }
-
-  TPersistManyxxx<TItem> = class
-  protected
-    function GetItem(AIndex: integer): TItem; virtual; abstract;
-    procedure SetItem(AIndex: integer; AValue: TItem); virtual; abstract;
-    function GetCount: integer; virtual; abstract;
-    procedure SetCount(AValue: integer); virtual; abstract;
-  public
-    property Count: integer read GetCount write SetCount;
-    property Item[AIndex: integer]: TItem read GetItem write SetItem;
-  end;
-
-  { TMemoryPersistMany }
-
-  TMemoryPersistMany<TItem> = class(TPersistManyXXX<TItem>)
-  private
-    fData: TFPGList<TItem>;
-  protected
-    function GetItem(AIndex: integer): TItem; override;
-    procedure SetItem(AIndex: integer; AValue: TItem); override;
-    function GetCount: integer; override;
-    procedure SetCount(AValue: integer); override;
-  public
-    constructor Create;
-    destructor Destroy; override;
-  end;
-
-
 implementation
-
-{ TMemoryPersistMany<TItem> }
-
-function TMemoryPersistMany<TItem>.GetItem(AIndex: integer): TItem;
-begin
-  Result := fData[AIndex];
-end;
-
-procedure TMemoryPersistMany<TItem>.SetItem(AIndex: integer; AValue: TItem);
-begin
-  fData[AIndex] := AValue;
-end;
-
-function TMemoryPersistMany<TItem>.GetCount: integer;
-begin
-  Result := fData.Count;
-end;
-
-procedure TMemoryPersistMany<TItem>.SetCount(AValue: integer);
-begin
-  fData.Count := AValue;
-end;
-
-constructor TMemoryPersistMany < TItem > .Create;
-begin
-  fData := TFPGList<TItem>.Create;
-end;
-
-destructor TMemoryPersistMany < TItem > .Destroy;
-begin
-  FreeAndNil(fData);
-  inherited Destroy;
-end;
 
 { TPersistMany<TItem> }
 

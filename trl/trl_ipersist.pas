@@ -61,9 +61,9 @@ type
     property ClassName: string read GetClassName;
   end;
 
-  { IPersistMany }
+  { IPersistManyItems }
 
-  IPersistMany<TItem> = interface(IPersistMany)
+  IPersistManyItems<TItem> = interface(IPersistMany)
   ['{A08640F4-019D-4F1B-BAC2-6894CA5E0570}']
     function GetItem(AIndex: integer): TItem;
     procedure SetItem(AIndex: integer; AValue: TItem);
@@ -72,13 +72,13 @@ type
 
   { IPersistManyIntegers }
 
-  IPersistManyIntegers = interface(IPersistMany<integer>)
+  IPersistManyIntegers = interface(IPersistManyItems<integer>)
   ['{E50D2C49-26BF-4ABB-92B9-7888A63B19A5}']
   end;
 
   { IPersistManyStrings }
 
-  IPersistManyStrings = interface(IPersistMany<string>)
+  IPersistManyStrings = interface(IPersistManyItems<string>)
   ['{E50D2C49-26BF-4ABB-92B9-7888A63B19A5}']
   end;
 
@@ -211,7 +211,7 @@ type
 
   { IPersistManyRefs }
 
-  IPersistManyRefs = interface(IPersistMany<IPersistRef>)
+  IPersistManyRefs = interface(IPersistManyItems<IPersistRef>)
   ['{55766680-2912-4680-8B30-8908573E263C}']
     function GetFactory: IPersistFactory;
     procedure SetFactory(AValue: IPersistFactory);
