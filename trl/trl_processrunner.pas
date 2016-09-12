@@ -36,6 +36,7 @@ type
     fWorkingDir: string;
     fParameters: TStringList;
     fEnvironment: TStringList;
+    fPrefillCurentEnvironment: Boolean;
     function GetEnvironment: TStringList;
     function GetParameters: TStringList;
   public
@@ -47,6 +48,7 @@ type
     property WorkingDir: string read fWorkingDir write fWorkingDir;
     property Parameters: TStringList read GetParameters;
     property Environment: TStringList read GetEnvironment;
+    property PrefillCurentEnvironment: Boolean read fPrefillCurentEnvironment write fPrefillCurentEnvironment;
   end;
 
   { TProcessRunnerThread }
@@ -65,7 +67,7 @@ type
     procedure ExpandLine(AExpandVars, ASysVars: TStrings;
       const AIndex: integer; const AInProcess: TIntegerSet);
     procedure ExpandEnvVariables(AEnvVariables: TStrings);
-    procedure FillEnvVariables(AEnvVariables: TStrings);
+    procedure FillEnvVariables(AEnvVariables: TStrings; APrefillCurentEnvironment: Boolean);
     procedure Execute; override;
   public
     constructor Create(AInfo: TProcessRunnerInfo; AOnSync: TProcessRunnerSync.TOnSyncEvent);
@@ -94,9 +96,11 @@ type
     function GetBatch: string;
     function GetCommand: string;
     function GetWorkingDir: string;
+    function GetPrefillCurentEnvironment: Boolean;
     procedure SetBatch(AValue: string);
     procedure SetCommand(AValue: string);
     procedure SetWorkingDir(AValue: string);
+    procedure SetPrefillCurentEnvironment(AValue: Boolean);
   public
     procedure AfterConstruction; override;
     destructor Destroy; override;
@@ -115,6 +119,7 @@ type
     property WorkingDir: string read GetWorkingDir write SetWorkingDir;
     property Command: string read GetCommand write SetCommand;
     property Batch: string read GetBatch write SetBatch;
+    property PrefillCurentEnvironment: Boolean read GetPrefillCurentEnvironment write SetPrefillCurentEnvironment;
   published
     property OnPushOutput: TPushOutput read fOnPushOutput write fOnPushOutput;
     property OnFinish: TFinished read fOnFinish write fOnFinish;
@@ -158,6 +163,7 @@ begin
   WorkingDir := AInfo.WorkingDir;
   Parameters.Assign(AInfo.Parameters);
   Environment.Assign(AInfo.Environment);
+  PrefillCurentEnvironment := AInfo.PrefillCurentEnvironment;
 end;
 
 { TProcessRunnerSync }
@@ -210,6 +216,16 @@ begin
      mPos := Pos(#10, fOutput);
     end;
   end;
+end;
+
+function TProcessRunner.GetPrefillCurentEnvironment: Boolean;
+begin
+  Result := fInfo.PrefillCurentEnvironment;
+end;
+
+procedure TProcessRunner.SetPrefillCurentEnvironment(AValue: Boolean);
+begin
+  fInfo.PrefillCurentEnvironment := AValue;
 end;
 
 function TProcessRunner.GetBatch: string;
@@ -422,14 +438,16 @@ begin
   end;
 end;
 
-procedure TProcessRunnerThread.FillEnvVariables(AEnvVariables: TStrings);
+procedure TProcessRunnerThread.FillEnvVariables(AEnvVariables: TStrings; APrefillCurentEnvironment: Boolean);
 var
   i: integer;
 begin
   ExpandEnvVariables(AEnvVariables);
+  if APrefillCurentEnvironment then
+    FillCurrentEnvVariables(fProcess.Environment);
   for i := 0 to AEnvVariables.Count - 1 do
   begin
-    fProcess.Environment.Add(AEnvVariables[i]);
+    AddOrReplaceEnvVariable(AEnvVariables.Names[i], AEnvVariables.ValueFromIndex[i]);
   end;
 end;
 
@@ -448,7 +466,6 @@ begin
   fProcess := TProcess.Create(nil);
   try
     try
-      //FillCurrentEnvVariables;
       fProcess.CurrentDirectory := fInfo.WorkingDir;
       {$IFDEF windows}
       fProcess.Options := fProcess.Options + [poUsePipes, poNewConsole];
@@ -458,7 +475,7 @@ begin
       {$ENDIF}
       fProcess.Executable := fInfo.Command;
       fProcess.Parameters.Assign(fInfo.Parameters);
-      FillEnvVariables(fInfo.Environment);
+      FillEnvVariables(fInfo.Environment, fInfo.PrefillCurentEnvironment);
       mev := fProcess.Environment.Text;
       try
         fProcess.Execute;
