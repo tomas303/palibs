@@ -5,7 +5,7 @@ unit trl_processrunner;
 interface
 
 uses
-  Classes, SysUtils, process, strutils;
+  Classes, SysUtils, process, strutils, RegExpr;
 
 type
 
@@ -61,7 +61,10 @@ type
     fOutput: string;
   protected
     procedure AddOrReplaceEnvVariable(const AName, AValue: string);
-    procedure FillCurrentEnvVariables;
+    procedure FillCurrentEnvVariables(AEnvVariables: TStrings);
+    procedure ExpandLine(AExpandVars, ASysVars: TStrings;
+      const AIndex: integer; const AInProcess: TIntegerSet);
+    procedure ExpandEnvVariables(AEnvVariables: TStrings);
     procedure FillEnvVariables(AEnvVariables: TStrings);
     procedure Execute; override;
   public
@@ -344,13 +347,78 @@ begin
     fProcess.Environment[mInd] := AName + '=' + AValue;
 end;
 
-procedure TProcessRunnerThread.FillCurrentEnvVariables;
+procedure TProcessRunnerThread.FillCurrentEnvVariables(AEnvVariables: TStrings);
 var
   i: integer;
 begin
   for i := 1 to GetEnvironmentVariableCount do
   begin
-    fProcess.Environment.Add(GetEnvironmentString(i));
+    AEnvVariables.Add(GetEnvironmentString(i));
+  end;
+end;
+
+procedure TProcessRunnerThread.ExpandLine(AExpandVars, ASysVars: TStrings;
+  const AIndex: integer; const AInProcess: TIntegerSet);
+var
+  mRegEx: TRegExpr;
+  mRepIndex: integer;
+  mMatch: string;
+  mMatched: Boolean;
+  mLine: string;
+  m1,m2: string;
+begin
+  mRegEx := TRegExpr.Create;
+  try
+    {$IFDEF UNIX}
+    mRegEx.Expression := '\$\(?(\w+)\)?';
+    mRegEx.ModifierI := True;
+    {$ENDIF UNIX}
+    {$IFDEF WINDOWS}
+    mRegEx.Expression := '%(\w+)%';
+    mRegEx.ModifierI := False;
+    {$ENDIF UNIX}
+    mLine := AExpandVars[AIndex];
+    mMatched := mRegEx.Exec(AExpandVars[AIndex]);
+    while mMatched do begin
+      mMatch := mRegEx.Match[1];
+      m1 := mRegEx.Match[0];
+      mRepIndex := AExpandVars.IndexOfName(mMatch);
+      if mRepIndex <> AIndex then begin
+        if mRepIndex <> -1 then begin
+          if not (mRepIndex in AInProcess) then
+          begin
+            ExpandLine(AExpandVars, ASysVars, mRepIndex, AInProcess + [mRepIndex]);
+          end;
+          mLine := ReplaceStr(mLine, mRegEx.Match[0], AExpandVars.ValueFromIndex[mRepIndex]);
+        end
+        else
+        begin
+          mRepIndex := ASysVars.IndexOfName(mMatch);
+          if mRepIndex <> -1 then
+            mLine := ReplaceStr(mLine, mRegEx.Match[0], ASysVars.ValueFromIndex[mRepIndex]);
+        end;
+      end;
+      mMatched := mRegEx.ExecNext;
+    end;
+    AExpandVars[AIndex] := mLine;
+  finally
+    mRegEx.Free;
+  end;
+end;
+
+procedure TProcessRunnerThread.ExpandEnvVariables(AEnvVariables: TStrings);
+var
+  mSysVars: TStringList;
+  i: integer;
+begin
+  mSysVars := TStringList.Create;
+  try
+    FillCurrentEnvVariables(mSysVars);
+    for i := 0 to AEnvVariables.Count - 1 do begin
+      ExpandLine(AEnvVariables, mSysVars, i, [i]);
+    end;
+  finally
+    mSysVars.Free;
   end;
 end;
 
@@ -358,6 +426,7 @@ procedure TProcessRunnerThread.FillEnvVariables(AEnvVariables: TStrings);
 var
   i: integer;
 begin
+  ExpandEnvVariables(AEnvVariables);
   for i := 0 to AEnvVariables.Count - 1 do
   begin
     fProcess.Environment.Add(AEnvVariables[i]);
@@ -390,7 +459,6 @@ begin
       fProcess.Executable := fInfo.Command;
       fProcess.Parameters.Assign(fInfo.Parameters);
       FillEnvVariables(fInfo.Environment);
-      //fProcess.Environment.Assign(fInfo.Environment);
       mev := fProcess.Environment.Text;
       try
         fProcess.Execute;
