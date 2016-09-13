@@ -403,20 +403,18 @@ begin
       mMatch := mRegEx.Match[1];
       m1 := mRegEx.Match[0];
       mRepIndex := AExpandVars.IndexOfName(mMatch);
-      if mRepIndex <> AIndex then begin
-        if mRepIndex <> -1 then begin
-          if not (mRepIndex in AInProcess) then
-          begin
-            ExpandLine(AExpandVars, ASysVars, mRepIndex, AInProcess + [mRepIndex]);
-          end;
-          mLine := ReplaceStr(mLine, mRegEx.Match[0], AExpandVars.ValueFromIndex[mRepIndex]);
-        end
-        else
-        begin
-          mRepIndex := ASysVars.IndexOfName(mMatch);
-          if mRepIndex <> -1 then
-            mLine := ReplaceStr(mLine, mRegEx.Match[0], ASysVars.ValueFromIndex[mRepIndex]);
-        end;
+      if (mRepIndex <> -1)  // found in user defined
+         and (mRepIndex <> AIndex) // not self
+         and not (mRepIndex in AInProcess) // and not in acutal process(against endless loop)
+      then begin
+        ExpandLine(AExpandVars, ASysVars, mRepIndex, AInProcess + [mRepIndex]);
+        mLine := ReplaceStr(mLine, mRegEx.Match[0], AExpandVars.ValueFromIndex[mRepIndex]);
+      end
+      else
+      begin
+        mRepIndex := ASysVars.IndexOfName(mMatch);
+        if mRepIndex <> -1 then
+          mLine := ReplaceStr(mLine, mRegEx.Match[0], ASysVars.ValueFromIndex[mRepIndex]);
       end;
       mMatched := mRegEx.ExecNext;
     end;
