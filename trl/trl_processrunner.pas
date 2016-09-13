@@ -147,6 +147,12 @@ constructor TProcessRunnerInfo.Create;
 begin
   fParameters := TStringList.Create;
   fEnvironment := TStringList.Create;
+  {$IFDEF UNIX}
+  fEnvironment.CaseSensitive := True;
+  {$ENDIF UNIX}
+  {$IFDEF WINDOWS}
+  fEnvironment.CaseSensitive := False;
+  {$ENDIF UNIX}
 end;
 
 destructor TProcessRunnerInfo.Destroy;
@@ -387,11 +393,9 @@ begin
   try
     {$IFDEF UNIX}
     mRegEx.Expression := '\$\(?(\w+)\)?';
-    mRegEx.ModifierI := True;
     {$ENDIF UNIX}
     {$IFDEF WINDOWS}
     mRegEx.Expression := '%(\w+)%';
-    mRegEx.ModifierI := False;
     {$ENDIF UNIX}
     mLine := AExpandVars[AIndex];
     mMatched := mRegEx.Exec(AExpandVars[AIndex]);
@@ -429,6 +433,12 @@ var
 begin
   mSysVars := TStringList.Create;
   try
+    {$IFDEF UNIX}
+    mSysVars.CaseSensitive := True;
+    {$ENDIF UNIX}
+    {$IFDEF WINDOWS}
+    mSysVars.CaseSensitive := False;
+    {$ENDIF UNIX}
     FillCurrentEnvVariables(mSysVars);
     for i := 0 to AEnvVariables.Count - 1 do begin
       ExpandLine(AEnvVariables, mSysVars, i, [i]);
