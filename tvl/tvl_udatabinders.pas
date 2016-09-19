@@ -6,11 +6,11 @@ uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
-  Forms, EditBtn, tvl_ucontrolbinder;
+  Forms, EditBtn, tvl_ucontrolbinder, ComCtrls;
 
 type
 
-  TBinderChangeEvent = procedure of object;
+  TBinderChangeEvent = procedure(const ADataItem: IRBDataItem; AControl: TWinControl) of object;
 
   TBinderChangeEvents = specialize TFPGList<TBinderChangeEvent>;
 
@@ -141,6 +141,18 @@ type
     procedure FillOffer; override;
     procedure OfferToData; override;
     procedure DataToOffer; override;
+  end;
+
+  { TTabSheetBinder }
+
+  TTabSheetBinder = class(TEditBinder)
+  private
+    function GetControl: TCustomPage;
+  protected
+    property Control: TCustomPage read GetControl;
+  public
+    procedure DataToControl; override;
+    procedure ControlToData; override;
   end;
 
   { TListBinder }
@@ -310,6 +322,23 @@ type
   public
     property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
   end;
+
+{ TTabSheetBinder }
+
+function TTabSheetBinder.GetControl: TCustomPage;
+begin
+  Result := inherited Control as TCustomPage;
+end;
+
+procedure TTabSheetBinder.DataToControl;
+begin
+  Control.Caption := DataItem.AsString;
+end;
+
+procedure TTabSheetBinder.ControlToData;
+begin
+  // for now leave readonly
+end;
 
 { TListBinder.TGridEditorSupport.TSupportBinder }
 
@@ -1369,7 +1398,7 @@ var
   mEvent: TBinderChangeEvent;
 begin
   for mEvent in fChangeEvents do
-    mEvent;
+    mEvent(DataItem, Control);
 end;
 
 constructor TEditBinder.Create;

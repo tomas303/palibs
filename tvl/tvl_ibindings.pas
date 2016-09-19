@@ -11,7 +11,8 @@ type
 
   IRBDataBinder = interface
   ['{015ECE02-6F9E-4071-BDCE-63BD11F6FAD9}']
-    procedure Bind(AContainer: TWinControl; const AData: IRBData);
+    procedure BindArea(AContainer: TWinControl; const AData: IRBData);
+    procedure BindControl(AControl: TWinControl; const AName: string);
     procedure Unbind;
     procedure DataChange;
     procedure Flush(AControl: TControl = nil);
