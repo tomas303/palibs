@@ -149,6 +149,20 @@ type
       AInterfaces: array of TGuid);
   end;
 
+  TDI_CreateInstanceEvent = function: TObject of object;
+
+  { TDI_TCreateViaEventReg }
+
+  TDI_TCreateViaEventReg = class(TDIReg)
+  private
+    fCreateEvent: TDI_CreateInstanceEvent;
+  protected
+    function NewObject: TObject; override;
+    function InstantiatedClass: TClass; override;
+  public
+    constructor Create(ACreateEvent: TDI_CreateInstanceEvent;
+      AInterfaces: array of TGuid);
+  end;
 
 
   { TDIContainer }
@@ -167,6 +181,7 @@ type
     function RegisterReg(AReg: TDIReg): TDIReg;
     function NewReg(AClass: TClass; const AID: string; AInterfaces: array of TGuid; ACreateKind: TDIRegCreateKind): TDIReg; overload;
     function NewReg(AClass: TComponentClass; AOwner: TComponent; const AID: string; AInterfaces: array of TGuid; ACreateKind: TDIRegCreateKind): TDIReg; overload;
+    function NewReg(ACreateEvent: TDI_CreateInstanceEvent; const AID: string; AInterfaces: array of TGuid; ACreateKind: TDIRegCreateKind): TDIReg; overload;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -181,6 +196,10 @@ type
     function Add(const AClass: TComponentClass; AOwner: TComponent; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
     function Add(const AClass: TComponentClass; AOwner: TComponent; AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
     function Add(const AClass: TComponentClass; AOwner: TComponent; AInterfaces: array of TGuid; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    // TCreateViaEventReg
+    function Add(const ACreateEvent: TDI_CreateInstanceEvent; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const ACreateEvent: TDI_CreateInstanceEvent; AInterface: TGUID;  const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
+    function Add(const ACreateEvent: TDI_CreateInstanceEvent; AInterfaces: array of TGuid; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
   end;
 
   { TCustomDIFactory }
@@ -213,6 +232,26 @@ type
   end;
 
 implementation
+
+{ TDI_TCreateViaEventReg }
+
+function TDI_TCreateViaEventReg.NewObject: TObject;
+begin
+  Result := fCreateEvent;
+end;
+
+function TDI_TCreateViaEventReg.InstantiatedClass: TClass;
+begin
+  Result := nil;
+end;
+
+constructor TDI_TCreateViaEventReg.Create(ACreateEvent: TDI_CreateInstanceEvent;
+  AInterfaces: array of TGuid);
+begin
+  inherited Create;
+  fCreateEvent := ACreateEvent;
+  AddSupportedInterfaces(AInterfaces);
+end;
 
 { TDIOwner }
 
@@ -693,6 +732,16 @@ begin
   Result.CreateKind := ACreateKind;
 end;
 
+function TDIContainer.NewReg(ACreateEvent: TDI_CreateInstanceEvent;
+  const AID: string; AInterfaces: array of TGuid; ACreateKind: TDIRegCreateKind
+  ): TDIReg;
+begin
+  CheckRegNotExists(nil, AID);
+  Result := RegisterReg(TDI_TCreateViaEventReg.Create(ACreateEvent, AInterfaces));
+  Result.ID := AID;
+  Result.CreateKind := ACreateKind;
+end;
+
 constructor TDIContainer.Create;
 begin
    inherited;
@@ -766,6 +815,25 @@ function TDIContainer.Add(const AClass: TComponentClass; AOwner: TComponent;
   AInterfaces: array of TGuid; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
 begin
   Result := NewReg(AClass, AOwner, AID, AInterfaces, ACreateKind);
+end;
+
+function TDIContainer.Add(const ACreateEvent: TDI_CreateInstanceEvent;
+  const AID: string; ACreateKind: TDIRegCreateKind): TDIReg;
+begin
+  Result := NewReg(ACreateEvent, AID, [], ACreateKind);
+end;
+
+function TDIContainer.Add(const ACreateEvent: TDI_CreateInstanceEvent;
+  AInterface: TGUID; const AID: string; ACreateKind: TDIRegCreateKind): TDIReg;
+begin
+  Result := NewReg(ACreateEvent, AID, [AInterface], ACreateKind);
+end;
+
+function TDIContainer.Add(const ACreateEvent: TDI_CreateInstanceEvent;
+  AInterfaces: array of TGuid; const AID: string; ACreateKind: TDIRegCreateKind
+  ): TDIReg;
+begin
+  Result := NewReg(ACreateEvent, AID, AInterfaces, ACreateKind);
 end;
 
 end.
