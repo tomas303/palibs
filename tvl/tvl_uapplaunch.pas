@@ -28,6 +28,7 @@ type
     procedure CloseMainFormHandler(Sender: TObject; var CloseAction: TCloseAction);
   public
     procedure Launch;
+    procedure AfterConstruction; override;
   published
     property Kicker: IGUIKicker read fKicker write fKicker;
   end;
@@ -42,16 +43,22 @@ begin
   if CloseAction in [caHide, caFree] then
   begin
     Kicker.ShutDown;
-    Application.Terminate;
   end;
 end;
 
 procedure TGUILauncher.Launch;
 begin
-  Application.Initialize;
   Kicker.MainForm.ConnectCloseHandler(CloseMainFormHandler);
   Kicker.StartUp;
   Application.Run;
+end;
+
+procedure TGUILauncher.AfterConstruction;
+begin
+  // since mainform could be subject of dependency injection and as such could
+  // be created during create of hierarchy of object, call to inititialization
+  // is put here(at least on windows must be called before main form is created)
+  Application.Initialize;
 end;
 
 end.
