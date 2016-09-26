@@ -222,7 +222,13 @@ begin
     if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistMany) then
       SaveDataList(AStoreEl, AData[i])
     else if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IPersistRef) then
-        SaveDataItemRef(AStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+      SaveDataItemRef(AStoreEl, AData[i].Name, AData[i].AsInterface as IPersistRef)
+    else if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IRBData) then
+    begin
+      mObjStoreEl := Doc.CreateElement(AData[i].Name);
+      AStoreEl.AppendChild(mObjStoreEl);
+      SaveData(mObjStoreEl, AData[i].AsInterface as IRBData)
+    end
     else if AData[i].IsObject then
     begin
       if AData[i].AsObject <> nil then
@@ -263,6 +269,12 @@ begin
       mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
       if mObjStoreEl <> nil then
         LoadDataItemRef(mObjStoreEl, AData[i].AsInterface as IPersistRef)
+    end
+    else if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IRBData) then
+    begin
+      mObjStoreEl := AStoreEl.FindNode(AData[i].Name) as TDOMElement;
+      if mObjStoreEl <> nil then
+         LoadData(mObjStoreEl, AData[i].AsInterface as IRBData)
     end
     else
     if AData[i].IsObject then
