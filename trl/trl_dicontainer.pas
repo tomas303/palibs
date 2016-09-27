@@ -521,7 +521,7 @@ begin
 
       except
         on E: Exception do begin
-          raise Exception.Create(E.Message + ' on property ' + mRBItem.Name);
+          raise Exception.CreateFmt('Error when injecting property "%s.%s": ' + LineEnding + '%s', [mRB.ClassName, mRBItem.Name, E.Message]);
         end;
       end;
     end;
