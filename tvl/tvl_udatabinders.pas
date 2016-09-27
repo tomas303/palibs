@@ -6,13 +6,9 @@ uses
   Classes, SysUtils, trl_irttibroker, Controls, StdCtrls, ExtCtrls, fgl,
   Graphics, Grids, MaskEdit, lmessages, LCLProc, LCLType,
   Menus, SynEdit, trl_ipersist, trl_upersist, tvl_messages, lclintf, messages,
-  Forms, EditBtn, tvl_ucontrolbinder, ComCtrls;
+  Forms, EditBtn, tvl_ucontrolbinder, ComCtrls, tvl_ibindings;
 
 type
-
-  TBinderChangeEvent = procedure(const ADataItem: IRBDataItem; AControl: TWinControl) of object;
-
-  TBinderChangeEvents = specialize TFPGList<TBinderChangeEvent>;
 
   { TEditBinder }
 

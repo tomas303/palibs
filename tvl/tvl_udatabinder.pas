@@ -22,6 +22,9 @@ type
     procedure Bind(const AControl: TWinControl);
     procedure DataChange;
     procedure Flush(AControl: TControl = nil);
+    procedure RegisterChangeEvent(AEvent: TBinderChangeEvent); virtual; abstract;
+    procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent); virtual; abstract;
+    property DataItem: IRBDataItem read fDataItem;
   end;
 
   { TDataSlotsItem }
@@ -31,10 +34,12 @@ type
     TBinderItems = specialize TFPGObjectList<TEditBinder>;
   private
     fBinders: TBinderItems;
+    fRecallDataChangeEvents: TBinderChangeEvents;
     function CreateBinder(const AControl: TWinControl): TEditBinder;
     function FindBinder(const AControl: TWinControl): TEditBinder;
   protected
     procedure PushDataChange(const ADataItem: IRBDataItem; AControl: TWinControl);
+    procedure RecallDataChange(const ADataItem: IRBDataItem; AControl: TWinControl);
   protected
     procedure DoBind(const AControl: TWinControl); override;
     procedure DoDataChange; override;
@@ -42,6 +47,8 @@ type
   public
     constructor Create(const ADataItem: IRBDataItem); override;
     destructor Destroy; override;
+    procedure RegisterChangeEvent(AEvent: TBinderChangeEvent); override;
+    procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent); override;
   end;
 
   { TObjectSlotsItem }
@@ -58,6 +65,8 @@ type
   public
     constructor Create(const ADataItem: IRBDataItem); override;
     destructor Destroy; override;
+    procedure RegisterChangeEvent(AEvent: TBinderChangeEvent); override;
+    procedure UnregisterChangeEvent(AEvent: TBinderChangeEvent); override;
   end;
 
   { TDataSlots }
@@ -78,6 +87,7 @@ type
     procedure SetItems(AIndex: Integer; AValue: TCustomDataSlotsItem);
     function GetItemsCount: integer;
     procedure SetItemsCount(AValue: integer);
+    function GetItemByName(const AName: string): TCustomDataSlotsItem;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -90,6 +100,7 @@ type
   public
     property Items[AIndex: integer]: TCustomDataSlotsItem read GetItems write SetItems; default;
     property ItemsCount: integer read GetItemsCount write SetItemsCount;
+    property ItemByName[const AName: string]: TCustomDataSlotsItem read GetItemByName;
   end;
 
   { TRBDataBinder }
@@ -109,6 +120,8 @@ type
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
     property AData: IRBData read GetData write SetData;
+    procedure RegisterChangeEvent(const AItemName: string; AEvent: TBinderChangeEvent);
+    procedure UnregisterChangeEvent(const AItemName: string; AEvent: TBinderChangeEvent);
   public
     destructor Destroy; override;
   end;
@@ -162,6 +175,24 @@ destructor TObjectSlotsItem.Destroy;
 begin
   FreeAndNil(fBinders);
   inherited Destroy;
+end;
+
+procedure TObjectSlotsItem.RegisterChangeEvent(AEvent: TBinderChangeEvent);
+var
+  i, j: integer;
+begin
+  for i := 0 to fBinders.Count - 1 do
+    for j := 0 to fBinders.Data[i].Data.Count - 1 do
+      fBinders.Data[i].RegisterChangeEvent(fBinders.Data[i].Data[j].Name, AEvent);
+end;
+
+procedure TObjectSlotsItem.UnregisterChangeEvent(AEvent: TBinderChangeEvent);
+var
+  i, j: integer;
+begin
+  for i := 0 to fBinders.Count - 1 do
+    for j := 0 to fBinders.Data[i].Data.Count - 1 do
+      fBinders.Data[i].UnregisterChangeEvent(fBinders.Data[i].Data[j].Name, AEvent);
 end;
 
 { TDataSlotsItem }
@@ -224,6 +255,15 @@ begin
       mBinder.DataToControl;
 end;
 
+procedure TDataSlotsItem.RecallDataChange(const ADataItem: IRBDataItem;
+  AControl: TWinControl);
+var
+  mEvent: TBinderChangeEvent;
+begin
+  for mEvent in fRecallDataChangeEvents do
+    mEvent(ADataItem, AControl);
+end;
+
 procedure TDataSlotsItem.DoBind(const AControl: TWinControl);
 var
   mBinder: TEditBinder;
@@ -232,6 +272,7 @@ begin
   if mBinder = nil then begin
     mBinder := CreateBinder(AControl);
     mBinder.RegisterChangeEvent(@PushDataChange);
+    mBinder.RegisterChangeEvent(@RecallDataChange);
     fBinders.Add(mBinder);
   end;
   mBinder.Unbind;
@@ -260,12 +301,32 @@ constructor TDataSlotsItem.Create(const ADataItem: IRBDataItem);
 begin
   inherited;
   fBinders := TBinderItems.Create;
+  fRecallDataChangeEvents := TBinderChangeEvents.Create;
 end;
 
 destructor TDataSlotsItem.Destroy;
 begin
+  FreeAndNil(fRecallDataChangeEvents);
   FreeAndNil(fBinders);
   inherited Destroy;
+end;
+
+procedure TDataSlotsItem.RegisterChangeEvent(AEvent: TBinderChangeEvent);
+var
+  mIndex: integer;
+begin
+  mIndex := fRecallDataChangeEvents.IndexOf(AEvent);
+  if mIndex = -1 then
+    fRecallDataChangeEvents.Add(AEvent);
+end;
+
+procedure TDataSlotsItem.UnregisterChangeEvent(AEvent: TBinderChangeEvent);
+var
+  mIndex: integer;
+begin
+  mIndex := fRecallDataChangeEvents.IndexOf(AEvent);
+  if mIndex <> -1 then
+    fRecallDataChangeEvents.Delete(mIndex);
 end;
 
 { TCustomDataSlotsItem }
@@ -301,6 +362,18 @@ procedure TDataSlots.SetData(AValue: IRBData);
 begin
   fData := AValue;
   ActualizeItems;
+end;
+
+function TDataSlots.GetItemByName(const AName: string): TCustomDataSlotsItem;
+var
+  mInd: Integer;
+begin
+  mInd := fItems.IndexOf(AName);
+  if mInd = -1 then
+    raise EDataBinder.CreateFmt('GetItemByName - data slot item %s not exists', [AName]);
+  Result := fItems.Data[mInd];
+  if Result = nil then
+    raise EDataBinder.CreateFmt('GetItemByName - data slot item %s point to nil', [AName]);
 end;
 
 function TDataSlots.GetItemsCount: integer;
@@ -469,6 +542,24 @@ end;
 procedure TRBDataBinder.SetData(AValue: IRBData);
 begin
   fDataSlots.Data := AValue;
+end;
+
+procedure TRBDataBinder.RegisterChangeEvent(const AItemName: string;
+  AEvent: TBinderChangeEvent);
+var
+  mSlotItem: TCustomDataSlotsItem;
+begin
+  mSlotItem := fDataSlots.ItemByName[AItemName];
+  mSlotItem.RegisterChangeEvent(AEvent)
+end;
+
+procedure TRBDataBinder.UnregisterChangeEvent(const AItemName: string;
+  AEvent: TBinderChangeEvent);
+var
+  mSlotItem: TCustomDataSlotsItem;
+begin
+  mSlotItem := fDataSlots.ItemByName[AItemName];
+  mSlotItem.UnregisterChangeEvent(AEvent)
 end;
 
 end.

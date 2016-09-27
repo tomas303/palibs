@@ -3,9 +3,14 @@ unit tvl_ibindings;
 interface
 
 uses
-  trl_irttibroker, trl_ipersist, Controls;
+  trl_irttibroker, trl_ipersist, Controls, fgl;
 
 type
+
+  TBinderChangeEvent = procedure(const ADataItem: IRBDataItem; AControl: TWinControl) of object;
+
+  TBinderChangeEvents = specialize TFPGList<TBinderChangeEvent>;
+
 
   { IRBDataBinder }
 
@@ -19,6 +24,8 @@ type
     function GetData: IRBData;
     procedure SetData(AValue: IRBData);
     property Data: IRBData read GetData write SetData;
+    procedure RegisterChangeEvent(const AItemName: string; AEvent: TBinderChangeEvent);
+    procedure UnregisterChangeEvent(const AItemName: string; AEvent: TBinderChangeEvent);
   end;
 
   IRBTallyBinder = interface
