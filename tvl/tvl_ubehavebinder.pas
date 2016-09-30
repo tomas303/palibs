@@ -6,7 +6,7 @@ interface
 
 uses
   SysUtils, tvl_ibindings, tvl_ucontrolbinder, tvl_ubehavebinders,
-  Controls, ComCtrls, fgl;
+  Controls, ComCtrls, fgl, SynEdit;
 
 type
 
@@ -60,6 +60,7 @@ begin
   begin
     if not (AContainer.Controls[i] is TWinControl) then
       Continue;
+    MakeBinders(AContainer.Controls[i] as TWinControl);
     AddBinderForControl(AContainer.Controls[i] as TWinControl);
   end;
 end;
@@ -70,6 +71,12 @@ var
 begin
   if AControl is TCustomTabControl then begin
     mBinder := TPageControlBehaveBinder.Create;
+    fBinders.Add(mBinder);
+    mBinder.Bind(AControl);
+  end
+  else
+  if AControl is TCustomSynEdit then begin
+    mBinder := TSynEditBinder.Create;
     fBinders.Add(mBinder);
     mBinder.Bind(AControl);
   end;

@@ -6,7 +6,8 @@ interface
 
 uses
   Controls, ComCtrls, LMessages, Forms, SysUtils, StdCtrls, Menus, types,
-  classes, ExtCtrls, LCLProc, lclintf, fgl, tvl_ucontrolbinder{, Windows};
+  classes, ExtCtrls, LCLProc, lclintf, fgl, tvl_ucontrolbinder{, Windows},
+  SynEdit, SynEditTypes, Dialogs, LCLType;
 
 const
   LM_FOCUSCONTROLONPAGE = LM_BEHAVEBINDER + 02;
@@ -96,7 +97,185 @@ type
   TMoveFormBinder = class(TControlBinder)
   end;
 
+  { TSynEditBinder }
+
+  TSynEditBinder = class(TControlBinder)
+  protected
+    fFindDlg: TFindDialog;
+    procedure OnDlgFind(Sender: TObject);
+    function FindOptions2SynSearchOptions(const AOptions: TFindOptions): TSynSearchOptions;
+    procedure Find;
+    function GetFindDlg: TFindDialog;
+    property FindDlg: TFindDialog read GetFindDlg;
+  protected
+    fReplaceDlg: TReplaceDialog;
+    fLastSearchReplace: integer;
+    procedure OnDlgReplace(Sender: TObject);
+    procedure OnDlgReplaceFind(Sender: TObject);
+    procedure Replace;
+    function GetReplaceDlg: TReplaceDialog;
+    property ReplaceDlg: TReplaceDialog read GetReplaceDlg;
+  protected
+    function GetControl: TCustomSynEdit;
+    procedure DoControlWndProc(var TheMessage: TLMessage); override;
+  public
+    destructor Destroy; override;
+    procedure BindControl; override;
+    property Control: TCustomSynEdit read GetControl;
+  end;
+
 implementation
+
+{ TSynEditBinder }
+
+procedure TSynEditBinder.OnDlgFind(Sender: TObject);
+begin
+  Control.SearchReplace(FindDlg.FindText, '',
+    FindOptions2SynSearchOptions(FindDlg.Options) + [ssoFindContinue]);
+end;
+
+function TSynEditBinder.GetFindDlg: TFindDialog;
+begin
+  if fFindDlg = nil then begin
+    fFindDlg := TFindDialog.Create(nil);
+    fFindDlg.Title := Format('%s (%s)', [fFindDlg.Title, Control.Name]);
+    fFindDlg.OnFind := @OnDlgFind;
+  end;
+  Result := fFindDlg;
+end;
+
+procedure TSynEditBinder.OnDlgReplace(Sender: TObject);
+var
+  mSynOptions: TSynSearchOptions;
+begin
+  mSynOptions := FindOptions2SynSearchOptions(ReplaceDlg.Options);
+  if ssoReplaceAll in mSynOptions then begin
+    Control.SearchReplace(ReplaceDlg.FindText, ReplaceDlg.ReplaceText, mSynOptions);
+  end else begin
+    // replace only one then it will be after previous succesful find
+    if (Control.SelStart = fLastSearchReplace) then
+    begin
+      // otherwise next is replaced and not one just finded and thus selected
+      if ssoBackwards in mSynOptions then
+        Control.LogicalCaretXY := Control.BlockEnd
+      else
+        Control.LogicalCaretXY := Control.BlockBegin;
+      Control.SearchReplace(ReplaceDlg.FindText, ReplaceDlg.ReplaceText, mSynOptions);
+    end;
+
+  end;
+end;
+
+procedure TSynEditBinder.OnDlgReplaceFind(Sender: TObject);
+begin
+  fLastSearchReplace := -1;
+  if Control.SearchReplace(ReplaceDlg.FindText, ReplaceDlg.ReplaceText,
+    FindOptions2SynSearchOptions(ReplaceDlg.Options) + [ssoFindContinue]) = 1
+  then
+    fLastSearchReplace := Control.SelStart;
+end;
+
+procedure TSynEditBinder.Replace;
+begin
+  ReplaceDlg.Execute;
+end;
+
+function TSynEditBinder.GetReplaceDlg: TReplaceDialog;
+begin
+  if fReplaceDlg = nil then begin
+    fReplaceDlg := TReplaceDialog.Create(nil);
+    fReplaceDlg.Title := Format('%s (%s)', [fReplaceDlg.Title, Control.Name]);
+    fReplaceDlg.OnFind := @OnDlgReplaceFind;
+    fReplaceDlg.OnReplace := @OnDlgReplace;
+  end;
+  Result := fReplaceDlg;
+end;
+
+function TSynEditBinder.FindOptions2SynSearchOptions(
+  const AOptions: TFindOptions): TSynSearchOptions;
+var
+  mOp: TFindOption;
+begin
+  Result := [ssoBackwards];
+  for mOp in TFindOption do begin
+    if mOp in AOptions then
+      case mOp of
+        frDown: Result := Result - [ssoBackwards];
+        frFindNext:;
+        frHideMatchCase:;
+        frHideWholeWord:;
+        frHideUpDown:;
+        frMatchCase: Result := Result + [ssoMatchCase];
+        frDisableMatchCase:;
+        frDisableUpDown:;
+        frDisableWholeWord:;
+        frReplace: Result := Result + [ssoReplace];
+        frReplaceAll: Result := Result + [ssoReplaceAll];
+        frWholeWord: Result := Result + [ssoWholeWord];
+        frShowHelp:;
+        frEntireScope: Result := Result + [ssoEntireScope];
+        frHideEntireScope:;
+        frPromptOnReplace: Result := Result + [ssoPrompt];
+        frHidePromptOnReplace:;
+        frButtonsAtBottom:;
+      end;
+  end;
+end;
+
+procedure TSynEditBinder.Find;
+begin
+  FindDlg.Execute;
+end;
+
+function TSynEditBinder.GetControl: TCustomSynEdit;
+begin
+  Result := inherited Control as TCustomSynEdit;
+end;
+
+procedure TSynEditBinder.DoControlWndProc(var TheMessage: TLMessage);
+var
+  mSynOptions: TSynSearchOptions;
+begin
+  case TheMessage.Msg of
+    LM_KEYDOWN:
+      if (TLMKey(TheMessage).CharCode = VK_F)
+        and ([ssModifier] = MsgKeyDataToShiftState(TLMKey(TheMessage).KeyData))
+      then begin
+        Find;
+      end
+      else
+      if (TLMKey(TheMessage).CharCode = VK_F3)
+        and (FindDlg.FindText <> '')
+      then begin
+        mSynOptions := FindOptions2SynSearchOptions(FindDlg.Options);
+        if [ssShift] = MsgKeyDataToShiftState(TLMKey(TheMessage).KeyData) then
+          mSynOptions := mSynOptions + [ssoBackwards]
+        else
+          mSynOptions := mSynOptions - [ssoBackwards];
+        mSynOptions :=  mSynOptions + [ssoFindContinue];
+        Control.SearchReplace(FindDlg.FindText, '', mSynOptions);
+      end
+      else
+      if (TLMKey(TheMessage).CharCode = VK_H)
+        and ([ssModifier] = MsgKeyDataToShiftState(TLMKey(TheMessage).KeyData))
+      then begin
+        Replace;
+      end;
+  end;
+  inherited DoControlWndProc(TheMessage);
+end;
+
+destructor TSynEditBinder.Destroy;
+begin
+  FreeAndNil(fFindDlg);
+  FreeAndNil(fReplaceDlg);
+  inherited Destroy;
+end;
+
+procedure TSynEditBinder.BindControl;
+begin
+  inherited BindControl;
+end;
 
 { TMoveControlBinder }
 
