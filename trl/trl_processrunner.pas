@@ -18,12 +18,16 @@ type
 
   TProcessRunnerSync = class
   public type
-    TOnSyncEvent = procedure(const AData: string) of object;
+    TDataKind = (dkOut, dkErr);
+  public type
+    TOnSyncEvent = procedure(const AData: string; const AKind: TDataKind) of object;
   private
     fData: string;
+    fKind: TDataKind;
     fOnSync: TOnSyncEvent;
   public
-    constructor Create(const AData: string; AOnSync: TOnSyncEvent);
+    constructor Create(const AData: string; AKind: TDataKind;
+      AOnSync: TOnSyncEvent);
     procedure Sync;
   end;
 
@@ -68,6 +72,7 @@ type
       const AIndex: integer; const AInProcess: TIntegerSet);
     procedure ExpandEnvVariables(AEnvVariables: TStrings);
     procedure FillEnvVariables(AEnvVariables: TStrings; APrefillCurentEnvironment: Boolean);
+    procedure ProcessStdErr;
     procedure Execute; override;
   public
     constructor Create(AInfo: TProcessRunnerInfo; AOnSync: TProcessRunnerSync.TOnSyncEvent);
@@ -87,11 +92,13 @@ type
   private
     fCT: TProcessRunnerThread;
     fInfo: TProcessRunnerInfo;
-    fOnPushOutput: TPushOutput;
+    fOnPushOutput, fOnPushErrOutput: TPushOutput;
     fOnFinish: TFinished;
-    fOutput: string;
+    fOutput, fErrOutput: string;
     fProcess: TProcess;
-    procedure SyncOutput(const AData: string);
+    procedure SyncOutput(const AData: string; const AKind: TProcessRunnerSync.TDataKind);
+    procedure ProcessOutput(const AData: string);
+    procedure ProcessErrOutput(const AData: string);
   protected
     function GetBatch: string;
     function GetCommand: string;
@@ -122,6 +129,7 @@ type
     property PrefillCurentEnvironment: Boolean read GetPrefillCurentEnvironment write SetPrefillCurentEnvironment;
   published
     property OnPushOutput: TPushOutput read fOnPushOutput write fOnPushOutput;
+    property OnPushErrOutput: TPushOutput read fOnPushErrOutput write fOnPushErrOutput;
     property OnFinish: TFinished read fOnFinish write fOnFinish;
   end;
 
@@ -174,26 +182,38 @@ end;
 
 { TProcessRunnerSync }
 
-constructor TProcessRunnerSync.Create(const AData: string; AOnSync: TOnSyncEvent);
+constructor TProcessRunnerSync.Create(const AData: string; AKind: TDataKind;
+  AOnSync: TOnSyncEvent);
 begin
   fData := AData;
+  fKind := AKind;
   fOnSync := AOnSync;
 end;
 
 procedure TProcessRunnerSync.Sync;
 begin
-  fOnSync(fData);
+  fOnSync(fData, fKind);
   Free;
 end;
 
 { TProcessRunner }
 
-procedure TProcessRunner.SyncOutput(const AData: string);
+procedure TProcessRunner.SyncOutput(const AData: string; const AKind: TProcessRunnerSync.TDataKind);
+begin
+  case AKind of
+    dkOut: ProcessOutput(AData);
+    dkErr: ProcessErrOutput(AData);
+  end;
+end;
+
+procedure TProcessRunner.ProcessOutput(const AData: string);
 var
   mPos: integer;
   mLine: string;
   mFinishList: TStringList;
 begin
+  if not Assigned(OnPushOutput) then
+    Exit;
   if AnsiStartsStr(cFinished, AData) then
   begin
     if fOutput <> '' then begin
@@ -217,10 +237,31 @@ begin
      mLine := copy(fOutput, 1, mPos - 1);
      if (Length(mLine) > 0) and (mLine[Length(mLine)] = #13) then
        Delete(mLine, Length(mLine), 1);
-     fOnPushOutput(mLine);
+     OnPushOutput(mLine);
      Delete(fOutput, 1, mPos);
      mPos := Pos(#10, fOutput);
     end;
+  end;
+end;
+
+procedure TProcessRunner.ProcessErrOutput(const AData: string);
+var
+  mPos: integer;
+  mLine: string;
+  mFinishList: TStringList;
+begin
+  if not Assigned(OnPushErrOutput) then
+    Exit;
+  fErrOutput := fErrOutput + AData;
+  mPos := Pos(#10, fErrOutput);
+  while mPos > 0 do
+  begin
+    mLine := copy(fErrOutput, 1, mPos - 1);
+    if (Length(mLine) > 0) and (mLine[Length(mLine)] = #13) then
+      Delete(mLine, Length(mLine), 1);
+    OnPushErrOutput(mLine);
+    Delete(fErrOutput, 1, mPos);
+    mPos := Pos(#10, fErrOutput);
   end;
 end;
 
@@ -459,6 +500,24 @@ begin
   end;
 end;
 
+procedure TProcessRunnerThread.ProcessStdErr;
+var
+  mOutRead: integer;
+  mData: string;
+  mSyncOutput: TProcessRunnerSync;
+begin
+  while fProcess.Stderr.NumBytesAvailable > 0 do
+  begin
+    SetLength(mData, 500);
+    mOutRead := fProcess.Stderr.Read(mData[1], 500);
+    if mOutRead = 0 then
+      Break;
+    SetLength(mData, mOutRead);
+    mSyncOutput := TProcessRunnerSync.Create(mData, dkErr, fOnSync);
+    Queue(@mSyncOutput.Sync);
+  end;
+end;
+
 procedure TProcessRunnerThread.Execute;
 var
   mOutRead: integer;
@@ -517,15 +576,16 @@ begin
           case fCompileState of
             cpsResumed:
               begin
+                ProcessStdErr;
                 SetLength(mData, 500);
                 mOutRead := fProcess.Output.Read(mData[1], 500);
-               if (mOutRead = 0) and not fProcess.Active then
+                if (mOutRead = 0) and not fProcess.Active then
                 begin
                   fCompileState := cpsTerminated;
                   Break;
                 end;
                 SetLength(mData, mOutRead);
-                mSyncOutput := TProcessRunnerSync.Create(mData, fOnSync);
+                mSyncOutput := TProcessRunnerSync.Create(mData, dkOut, fOnSync);
                 Queue(@mSyncOutput.Sync);
               end;
             cpsTerminated:
@@ -549,15 +609,16 @@ begin
       on E: Exception do begin
         mExitCode := -11111;
         mData := E.ClassName + ' ' + E.Message;
-        mSyncOutput := TProcessRunnerSync.Create(mData, fOnSync);
+        mSyncOutput := TProcessRunnerSync.Create(mData, dkErr, fOnSync);
         Queue(@mSyncOutput.Sync);
       end;
     end;
+    ProcessStdErr;
     mFinishList := TStringList.Create;
     try
       mFinishList.Add(cFinished);
       mFinishList.Add(cExitCode + '=' + IntToStr(mExitCode));
-      mSyncOutput := TProcessRunnerSync.Create(mFinishList.Text, fOnSync);
+      mSyncOutput := TProcessRunnerSync.Create(mFinishList.Text, dkOut, fOnSync);
     finally
       mFinishList.Free;
     end;
