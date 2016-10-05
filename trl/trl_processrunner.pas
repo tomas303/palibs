@@ -72,6 +72,9 @@ type
       const AIndex: integer; const AInProcess: TIntegerSet);
     procedure ExpandEnvVariables(AEnvVariables: TStrings);
     procedure FillEnvVariables(AEnvVariables: TStrings; APrefillCurentEnvironment: Boolean);
+    function ExpandParamLine(const ALine: string; AEnvVariables: TStrings): string;
+    procedure ExpandParameters(AParameters: TStrings);
+    procedure FillParameters(AParameters: TStrings);
     procedure ProcessStdErr;
     procedure Execute; override;
   public
@@ -500,6 +503,66 @@ begin
   end;
 end;
 
+function TProcessRunnerThread.ExpandParamLine(const ALine: string;
+  AEnvVariables: TStrings): string;
+var
+  mRegEx: TRegExpr;
+  mRepIndex: integer;
+  mMatch: string;
+  mMatched: Boolean;
+begin
+  Result := ALine;
+  mRegEx := TRegExpr.Create;
+  try
+    {$IFDEF UNIX}
+    mRegEx.Expression := '\$\(?(\w+)\)?';
+    {$ENDIF UNIX}
+    {$IFDEF WINDOWS}
+    mRegEx.Expression := '%(\w+)%';
+    {$ENDIF UNIX}
+    mMatched := mRegEx.Exec(ALine);
+    while mMatched do begin
+      mMatch := mRegEx.Match[1];
+      mRepIndex := AEnvVariables.IndexOfName(mMatch);
+      if (mRepIndex <> -1) then
+        Result := ReplaceStr(Result, mRegEx.Match[0], AEnvVariables.ValueFromIndex[mRepIndex]);
+      mMatched := mRegEx.ExecNext;
+    end;
+  finally
+    mRegEx.Free;
+  end;
+end;
+
+procedure TProcessRunnerThread.ExpandParameters(AParameters: TStrings);
+var
+  mEnv: TStringList;
+  i: integer;
+  mLine: string;
+begin
+  mEnv := TStringList.Create;
+  try
+    mEnv.Assign(fProcess.Environment);
+    {$IFDEF UNIX}
+    mEnv.CaseSensitive := True;
+    {$ENDIF UNIX}
+    {$IFDEF WINDOWS}
+    mEnv.CaseSensitive := False;
+    {$ENDIF UNIX}
+    for i := 0 to AParameters.Count - 1 do begin
+      mLine := ExpandParamLine(AParameters[i], mEnv);
+      AParameters[i] := mLine;
+    end;
+  finally
+    mEnv.Free;
+  end;
+end;
+
+procedure TProcessRunnerThread.FillParameters(AParameters: TStrings);
+begin
+  fProcess.Parameters.Assign(AParameters);
+  ExpandParameters(fProcess.Parameters);
+end;
+
 procedure TProcessRunnerThread.ProcessStdErr;
 var
   mOutRead: integer;
@@ -541,8 +604,8 @@ begin
       fProcess.Options := fProcess.Options + [poUsePipes, poNoConsole];
       {$ENDIF}
       fProcess.Executable := fInfo.Command;
-      fProcess.Parameters.Assign(fInfo.Parameters);
       FillEnvVariables(fInfo.Environment, fInfo.PrefillCurentEnvironment);
+      FillParameters(fInfo.Parameters);
       mev := fProcess.Environment.Text;
       try
         fProcess.Execute;
