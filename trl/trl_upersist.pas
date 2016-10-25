@@ -20,6 +20,7 @@ type
     function GetClassName: string;
     function GetIsObject: Boolean;
     function GetIsMemo: Boolean;
+    function GetIsID: Boolean;
     function GetIsInterface: Boolean;
     function GetTypeKind: TTypeKind;
     function GetAsPersist: string;
@@ -63,6 +64,7 @@ type
     function GetIsObject: Boolean;
     function GetIsInterface: Boolean;
     function GetIsMemo: Boolean;
+    function GetIsID: Boolean;
     function GetAsInterface(AIndex: integer): IUnknown; virtual;
     procedure SetAsInterface(AIndex: integer; AValue: IUnknown); virtual;
     function GetClassName: string; virtual;
@@ -86,6 +88,7 @@ type
     property IsObject: Boolean read GetIsObject;
     property IsInterface: Boolean read GetIsInterface;
     property IsMemo: Boolean read GetIsMemo;
+    property IsID: Boolean read GetIsID;
     property ClassName: string read GetClassName;
   public
     constructor Create;
@@ -151,6 +154,11 @@ end;
 function TPersistMany<TItem>.GetIsMemo: Boolean;
 begin
   Result := SameText(ItemTypeInfo^.Name, cMemoStringType);
+end;
+
+function TPersistMany<TItem>.GetIsID: Boolean;
+begin
+  Result := SameText(ItemTypeInfo^.Name, cIDStringType);
 end;
 
 function TPersistMany<TItem>.GetAsInterface(AIndex: integer): IUnknown;
@@ -280,6 +288,11 @@ end;
 function TPersistManyDataItem.GetIsMemo: Boolean;
 begin
   Result := fPersistMany.IsMemo;
+end;
+
+function TPersistManyDataItem.GetIsID: Boolean;
+begin
+  Result := fPersistMany.IsID;
 end;
 
 function TPersistManyDataItem.GetIsInterface: Boolean;

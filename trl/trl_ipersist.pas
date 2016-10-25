@@ -9,9 +9,11 @@ uses
 
 const
   cMemoStringType = 'TMemoString';
+  cIDStringType = 'TIDString';
 
 type
   TMemoString = type string;
+  TIDString = type string;
 
   { IPersistMoniker }
 
@@ -39,6 +41,7 @@ type
     function GetIsInterface: Boolean;
     function GetIsObject: Boolean;
     function GetIsMemo: Boolean;
+    function GetIsID: Boolean;
     procedure SetAsInterface(AIndex: integer; AValue: IUnknown);
     procedure SetAsPersistData(AIndex: integer; AValue: IRBData);
     procedure SetAsObject(AIndex: integer; AValue: TObject);
@@ -58,6 +61,7 @@ type
     property IsObject: Boolean read GetIsObject;
     property IsInterface: Boolean read GetIsInterface;
     property IsMemo: Boolean read GetIsMemo;
+    property IsID: Boolean read GetIsID;
     property ClassName: string read GetClassName;
   end;
 

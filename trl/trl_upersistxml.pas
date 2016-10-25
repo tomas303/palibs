@@ -258,6 +258,7 @@ var
   i: integer;
   mObjStoreEl: TDOMElement;
   mData: IRBData;
+  mID: string;
 begin
   for i := 0 to AData.Count - 1 do
   begin
@@ -296,6 +297,15 @@ begin
     if AData[i].IsMemo then
     begin
       AData[i].AsPersist := LoadDataItemMemo(AStoreEl, AData[i].Name);
+    end
+    else
+    if AData[i].IsID then
+    begin
+      mID := LoadDataItemValue(AStoreEl, AData[i].Name);
+      // just because of possible older item stored without ID will not overwrite
+      // id created for new object with empty value
+      if mID <> '' then
+        AData[i].AsPersist := mID;
     end
     else
     if AData[i].IsInterface then
