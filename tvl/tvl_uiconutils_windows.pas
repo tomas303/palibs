@@ -4,6 +4,8 @@ unit tvl_uiconutils_windows;
 
 interface
 
+{$IFDEF WINDOWS}
+
 uses
   Classes, SysUtils, Graphics, LCLIntf, LCLType, shellapi;
 
@@ -17,12 +19,19 @@ type
       AIconHeight: Integer);
   end;
 
+{$ENDIF WINDOWS}
+
 implementation
+
+{$IFDEF WINDOWS}
 
 { TIconUtilsWindows }
 
 procedure TIconUtilsWindows.RenderAppIcon(const AApplication: string; ABitmap: TBitmap;
   AIconHeight: Integer);
+const
+  // by test looks the best
+  cTrColor = TColor($CCCCCC);
 var
   mIcon: TIcon;
   mApp: UnicodeString;
@@ -31,31 +40,36 @@ var
   mhIconSmall: HICON = 0;
   mHalf: Integer;
 begin
+  ABitmap.Transparent := False;
   mIcon := TIcon.Create;
   try
     mApp := AApplication;
     if ExtractIconEx(PWideChar(mApp), 0, mhIconLarge, mhIconSmall, 1) = 2 then
     begin
-     if AIconHeight >= GetSystemMetrics(SM_CXICON) then
-       mhIcon := mhIconLarge
-     else
-       mhIcon := mhIconSmall;
-     mIcon.Handle := mhIcon;
-     ABitmap.Width := AIconHeight;
-     ABitmap.Height := AIconHeight;
-     ABitmap.Canvas.Brush.Color := clBlack;
-     ABitmap.Canvas.FillRect(0, 0, ABitmap.Width - 1, ABitmap.Height - 1);
-     if mIcon.Height <= ABitmap.Height then begin
-       mHalf := (AIconHeight - mIcon.Height) div 2;
-       ABitmap.Canvas.Draw(mHalf, mHalf, mIcon);
-     end
-     else
-       ABitmap.Canvas.StretchDraw(TRect.Create(0, 0, ABitmap.Width - 1, ABitmap.Height - 1), mIcon);
+      if AIconHeight >= GetSystemMetrics(SM_CXSMICON) + 8 then
+        mhIcon := mhIconLarge
+      else
+        mhIcon := mhIconSmall;
+      mIcon.Handle := mhIcon;
+      ABitmap.Width := AIconHeight;
+      ABitmap.Height := AIconHeight;
+      ABitmap.Canvas.Brush.Color := cTrColor;
+      ABitmap.Canvas.FillRect(0, 0, ABitmap.Width, ABitmap.Height);
+      ABitmap.TransparentColor := cTrColor;
+      ABitmap.Transparent := True;
+      if mIcon.Height <= ABitmap.Height then begin
+        mHalf := (AIconHeight - mIcon.Height) div 2;
+        ABitmap.Canvas.Draw(mHalf, mHalf, mIcon);
+      end
+      else
+        ABitmap.Canvas.StretchDraw(TRect.Create(0, 0, ABitmap.Width - 1, ABitmap.Height - 1), mIcon);
     end;
   finally
     mIcon.Free;
   end;
 end;
+
+{$ENDIF WINDOWS}
 
 end.
 
