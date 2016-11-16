@@ -4,14 +4,17 @@ unit tvl_uiconutils_unix;
 
 interface
 
+{$IFDEF UNIX}
+
 uses
-  Classes, SysUtils, tvl_iiconutils, FPimage, Graphics, LCLIntf, LCLType;
+  Classes, SysUtils, tvl_iiconutils, FPimage, Graphics, LCLIntf, LCLType,
+  tvl_uiconutils_common;
 
 type
 
   { TIconUtilsUnix }
 
-  TIconUtilsUnix = class(TInterfacedObject, IIconUtils)
+  TIconUtilsUnix = class(TIconUtilsCommon)
   public const
     cHiColorPath = '/usr/share/icons/hicolor/';
   protected type
@@ -37,7 +40,11 @@ type
     procedure BeforeDestruction; override;
   end;
 
+{$ENDIF UNIX}
+
 implementation
+
+{$IFDEF UNIX}
 
 { TIconUtilsUnix }
 
@@ -132,34 +139,26 @@ end;
 procedure TIconUtilsUnix.RenderAppIcon(const AApplication: string; ABitmap: TBitmap;
   AIconHeight: Integer);
 var
-  mGraphic: TPortableNetworkGraphic;
+  mIcon: TPortableNetworkGraphic;
   mFile: string;
 begin
   IconHeight := AIconHeight;
+  PrepareBitmap(ABitmap, AIconHeight);
   mFile := FindAppIconFile(AApplication);
-  mGraphic := nil;
+  mIcon := nil;
   if SameText(ExtractFileExt(mFile), '.svg') then begin
     //AddVectorialImage(mIcoFile, ABitmap, AHeight);
   end else if SameText(ExtractFileExt(mFile), '.png') then begin
-    mGraphic := TPortableNetworkGraphic.Create;
+    mIcon := TPortableNetworkGraphic.Create;
   end;
-  if mGraphic = nil then
+  if mIcon = nil then begin
     Exit;
+  end;
   try
-    mGraphic.LoadFromFile(mFile);
-    if mGraphic.Height <= AIconHeight then
-      ABitmap.Assign(mGraphic)
-    else begin
-      ABitmap.Width := AIconHeight;
-      ABitmap.Height := AIconHeight;
-      ABitmap.TransparentMode := mGraphic.TransparentMode;
-      ABitmap.TransparentColor := mGraphic.TransparentColor;
-      ABitmap.PixelFormat := mGraphic.PixelFormat;
-      ABitmap.Masked := mGraphic.Masked;
-      ABitmap.Canvas.StretchDraw(TRect.Create(0, 0, ABitmap.Width - 1, ABitmap.Height - 1), mGraphic);
-    end;
+    mIcon.LoadFromFile(mFile);
+    RenderBitmap(ABitmap, mIcon);
   finally
-    mGraphic.Free;
+    mIcon.Free;
   end;
 end;
 
@@ -168,6 +167,8 @@ begin
   FreeAndNil(fPaths);
   inherited BeforeDestruction;
 end;
+
+{$ENDIF UNIX}
 
 end.
 

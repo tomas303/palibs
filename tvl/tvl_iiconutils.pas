@@ -14,6 +14,9 @@ type
       AIconHeight: Integer);
   end;
 
+const
+  cIconUtilsTransparentColor = $CCCCCC;
+
 implementation
 
 end.

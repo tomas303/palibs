@@ -7,13 +7,13 @@ interface
 {$IFDEF WINDOWS}
 
 uses
-  Classes, SysUtils, Graphics, LCLIntf, LCLType, shellapi;
+  Classes, SysUtils, Graphics, LCLIntf, LCLType, shellapi, tvl_uiconutils_common;
 
 type
 
   { TIconUtilsWindows }
 
-  TIconUtilsWindows = class(TInterfacedObject)
+  TIconUtilsWindows = class(TIconUtilsCommon)
   protected
     procedure RenderAppIcon(const AApplication: string; ABitmap: TBitmap;
       AIconHeight: Integer);
@@ -29,9 +29,6 @@ implementation
 
 procedure TIconUtilsWindows.RenderAppIcon(const AApplication: string; ABitmap: TBitmap;
   AIconHeight: Integer);
-const
-  // by test looks the best
-  cTrColor = TColor($CCCCCC);
 var
   mIcon: TIcon;
   mApp: UnicodeString;
@@ -40,7 +37,7 @@ var
   mhIconSmall: HICON = 0;
   mHalf: Integer;
 begin
-  ABitmap.Transparent := False;
+  PrepareBitmap(ABitmap, AIconHeight);
   mIcon := TIcon.Create;
   try
     mApp := AApplication;
@@ -51,18 +48,7 @@ begin
       else
         mhIcon := mhIconSmall;
       mIcon.Handle := mhIcon;
-      ABitmap.Width := AIconHeight;
-      ABitmap.Height := AIconHeight;
-      ABitmap.Canvas.Brush.Color := cTrColor;
-      ABitmap.Canvas.FillRect(0, 0, ABitmap.Width, ABitmap.Height);
-      ABitmap.TransparentColor := cTrColor;
-      ABitmap.Transparent := True;
-      if mIcon.Height <= ABitmap.Height then begin
-        mHalf := (AIconHeight - mIcon.Height) div 2;
-        ABitmap.Canvas.Draw(mHalf, mHalf, mIcon);
-      end
-      else
-        ABitmap.Canvas.StretchDraw(TRect.Create(0, 0, ABitmap.Width - 1, ABitmap.Height - 1), mIcon);
+      RenderBitmap(ABitmap, mIcon);
     end;
   finally
     mIcon.Free;
