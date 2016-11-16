@@ -9,9 +9,9 @@ uses
 
 type
 
-  { TOsUtils }
+  { TSysUtils }
 
-  TOsUtils = class(TInterfacedObject, ISysUtils)
+  TSysUtils = class(TInterfacedObject, ISysUtils)
   protected
     // ISysUtils
     function NewGID: string;
@@ -20,9 +20,9 @@ type
 
 implementation
 
-{ TOsUtils }
+{ TSysUtils }
 
-function TOsUtils.NewGID: string;
+function TSysUtils.NewGID: string;
 var
   mGuid: TGuid;
   mEncStream: TBase64EncodingStream;
@@ -45,7 +45,7 @@ begin
   end;
 end;
 
-function TOsUtils.NewGuid: TGuid;
+function TSysUtils.NewGuid: TGuid;
 begin
   CreateGUID(Result);
 end;
