@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="14">
+    <Files Count="16">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -66,6 +66,14 @@
         <Filename Value="trl_ulazlog.pas"/>
         <UnitName Value="trl_ulazlog"/>
       </Item14>
+      <Item15>
+        <Filename Value="trl_isysutils.pas"/>
+        <UnitName Value="trl_isysutils"/>
+      </Item15>
+      <Item16>
+        <Filename Value="trl_usysutils.pas"/>
+        <UnitName Value="trl_usysutils"/>
+      </Item16>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

@@ -33,7 +33,7 @@ type
   TDIReg = class
   public type
 
-    TOnInjectEvent = procedure(const AItem: IRBDataItem) of object;
+    TOnInjectEvent = procedure(const AItem: IRBDataItem; ADIC: TDICustomContainer) of object;
 
     { TInjectProp }
 
@@ -517,7 +517,7 @@ begin
         end;
         // event
         if ((mIP.Name = mRBItem.Name) or (mIP.Name = '')) and Assigned(mIP.OnInject) then
-          mIP.OnInject(mRBItem);
+          mIP.OnInject(mRBItem, fDIC);
 
       except
         on E: Exception do begin
