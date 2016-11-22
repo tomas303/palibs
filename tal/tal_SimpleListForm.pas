@@ -1,4 +1,4 @@
-unit tvl_SimpleListForm;
+unit tal_SimpleListForm;
 
 {$mode objfpc}{$H+}
 
@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  tvl_iedit, tvl_ibindings, trl_ipersist, trl_irttibroker;
+  tal_iedit, tvl_ibindings, trl_ipersist, trl_irttibroker;
 
 type
 

@@ -1,4 +1,4 @@
-unit tvl_iedit;
+unit tal_iedit;
 
 {$mode delphi}{$H+}
 

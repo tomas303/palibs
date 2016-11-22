@@ -8,7 +8,8 @@ unit tal;
 interface
 
 uses
-  tal_uapp, tal_ilauncher, tal_uguilauncher, LazarusPackageIntf;
+  tal_uapp, tal_ilauncher, tal_uguilauncher, tal_iedit, tal_SimpleListForm, 
+  LazarusPackageIntf;
 
 implementation
 
