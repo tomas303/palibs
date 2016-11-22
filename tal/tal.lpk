@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="tal"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="3">
+      <Item1>
+        <Filename Value="tal_uapp.pas"/>
+        <UnitName Value="tal_uapp"/>
+      </Item1>
+      <Item2>
+        <Filename Value="tal_ilauncher.pas"/>
+        <UnitName Value="tal_ilauncher"/>
+      </Item2>
+      <Item3>
+        <Filename Value="tal_uguilauncher.pas"/>
+        <UnitName Value="tal_uguilauncher"/>
+      </Item3>
+    </Files>
+    <RequiredPkgs Count="3">
+      <Item1>
+        <PackageName Value="tvl"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="trl"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+      </Item3>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
