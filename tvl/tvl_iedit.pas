@@ -18,13 +18,6 @@ type
      procedure List;
   end;
 
-  IMainForm = interface
-  ['{C322BECE-AE6A-4A1B-9794-BCE551D0A82D}']
-    procedure StartUp;
-    procedure ShutDown;
-    procedure ConnectCloseHandler(OnCloseHandler: TCloseEvent);
-  end;
-
 implementation
 
 end.

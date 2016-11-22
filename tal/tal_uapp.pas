@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, trl_dicontainer, trl_irttibroker, trl_ipersist,
   tal_ilauncher,
-  trl_urttibroker, tvl_uapplaunch,
+  trl_urttibroker,
   trl_isysutils, trl_usysutils;
 
 type
