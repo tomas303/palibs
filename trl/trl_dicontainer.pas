@@ -95,7 +95,7 @@ type
     procedure Inject(AInstance: TObject);
     procedure AddSupportedInterfaces(AInterfaces: array of TGuid);
     function NewObject: TObject; virtual; abstract;
-    procedure FreeSingleObject;
+    procedure FreeSingleObject; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -149,6 +149,7 @@ type
       AInterfaces: array of TGuid);
   end;
 
+
   TDI_CreateInstanceEvent = function: TObject of object;
 
   { TDI_TCreateViaEventReg }
@@ -164,6 +165,18 @@ type
       AInterfaces: array of TGuid);
   end;
 
+  { TDI_TOuterObjectReg }
+
+  TDI_TOuterObjectReg = class(TDIReg)
+  private
+    fObject: TObject;
+  protected
+    function NewObject: TObject; override;
+    function InstantiatedClass: TClass; override;
+  public
+    constructor Create(AObject: TObject);
+    procedure FreeSingleObject; override;
+  end;
 
   { TDIContainer }
 
@@ -232,6 +245,28 @@ type
   end;
 
 implementation
+
+{ TDI_TOuterObjectReg }
+
+function TDI_TOuterObjectReg.NewObject: TObject;
+begin
+  Result := fObject;
+end;
+
+function TDI_TOuterObjectReg.InstantiatedClass: TClass;
+begin
+  Result := fObject.ClassType;
+end;
+
+constructor TDI_TOuterObjectReg.Create(AObject: TObject);
+begin
+  inherited Create;
+  fObject := AObject;
+end;
+
+procedure TDI_TOuterObjectReg.FreeSingleObject;
+begin
+end;
 
 { TDI_TCreateViaEventReg }
 
@@ -743,9 +778,14 @@ begin
 end;
 
 constructor TDIContainer.Create;
+var
+  mReg: TDI_TOuterObjectReg;
 begin
-   inherited;
-   fRegs := TDIRegs.Create;
+  inherited;
+  fRegs := TDIRegs.Create;
+  // by this will be locatable - mainly for purpose of factory wrapper over it
+  mReg := TDI_TOuterObjectReg.Create(Self);
+  RegisterReg(mReg);
 end;
 
 destructor TDIContainer.Destroy;
