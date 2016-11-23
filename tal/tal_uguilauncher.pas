@@ -17,6 +17,9 @@ type
   protected
     // ILauncher
     procedure Launch;
+  protected
+    procedure BeforeLaunch; virtual;
+    procedure AfterLaunch; virtual;
   public
     procedure AfterConstruction; override;
   published
@@ -29,12 +32,27 @@ implementation
 
 procedure TGUILauncher.Launch;
 begin
-  MainForm.StartUp;
+  BeforeLaunch;
   try
-    Application.Run;
+    MainForm.StartUp;
+    try
+      Application.Run;
+    finally
+      MainForm.ShutDown;
+    end;
   finally
-    MainForm.ShutDown;
+    AfterLaunch;
   end;
+end;
+
+procedure TGUILauncher.BeforeLaunch;
+begin
+
+end;
+
+procedure TGUILauncher.AfterLaunch;
+begin
+
 end;
 
 procedure TGUILauncher.AfterConstruction;
