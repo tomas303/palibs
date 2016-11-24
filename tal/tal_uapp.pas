@@ -18,9 +18,13 @@ type
   private
     fDIC: TDIContainer;
     fDataFile: string;
+    fSettingsFile: string;
+    fLogFile: string;
   protected
     property DIC: TDIContainer read fDIC write fDIC;
     property DataFile: string read fDataFile write fDataFile;
+    property SettingsFile: string read fSettingsFile write fSettingsFile;
+    property LogFile: string read fLogFile write fLogFile;
   protected
     procedure InjectPersistRef(const AItem: IRBDataItem; ADIC: TDICustomContainer);
     procedure RegisterDataClass(ADIC: TDIContainer; AClass: TClass);
@@ -100,6 +104,8 @@ begin
       raise Exception.Create('Cannot create directory ' + mAppDir);
   end;
   fDataFile := mAppDir + 'data.xml';
+  fSettingsFile := mAppDir + 'settings.xml';
+  fLogFile := mAppDir + 'log.txt';
 end;
 
 procedure TALApp.RegisterSystemServices;
