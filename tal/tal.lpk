@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="5">
+    <Files Count="6">
       <Item1>
         <Filename Value="tal_uapp.pas"/>
         <UnitName Value="tal_uapp"/>
@@ -30,6 +30,10 @@
         <Filename Value="tal_SimpleListForm.pas"/>
         <UnitName Value="tal_SimpleListForm"/>
       </Item5>
+      <Item6>
+        <Filename Value="tal_uwindowlog.pas"/>
+        <UnitName Value="tal_uwindowlog"/>
+      </Item6>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
