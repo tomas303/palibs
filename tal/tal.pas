@@ -9,7 +9,8 @@ interface
 
 uses
   tal_uapp, tal_ilauncher, tal_uguilauncher, tal_iedit, tal_SimpleListForm, 
-  tal_uwindowlog, LazarusPackageIntf;
+  tal_uwindowlog, tal_ihistorysettings, tal_uhistorysettings, 
+  LazarusPackageIntf;
 
 implementation
 

@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="8">
       <Item1>
         <Filename Value="tal_uapp.pas"/>
         <UnitName Value="tal_uapp"/>
@@ -34,6 +34,14 @@
         <Filename Value="tal_uwindowlog.pas"/>
         <UnitName Value="tal_uwindowlog"/>
       </Item6>
+      <Item7>
+        <Filename Value="tal_ihistorysettings.pas"/>
+        <UnitName Value="tal_ihistorysettings"/>
+      </Item7>
+      <Item8>
+        <Filename Value="tal_uhistorysettings.pas"/>
+        <UnitName Value="tal_uhistorysettings"/>
+      </Item8>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
