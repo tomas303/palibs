@@ -73,9 +73,9 @@ type
     procedure SetAsPersistData(AIndex: integer; AValue: IRBData); virtual;
     function ItemTypeInfo: PTypeInfo;
     function GetCount: integer;
-    function GetItem(AIndex: integer): TItem;
+    function GetItem(AIndex: integer): TItem; virtual;
     procedure SetCount(AValue: integer);
-    procedure SetItem(AIndex: integer; AValue: TItem);
+    procedure SetItem(AIndex: integer; AValue: TItem); virtual;
     property Count: integer read GetCount write SetCount;
     property Item[AIndex: integer]: TItem read GetItem write SetItem; default;
     procedure Delete(AIndex: integer);
@@ -99,6 +99,8 @@ type
 
   TPersistManyObjects<TObjItem: TObject> = class(TPersistMany<TObjItem>)
   protected
+    function GetItem(AIndex: integer): TObjItem; override;
+    procedure SetItem(AIndex: integer; AValue: TObjItem); override;
     function GetAsObject(AIndex: integer): TObject; override;
     procedure SetAsObject(AIndex: integer; AValue: TObject); override;
     function GetAsPersistData(AIndex: integer): IRBData; override;
@@ -241,20 +243,31 @@ end;
 
 { TPersistManyObjects<TItem> }
 
-function TPersistManyObjects<TObjItem>.GetAsObject(AIndex: integer): TObject;
+function TPersistManyObjects<TObjItem>.GetItem(AIndex: integer): TObjItem;
 begin
   if AIndex > Count - 1 then
     Count := AIndex + 1;
-  if Item[AIndex] = nil then
-    Item[AIndex]:= TObjItem.Create;
+  Result := inherited GetItem(AIndex);
+  if Result = nil then begin
+    Result := TObjItem.Create;
+    inherited SetItem(AIndex, Result);
+  end;
+end;
+
+procedure TPersistManyObjects<TObjItem>.SetItem(AIndex: integer; AValue: TObjItem);
+begin
+  Item[AIndex].Free;
+  Item[AIndex] := AValue as TObjItem;
+end;
+
+function TPersistManyObjects<TObjItem>.GetAsObject(AIndex: integer): TObject;
+begin
   Result := Item[AIndex];
 end;
 
 procedure TPersistManyObjects<TObjItem>.SetAsObject(AIndex: integer;
   AValue: TObject);
 begin
-  if Item[AIndex] <> nil then
-    Item[AIndex].Free;
   Item[AIndex] := AValue as TObjItem;
 end;
 

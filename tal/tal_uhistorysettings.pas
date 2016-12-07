@@ -322,12 +322,6 @@ begin
     end;
   if (Result = nil) and ACanCreate then begin
     APositions.Count := APositions.Count + 1;
-
-    if APositions.AsPersistData[APositions.Count - 1] = nil then
-    begin
-      exit;
-    end;
-
     APositions.Item[APositions.Count - 1].ID := AID;
     Result := APositions.Item[APositions.Count - 1];
   end;
@@ -347,12 +341,6 @@ begin
     end;
   if (Result = nil) and ACanCreate then begin
     ATexts.Count := ATexts.Count + 1;
-
-    if ATexts.AsPersistData[ATexts.Count - 1] = nil then
-    begin
-      exit;
-    end;
-
     ATexts.Item[ATexts.Count - 1].ID := AID;
     Result := ATexts.Item[ATexts.Count - 1];
   end;
