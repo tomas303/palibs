@@ -9,15 +9,8 @@ interface
 
 uses
   tal_uapp, tal_ilauncher, tal_uguilauncher, tal_iedit, tal_SimpleListForm, 
-  tal_uwindowlog, tal_ihistorysettings, tal_uhistorysettings, 
-  LazarusPackageIntf;
+  tal_uwindowlog, tal_ihistorysettings, tal_uhistorysettings;
 
 implementation
 
-procedure Register;
-begin
-end;
-
-initialization
-  RegisterPackage('tal', @Register);
 end.
