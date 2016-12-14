@@ -9,6 +9,7 @@ uses
   tal_ilauncher,
   trl_urttibroker,
   trl_isysutils, trl_usysutils,
+  trl_upersiststore,
   tal_uhistorysettings, tal_ihistorysettings;
 
 type
@@ -30,6 +31,7 @@ type
     procedure InjectPersistRef(const AItem: IRBDataItem; ADIC: TDICustomContainer);
     procedure RegisterDataClass(ADIC: TDIContainer; AClass: TClass);
     procedure RegisterHistorySettings(ADIC: TDIContainer; const AStoreID: string = '');
+    procedure RegisterPersistCommon(ADIC: TDIContainer);
   protected
     procedure SetUpDataFile;
     procedure RegisterSystemServices;
@@ -92,7 +94,33 @@ begin
   //
   RegisterDataClass(ADIC, THistoryDataPosition);
   RegisterDataClass(ADIC, THistoryDataTexts);
+  RegisterDataClass(ADIC, THistoryDataCheckBoxStates);
+  RegisterDataClass(ADIC, THistoryDataIntegers);
   RegisterDataClass(ADIC, THistoryData);
+end;
+
+procedure TALApp.RegisterPersistCommon(ADIC: TDIContainer);
+var
+  mReg: TDIReg;
+begin
+  mReg := ADIC.Add(TStoreCache);
+  //
+  mReg := ADIC.Add(TRBData, IRBData);
+  //
+  mReg := ADIC.Add(TSIDList, ISIDList);
+  //
+  mReg := ADIC.Add(TPersistRef, IPersistRef);
+  mReg.InjectProp('Store', IPersistStore);
+  //
+  mReg := ADIC.Add(TPersistManyRefs, IPersistManyRefs);
+  mReg.InjectProp('Store', IPersistStore);
+  //
+  mReg := ADIC.Add(TPersistRefList, IPersistRefList);
+  //
+  mReg := ADIC.Add(TPersistStore, IPersistStore, '', ckSingle);
+  mReg.InjectProp('Factory', IPersistFactory);
+  mReg.InjectProp('Device', IPersistStoreDevice);
+  mReg.InjectProp('Cache', TStoreCache);
 end;
 
 procedure TALApp.SetUpDataFile;
