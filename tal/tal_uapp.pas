@@ -94,8 +94,9 @@ begin
   //
   RegisterDataClass(ADIC, THistoryDataPosition);
   RegisterDataClass(ADIC, THistoryDataTexts);
-  RegisterDataClass(ADIC, THistoryDataCheckBoxStates);
+  RegisterDataClass(ADIC, THistoryDataCheckBoxState);
   RegisterDataClass(ADIC, THistoryDataIntegers);
+  RegisterDataClass(ADIC, THistoryDataMemo);
   RegisterDataClass(ADIC, THistoryData);
 end;
 

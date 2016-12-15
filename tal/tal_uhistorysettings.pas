@@ -10,149 +10,124 @@ uses
 
 type
 
-  THistoryDataPosition = class
+  { THistoryData }
+
+  THistoryData = class
   private
+    fName: string;
     fID: string;
+  published
+    property Name: string read fName write fName;
+    property ID: string read fID write fID;
+  end;
+
+  { THistoryDataPosition }
+
+  THistoryDataPosition = class(THistoryData)
+  private
     fTop: integer;
     fLeft: integer;
     fWidth: integer;
     fHeight: integer;
   published
-    property ID: string read fID write fID;
     property Top: integer read fTop write fTop;
     property Left: integer read fLeft write fLeft;
     property Width: integer read fWidth write fWidth;
     property Height: integer read fHeight write fHeight;
   end;
 
-  IPersistManyTHistoryDataPositions = interface(IPersistManyItems<THistoryDataPosition>)
-  ['{CC058F28-C055-4E71-A890-E912642D9AD4}']
-  end;
-
-  TPersistManyTHistoryDataPositions = class(TPersistManyObjects<THistoryDataPosition>, IPersistManyTHistoryDataPositions)
-  end;
 
   { THistoryDataTexts }
 
-  THistoryDataTexts = class
+  THistoryDataTexts = class(THistoryData)
   private
-    fID: string;
     fTexts: IPersistManyStrings;
   public
     procedure AfterConstruction; override;
   published
-     property ID: string read fID write fID;
      property Texts: IPersistManyStrings read fTexts;
   end;
 
-  IPersistManyTHistoryDataTexts = interface(IPersistManyItems<THistoryDataTexts>)
-  ['{2D2B4EB2-920B-493B-AFA3-402BCDB0495F}']
-  end;
+  { THistoryDataCheckBoxState }
 
-  TPersistManyTHistoryDataTexts = class(TPersistManyObjects<THistoryDataTexts>, IPersistManyTHistoryDataTexts)
-  end;
-
-  { THistoryDataCheckBoxStates }
-
-  THistoryDataCheckBoxStates = class
+  THistoryDataCheckBoxState = class(THistoryData)
   private
-    fID: string;
     fCheckBoxState: TCheckBoxState;
   published
-     property ID: string read fID write fID;
      property CheckBoxState: TCheckBoxState read fCheckBoxState write fCheckBoxState;
-  end;
-
-  IPersistManyTHistoryDataCheckBoxStates = interface(IPersistManyItems<THistoryDataCheckBoxStates>)
-  ['{1CDE4E3A-C21B-4EB5-8D26-0940A7E18F98}']
-  end;
-
-  TPersistManyTHistoryDataCheckBoxStates = class(TPersistManyObjects<THistoryDataCheckBoxStates>, IPersistManyTHistoryDataCheckBoxStates)
   end;
 
   { THistoryDataIntegers }
 
-  THistoryDataIntegers = class
+  THistoryDataIntegers = class(THistoryData)
   private
-    fID: string;
     fIntegers: IPersistManyIntegers;
   public
     procedure AfterConstruction; override;
   published
-     property ID: string read fID write fID;
      property Integers: IPersistManyIntegers read fIntegers;
   end;
 
-  IPersistManyTHistoryDataIntegers = interface(IPersistManyItems<THistoryDataIntegers>)
-  ['{466318BC-50E3-4555-809C-628650475215}']
-  end;
+  { THistoryDataMemo }
 
-  TPersistManyTHistoryDataIntegers = class(TPersistManyObjects<THistoryDataIntegers>, IPersistManyTHistoryDataIntegers)
-  end;
-
-  THistoryData = class
+  THistoryDataMemo = class(THistoryData)
   private
-    fID: string;
-    fPositions: IPersistManyTHistoryDataPositions;
-    fTexts: IPersistManyTHistoryDataTexts;
-    fCheckBoxStates: IPersistManyTHistoryDataCheckBoxStates;
-    fIntegers: IPersistManyTHistoryDataIntegers;
-  public
-    procedure AfterConstruction; override;
+    fMemo: TMemoString;
   published
-    property ID: string read fID write fID;
-    property Positions: IPersistManyTHistoryDataPositions read fPositions;
-    property Texts: IPersistManyTHistoryDataTexts read fTexts;
-    property CheckBoxStates: IPersistManyTHistoryDataCheckBoxStates read fCheckBoxStates;
-    property Integers: IPersistManyTHistoryDataIntegers read fIntegers;
+     property Memo: TMemoString read fMemo write fMemo;
   end;
 
   { TControlVisitor }
 
   TControlVisitor = class
+  protected type
+    TFinder<TDATA: THistoryData> = class
+    public
+      // temporarily instead of GetHistoryData
+      class function GetHistoryData(const AStore: IPersistStore; const AName, AID: string; ACanCreate: Boolean): IRBData;
+    end;
   protected const
     cMaxTexts = 10;
   protected
-    function GetPosition(const AID: string; const APositions: IPersistManyTHistoryDataPositions;
-      ACanCreate: Boolean): THistoryDataPosition;
-    function GetTexts(const AID: string; const ATexts: IPersistManyTHistoryDataTexts;
-      ACanCreate: Boolean): THistoryDataTexts;
-    function GetCheckBoxState(const AID: string; const ACheckBoxStates: IPersistManyTHistoryDataCheckBoxStates;
-      ACanCreate: Boolean): THistoryDataCheckBoxStates;
-    function GetIntegers(const AID: string; const AIntegers: IPersistManyTHistoryDataIntegers;
-      ACanCreate: Boolean): THistoryDataIntegers;
+    fStore: IPersistStore;
+  protected
+    // it cause internal error when use TDATA type(like classname)
+    //function GetHistoryData<TDATA: THistoryData>(const AName, AID: string; ACanCreate: Boolean): TDATA;
   public
-    procedure Visit(const AHistory: IRBData; AControl: TControl); virtual; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomComboBox); virtual; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomForm); virtual; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomSplitter); virtual; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomCheckBox); virtual; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TSynEditBase); virtual; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomEdit); virtual; overload;
+    constructor Create(AStore: IPersistStore);
+    procedure Visit(AControl: TControl; const AID: string); virtual; abstract; overload;
+    procedure Visit(AControl: TCustomComboBox; const AID: string); virtual; abstract; overload;
+    procedure Visit(AControl: TCustomForm; const AID: string); virtual; abstract; overload;
+    procedure Visit(AControl: TCustomSplitter; const AID: string); virtual; abstract; overload;
+    procedure Visit(AControl: TCustomCheckBox; const AID: string); virtual; abstract; overload;
+    procedure Visit(AControl: TSynEditBase; const AID: string); virtual; abstract; overload;
+    procedure Visit(AControl: TCustomEdit; const AID: string); virtual; abstract; overload;
   end;
 
   { TControlSaveVisitor }
 
   TControlSaveVisitor = class(TControlVisitor)
   public
-    procedure Visit(const AHistory: IRBData; AControl: TCustomComboBox); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomForm); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomSplitter); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomCheckBox); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TSynEditBase); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomEdit); override; overload;
+    procedure Visit(AControl: TControl; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomComboBox; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomForm; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomSplitter; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomCheckBox; const AID: string); override; overload;
+    procedure Visit(AControl: TSynEditBase; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomEdit; const AID: string); override; overload;
   end;
 
   { TControlLoadVisitor }
 
   TControlLoadVisitor = class(TControlVisitor)
   public
-    procedure Visit(const AHistory: IRBData; AControl: TCustomComboBox); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomForm); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomSplitter); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomCheckBox); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TSynEditBase); override; overload;
-    procedure Visit(const AHistory: IRBData; AControl: TCustomEdit); override; overload;
+    procedure Visit(AControl: TControl; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomComboBox; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomForm; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomSplitter; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomCheckBox; const AID: string); override; overload;
+    procedure Visit(AControl: TSynEditBase; const AID: string); override; overload;
+    procedure Visit(AControl: TCustomEdit; const AID: string); override; overload;
   end;
 
   { THistorySettings }
@@ -161,17 +136,19 @@ type
   protected
     fStore: IPersistStore;
   protected
-    procedure DispatchVisit(AControl: TControl; AHistory: IRBData;
+    procedure DispatchVisit(AControl: TControl; const AID: string;
       AVisitor: TControlVisitor);
-    procedure AcceptVisitor(AControl: TWinControl; AHistory: IRBData;
-      AVisitor: TControlVisitor; AInside: Boolean = True); overload;
-    procedure AcceptVisitor(AControl: TControl; AHistory: IRBData;
-      AVisitor: TControlVisitor; AInside: Boolean = True); overload;
+    procedure AcceptVisitor(AControl: TWinControl; AVisitor: TControlVisitor;
+      const AID: string; AInside: Boolean = True); overload;
+    procedure AcceptVisitor(AControl: TControl; AVisitor: TControlVisitor;
+      const AID: string; AInside: Boolean = True); overload;
     function GetHistoryData(const AID: string): IRBData;
   protected
     // IHistorySettings
-    procedure Load(const ATopControl: TWinControl; AInside: Boolean = True);
-    procedure Save(const ATopControl: TWinControl; AInside: Boolean = True);
+    procedure Load(const ATopControl: TWinControl; AInside: Boolean = True); overload;
+    procedure Load(const ATopControl: TWinControl; const AID: string; AInside: Boolean = True); overload;
+    procedure Save(const ATopControl: TWinControl; AInside: Boolean = True); overload;
+    procedure Save(const ATopControl: TWinControl; const AID: string; AInside: Boolean = True); overload;
   published
     property Store: IPersistStore read fStore write fStore;
   end;
@@ -186,20 +163,21 @@ begin
   fIntegers := TPersistManyIntegers.Create;
 end;
 
-{ THistoryDataCheckBoxStates }
-
 { TControlSaveVisitor }
 
-procedure TControlSaveVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomComboBox);
+procedure TControlSaveVisitor.Visit(AControl: TControl; const AID: string);
+begin
+end;
+
+procedure TControlSaveVisitor.Visit(AControl: TCustomComboBox; const AID: string);
 var
   i: integer;
+  mData: IRBData;
   mTexts: THistoryDataTexts;
   mComboText: string;
 begin
-  mTexts := GetTexts(AControl.Name,
-    AHistory.ItemByName['Texts'].AsInterface as IPersistManyTHistoryDataTexts,
-    True);
+  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mTexts := mData.UnderObject as THistoryDataTexts;
   mComboText := AControl.Text;
   i := 0;
   while i <= mTexts.Texts.Count - 1 do
@@ -211,84 +189,88 @@ begin
   mTexts.Texts[mTexts.Texts.Count - 1] := mComboText;
   while mTexts.Texts.Count > cMaxTexts do
     mTexts.Texts.Delete(0);
+  fStore.Save(mData);
 end;
 
-procedure TControlSaveVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomForm);
+procedure TControlSaveVisitor.Visit(AControl: TCustomForm; const AID: string);
 var
-  i: integer;
+  mData: IRBData;
   mPosition: THistoryDataPosition;
 begin
-  mPosition := GetPosition(AControl.Name,
-    AHistory.ItemByName['Positions'].AsInterface as IPersistManyTHistoryDataPositions,
-    True);
+  mData := TFinder<THistoryDataPosition>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mPosition := mData.UnderObject as THistoryDataPosition;
   mPosition.Left := AControl.Left;
   mPosition.Top := AControl.Top;
   mPosition.Width := AControl.Width;
   mPosition.Height := AControl.Height;
+  fStore.Save(mData);
 end;
 
-procedure TControlSaveVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomSplitter);
+procedure TControlSaveVisitor.Visit(AControl: TCustomSplitter; const AID: string);
 var
+  mData: IRBData;
   mIntegers: THistoryDataIntegers;
 begin
-  mIntegers := GetIntegers(AControl.Name,
-    AHistory.ItemByName['Integers'].AsInterface as IPersistManyTHistoryDataIntegers,
-    True);
+  mData := TFinder<THistoryDataIntegers>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mIntegers := mData.UnderObject as THistoryDataIntegers;
   mIntegers.Integers.Count := 1;
-  mIntegers.Integers[0] := AControl.GetSplitterPosition;
+  if AControl.ResizeAnchor in [akLeft, akRight] then
+    mIntegers.Integers[0] := Round(AControl.GetSplitterPosition * 10000 / AControl.Parent.Width)
+  else
+    mIntegers.Integers[0] := Round(AControl.GetSplitterPosition * 10000 / AControl.Parent.Height);
+  fStore.Save(mData);
 end;
 
-procedure TControlSaveVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomCheckBox);
+procedure TControlSaveVisitor.Visit(AControl: TCustomCheckBox; const AID: string);
 var
-  mCheckBoxStates: THistoryDataCheckBoxStates;
+  mData: IRBData;
+  mCheckBoxState: THistoryDataCheckBoxState;
 begin
-  mCheckBoxStates := GetCheckBoxState(AControl.Name,
-    AHistory.ItemByName['CheckBoxStates'].AsInterface as IPersistManyTHistoryDataCheckBoxStates,
-    True);
-  mCheckBoxStates.CheckBoxState := AControl.State;
+  mData := TFinder<THistoryDataCheckBoxState>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mCheckBoxState := mData.UnderObject as THistoryDataCheckBoxState;
+  mCheckBoxState.CheckBoxState := AControl.State;
+  fStore.Save(mData);
 end;
 
-procedure TControlSaveVisitor.Visit(const AHistory: IRBData;
-  AControl: TSynEditBase);
+procedure TControlSaveVisitor.Visit(AControl: TSynEditBase; const AID: string);
 var
+  mData: IRBData;
+  mMemo: THistoryDataMemo;
+begin
+  mData := TFinder<THistoryDataMemo>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mMemo := mData.UnderObject as THistoryDataMemo;
+  mMemo.Memo := AControl.Lines.Text;
+  fStore.Save(mData);
+end;
+
+procedure TControlSaveVisitor.Visit(AControl: TCustomEdit; const AID: string);
+var
+  mData: IRBData;
   mTexts: THistoryDataTexts;
 begin
-  mTexts := GetTexts(AControl.Name,
-    AHistory.ItemByName['Texts'].AsInterface as IPersistManyTHistoryDataTexts,
-    True);
-  mTexts.Texts.Count := 1;
-  mTexts.Texts[0] := AControl.Lines.Text;
-end;
-
-procedure TControlSaveVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomEdit);
-var
-  mTexts: THistoryDataTexts;
-begin
-  mTexts := GetTexts(AControl.Name,
-    AHistory.ItemByName['Texts'].AsInterface as IPersistManyTHistoryDataTexts,
-    True);
+  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mTexts := mData.UnderObject as THistoryDataTexts;
   mTexts.Texts.Count := 1;
   mTexts.Texts[0] := AControl.Text;
+  fStore.Save(mData);
 end;
 
 { TControlLoadVisitor }
 
-procedure TControlLoadVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomComboBox);
+procedure TControlLoadVisitor.Visit(AControl: TControl; const AID: string);
+begin
+end;
+
+procedure TControlLoadVisitor.Visit(AControl: TCustomComboBox; const AID: string);
 var
+  mData: IRBData;
   i: integer;
   mTexts: THistoryDataTexts;
-  mComboText: string;
 begin
-  mTexts := GetTexts(AControl.Name,
-    AHistory.ItemByName['Texts'].AsInterface as IPersistManyTHistoryDataTexts,
-    False);
-  if mTexts = nil then
+  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, False);
+  if mData = nil then
     Exit;
+  mTexts := mData.UnderObject as THistoryDataTexts;
   AControl.Clear;
   for i := 0 to mTexts.Texts.Count - 1 do
     AControl.Items.Insert(0, mTexts.Texts[i]);
@@ -296,87 +278,84 @@ begin
     AControl.ItemIndex := 0;
 end;
 
-procedure TControlLoadVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomForm);
+procedure TControlLoadVisitor.Visit(AControl: TCustomForm; const AID: string);
 var
-  i: integer;
+  mData: IRBData;
   mPosition: THistoryDataPosition;
 begin
-  mPosition := GetPosition(AControl.Name,
-    AHistory.ItemByName['Positions'].AsInterface as IPersistManyTHistoryDataPositions,
-    False);
-  if mPosition = nil then
+  mData := TFinder<THistoryDataPosition>.GetHistoryData(fStore, AControl.Name, AID, False);
+  if mData = nil then
     Exit;
+  mPosition := mData.UnderObject as THistoryDataPosition;
   AControl.Left := mPosition.Left;
   AControl.Top := mPosition.Top;
   AControl.Width := mPosition.Width;
   AControl.Height := mPosition.Height;
 end;
 
-procedure TControlLoadVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomSplitter);
+procedure TControlLoadVisitor.Visit(AControl: TCustomSplitter; const AID: string);
 var
+  mData: IRBData;
   mIntegers: THistoryDataIntegers;
 begin
-  mIntegers := GetIntegers(AControl.Name,
-    AHistory.ItemByName['Integers'].AsInterface as IPersistManyTHistoryDataIntegers,
-    False);
-  if mIntegers = nil then
+  mData := TFinder<THistoryDataIntegers>.GetHistoryData(fStore, AControl.Name, AID, False);
+  if mData = nil then
     Exit;
-  if mIntegers.Integers.Count > 0 then
-    AControl.SetSplitterPosition(mIntegers.Integers[0]);
+  mIntegers := mData.UnderObject as THistoryDataIntegers;
+  if mIntegers.Integers.Count > 0 then begin
+    if AControl.ResizeAnchor in [akLeft, akRight] then begin
+      AControl.SetSplitterPosition((mIntegers.Integers[0] * AControl.Parent.Width) DIV 10000);
+      if AControl.GetSplitterPosition < 0 then
+        AControl.SetSplitterPosition(0)
+      else if AControl.GetSplitterPosition > AControl.Parent.Width - 1 then
+        AControl.SetSplitterPosition(AControl.Parent.Width - 1);
+    end
+    else
+    begin
+      AControl.SetSplitterPosition((mIntegers.Integers[0] * AControl.Parent.Height) DIV 10000);
+      if AControl.GetSplitterPosition < 0 then
+        AControl.SetSplitterPosition(0)
+      else if AControl.GetSplitterPosition > AControl.Parent.Height - 1 then
+        AControl.SetSplitterPosition(AControl.Parent.Height - 1);
+    end;
+  end;
 end;
 
-procedure TControlLoadVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomCheckBox);
+procedure TControlLoadVisitor.Visit(AControl: TCustomCheckBox; const AID: string);
 var
-  mCheckBoxStates: THistoryDataCheckBoxStates;
+  mData: IRBData;
+  mCheckBoxState: THistoryDataCheckBoxState;
 begin
-  mCheckBoxStates := GetCheckBoxState(AControl.Name,
-    AHistory.ItemByName['CheckBoxStates'].AsInterface as IPersistManyTHistoryDataCheckBoxStates,
-    False);
-  if mCheckBoxStates = nil then
+  mData := TFinder<THistoryDataCheckBoxState>.GetHistoryData(fStore, AControl.Name, AID, False);
+  if mData = nil then
     Exit;
-  AControl.State := mCheckBoxStates.CheckBoxState;
+  mCheckBoxState := mData.UnderObject as THistoryDataCheckBoxState;
+  AControl.State := mCheckBoxState.CheckBoxState;
 end;
 
-procedure TControlLoadVisitor.Visit(const AHistory: IRBData;
-  AControl: TSynEditBase);
+procedure TControlLoadVisitor.Visit(AControl: TSynEditBase; const AID: string);
 var
+  mData: IRBData;
+  mMemo: THistoryDataMemo;
+begin
+  mData := TFinder<THistoryDataMemo>.GetHistoryData(fStore, AControl.Name, AID, False);
+  if mData = nil then
+    Exit;
+  mMemo := mData.UnderObject as THistoryDataMemo;
+  AControl.Lines.Text := mMemo.Memo;
+end;
+
+procedure TControlLoadVisitor.Visit(AControl: TCustomEdit; const AID: string);
+var
+  mData: IRBData;
   mTexts: THistoryDataTexts;
 begin
-  mTexts := GetTexts(AControl.Name,
-    AHistory.ItemByName['Texts'].AsInterface as IPersistManyTHistoryDataTexts,
-    False);
-  if mTexts = nil then
+  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, False);
+  if mData = nil then
     Exit;
-  if mTexts.Texts.Count > 0 then
-    AControl.Lines.Text := mTexts.Texts[0];
-end;
-
-procedure TControlLoadVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomEdit);
-var
-  mTexts: THistoryDataTexts;
-begin
-  mTexts := GetTexts(AControl.Name,
-    AHistory.ItemByName['Texts'].AsInterface as IPersistManyTHistoryDataTexts,
-    False);
-  if mTexts = nil then
-    Exit;
+  mTexts := mData.UnderObject as THistoryDataTexts;
   if mTexts.Texts.Count > 0 then
     AControl.Text := mTexts.Texts[0];
-end;
-
-{ THistoryData }
-
-procedure THistoryData.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  fPositions := TPersistManyTHistoryDataPositions.Create;
-  fTexts := TPersistManyTHistoryDataTexts.Create;
-  fCheckBoxStates := TPersistManyTHistoryDataCheckBoxStates.Create;
-  fIntegers := TPersistManyTHistoryDataIntegers.Create;
 end;
 
 { THistoryDataTexts }
@@ -390,44 +369,44 @@ end;
 { THistorySettings }
 
 procedure THistorySettings.DispatchVisit(AControl: TControl;
-  AHistory: IRBData; AVisitor: TControlVisitor);
+  const AID: string; AVisitor: TControlVisitor);
 begin
   // because of helpers do not support virtual methods, dispatch to visitor methods
   // need to be done here staticaly
   if AControl is TCustomForm then
-    AVisitor.Visit(AHistory, AControl as TCustomForm)
+    AVisitor.Visit(AControl as TCustomForm, AID)
   else if AControl is TCustomComboBox then
-    AVisitor.Visit(AHistory, AControl as TCustomComboBox)
+    AVisitor.Visit(AControl as TCustomComboBox, AID)
   else if AControl is TCustomSplitter then
-    AVisitor.Visit(AHistory, AControl as TCustomSplitter)
+    AVisitor.Visit(AControl as TCustomSplitter, AID)
   else if AControl is TCustomCheckBox then
-    AVisitor.Visit(AHistory, AControl as TCustomCheckBox)
+    AVisitor.Visit(AControl as TCustomCheckBox, AID)
   else if AControl is TSynEditBase then
-    AVisitor.Visit(AHistory, AControl as TSynEditBase)
+    AVisitor.Visit(AControl as TSynEditBase, AID)
   else if AControl is TCustomEdit then
-    AVisitor.Visit(AHistory, AControl as TCustomEdit)
+    AVisitor.Visit(AControl as TCustomEdit, AID)
   else
-    AVisitor.Visit(AHistory, AControl);
+    AVisitor.Visit(AControl, AID);
 end;
 
-procedure THistorySettings.AcceptVisitor(AControl: TWinControl; AHistory: IRBData;
-  AVisitor: TControlVisitor; AInside: Boolean = True);
+procedure THistorySettings.AcceptVisitor(AControl: TWinControl;
+  AVisitor: TControlVisitor; const AID: string; AInside: Boolean = True);
 var
   i: integer;
 begin
-  DispatchVisit(AControl, AHistory, AVisitor);
+  DispatchVisit(AControl, AID, AVisitor);
   if AInside then
     for i := 0 to AControl.ControlCount - 1 do
-      AcceptVisitor(AControl.Controls[i], AHistory, AVisitor);
+      AcceptVisitor(AControl.Controls[i], AVisitor, AID, AInside);
 end;
 
 procedure THistorySettings.AcceptVisitor(AControl: TControl;
-  AHistory: IRBData; AVisitor: TControlVisitor; AInside: Boolean = True);
+  AVisitor: TControlVisitor; const AID: string; AInside: Boolean = True);
 begin
   if AControl is TWinControl then
-    AcceptVisitor(AControl as TWinControl, AHistory, AVisitor, AInside)
+    AcceptVisitor(AControl as TWinControl, AVisitor, AID, AInside)
   else
-    DispatchVisit(AControl, AHistory, AVisitor);
+    DispatchVisit(AControl, AID, AVisitor);
 end;
 
 function THistorySettings.GetHistoryData(const AID: string): IRBData;
@@ -450,16 +429,20 @@ begin
 end;
 
 procedure THistorySettings.Load(const ATopControl: TWinControl; AInside: Boolean = True);
+begin
+  Load(ATopControl, '',AInside);
+end;
+
+procedure THistorySettings.Load(const ATopControl: TWinControl;
+  const AID: string; AInside: Boolean);
 var
   mLoadVisitor: TControlLoadVisitor;
-  mHistoryData: IRBData;
 begin
   Store.Open;
   try
-    mHistoryData := GetHistoryData(ATopControl.Name);
-    mLoadVisitor := TControlLoadVisitor.Create;
+    mLoadVisitor := TControlLoadVisitor.Create(Store);
     try
-      AcceptVisitor(ATopControl, mHistoryData, mLoadVisitor, AInside);
+      AcceptVisitor(ATopControl, mLoadVisitor, AID, AInside);
     finally
       mLoadVisitor.Free;
     end;
@@ -469,20 +452,23 @@ begin
 end;
 
 procedure THistorySettings.Save(const ATopControl: TWinControl; AInside: Boolean = True);
+begin
+  Save(ATopControl, '', AInside);
+end;
+
+procedure THistorySettings.Save(const ATopControl: TWinControl;
+  const AID: string; AInside: Boolean);
 var
   mSaveVisitor: TControlSaveVisitor;
-  mHistoryData: IRBData;
 begin
   Store.Open;
   try
-    mHistoryData := GetHistoryData(ATopControl.Name);
-    mSaveVisitor := TControlSaveVisitor.Create;
+    mSaveVisitor := TControlSaveVisitor.Create(Store);
     try
-      AcceptVisitor(ATopControl, mHistoryData, mSaveVisitor, AInside);
+      AcceptVisitor(ATopControl, mSaveVisitor, AID, AInside);
     finally
       mSaveVisitor.Free;
     end;
-    Store.Save(mHistoryData);
   finally
     Store.Close;
   end;
@@ -490,110 +476,54 @@ end;
 
 { TControlVisitor }
 
-function TControlVisitor.GetPosition(const AID: string;
-  const APositions: IPersistManyTHistoryDataPositions; ACanCreate: Boolean): THistoryDataPosition;
+//function TControlVisitor.GetHistoryData<TDATA>(const AName, AID: string; ACanCreate: Boolean): TDATA;
+//var
+//  mList: IPersistRefList;
+//  i: integer;
+//begin
+//  Result := nil;
+//  mList := (fStore as IPersistQuery).SelectClass(''{TDATA.ClassName});
+//  for i := 0 to mList.Count - 1 do begin
+//    if (mList.Data[i].ItemByName['Name'].AsString = AName)
+//      and (mList.Data[i].ItemByName['ID'].AsString = AID)
+//    then begin
+//      Result := mList.Data[i].UnderObject as TDATA;
+//      Break;
+//    end;
+//  end;
+//  if (Result = nil) and ACanCreate then begin
+//    Result := fStore.New({TDATA.ClassName}'').UnderObject as TDATA;
+//    //Result.Name := AName;
+//    //Result.ID := AID;
+//  end;
+//end;
+
+constructor TControlVisitor.Create(AStore: IPersistStore);
+begin
+  fStore := AStore;
+end;
+
+class function TControlVisitor.TFinder<TDATA: THistoryData>.GetHistoryData(const AStore: IPersistStore;
+  const AName, AID: string; ACanCreate: Boolean): IRBData;
 var
+  mList: IPersistRefList;
   i: integer;
 begin
   Result := nil;
-  for i := 0 to APositions.Count - 1 do
-    if APositions.Item[i].ID = AID then begin
-      Result := APositions.Item[i];
+  mList := (AStore as IPersistQuery).SelectClass(TDATA.ClassName);
+  for i := 0 to mList.Count - 1 do begin
+    if (mList.Data[i].ItemByName['Name'].AsString = AName)
+      and (mList.Data[i].ItemByName['ID'].AsString = AID)
+    then begin
+      Result := mList.Data[i];
       Break;
     end;
-  if (Result = nil) and ACanCreate then begin
-    APositions.Count := APositions.Count + 1;
-    APositions.Item[APositions.Count - 1].ID := AID;
-    Result := APositions.Item[APositions.Count - 1];
   end;
-end;
-
-function TControlVisitor.GetTexts(const AID: string;
-  const ATexts: IPersistManyTHistoryDataTexts; ACanCreate: Boolean
-  ): THistoryDataTexts;
-var
-  i: integer;
-begin
-  Result := nil;
-  for i := 0 to ATexts.Count - 1 do
-    if ATexts.Item[i].ID = AID then begin
-      Result := ATexts.Item[i];
-      Break;
-    end;
   if (Result = nil) and ACanCreate then begin
-    ATexts.Count := ATexts.Count + 1;
-    ATexts.Item[ATexts.Count - 1].ID := AID;
-    Result := ATexts.Item[ATexts.Count - 1];
+    Result := AStore.New(TDATA.ClassName);
+    Result.ItemByName['Name'].AsString := AName;
+    Result.ItemByName['ID'].AsString := AID;
   end;
-end;
-
-function TControlVisitor.GetCheckBoxState(const AID: string;
-  const ACheckBoxStates: IPersistManyTHistoryDataCheckBoxStates; ACanCreate: Boolean
-  ): THistoryDataCheckBoxStates;
-var
-  i: integer;
-begin
-  Result := nil;
-  for i := 0 to ACheckBoxStates.Count - 1 do
-    if ACheckBoxStates.Item[i].ID = AID then begin
-      Result := ACheckBoxStates.Item[i];
-      Break;
-    end;
-  if (Result = nil) and ACanCreate then begin
-    ACheckBoxStates.Count := ACheckBoxStates.Count + 1;
-    ACheckBoxStates.Item[ACheckBoxStates.Count - 1].ID := AID;
-    Result := ACheckBoxStates.Item[ACheckBoxStates.Count - 1];
-  end;
-end;
-
-function TControlVisitor.GetIntegers(const AID: string;
-  const AIntegers: IPersistManyTHistoryDataIntegers; ACanCreate: Boolean
-  ): THistoryDataIntegers;
-var
-  i: integer;
-begin
-  Result := nil;
-  for i := 0 to AIntegers.Count - 1 do
-    if AIntegers.Item[i].ID = AID then begin
-      Result := AIntegers.Item[i];
-      Break;
-    end;
-  if (Result = nil) and ACanCreate then begin
-    AIntegers.Count := AIntegers.Count + 1;
-    AIntegers.Item[AIntegers.Count - 1].ID := AID;
-    Result := AIntegers.Item[AIntegers.Count - 1];
-  end;
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData; AControl: TControl);
-begin
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData; AControl: TCustomComboBox);
-begin
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData; AControl: TCustomForm);
-begin
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomSplitter);
-begin
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData;
-  AControl: TCustomCheckBox);
-begin
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData; AControl: TSynEditBase
-  );
-begin
-end;
-
-procedure TControlVisitor.Visit(const AHistory: IRBData; AControl: TCustomEdit);
-begin
 end;
 
 end.
