@@ -47,10 +47,10 @@ type
       OnInject: TOnInjectEvent;
     public
       procedure Clear;
-      function Create(const AName: string; AValue: variant): TInjectProp; overload;
-      function Create(const AName: string; AValue: TClass; const AID: string = ''; AContainer: TDICustomContainer = nil): TInjectProp; overload;
-      function Create(const AName: string; const AValue: TGuid; const AID: string = ''; AContainer: TDICustomContainer = nil): TInjectProp; overload;
-      function Create(const AName: string; AOnInject: TOnInjectEvent): TInjectProp; overload;
+      class function Create(const AName: string; AValue: variant): TInjectProp; overload; static;
+      class function Create(const AName: string; AValue: TClass; const AID: string = ''; AContainer: TDICustomContainer = nil): TInjectProp; overload; static;
+      class function Create(const AName: string; const AValue: TGuid; const AID: string = ''; AContainer: TDICustomContainer = nil): TInjectProp; overload; static;
+      class function Create(const AName: string; AOnInject: TOnInjectEvent): TInjectProp; overload; static;
     public
       class operator =(a, b: TInjectProp): Boolean;
     end;
@@ -62,7 +62,7 @@ type
     TImplementation = record
       Guid: TGuid;
     public
-      function Create(const AGuid: TGuid): TImplementation;
+      class function Create(const AGuid: TGuid): TImplementation; static;
       class operator =(a, b: TImplementation): Boolean;
     end;
 
@@ -334,7 +334,7 @@ end;
 
 { TDIReg.TImplementation }
 
-function TDIReg.TImplementation.Create(const AGuid: TGuid): TImplementation;
+class function TDIReg.TImplementation.Create(const AGuid: TGuid): TImplementation;
 begin
   Result.Guid := AGuid;
 end;
@@ -435,14 +435,14 @@ begin
   OnInject := nil;
 end;
 
-function TDIReg.TInjectProp.Create(const AName: string; AValue: variant): TInjectProp;
+class function TDIReg.TInjectProp.Create(const AName: string; AValue: variant): TInjectProp;
 begin
   Result.Clear;
   Result.Name := AName;
   Result.Value := AValue;
 end;
 
-function TDIReg.TInjectProp.Create(const AName: string; AValue: TClass;
+class function TDIReg.TInjectProp.Create(const AName: string; AValue: TClass;
   const AID: string = ''; AContainer: TDICustomContainer = nil): TInjectProp;
 begin
   Result.Clear;
@@ -452,7 +452,7 @@ begin
   Result.ID := AID;
 end;
 
-function TDIReg.TInjectProp.Create(const AName: string; const AValue: TGuid;
+class function TDIReg.TInjectProp.Create(const AName: string; const AValue: TGuid;
   const AID: string = ''; AContainer: TDICustomContainer = nil): TInjectProp;
 begin
   Result.Clear;
@@ -462,7 +462,7 @@ begin
   Result.ID := AID;
 end;
 
-function TDIReg.TInjectProp.Create(const AName: string;
+class function TDIReg.TInjectProp.Create(const AName: string;
   AOnInject: TOnInjectEvent): TInjectProp;
 begin
   Result.Clear;

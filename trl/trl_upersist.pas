@@ -248,7 +248,7 @@ begin
   if AIndex > Count - 1 then
     Count := AIndex + 1;
   Result := inherited GetItem(AIndex);
-  if Result = nil then begin
+  if not assigned(Result) then begin
     Result := TObjItem.Create;
     inherited SetItem(AIndex, Result);
   end;

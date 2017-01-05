@@ -53,7 +53,7 @@ type
       fSID: TSID;
       fData: IRBData;
     public
-      function Create(const ASID: TSID; const AData: IRBData): TDataRecord;
+      class function Create(const ASID: TSID; const AData: IRBData): TDataRecord; static;
       procedure Clear;
       class operator =(a, b: TDataRecord): Boolean;
     end;
@@ -201,7 +201,7 @@ end;
 function TPersistRef<TItem>.GetItem: TItem;
 begin
   if Data = nil then
-    Result := nil
+    Result := TItem(nil)
   else
     Result := Data.UnderObject as TItem;
 end;
@@ -424,7 +424,7 @@ end;
 
 { TStoreCache.TDataRecord }
 
-function TStoreCache.TDataRecord.Create(const ASID: TSID; const AData: IRBData): TDataRecord;
+class function TStoreCache.TDataRecord.Create(const ASID: TSID; const AData: IRBData): TDataRecord;
 begin
   Result.fSID := ASID;
   Result.fData := AData;
