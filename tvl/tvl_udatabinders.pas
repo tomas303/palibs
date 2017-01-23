@@ -243,6 +243,7 @@ type
     procedure EmptyRow(ARow: integer);
     function CreateEditor(const ADataItem: IRBDataItem): TWinControl;
     function CreateBinder(const ADataItem: IRBDataItem): TEditBinder;
+    procedure NilEditor;
     procedure OnColRowDeletedHandler(Sender: TObject;
       IsColumn: Boolean; sIndex, tIndex: Integer);
     procedure OnColRowInsertedHandler(Sender: TObject;
@@ -1084,6 +1085,13 @@ begin
   end;
 end;
 
+procedure TListBinder.NilEditor;
+begin
+  if Control.Editor = fCellEditor then
+    Control.Editor := nil;
+  fCellEditor := nil;
+end;
+
 function TListBinder.GetOfferEditor: TOfferEditor;
 begin
   if fOfferEditor = nil then
@@ -1150,12 +1158,15 @@ begin
       fObjectData := AsMany.AsPersistData[aRow - 1];
       mDataItem := fObjectData[aCol];
     end;
+    NilEditor;
     fCellEditor := CreateEditor(mDataItem);
     fCellBinder := CreateBinder(mDataItem);
     fCellBinder.Bind(fCellEditor, mDataItem);
   end
-  else
-    fCellEditor := nil;
+  else begin
+    fCellBinder.Unbind;
+    NilEditor;
+  end;
   Editor := fCellEditor;
   fCol := aCol;
   fRow :=  aRow;
@@ -1233,6 +1244,7 @@ begin
   Control.OnSelectEditor := nil;
   Control.OnKeyDown := nil;
   Control.H_OnEditingDone := nil;
+  NilEditor;
   FreeAndNil(fCellBinder);
   FreeAndNil(fOfferEditor);
   FreeAndNil(fTextEditor);
