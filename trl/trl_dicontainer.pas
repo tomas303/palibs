@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, fgl, typinfo, trl_irttibroker, trl_urttibroker, trl_ifactory,
-  variants;
+  variants, trl_iprops;
 
 type
 
@@ -21,9 +21,9 @@ type
 
   TDICustomContainer = class(TDIObject)
   public
-    function Locate(AClass: TClass; const AID: string = ''): pointer; virtual; overload; abstract;
-    function Locate(AInterface: TGUID; const AID: string = ''): pointer; virtual; overload; abstract;
-    function Locate(const AClass: string; const AID: string = ''): pointer; virtual; overload; abstract;
+    function Locate(AClass: TClass; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
+    function Locate(AInterface: TGUID; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
+    function Locate(const AClass: string; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
   end;
 
   TDIRegCreateKind = (ckTransient, ckSingle);
@@ -93,16 +93,18 @@ type
     function Instantiate(AClass: TClass; const AID: string): Boolean; overload;
     function Instantiate(const AClass: string; const AID: string): Boolean; overload;
     procedure Inject(AInstance: TObject);
+    procedure Inject2(AInstance: TObject; const AProps: IProps);
     procedure AddSupportedInterfaces(AInterfaces: array of TGuid);
     function NewObject: TObject; virtual; abstract;
     procedure FreeSingleObject; virtual;
   public
     constructor Create;
     destructor Destroy; override;
-    function Make: pointer; overload;
-    function Make(AInterface: TGUID; const AID: string): pointer; overload;
+    function Make(const AProps: IProps): pointer; overload;
+    function Make(AInterface: TGUID; const AID: string; const AProps: IProps): pointer; overload;
     procedure InjectProps(AProps: array of TInjectProp);
     procedure InjectProp(const AName: string; const AValue: string); overload;
+    procedure InjectProp(const AName: string; const AValue: integer); overload;
     procedure InjectProp(const AName: string; const AValue: Boolean); overload;
     procedure InjectProp(const AName: string; AValue: TClass; const AID: string = ''; AContainer: TDICustomContainer = nil); overload;
     procedure InjectProp(const AName: string; const AValue: TGuid; const AID: string = ''; AContainer: TDICustomContainer = nil); overload;
@@ -198,9 +200,9 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
-    function Locate(AClass: TClass; const AID: string = ''): pointer; override; overload;
-    function Locate(AInterface: TGUID; const AID: string = ''): pointer; override; overload;
-    function Locate(const AClass: string; const AID: string = ''): pointer; override; overload;
+    function Locate(AClass: TClass; const AID: string = ''; const AProps: IProps = nil): pointer; override; overload;
+    function Locate(AInterface: TGUID; const AID: string = ''; const AProps: IProps = nil): pointer; override; overload;
+    function Locate(const AClass: string; const AID: string = ''; const AProps: IProps = nil): pointer; override; overload;
     // TObject
     function Add(const AClass: TClass; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
     function Add(const AClass: TClass; AInterface: TGUID; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
@@ -563,6 +565,56 @@ begin
   end;
 end;
 
+procedure TDIReg.Inject2(AInstance: TObject; const AProps: IProps);
+var
+  mRB: IRBData;
+  mRBItem: IRBDataItem;
+  i: integer;
+  mInterface: IUnknown;
+  mm: string;
+begin
+  if AProps = nil then
+    Exit;
+  mRB := TRBData.Create(AInstance, True);
+  for i := 0 to AProps.Count - 1 do begin
+    mRBItem := mRB.FindItem(AProps.Name(i));
+    if mRBItem = nil then
+      Continue;
+    mm := mRBItem.Name;
+    case AProps.PropType(i) of
+      ptInt:
+        mRBItem.AsInteger := AProps.AsInt(i);
+      ptStr:
+        mRBItem.AsString := AProps.AsStr(i);
+      ptBool:
+        mRBItem.AsBoolean := AProps.AsBool(i);
+      ptGuid:
+        // maybe not suitable here - anyway not able to specify ID
+        // it will be possible only with special locator types(aka record - guid and id)
+        // OP paradigm - like strategy ... which itself is object and pass as parametr
+        // something like decoration .... draw frame around, debug mode, anything changable
+        // at runtime and possibly different for kind of component
+        // maybe general Edit and here specify for number, string, date, directory .....like Behavior
+        // (allowed chars, format, maybe added dialog ... but it will be more appropriate for IComposite
+        // .. yes it will specify vizual, but behavior belongs to this)
+        // for real create object without constraint it should be new type ... ptMetadata
+        case mRBItem.TypeKind of
+          tkInterface:
+            begin
+              mInterface := fDIC.Locate(AProps.AsGuid(i));
+              mRBItem.AsInterface := mInterface;
+            end;
+          tkAString:
+            mRBItem.AsString := GUIDToString(AProps.AsGuid(i));
+          else
+            raise Exception.CreateFmt('Error when injecting property "%s.%s": ' + LineEnding, [mRB.ClassName, mRBItem.Name]);
+        end;
+      ptInterface:
+        mRBItem.AsInterface := AProps.AsIntf(i);
+    end;
+  end;
+end;
+
 procedure TDIReg.AddSupportedInterfaces(AInterfaces: array of TGuid);
 var
   mImpl: TGuid;
@@ -599,7 +651,7 @@ begin
   inherited Destroy;
 end;
 
-function TDIReg.Make: pointer;
+function TDIReg.Make(const AProps: IProps): pointer;
 begin
   if (fCreateKind = ckSingle) and (fSingleObject <> nil) then
     Result := fSingleObject
@@ -607,12 +659,13 @@ begin
   begin
     Result := NewObject;
     Inject(Result);
+    Inject2(Result, AProps);
     if (fCreateKind = ckSingle) then
       fSingleObject := Result;
   end;
 end;
 
-function TDIReg.Make(AInterface: TGUID; const AID: string): pointer;
+function TDIReg.Make(AInterface: TGUID; const AID: string; const AProps: IProps): pointer;
 var
   m: TObject;
   mClassName: string;
@@ -626,7 +679,7 @@ begin
   end
   else
   begin
-    m := Make;
+    m := Make(AProps);
     try
       mClassName := m.ClassName;
       if not m.GetInterfaceWeak(AInterface, Result) then
@@ -658,6 +711,11 @@ begin
 end;
 
 procedure TDIReg.InjectProp(const AName: string; const AValue: string);
+begin
+  fInjectProps.Add(TInjectProp.Create(AName, AValue));
+end;
+
+procedure TDIReg.InjectProp(const AName: string; const AValue: integer);
 begin
   fInjectProps.Add(TInjectProp.Create(AName, AValue));
 end;
@@ -794,34 +852,34 @@ begin
   inherited Destroy;
 end;
 
-function TDIContainer.Locate(AClass: TClass; const AID: string = ''): pointer;
+function TDIContainer.Locate(AClass: TClass; const AID: string = ''; const AProps: IProps = nil): pointer;
 var
   mReg: TDIReg;
 begin
   mReg := Find(AClass, AID);
   if mReg = nil then
     raise Exception.CreateFmt('registration not found(class:%s id:%s)', [AClass.ClassName, AID]);
-  Result := mReg.Make;
+  Result := mReg.Make(AProps);
 end;
 
-function TDIContainer.Locate(AInterface: TGUID; const AID: string = ''): pointer;
+function TDIContainer.Locate(AInterface: TGUID; const AID: string = ''; const AProps: IProps = nil): pointer;
 var
   mReg: TDIReg;
 begin
   mReg := Find(AInterface, AID);
   if mReg = nil then
     raise Exception.CreateFmt('Registration for interface: %s ID:%s not found', [GUIDToString(AInterface), AID]);
-  Result := mReg.Make(AInterface, AID);
+  Result := mReg.Make(AInterface, AID, AProps);
 end;
 
-function TDIContainer.Locate(const AClass: string; const AID: string = ''): pointer;
+function TDIContainer.Locate(const AClass: string; const AID: string = ''; const AProps: IProps = nil): pointer;
 var
   mReg: TDIReg;
 begin
   mReg := Find(AClass, AID);
   if mReg = nil then
     raise Exception.CreateFmt('registration for class %s not found', [AClass]);
-  Result := mReg.Make;
+  Result := mReg.Make(AProps);
 end;
 
 function TDIContainer.Add(const AClass: TClass; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;
