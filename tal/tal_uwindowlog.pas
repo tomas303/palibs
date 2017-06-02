@@ -40,7 +40,7 @@ implementation
 
 procedure TWindowLog.IncLevel;
 begin
-  fLevel := fLevel + '--';
+  fLevel := fLevel + '  ';
 end;
 
 procedure TWindowLog.DecLevel;
@@ -57,8 +57,12 @@ begin
   fLogMemo := TMemo.Create(fLogForm);
   fLogMemo.Parent := fLogForm;
   fLogMemo.Align := alClient;
+  fLogMemo.Font.Name := 'DejaVu Sans Mono';
+  fLogMemo.Font.Size := 10;
   fLogMemo.Visible := True;
   fLogForm.Visible := True;
+  fLogForm.Left := Screen.Width - fLogForm.Width;
+  fLogForm.Top := Screen.Height - fLogForm.Height;
 end;
 
 procedure TWindowLog.OnLogFormCloseQuery(Sender: TObject; var CanClose: boolean
@@ -84,8 +88,8 @@ end;
 
 procedure TWindowLog.DebugLnEnter(const s: string);
 begin
+  DebugLn('enter ' + s);
   IncLevel;
-  DebugLn(s);
 end;
 
 procedure TWindowLog.DebugLnEnter(s: string; Args: array of const);
@@ -95,8 +99,8 @@ end;
 
 procedure TWindowLog.DebugLnExit(const s: string);
 begin
-  DebugLn(s);
   DecLevel;
+  DebugLn('exit ' + s);
 end;
 
 procedure TWindowLog.DebugLnExit(s: string; Args: array of const);
