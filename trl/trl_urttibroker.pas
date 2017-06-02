@@ -523,12 +523,12 @@ end;
 
 function TRBIntegerDataItem.GetAsVariant: Variant;
 begin
-  Result := GetAsBoolean;
+  Result := GetAsInteger;
 end;
 
 procedure TRBIntegerDataItem.SetAsVariant(AValue: Variant);
 begin
-  SetAsBoolean(AValue);
+  SetAsInteger(AValue);
 end;
 
 function TRBIntegerDataItem.GetAsPtrInt: PtrInt;
