@@ -14,6 +14,8 @@ type
   TProp = class(TInterfacedObject, IProp)
   protected
     //IProp
+    function Equals(const AProp: IProp): Boolean; virtual;
+    function Clone: IProp; virtual; abstract;
     function GetName: string;
     function GetPropType: TPropType; virtual;
     function GetAsInteger: integer; virtual;
@@ -32,6 +34,16 @@ type
     procedure SetAsInterface(AValue: IUnknown); virtual;
     function GetAsTGuid: TGuid; virtual;
     procedure SetAsTGuid(AValue: TGuid); virtual;
+    property Name: string read GetName;
+    property PropType: TPropType read GetPropType;
+    property AsString: string read GetAsString write SetAsString;
+    property AsInteger: integer read GetAsInteger write SetAsInteger;
+    property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
+    property AsObject: TObject read GetAsObject write SetAsObject;
+    property AsVariant: variant read GetAsVariant write SetAsVariant;
+    property AsPtrInt: PtrInt read GetAsPtrInt write SetAsPtrInt;
+    property AsInterface: IUnknown read GetAsInterface write SetAsInterface;
+    property AsTGuid: TGuid read GetAsTGuid write SetAsTGuid;
   end;
 
   { TStringProp }
@@ -40,6 +52,8 @@ type
   protected
     fValue: String;
   protected
+    function Equals(const AProp: IProp): Boolean; override;
+    function Clone: IProp; override;
     function GetPropType: TPropType; override;
     function GetAsString: string; override;
     procedure SetAsString(AValue: string); override;
@@ -53,6 +67,8 @@ type
   protected
     fValue: Integer;
   protected
+    function Equals(const AProp: IProp): Boolean; override;
+    function Clone: IProp; override;
     function GetPropType: TPropType; override;
     function GetAsInteger: integer; override;
     procedure SetAsInteger(AValue: integer); override;
@@ -65,6 +81,9 @@ type
   TBooleanProp = class(TProp)
   protected
     fValue: Boolean;
+  protected
+    function Equals(const AProp: IProp): Boolean; override;
+    function Clone: IProp; override;
     function GetPropType: TPropType; override;
     function GetAsBoolean: Boolean; override;
     procedure SetAsBoolean(AValue: Boolean); override;
@@ -78,6 +97,8 @@ type
   protected
     fValue: TGuid;
   protected
+    function Equals(const AProp: IProp): Boolean; override;
+    function Clone: IProp; override;
     function GetPropType: TPropType; override;
     function GetAsTGuid: TGuid; override;
     procedure SetAsTGuid(AValue: TGuid); override;
@@ -91,6 +112,8 @@ type
   protected
     fValue: IUnknown;
   protected
+    function Equals(const AProp: IProp): Boolean; override;
+    function Clone: IProp; override;
     function GetPropType: TPropType; override;
     function GetAsInterface: IUnknown; override;
     procedure SetAsInterface(AValue: IUnknown); override;
@@ -108,13 +131,26 @@ type
     cDefaultBool = False;
     cDefaultGuid: TGUID = '{00000000-0000-0000-0000-000000000000}';
   protected type
-    TItems = specialize TFPGMapInterfacedObjectData<string, IProp>;
+
+    { TItems }
+
+    TItems = class(specialize TFPGMapInterfacedObjectData<string, IProp>)
+    protected
+      procedure Deref(Item: Pointer); override;
+      procedure CopyData(Src, Dest: Pointer); override;
+    end;
+
   protected
     fItems: TItems;
     function IndexFit(const AIndex: integer): Boolean;
   protected
     //IProps
     function Count: integer;
+    function GetProp(AIndex: integer): IProp;
+    property Prop[AIndex: integer]: IProp read GetProp; default;
+    function GetPropByName(const AName: string): IProp;
+    property PropByName[const AName: string]: IProp read GetPropByName;
+    function Equals(const AProps: IProps): Boolean;
     function PropType(const AName: string): TPropType;
     function PropType(const AIndex: integer): TPropType;
     function Name(const AIndex: integer): string;
@@ -124,6 +160,7 @@ type
     function SetBool(const AName: string; const AValue: Boolean): IProps;
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
+    function SetProp(const AName: string; const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
     function AsInt(const AName: string): integer;
     function AsBool(const AName: string): Boolean;
@@ -134,6 +171,7 @@ type
     function AsBool(const AIndex: integer): Boolean;
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
+    function Diff(const AProps: IProps): IProps;
   public
     constructor Create;
     destructor Destroy; override;
@@ -142,7 +180,29 @@ type
 
 implementation
 
+{ TProps.TItems }
+
+procedure TProps.TItems.Deref(Item: Pointer);
+begin
+  // in TFPGMapInterfacedObjectData.CopyData is error
+  // TData(Dest^) := TData(Src^); will also ref. data
+  // based on similar list it should be pointer(Dest^) := pointer(Src^);
+  inherited Deref(Item);
+end;
+
+procedure TProps.TItems.CopyData(Src, Dest: Pointer);
+begin
+  inherited CopyData(Src, Dest);
+  //if Assigned(Pointer(Dest^)) then
+  //  IProp(Dest^)._Release;
+end;
+
 { TInterfaceProp }
+
+function TInterfaceProp.Equals(const AProp: IProp): Boolean;
+begin
+  Result := inherited Equals(AProp) and (AProp.GetAsInterface as IUnknown = GetAsInterface as IUnknown);
+end;
 
 function TInterfaceProp.GetPropType: TPropType;
 begin
@@ -159,12 +219,26 @@ begin
   fValue := AValue;
 end;
 
+function TInterfaceProp.Clone: IProp;
+begin
+  Result := TInterfaceProp.Create(AsInterface);
+end;
+
 constructor TInterfaceProp.Create(const AValue: IUnknown);
 begin
   fValue := AValue;
 end;
 
 { TGuidProp }
+
+function TGuidProp.Equals(const AProp: IProp): Boolean;
+var
+  mG1, mG2:TGuid;
+begin
+  mG1 := AProp.GetAsTGuid;
+  mG2 := GetAsTGuid;
+  Result := inherited Equals(AProp) and CompareMem(@mG1, @mG2, SizeOf(mG1));
+end;
 
 function TGuidProp.GetPropType: TPropType;
 begin
@@ -181,6 +255,11 @@ begin
   fValue := AValue;
 end;
 
+function TGuidProp.Clone: IProp;
+begin
+  Result := TGuidProp.Create(AsTGuid);
+end;
+
 constructor TGuidProp.Create(const AValue: TGuid);
 begin
   inherited Create;
@@ -188,6 +267,11 @@ begin
 end;
 
 { TBooleanProp }
+
+function TBooleanProp.Equals(const AProp: IProp): Boolean;
+begin
+  Result := inherited Equals(AProp) and (AProp.GetAsBoolean = GetAsBoolean);
+end;
 
 function TBooleanProp.GetPropType: TPropType;
 begin
@@ -204,6 +288,11 @@ begin
   fValue := AValue;
 end;
 
+function TBooleanProp.Clone: IProp;
+begin
+  Result := TBooleanProp.Create(AsBoolean);
+end;
+
 constructor TBooleanProp.Create(const AValue: Boolean);
 begin
   inherited Create;
@@ -211,6 +300,11 @@ begin
 end;
 
 { TIntegerProp }
+
+function TIntegerProp.Equals(const AProp: IProp): Boolean;
+begin
+  Result := inherited Equals(AProp) and (AProp.GetAsInteger = GetAsInteger);
+end;
 
 function TIntegerProp.GetPropType: TPropType;
 begin
@@ -227,6 +321,11 @@ begin
   fValue := AValue;
 end;
 
+function TIntegerProp.Clone: IProp;
+begin
+  Result := TIntegerProp.Create(AsInteger);
+end;
+
 constructor TIntegerProp.Create(const AValue: Integer);
 begin
   inherited Create;
@@ -234,6 +333,11 @@ begin
 end;
 
 { TStringProp }
+
+function TStringProp.Equals(const AProp: IProp): Boolean;
+begin
+  Result := inherited Equals(AProp) and (AProp.GetAsString = GetAsString);
+end;
 
 function TStringProp.GetPropType: TPropType;
 begin
@@ -250,6 +354,11 @@ begin
   fValue := AValue;
 end;
 
+function TStringProp.Clone: IProp;
+begin
+  Result := TStringProp.Create(AsString);
+end;
+
 constructor TStringProp.Create(const AValue: string);
 begin
   inherited Create;
@@ -257,6 +366,11 @@ begin
 end;
 
 { TProp }
+
+function TProp.Equals(const AProp: IProp): Boolean;
+begin
+  Result := (AProp <> nil) and (AProp.PropType = GetPropType);
+end;
 
 function TProp.GetName: string;
 begin
@@ -377,6 +491,40 @@ begin
   Result := fItems.Count;
 end;
 
+function TProps.GetProp(AIndex: integer): IProp;
+begin
+  if IndexFit(AIndex) then
+    Result := fItems.Data[AIndex]
+  else
+    Result := nil;
+end;
+
+function TProps.GetPropByName(const AName: string): IProp;
+begin
+  Result := GetProp(fItems.IndexOf(AName));
+end;
+
+function TProps.Equals(const AProps: IProps): Boolean;
+var
+  i, mInd: integer;
+  mProp: IProp;
+begin
+  if AProps = nil then
+    Result := False
+  else  if AProps.Count <> Count then
+    Result := False
+  else begin
+    Result := True;
+    for i := 0 to Count - 1 do begin
+      mProp := AProps.PropByName[Name(i)];
+      if (mProp = nil) or not mProp.Equals(Prop[i]) then begin
+        Result := False;
+        Break;
+      end;
+    end;
+  end;
+end;
+
 function TProps.PropType(const AName: string): TPropType;
 begin
   Result := PropType(fItems.IndexOf(AName));
@@ -431,6 +579,12 @@ function TProps.SetIntf(const AName: string; const AValue: IUnknown): IProps;
 begin
   Result := Self;
   fItems.AddOrSetData(AName, TInterfaceProp.Create(AValue));
+end;
+
+function TProps.SetProp(const AName: string; const AProp: IProp): IProps;
+begin
+  Result := Self;
+  fItems.AddOrSetData(AName, AProp.Clone);
 end;
 
 function TProps.AsStr(const AName: string): string;
@@ -496,6 +650,20 @@ begin
     Result := fItems.Data[AIndex].AsInterface
   else
     Result := nil;
+end;
+
+function TProps.Diff(const AProps: IProps): IProps;
+var
+  i: integer;
+  mMyProp, mTheirProp: IProp;
+begin
+  Result := New;
+  for i := 0 to Count - 1 do begin
+    mMyProp := Prop[i];
+    mTheirProp := AProps.PropByName[Name(i)];
+    if (mTheirProp = nil) or not mTheirProp.Equals(mMyProp) then
+      Result.SetProp(Name(i), mMyProp);
+  end;
 end;
 
 end.

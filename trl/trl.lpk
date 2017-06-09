@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="19">
+    <Files Count="20">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -83,9 +83,13 @@
         <UnitName Value="trl_uprops"/>
       </Item18>
       <Item19>
-        <Filename Value="trl_injector.pas"/>
-        <UnitName Value="trl_injector"/>
+        <Filename Value="trl_iinjector.pas"/>
+        <UnitName Value="trl_iinjector"/>
       </Item19>
+      <Item20>
+        <Filename Value="trl_uinjector.pas"/>
+        <UnitName Value="trl_uinjector"/>
+      </Item20>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

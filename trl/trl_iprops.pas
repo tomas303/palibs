@@ -16,6 +16,8 @@ type
 
   IProp = interface
   ['{B36E5E43-AFB2-4A28-8E09-E7BC682BE1F0}']
+    function Equals(const AProp: IProp): Boolean;
+    function Clone: IProp;
     function GetName: string;
     function GetPropType: TPropType; //??? probably own type and if necessary map it to typekind
     function GetAsInteger: integer;
@@ -50,9 +52,17 @@ type
   // SetIt.SetIt.SetIt.ReadOnly;
   // better to use Writeable field(strict private) so by default is false
   // and is set only in some builder methods - then and back
+
+  { IProps }
+
   IProps = interface
   ['{D3841623-443A-4177-8FED-DDA65A75CD43}']
     function Count: integer;
+    function GetProp(AIndex: integer): IProp;
+    property Prop[AIndex: integer]: IProp read GetProp; default;
+    function GetPropByName(const AName: string): IProp;
+    property PropByName[const AName: string]: IProp read GetPropByName;
+    function Equals(const AProps: IProps): Boolean;
     function PropType(const AName: string): TPropType;
     function PropType(const AIndex: integer): TPropType;
     function Name(const AIndex: integer): string;
@@ -62,6 +72,7 @@ type
     function SetBool(const AName: string; const AValue: Boolean): IProps;
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
+    function SetProp(const AName: string; const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
     function AsInt(const AName: string): integer;
     function AsBool(const AName: string): Boolean;
@@ -72,6 +83,7 @@ type
     function AsBool(const AIndex: integer): Boolean;
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
+    function Diff(const AProps: IProps): IProps;
   end;
 
 implementation
