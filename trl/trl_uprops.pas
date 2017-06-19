@@ -151,6 +151,7 @@ type
     function GetPropByName(const AName: string): IProp;
     property PropByName[const AName: string]: IProp read GetPropByName;
     function Equals(const AProps: IProps): Boolean;
+    function Clone: IProps;
     function PropType(const AName: string): TPropType;
     function PropType(const AIndex: integer): TPropType;
     function Name(const AIndex: integer): string;
@@ -173,7 +174,7 @@ type
     function AsIntf(const AIndex: integer): IUnknown;
     function Diff(const AProps: IProps): IProps;
   public
-    constructor Create;
+    procedure AfterConstruction; override;
     destructor Destroy; override;
     class function New: IProps;
   end;
@@ -464,9 +465,9 @@ end;
 
 { TProps }
 
-constructor TProps.Create;
+procedure TProps.AfterConstruction;
 begin
-  inherited;
+  inherited AfterConstruction;
   fItems := TItems.Create;
 end;
 
@@ -523,6 +524,16 @@ begin
       end;
     end;
   end;
+end;
+
+function TProps.Clone: IProps;
+var
+  mProp: IProp;
+  i: integer;
+begin
+  Result := TProps.Create;
+  for i := 0 to Count - 1 do
+    Result.SetProp(Name(i), Prop[i]);
 end;
 
 function TProps.PropType(const AName: string): TPropType;

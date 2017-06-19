@@ -63,6 +63,7 @@ type
     function GetPropByName(const AName: string): IProp;
     property PropByName[const AName: string]: IProp read GetPropByName;
     function Equals(const AProps: IProps): Boolean;
+    function Clone: IProps;
     function PropType(const AName: string): TPropType;
     function PropType(const AIndex: integer): TPropType;
     function Name(const AIndex: integer): string;
