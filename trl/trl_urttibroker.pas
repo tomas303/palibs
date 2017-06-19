@@ -243,8 +243,18 @@ begin
 end;
 
 procedure TRBInterfaceDataItem.SetAsInterface(AValue: IUnknown);
+var
+  mIntfGuid: TGuid;
+  mUnk: IUnknown;
 begin
-  SetInterfaceProp(fParent.fObject, PropInfo, AValue);
+  if AValue = nil then
+    SetInterfaceProp(fParent.fObject, PropInfo, AValue)
+  else begin
+    mIntfGuid := GetTypeData(PropInfo^.PropType)^.GUID;
+    if AValue.QueryInterface(mIntfGuid, mUnk) <> 0 then
+      raise ERBException.CreateFmt('Value set into interface(%s) doesn''t support target interface(%s)', [GUIDToString(AValue), GUIDToString(mIntfGuid)]);
+    SetInterfaceProp(fParent.fObject, PropInfo, mUnk);
+  end;
 end;
 
 { TRBPtrIntDataItem }
