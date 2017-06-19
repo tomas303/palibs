@@ -16,6 +16,7 @@ type
     // IInjector
     procedure Write(AInstance: TObject; const AProps: IProps);
     procedure Read(AInstance: TObject; const AProps: IProps);
+    procedure Read(AInstance: TObject; const AName: string; const AProps: IProps);
   public
     class function New: IInjector;
   end;
@@ -64,6 +65,12 @@ implementation
   end;
 
   procedure TInjector.Read(AInstance: TObject; const AProps: IProps);
+  begin
+    Read(AInstance, '', AProps);
+  end;
+
+  procedure TInjector.Read(AInstance: TObject; const AName: string;
+    const AProps: IProps);
   var
     mRB: IRBData;
     mRBItem: IRBDataItem;
@@ -72,7 +79,10 @@ implementation
   begin
     if AProps = nil then
       Exit;
-    mRB := TRBData.Create(AInstance, True);
+    if AName <> '' then
+      mRB := TRBData.Create(AInstance, AName)
+    else
+      mRB := TRBData.Create(AInstance, True);
     for i := 0 to AProps.Count - 1 do begin
       mRBItem := mRB.FindItem(AProps.Name(i));
       if mRBItem = nil then
