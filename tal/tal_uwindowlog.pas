@@ -63,6 +63,8 @@ begin
   fLogForm.Visible := True;
   fLogForm.Left := Screen.Width - fLogForm.Width;
   fLogForm.Top := Screen.Height - fLogForm.Height;
+  fLogForm.WindowState := wsMinimized;
+  fLogForm.ShowInTaskBar := stNever;
 end;
 
 procedure TWindowLog.OnLogFormCloseQuery(Sender: TObject; var CanClose: boolean
