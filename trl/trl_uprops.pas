@@ -13,6 +13,8 @@ type
 
   TProp = class(TInterfacedObject, IProp)
   protected
+    fName: string;
+  protected
     //IProp
     function Equals(const AProp: IProp): Boolean; virtual;
     function Clone: IProp; virtual; abstract;
@@ -44,6 +46,8 @@ type
     property AsPtrInt: PtrInt read GetAsPtrInt write SetAsPtrInt;
     property AsInterface: IUnknown read GetAsInterface write SetAsInterface;
     property AsTGuid: TGuid read GetAsTGuid write SetAsTGuid;
+  public
+    constructor Create(const AName: string);
   end;
 
   { TStringProp }
@@ -58,7 +62,7 @@ type
     function GetAsString: string; override;
     procedure SetAsString(AValue: string); override;
   public
-    constructor Create(const AValue: string);
+    constructor Create(const AName: string; const AValue: string);
   end;
 
   { TIntegerProp }
@@ -73,7 +77,7 @@ type
     function GetAsInteger: integer; override;
     procedure SetAsInteger(AValue: integer); override;
   public
-    constructor Create(const AValue: Integer);
+    constructor Create(const AName: string; const AValue: Integer);
   end;
 
   { TBooleanProp }
@@ -88,7 +92,7 @@ type
     function GetAsBoolean: Boolean; override;
     procedure SetAsBoolean(AValue: Boolean); override;
   public
-    constructor Create(const AValue: Boolean);
+    constructor Create(const AName: string; const AValue: Boolean);
   end;
 
   { TGuidProp }
@@ -103,7 +107,7 @@ type
     function GetAsTGuid: TGuid; override;
     procedure SetAsTGuid(AValue: TGuid); override;
   public
-    constructor Create(const AValue: TGuid);
+    constructor Create(const AName: string; const AValue: TGuid);
   end;
 
   { TInterfaceProp }
@@ -118,13 +122,13 @@ type
     function GetAsInterface: IUnknown; override;
     procedure SetAsInterface(AValue: IUnknown); override;
   public
-    constructor Create(const AValue: IUnknown);
+    constructor Create(const AName: string; const AValue: IUnknown);
   end;
 
 
   { TProps }
 
-  TProps = class(TInterfacedObject, IProps)
+  TProps = class(TInterfacedObject, IProps, IPropFinder)
   protected const
     cDefaultStr = '';
     cDefaultInt = 0;
@@ -173,6 +177,9 @@ type
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
     function Diff(const AProps: IProps): IProps;
+  protected
+    // IPropFinder
+    function Find(const APath: string): IProp;
   public
     procedure AfterConstruction; override;
     destructor Destroy; override;
@@ -222,11 +229,12 @@ end;
 
 function TInterfaceProp.Clone: IProp;
 begin
-  Result := TInterfaceProp.Create(AsInterface);
+  Result := TInterfaceProp.Create(Name, AsInterface);
 end;
 
-constructor TInterfaceProp.Create(const AValue: IUnknown);
+constructor TInterfaceProp.Create(const AName: string; const AValue: IUnknown);
 begin
+  inherited Create(AName);
   fValue := AValue;
 end;
 
@@ -258,12 +266,12 @@ end;
 
 function TGuidProp.Clone: IProp;
 begin
-  Result := TGuidProp.Create(AsTGuid);
+  Result := TGuidProp.Create(Name, AsTGuid);
 end;
 
-constructor TGuidProp.Create(const AValue: TGuid);
+constructor TGuidProp.Create(const AName: string; const AValue: TGuid);
 begin
-  inherited Create;
+  inherited Create(AName);
   fValue := AValue;
 end;
 
@@ -291,12 +299,12 @@ end;
 
 function TBooleanProp.Clone: IProp;
 begin
-  Result := TBooleanProp.Create(AsBoolean);
+  Result := TBooleanProp.Create(Name, AsBoolean);
 end;
 
-constructor TBooleanProp.Create(const AValue: Boolean);
+constructor TBooleanProp.Create(const AName: string; const AValue: Boolean);
 begin
-  inherited Create;
+  inherited Create(AName);
   fValue := AValue;
 end;
 
@@ -324,12 +332,12 @@ end;
 
 function TIntegerProp.Clone: IProp;
 begin
-  Result := TIntegerProp.Create(AsInteger);
+  Result := TIntegerProp.Create(Name, AsInteger);
 end;
 
-constructor TIntegerProp.Create(const AValue: Integer);
+constructor TIntegerProp.Create(const AName: string; const AValue: Integer);
 begin
-  inherited Create;
+  inherited Create(AName);
   fValue := AValue;
 end;
 
@@ -357,12 +365,12 @@ end;
 
 function TStringProp.Clone: IProp;
 begin
-  Result := TStringProp.Create(AsString);
+  Result := TStringProp.Create(Name, AsString);
 end;
 
-constructor TStringProp.Create(const AValue: string);
+constructor TStringProp.Create(const AName: string; const AValue: string);
 begin
-  inherited Create;
+  inherited Create(AName);
   fValue := AValue;
 end;
 
@@ -375,7 +383,7 @@ end;
 
 function TProp.GetName: string;
 begin
-  raise Exception.Create('unsupported');
+  Result := fName;
 end;
 
 function TProp.GetPropType: TPropType;
@@ -461,6 +469,12 @@ end;
 procedure TProp.SetAsTGuid(AValue: TGuid);
 begin
   raise Exception.Create('unsupported');
+end;
+
+constructor TProp.Create(const AName: string);
+begin
+  inherited Create;
+  fName := AName;
 end;
 
 { TProps }
@@ -565,31 +579,31 @@ end;
 function TProps.SetStr(const AName: string; const AValue: string): IProps;
 begin
   Result := Self;
-  fItems.AddOrSetData(AName, TStringProp.Create(AValue));
+  fItems.AddOrSetData(AName, TStringProp.Create(AName, AValue));
 end;
 
 function TProps.SetInt(const AName: string; const AValue: integer): IProps;
 begin
   Result := Self;
-  fItems.AddOrSetData(AName, TIntegerProp.Create(AValue));
+  fItems.AddOrSetData(AName, TIntegerProp.Create(AName, AValue));
 end;
 
 function TProps.SetBool(const AName: string; const AValue: Boolean): IProps;
 begin
   Result := Self;
-  fItems.AddOrSetData(AName, TBooleanProp.Create(AValue));
+  fItems.AddOrSetData(AName, TBooleanProp.Create(AName, AValue));
 end;
 
 function TProps.SetGuid(const AName: string; const AValue: TGUID): IProps;
 begin
   Result := Self;
-  fItems.AddOrSetData(AName, TGuidProp.Create(AValue));
+  fItems.AddOrSetData(AName, TGuidProp.Create(AName, AValue));
 end;
 
 function TProps.SetIntf(const AName: string; const AValue: IUnknown): IProps;
 begin
   Result := Self;
-  fItems.AddOrSetData(AName, TInterfaceProp.Create(AValue));
+  fItems.AddOrSetData(AName, TInterfaceProp.Create(AName, AValue));
 end;
 
 function TProps.SetProp(const AName: string; const AProp: IProp): IProps;
@@ -674,6 +688,22 @@ begin
     mTheirProp := AProps.PropByName[Name(i)];
     if (mTheirProp = nil) or not mTheirProp.Equals(mMyProp) then
       Result.SetProp(Name(i), mMyProp);
+  end;
+end;
+
+function TProps.Find(const APath: string): IProp;
+var
+  mSplit: TStringArray;
+begin
+  Result := nil;
+  mSplit := APath.Split(['.']);
+  if Length(mSplit) > 0 then
+  begin
+    Result := PropByName[mSplit[0]];
+    if (Result <> nil) and (Length(mSplit) > 1) then
+    begin
+      Result := (Result.AsInterface as IPropFinder).Find(mSplit[1]);
+    end;
   end;
 end;
 

@@ -87,6 +87,11 @@ type
     function Diff(const AProps: IProps): IProps;
   end;
 
+  IPropFinder = interface
+  ['{982480ED-701A-4D12-8569-9C5B14F37502}']
+    function Find(const APath: string): IProp;
+  end;
+
 implementation
 
 end.
