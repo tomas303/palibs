@@ -85,6 +85,7 @@ type
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
     function Diff(const AProps: IProps): IProps;
+    function Info: string;
   end;
 
   IPropFinder = interface

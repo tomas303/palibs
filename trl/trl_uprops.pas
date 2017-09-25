@@ -177,6 +177,7 @@ type
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
     function Diff(const AProps: IProps): IProps;
+    function Info: string;
   protected
     // IPropFinder
     function Find(const APath: string): IProp;
@@ -691,7 +692,19 @@ begin
   end;
 end;
 
+function TProps.Info: string;
+var
+  i: integer;
+begin
+  Result := '';
+  for i := 0 to Count - 1 do
+  begin
+    Result := Result + Prop[i].Name + ' , ';
+  end;
+end;
+
 function TProps.Find(const APath: string): IProp;
+{
 var
   mSplit: TStringArray;
 begin
@@ -704,6 +717,24 @@ begin
     begin
       Result := (Result.AsInterface as IPropFinder).Find(mSplit[1]);
     end;
+  end;
+end;
+}
+var
+  mPath: TStringArray;
+  i: integer;
+  mFinder: IPropFinder;
+begin
+  Result := nil;
+  mPath := APath.Split('.');
+  Result := PropByName[mPath[0]];
+  for i := 1 to High(mPath) do
+  begin
+    if Result = nil then
+      raise Exception.CreateFmt('Property %s identified by key %s not found', [mPath[i - 1], APath]);
+    if not Supports(Result.AsInterface, IPropFinder, mFinder) {and (mPath[i] <> mPath[High(mPath)])} then
+      raise Exception.CreateFmt('Property %s identified by key %s does not support find', [mPath[i - 1], APath]);
+    Result := (Result.AsInterface as IPropFinder).Find(mPath[i]);
   end;
 end;
 
