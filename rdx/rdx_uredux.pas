@@ -60,7 +60,6 @@ type
   protected
     // IMapStateToProps
     function Map(const AProps: IProps): IProps;
-    function AddPath(const APath: string; AKeys: TStringArray): IMapStateToProps;
   protected
     fRdxState: IRdxState;
     procedure SetAddKey(const AKey: string);
@@ -121,13 +120,6 @@ begin
    if mProp <> nil then
      Result.SetProp(mProp.Name, mProp);
   end;
-end;
-
-function TMapStateToProps.AddPath(const APath: string; AKeys: TStringArray
-  ): IMapStateToProps;
-begin
-  Result := Self;
-  fItems.Add(TItem.Create(APath, AKeys));
 end;
 
 procedure TMapStateToProps.SetAddKey(const AKey: string);

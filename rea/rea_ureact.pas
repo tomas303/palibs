@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, rea_ireact, trl_iprops, rea_ibits,
   trl_itree, trl_idifactory, trl_irttibroker,
   trl_uprops, trl_udifactory,
-  trl_ilog, trl_iinjector, rdx_iredux, rea_ilayout,
+  trl_ilog, trl_iinjector, rea_ilayout,
   graphics, flu_iflux;
 
 type

@@ -6,10 +6,10 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="8">
+    <Files Count="7">
       <Item1>
         <Filename Value="rea_iapp.pas"/>
         <UnitName Value="rea_iapp"/>
@@ -31,37 +31,27 @@
         <UnitName Value="rea_ubits"/>
       </Item5>
       <Item6>
-        <Filename Value="rea_ulauncher.pas"/>
-        <UnitName Value="rea_ulauncher"/>
-      </Item6>
-      <Item7>
         <Filename Value="rea_ulayout.pas"/>
         <UnitName Value="rea_ulayout"/>
-      </Item7>
-      <Item8>
+      </Item6>
+      <Item7>
         <Filename Value="rea_ureact.pas"/>
         <UnitName Value="rea_ureact"/>
-      </Item8>
+      </Item7>
     </Files>
-    <RequiredPkgs Count="6">
+    <RequiredPkgs Count="4">
       <Item1>
-        <PackageName Value="rdx"/>
+        <PackageName Value="flu"/>
       </Item1>
       <Item2>
-        <PackageName Value="tal"/>
+        <PackageName Value="trl"/>
       </Item2>
       <Item3>
-        <PackageName Value="flu"/>
+        <PackageName Value="LCL"/>
       </Item3>
       <Item4>
-        <PackageName Value="trl"/>
-      </Item4>
-      <Item5>
-        <PackageName Value="LCL"/>
-      </Item5>
-      <Item6>
         <PackageName Value="FCL"/>
-      </Item6>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

@@ -8,8 +8,8 @@ unit rea;
 interface
 
 uses
-  rea_iapp, rea_ibits, rea_ilayout, rea_ireact, rea_ubits, rea_ulauncher, 
-  rea_ulayout, rea_ureact;
+  rea_iapp, rea_ibits, rea_ilayout, rea_ireact, rea_ubits, rea_ulayout, 
+  rea_ureact;
 
 implementation
 
