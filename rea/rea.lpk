@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="rea"/>
+    <Type Value="RunTimeOnly"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="8">
+      <Item1>
+        <Filename Value="rea_iapp.pas"/>
+        <UnitName Value="rea_iapp"/>
+      </Item1>
+      <Item2>
+        <Filename Value="rea_ibits.pas"/>
+        <UnitName Value="rea_ibits"/>
+      </Item2>
+      <Item3>
+        <Filename Value="rea_ilayout.pas"/>
+        <UnitName Value="rea_ilayout"/>
+      </Item3>
+      <Item4>
+        <Filename Value="rea_ireact.pas"/>
+        <UnitName Value="rea_ireact"/>
+      </Item4>
+      <Item5>
+        <Filename Value="rea_ubits.pas"/>
+        <UnitName Value="rea_ubits"/>
+      </Item5>
+      <Item6>
+        <Filename Value="rea_ulauncher.pas"/>
+        <UnitName Value="rea_ulauncher"/>
+      </Item6>
+      <Item7>
+        <Filename Value="rea_ulayout.pas"/>
+        <UnitName Value="rea_ulayout"/>
+      </Item7>
+      <Item8>
+        <Filename Value="rea_ureact.pas"/>
+        <UnitName Value="rea_ureact"/>
+      </Item8>
+    </Files>
+    <RequiredPkgs Count="6">
+      <Item1>
+        <PackageName Value="rdx"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="tal"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="flu"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="trl"/>
+      </Item4>
+      <Item5>
+        <PackageName Value="LCL"/>
+      </Item5>
+      <Item6>
+        <PackageName Value="FCL"/>
+      </Item6>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

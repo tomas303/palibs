@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="rdx"/>
+    <Type Value="RunTimeOnly"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="4">
+      <Item1>
+        <Filename Value="rdx_iredux.pas"/>
+        <UnitName Value="rdx_iredux"/>
+      </Item1>
+      <Item2>
+        <Filename Value="rdx_ufunc.pas"/>
+        <UnitName Value="rdx_ufunc"/>
+      </Item2>
+      <Item3>
+        <Filename Value="rdx_uredux.pas"/>
+        <UnitName Value="rdx_uredux"/>
+      </Item3>
+      <Item4>
+        <Filename Value="rdx_ustate.pas"/>
+        <UnitName Value="rdx_ustate"/>
+      </Item4>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="flu"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="trl"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
