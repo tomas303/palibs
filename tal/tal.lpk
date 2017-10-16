@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="10">
       <Item1>
         <Filename Value="tal_uapp.pas"/>
         <UnitName Value="tal_uapp"/>
@@ -46,20 +46,27 @@
         <Filename Value="tal_urealauncher.pas"/>
         <UnitName Value="tal_urealauncher"/>
       </Item9>
+      <Item10>
+        <Filename Value="tal_ureaapp.pas"/>
+        <UnitName Value="tal_ureaapp"/>
+      </Item10>
     </Files>
-    <RequiredPkgs Count="4">
+    <RequiredPkgs Count="5">
       <Item1>
-        <PackageName Value="rea"/>
+        <PackageName Value="rdx"/>
       </Item1>
       <Item2>
-        <PackageName Value="tvl"/>
+        <PackageName Value="rea"/>
       </Item2>
       <Item3>
-        <PackageName Value="trl"/>
+        <PackageName Value="tvl"/>
       </Item3>
       <Item4>
-        <PackageName Value="FCL"/>
+        <PackageName Value="trl"/>
       </Item4>
+      <Item5>
+        <PackageName Value="FCL"/>
+      </Item5>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
