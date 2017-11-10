@@ -6,10 +6,10 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="4">
+    <Files Count="6">
       <Item1>
         <Filename Value="rdx_iredux.pas"/>
         <UnitName Value="rdx_iredux"/>
@@ -26,6 +26,14 @@
         <Filename Value="rdx_ustate.pas"/>
         <UnitName Value="rdx_ustate"/>
       </Item4>
+      <Item5>
+        <Filename Value="rdx_ureg.pas"/>
+        <UnitName Value="rdx_ureg"/>
+      </Item5>
+      <Item6>
+        <Filename Value="rdx_ireg.pas"/>
+        <UnitName Value="rdx_ireg"/>
+      </Item6>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

@@ -20,6 +20,7 @@ type
   protected
     fReactApp: IReactApp;
   published
+    // todo: rename IMainForm to IMain and implement this interface instead IReactApp
     property ReactApp: IReactApp read fReactApp write fReactApp;
   end;
 

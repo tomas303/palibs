@@ -55,6 +55,10 @@ type
   ['{CAD729C0-F921-4932-9583-921B177142D2}']
   end;
 
+  IMainFormComposite = interface(IComposite)
+  ['{FA7A6E42-52EC-44DB-B522-E840DC9F34A3}']
+  end;
+
   IFormComposite = interface(IComposite)
   ['{E549424C-6C94-48BC-934D-B100341207C9}']
   end;

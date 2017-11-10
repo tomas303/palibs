@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="10">
+    <Files Count="12">
       <Item1>
         <Filename Value="tal_uapp.pas"/>
         <UnitName Value="tal_uapp"/>
@@ -50,6 +50,14 @@
         <Filename Value="tal_ureaapp.pas"/>
         <UnitName Value="tal_ureaapp"/>
       </Item10>
+      <Item11>
+        <Filename Value="tal_ireg.pas"/>
+        <UnitName Value="tal_ireg"/>
+      </Item11>
+      <Item12>
+        <Filename Value="tal_ureg.pas"/>
+        <UnitName Value="tal_ureg"/>
+      </Item12>
     </Files>
     <RequiredPkgs Count="5">
       <Item1>

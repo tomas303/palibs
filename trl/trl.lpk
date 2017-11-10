@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="22">
+    <Files Count="24">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -98,6 +98,14 @@
         <Filename Value="trl_utree.pas"/>
         <UnitName Value="trl_utree"/>
       </Item22>
+      <Item23>
+        <Filename Value="trl_ureg.pas"/>
+        <UnitName Value="trl_ureg"/>
+      </Item23>
+      <Item24>
+        <Filename Value="trl_ireg.pas"/>
+        <UnitName Value="trl_ireg"/>
+      </Item24>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

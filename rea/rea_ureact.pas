@@ -96,6 +96,11 @@ type
     property ActionResize: integer read fActionResize write fActionResize;
   end;
 
+  { TMainFormComposite }
+
+  TMainFormComposite = class(TFormComposite, IMainFormComposite)
+  end;
+
   { TEditComposite }
 
   TEditComposite = class(TComposite, IEditComposite)
