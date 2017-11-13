@@ -5,7 +5,7 @@ unit tal_uguilauncher;
 interface
 
 uses
-  Classes, SysUtils, tal_ilauncher, Forms;
+  Classes, SysUtils, trl_ilauncher, Forms, tvl_imainform;
 
 type
 

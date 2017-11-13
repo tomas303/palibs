@@ -5,7 +5,7 @@ unit tal_urealauncher;
 interface
 
 uses
-  tal_ilauncher, forms, rea_iapp;
+  trl_ilauncher, forms, rea_iapp;
 
 type
 

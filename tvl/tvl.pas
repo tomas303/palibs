@@ -11,7 +11,7 @@ uses
   tvl_udatabinder, tvl_udatabinders, tvl_ibindings, tvl_ubehavebinder, 
   tvl_ubehavebinders, tvl_ugridbinders, tvl_utallybinders, tvl_messages, 
   tvl_ucontrolbinder, tvl_iiconutils, tvl_uiconutils, tvl_uiconutils_windows, 
-  tvl_uiconutils_unix, tvl_uiconutils_common, tvl_igui, tvl_ugui;
+  tvl_uiconutils_unix, tvl_uiconutils_common, tvl_igui, tvl_ugui, tvl_imainform;
 
 implementation
 

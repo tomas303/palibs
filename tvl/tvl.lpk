@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="16">
+    <Files Count="17">
       <Item1>
         <Filename Value="tvl_udatabinder.pas"/>
         <UnitName Value="tvl_udatabinder"/>
@@ -74,6 +74,10 @@
         <Filename Value="tvl_ugui.pas"/>
         <UnitName Value="tvl_ugui"/>
       </Item16>
+      <Item17>
+        <Filename Value="tvl_imainform.pas"/>
+        <UnitName Value="tvl_imainform"/>
+      </Item17>
     </Files>
     <RequiredPkgs Count="4">
       <Item1>

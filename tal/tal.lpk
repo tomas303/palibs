@@ -9,55 +9,51 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="12">
+    <Files Count="11">
       <Item1>
         <Filename Value="tal_uapp.pas"/>
         <UnitName Value="tal_uapp"/>
       </Item1>
       <Item2>
-        <Filename Value="tal_ilauncher.pas"/>
-        <UnitName Value="tal_ilauncher"/>
-      </Item2>
-      <Item3>
         <Filename Value="tal_uguilauncher.pas"/>
         <UnitName Value="tal_uguilauncher"/>
-      </Item3>
-      <Item4>
+      </Item2>
+      <Item3>
         <Filename Value="tal_iedit.pas"/>
         <UnitName Value="tal_iedit"/>
-      </Item4>
-      <Item5>
+      </Item3>
+      <Item4>
         <Filename Value="tal_SimpleListForm.pas"/>
         <UnitName Value="tal_SimpleListForm"/>
-      </Item5>
-      <Item6>
+      </Item4>
+      <Item5>
         <Filename Value="tal_uwindowlog.pas"/>
         <UnitName Value="tal_uwindowlog"/>
-      </Item6>
-      <Item7>
+      </Item5>
+      <Item6>
         <Filename Value="tal_ihistorysettings.pas"/>
         <UnitName Value="tal_ihistorysettings"/>
-      </Item7>
-      <Item8>
+      </Item6>
+      <Item7>
         <Filename Value="tal_uhistorysettings.pas"/>
         <UnitName Value="tal_uhistorysettings"/>
-      </Item8>
-      <Item9>
+      </Item7>
+      <Item8>
         <Filename Value="tal_urealauncher.pas"/>
         <UnitName Value="tal_urealauncher"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="tal_ureaapp.pas"/>
         <UnitName Value="tal_ureaapp"/>
-      </Item10>
-      <Item11>
+      </Item9>
+      <Item10>
         <Filename Value="tal_ireg.pas"/>
         <UnitName Value="tal_ireg"/>
-      </Item11>
-      <Item12>
+      </Item10>
+      <Item11>
         <Filename Value="tal_ureg.pas"/>
         <UnitName Value="tal_ureg"/>
-      </Item12>
+      </Item11>
     </Files>
     <RequiredPkgs Count="5">
       <Item1>

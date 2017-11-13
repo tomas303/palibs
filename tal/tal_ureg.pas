@@ -6,7 +6,7 @@ interface
 
 uses
   tal_ireg, trl_idifactory, rea_ireact, rdx_iredux, trl_dicontainer,
-  tal_ureaapp, rea_iapp, tal_urealauncher, tal_ilauncher,
+  tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
   trl_ilog, tal_uwindowlog;
 
 type
