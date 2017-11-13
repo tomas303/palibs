@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="11">
       <Item1>
         <Filename Value="rea_iapp.pas"/>
         <UnitName Value="rea_iapp"/>
@@ -46,23 +46,28 @@
         <Filename Value="rea_ureg.pas"/>
         <UnitName Value="rea_ureg"/>
       </Item9>
+      <Item10>
+        <Filename Value="rea_imaps.pas"/>
+        <UnitName Value="rea_imaps"/>
+      </Item10>
+      <Item11>
+        <Filename Value="rea_umaps.pas"/>
+        <UnitName Value="rea_umaps"/>
+      </Item11>
     </Files>
-    <RequiredPkgs Count="5">
+    <RequiredPkgs Count="4">
       <Item1>
-        <PackageName Value="rdx"/>
+        <PackageName Value="flu"/>
       </Item1>
       <Item2>
-        <PackageName Value="flu"/>
+        <PackageName Value="trl"/>
       </Item2>
       <Item3>
-        <PackageName Value="trl"/>
+        <PackageName Value="LCL"/>
       </Item3>
       <Item4>
-        <PackageName Value="LCL"/>
-      </Item4>
-      <Item5>
         <PackageName Value="FCL"/>
-      </Item5>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

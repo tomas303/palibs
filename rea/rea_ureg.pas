@@ -10,7 +10,7 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_ireact, rea_ureact,
-  rdx_uredux, // todo: temporarily
+  rea_imaps, rea_umaps,
   flu_iflux,
   Forms, StdCtrls;
 
@@ -157,19 +157,6 @@ var
   mReg: TDIReg;
   mKey: string;
 begin
-  {
-  mReg := DIC.Add(TMapStateToProps, IMapStateToProps, 'appcomposite');
-  mReg.InjectProp('RdxState', IRdxState);
-  mReg.InjectProp('AddKey', Layout.Perspective.Path);
-  mReg := DIC.Add(TAppComposite, IAppComposite);
-  mReg.InjectProp('Factory', IDIFactory);
-  mReg.InjectProp('ElementFactory', IMetaElementFactory);
-  mReg.InjectProp('MapStateToProps', IMapStateToProps, 'appcomposite');
-  mReg.InjectProp('Log', ILog);
-  }
-
-  // todo: temporarily rea depends on rdx, but later TMapStateToProps will be moved
-  // to rea and IRdxState move to flu ... and then broke dependency again
   Result := DIC.Add(ACompositeClass, ACompositeInterface);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);

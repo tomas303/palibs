@@ -9,7 +9,8 @@ uses
   trl_itree, trl_idifactory, trl_irttibroker,
   trl_uprops, trl_udifactory,
   trl_ilog, trl_iinjector, rea_ilayout,
-  graphics, flu_iflux;
+  graphics, flu_iflux,
+  rea_imaps;
 
 type
 
