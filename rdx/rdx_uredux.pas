@@ -29,8 +29,8 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   published
-    property RdxState: IFluxState read fRdxState write fRdxState;
-    property RdxFunc: IFluxFunc read fRdxFunc write fRdxFunc;
+    property State: IFluxState read fRdxState write fRdxState;
+    property Func: IFluxFunc read fRdxFunc write fRdxFunc;
   end;
 
 implementation
@@ -41,11 +41,11 @@ procedure TRdxStore.Dispatch(const AAction: IFluxAction);
 var
   mEvent: TFluxStoreEvent;
 begin
-  RdxState := RdxFunc.Redux(RdxState, AAction);
-  if RdxState = nil then
+  State := Func.Redux(State, AAction);
+  if State = nil then
     raise Exception.Create('Redux function returned nil instead of AppState');
   for mEvent in fEvents do begin
-    mEvent(RdxState);
+    mEvent(State);
   end;
 end;
 

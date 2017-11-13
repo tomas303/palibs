@@ -52,8 +52,8 @@ end;
 function TReg.RegisterStore: TDIReg;
 begin
   Result := DIC.Add(TRdxStore, IFluxStore, '', ckSingle);
-  Result.InjectProp('RdxState', IFluxState);
-  Result.InjectProp('RdxFunc', IFluxFunc);
+  Result.InjectProp('State', IFluxState);
+  Result.InjectProp('Func', IFluxFunc);
 end;
 
 procedure TReg.RegisterCommon(const ASubFuncs: array of TClass);

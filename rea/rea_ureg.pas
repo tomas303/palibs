@@ -163,7 +163,7 @@ begin
   Result.InjectProp('Log', ILog);
   //
   mReg := DIC.Add(TMapStateToProps, IMapStateToProps, ACompositeClass.ClassName);
-  mReg.InjectProp('RdxState', IFluxState);
+  mReg.InjectProp('State', IFluxState);
   for mKey in AMapStateKeys do
     mReg.InjectProp('AddKey', mKey);
   //

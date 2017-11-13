@@ -40,7 +40,7 @@ type
     fRdxState: IFluxState;
     procedure SetAddKey(const AKey: string);
   published
-    property RdxState: IFluxState read fRdxState write fRdxState;
+    property State: IFluxState read fRdxState write fRdxState;
     property AddKey: string write SetAddKey;
   end;
 
@@ -92,7 +92,7 @@ begin
   Result := AProps.Clone;
   for mKey in fKeys do
   begin
-   mProp := (RdxState as IPropFinder).Find(mKey);
+   mProp := (State as IPropFinder).Find(mKey);
    if mProp <> nil then
      Result.SetProp(mProp.Name, mProp);
   end;
