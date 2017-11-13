@@ -252,7 +252,6 @@ end;
 procedure TALApp.RegisterAppServices;
 begin
   RegRuntime.RegisterCommon;
-
 end;
 
 procedure TALApp.BeforeLaunch;
