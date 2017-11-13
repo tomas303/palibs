@@ -40,6 +40,29 @@ type
     property Enabled: Boolean read GetEnabled write SetEnabled;
   end;
 
+  { IFluxState }
+
+  IFluxState = interface
+  ['{0930F255-E3FB-423E-B8BE-81109F56FDE4}']
+    function Props(const AID: string): IProps;
+  end;
+
+  { IFluxFunc }
+
+  IFluxFunc = interface
+  ['{D5CD4D66-CC4B-4A5E-A206-3D2838BB6CC6}']
+    function Redux(const AState: IFluxState; const AAction: IFluxAction): IFluxState;
+  end;
+
+  TFluxStoreEvent = procedure(const AAppState: IFluxState) of object;
+
+  { IFluxStore }
+
+  IFluxStore = interface
+  ['{3E5DDFF7-63FD-4E14-A913-0A5909A55C7C}']
+    procedure Add(const AEvent: TFluxStoreEvent);
+    procedure Remove(const AEvent: TFluxStoreEvent);
+  end;
 
   { IMapStateToProps }
 

@@ -5,32 +5,32 @@ unit rdx_uredux;
 interface
 
 uses
-  Classes, SysUtils, rdx_iredux, fgl, trl_iprops, flu_iflux;
+  Classes, SysUtils, fgl, trl_iprops, flu_iflux;
 
 type
 
   { TRdxStore }
 
-  TRdxStore = class(TInterfacedObject, IRdxStore, IFluxDispatcher)
+  TRdxStore = class(TInterfacedObject, IFluxStore, IFluxDispatcher)
   protected type
-    TEvents = specialize TFPGList<TRdxStoreEvent>;
+    TEvents = specialize TFPGList<TFluxStoreEvent>;
   protected
     fEvents: TEvents;
   protected
     // IFluxDispatcher
     procedure Dispatch(const AAction: IFluxAction);
-    // IRdxStore
-    procedure Add(const AEvent: TRdxStoreEvent);
-    procedure Remove(const AEvent: TRdxStoreEvent);
+    // IFluxStore
+    procedure Add(const AEvent: TFluxStoreEvent);
+    procedure Remove(const AEvent: TFluxStoreEvent);
   protected
-    fRdxState: IRdxState;
-    fRdxFunc: IRdxFunc;
+    fRdxState: IFluxState;
+    fRdxFunc: IFluxFunc;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   published
-    property RdxState: IRdxState read fRdxState write fRdxState;
-    property RdxFunc: IRdxFunc read fRdxFunc write fRdxFunc;
+    property RdxState: IFluxState read fRdxState write fRdxState;
+    property RdxFunc: IFluxFunc read fRdxFunc write fRdxFunc;
   end;
 
   { TMapStateToProps }
@@ -61,10 +61,10 @@ type
     // IMapStateToProps
     function Map(const AProps: IProps): IProps;
   protected
-    fRdxState: IRdxState;
+    fRdxState: IFluxState;
     procedure SetAddKey(const AKey: string);
   published
-    property RdxState: IRdxState read fRdxState write fRdxState;
+    property RdxState: IFluxState read fRdxState write fRdxState;
     property AddKey: string write SetAddKey;
   end;
 
@@ -133,7 +133,7 @@ end;
 
 procedure TRdxStore.Dispatch(const AAction: IFluxAction);
 var
-  mEvent: TRdxStoreEvent;
+  mEvent: TFluxStoreEvent;
 begin
   RdxState := RdxFunc.Redux(RdxState, AAction);
   if RdxState = nil then
@@ -143,13 +143,13 @@ begin
   end;
 end;
 
-procedure TRdxStore.Add(const AEvent: TRdxStoreEvent);
+procedure TRdxStore.Add(const AEvent: TFluxStoreEvent);
 begin
   if fEvents.IndexOf(AEvent) = -1 then
     fEvents.Add(AEvent);
 end;
 
-procedure TRdxStore.Remove(const AEvent: TRdxStoreEvent);
+procedure TRdxStore.Remove(const AEvent: TFluxStoreEvent);
 var
   mIndex: integer;
 begin

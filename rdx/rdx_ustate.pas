@@ -5,18 +5,18 @@ unit rdx_ustate;
 interface
 
 uses
-  SysUtils, rdx_iredux, trl_iprops, trl_idifactory;
+  SysUtils, flu_iflux, trl_iprops, trl_idifactory;
 
 type
 
   { TRdxState }
 
-  TRdxState = class(TInterfacedObject, IRdxState, IPropFinder)
+  TRdxState = class(TInterfacedObject, IFluxState, IPropFinder)
   protected
     // IPropFinder
     function Find(const APath: string): IProp;
   protected
-    // IRdxState
+    // IFluxState
     function Props(const AID: string): IProps;
   protected
     fFactory: IDIFactory;

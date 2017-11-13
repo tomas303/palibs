@@ -5,25 +5,25 @@ unit rdx_ufunc;
 interface
 
 uses
-  SysUtils, rdx_iredux, trl_iprops, trl_iinjector, trl_idifactory,
+  SysUtils, trl_iprops, trl_iinjector, trl_idifactory,
   flu_iflux, fgl;
 
 type
 
   { TRdxFunc }
 
-  TRdxFunc = class(TInterfacedObject, IRdxFunc)
+  TRdxFunc = class(TInterfacedObject, IFluxFunc)
   protected type
-    TFuncs = specialize TFPGInterfacedObjectList<IRdxFunc>;
+    TFuncs = specialize TFPGInterfacedObjectList<IFluxFunc>;
   protected
     fFuncs: TFuncs;
     function DoResize(const AMainForm: IProps; const AAction: IFluxAction): IProps;
     function DefaultMainForm: IProps;
-    function FindProps(const AState: IRdxState; const APath: string): IProps;
-    procedure SetAddFunc(AValue: IRdxFunc);
+    function FindProps(const AState: IFluxState; const APath: string): IProps;
+    procedure SetAddFunc(AValue: IFluxFunc);
   protected
-    // IRdxFunc
-    function Redux(const AState: IRdxState; const AAction: IFluxAction): IRdxState;
+    // IFluxFunc
+    function Redux(const AState: IFluxState; const AAction: IFluxAction): IFluxState;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -33,14 +33,14 @@ type
   published
     property Injector: IInjector read fInjector write fInjector;
     property Factory: IDIFactory read fFactory write fFactory;
-    property AddFunc: IRdxFunc write SetAddFunc;
+    property AddFunc: IFluxFunc write SetAddFunc;
   end;
 
 implementation
 
 { TRdxFunc }
 
-procedure TRdxFunc.SetAddFunc(AValue: IRdxFunc);
+procedure TRdxFunc.SetAddFunc(AValue: IFluxFunc);
 begin
   fFuncs.Add(AValue);
 end;
@@ -72,7 +72,7 @@ begin
     .SetInt('Height', 300);
 end;
 
-function TRdxFunc.FindProps(const AState: IRdxState; const APath: string
+function TRdxFunc.FindProps(const AState: IFluxState; const APath: string
   ): IProps;
 var
   mProp: IProp;
@@ -83,11 +83,11 @@ begin
   Result := mProp.AsInterface as IProps;
 end;
 
-function TRdxFunc.Redux(const AState: IRdxState; const AAction: IFluxAction
-  ): IRdxState;
+function TRdxFunc.Redux(const AState: IFluxState; const AAction: IFluxAction
+  ): IFluxState;
 var
-  mFunc: IRdxFunc;
-  mState: IRdxState;
+  mFunc: IFluxFunc;
+  mState: IFluxState;
 begin
   Result := AState;
   for mFunc in fFuncs do begin

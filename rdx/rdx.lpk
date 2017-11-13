@@ -9,31 +9,27 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="5">
       <Item1>
-        <Filename Value="rdx_iredux.pas"/>
-        <UnitName Value="rdx_iredux"/>
-      </Item1>
-      <Item2>
         <Filename Value="rdx_ufunc.pas"/>
         <UnitName Value="rdx_ufunc"/>
-      </Item2>
-      <Item3>
+      </Item1>
+      <Item2>
         <Filename Value="rdx_uredux.pas"/>
         <UnitName Value="rdx_uredux"/>
-      </Item3>
-      <Item4>
+      </Item2>
+      <Item3>
         <Filename Value="rdx_ustate.pas"/>
         <UnitName Value="rdx_ustate"/>
-      </Item4>
-      <Item5>
+      </Item3>
+      <Item4>
         <Filename Value="rdx_ureg.pas"/>
         <UnitName Value="rdx_ureg"/>
-      </Item5>
-      <Item6>
+      </Item4>
+      <Item5>
         <Filename Value="rdx_ireg.pas"/>
         <UnitName Value="rdx_ireg"/>
-      </Item6>
+      </Item5>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

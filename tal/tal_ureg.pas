@@ -5,9 +5,9 @@ unit tal_ureg;
 interface
 
 uses
-  tal_ireg, trl_idifactory, rea_ireact, rdx_iredux, trl_dicontainer,
+  tal_ireg, trl_idifactory, rea_ireact, trl_dicontainer,
   tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
-  trl_ilog, tal_uwindowlog;
+  trl_ilog, tal_uwindowlog, flu_iflux;
 
 type
 
@@ -32,14 +32,14 @@ function TReg.RegisterReactApp: TDIReg;
 var
   mReg: TDIReg;
 begin
-  // todo: think about move this to rea package ... that means move IRdxStore to flu
+  // todo: think about move this to rea package ... that means move IFluxStore to flu
   mReg := DIC.Add(TReactLauncher, ILauncher);
   mReg.InjectProp('ReactApp', IReactApp);
   //
   Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('React', IReact);
-  Result.InjectProp('AppStore', IRdxStore);
+  Result.InjectProp('AppStore', IFluxStore);
   Result.InjectProp('ElFactory', IMetaElementFactory);
 end;
 

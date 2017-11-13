@@ -5,7 +5,7 @@ unit tal_ureaapp;
 interface
 
 uses
-  SysUtils, rea_ireact, rdx_iredux, trl_uprops,
+  SysUtils, rea_ireact, trl_uprops,
   trl_idifactory, flu_iflux, rea_iapp;
 
 type
@@ -20,14 +20,14 @@ type
   protected
     fFactory: IDIFactory;
     fReact: IReact;
-    fAppStore: IRdxStore;
+    fAppStore: IFluxStore;
     fElFactory: IMetaElementFactory;
   protected
-    procedure AppStoreChanged(const AAppState: IRdxState);
+    procedure AppStoreChanged(const AAppState: IFluxState);
   published
     property Factory: IDIFactory read fFactory write FFactory;
     property React: IReact read fReact write fReact;
-    property AppStore: IRdxStore read fAppStore write fAppStore;
+    property AppStore: IFluxStore read fAppStore write fAppStore;
     property ElFactory: IMetaElementFactory read fElFactory write fElFactory;
   end;
 
@@ -50,7 +50,7 @@ begin
   AppStore.Remove(@AppStoreChanged);
 end;
 
-procedure TReactApp.AppStoreChanged(const AAppState: IRdxState);
+procedure TReactApp.AppStoreChanged(const AAppState: IFluxState);
 begin
   // for now synchronous change, what all will be rendered will be decided by
   // react componenets itself

@@ -10,7 +10,7 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_ireact, rea_ureact,
-  rdx_iredux, rdx_uredux, // todo: temporarily
+  rdx_uredux, // todo: temporarily
   flu_iflux,
   Forms, StdCtrls;
 
@@ -176,7 +176,7 @@ begin
   Result.InjectProp('Log', ILog);
   //
   mReg := DIC.Add(TMapStateToProps, IMapStateToProps, ACompositeClass.ClassName);
-  mReg.InjectProp('RdxState', IRdxState);
+  mReg.InjectProp('RdxState', IFluxState);
   for mKey in AMapStateKeys do
     mReg.InjectProp('AddKey', mKey);
   //
