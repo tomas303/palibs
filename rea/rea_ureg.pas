@@ -23,12 +23,12 @@ type
     procedure SetDIC(AValue: TDIContainer);
   protected
     // IReg
-    function RegisterTerminus(ABitClass: TClass; ABitInterface: TGuid; AControlClass: TComponentClass;
+    function RegisterBitTerminus(ABitClass: TClass; ABitInterface: TGuid; AControlClass: TComponentClass;
       const AControlID: string): TDIReg;
-    function RegisterContainer(ABitClass: TClass; ABitInterface: TGuid; AControlClass: TComponentClass;
+    function RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid; AControlClass: TComponentClass;
       const AControlID: string; const ATilerID: string): TDIReg;
-    function RegisterContainer(ABitClass: TClass; ABitInterface: TGuid; const ATilerID: string): TDIReg;
-    function RegisterTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
+    function RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid; const ATilerID: string): TDIReg;
+    function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
@@ -55,7 +55,7 @@ begin
   fDIC := AValue;
 end;
 
-function TReg.RegisterTerminus(ABitClass: TClass; ABitInterface: TGuid;
+function TReg.RegisterBitTerminus(ABitClass: TClass; ABitInterface: TGuid;
   AControlClass: TComponentClass; const AControlID: string): TDIReg;
 begin
   DIC.Add(AControlClass, nil, AControlID);
@@ -66,7 +66,7 @@ begin
   Result.InjectProp('Node', INode, 'leaf');
 end;
 
-function TReg.RegisterContainer(ABitClass: TClass; ABitInterface: TGuid;
+function TReg.RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid;
   AControlClass: TComponentClass; const AControlID: string; const ATilerID: string): TDIReg;
 begin
   if AControlClass <> nil then
@@ -80,13 +80,13 @@ begin
   Result.InjectProp('Tiler', ITiler, ATilerID);
 end;
 
-function TReg.RegisterContainer(ABitClass: TClass; ABitInterface: TGuid;
+function TReg.RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid;
   const ATilerID: string): TDIReg;
 begin
-  Result := RegisterContainer(ABitClass, ABitInterface, nil, '', ATilerID);
+  Result := RegisterBitContainer(ABitClass, ABitInterface, nil, '', ATilerID);
 end;
 
-function TReg.RegisterTiler(ATilerClass: TClass; ATilerInterface: TGuid;
+function TReg.RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid;
   const ATilerID: string; AScaleClass: TClass): TDIReg;
 var
   mReg: TDIReg;
@@ -172,18 +172,18 @@ end;
 
 procedure TReg.RegisterCommon;
 begin
-  RegisterTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
+  RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterElement;
   RegisterElementFactory;
   RegisterReact;
   RegisterReactFactory;
   RegisterReactComponent;
   RegisterReconciliator;
-  RegisterContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
-  RegisterContainer(TStripBit, IStripBit, cR_DesktopTiler);
-  RegisterTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
-  RegisterTerminus(TTextBit, ITextBit, TLabel, 'uitext');
-  RegisterTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
+  RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
+  RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
+  RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
+  RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
+  RegisterBitTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
 end;
 
 end.
