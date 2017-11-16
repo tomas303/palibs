@@ -99,7 +99,9 @@ type
 
   { TMainFormComposite }
 
-  TMainFormComposite = class(TFormComposite, IMainFormComposite)
+  TMainFormComposite = class(TComposite, IMainFormComposite)
+  protected
+    function ComposeElement(const AProps: IProps; const AChildren: array of IMetaElement): IMetaElement; override;
   end;
 
   { TEditComposite }
@@ -273,6 +275,19 @@ type
   end;
 
 implementation
+
+{ TMainFormComposite }
+
+function TMainFormComposite.ComposeElement(const AProps: IProps;
+  const AChildren: array of IMetaElement): IMetaElement;
+var
+  mChild: IMetaElement;
+begin
+  Result := ElementFactory.CreateElement(IMainFormBit, AProps);
+  for mChild in AChildren do begin
+    (Result as INode).AddChild(mChild as INode);
+  end;
+end;
 
 { TButtonsComposite }
 

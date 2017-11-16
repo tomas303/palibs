@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="12">
       <Item1>
         <Filename Value="rea_iapp.pas"/>
         <UnitName Value="rea_iapp"/>
@@ -54,6 +54,10 @@
         <Filename Value="rea_umaps.pas"/>
         <UnitName Value="rea_umaps"/>
       </Item11>
+      <Item12>
+        <Filename Value="rea_mainform.pas"/>
+        <UnitName Value="rea_mainform"/>
+      </Item12>
     </Files>
     <RequiredPkgs Count="4">
       <Item1>

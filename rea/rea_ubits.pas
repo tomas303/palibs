@@ -111,6 +111,9 @@ type
     property ResizeNotifier: IFluxNotifier read fResizeNotifier write fResizeNotifier;
   end;
 
+  TMainFormBit = class(TFormBit, IMainFormBit)
+  end;
+
   { TStripBit }
 
   TStripBit = class(TBit, IStripBit)

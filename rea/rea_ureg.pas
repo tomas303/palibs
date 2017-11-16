@@ -12,7 +12,8 @@ uses
   rea_ireact, rea_ureact,
   rea_imaps, rea_umaps,
   flu_iflux,
-  Forms, StdCtrls;
+  Forms, StdCtrls,
+  rea_mainform;
 
 type
 
@@ -180,6 +181,7 @@ begin
   RegisterReactComponent;
   RegisterReconciliator;
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
+  RegisterBitContainer(TMainFormBit, IMainFormBit, TMainForm, '', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
