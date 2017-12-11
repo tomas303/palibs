@@ -8,6 +8,12 @@ uses
   Controls, Graphics;
 
 type
+  IMessageNotifierBinder = interface
+  ['{639A647A-916B-4906-A4F8-89CD4C0E129D}']
+    procedure Bind(AControl: TControl);
+    procedure Unbind;
+  end;
+
   // wrapper for real control and its binder
   IBit = interface
   ['{479784FA-9E6B-4826-BCFE-92A676B2F7DD}']

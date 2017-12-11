@@ -21,6 +21,8 @@ type
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
 
+    function RegisterMessageNotifierBinder: TDIReg;
+
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReact: TDIReg;

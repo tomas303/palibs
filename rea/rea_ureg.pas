@@ -31,6 +31,7 @@ type
     function RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid; const ATilerID: string): TDIReg;
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
+    function RegisterMessageNotifierBinder: TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReact: TDIReg;
@@ -103,6 +104,11 @@ begin
   mReg := DIC.Add(ATilerClass, ATilerInterface, ATilerID);
   mReg.InjectProp('HScale', IScale, ATilerID+'horizontal');
   mReg.InjectProp('VScale', IScale, ATilerID+'vertical');
+end;
+
+function TReg.RegisterMessageNotifierBinder: TDIReg;
+begin
+  Result := DIC.Add(TMessageNotifierBinder, IMessageNotifierBinder);
 end;
 
 function TReg.RegisterElement: TDIReg;
@@ -186,6 +192,7 @@ begin
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
   RegisterBitTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
+  RegisterMessageNotifierBinder;
 end;
 
 end.

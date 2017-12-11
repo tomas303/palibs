@@ -7,9 +7,23 @@ interface
 uses
   SysUtils, rea_ibits, Controls, trl_idifactory, forms, trl_itree,
   StdCtrls, trl_iprops, Graphics, trl_ilog,
-  rea_ilayout, flu_iflux;
+  rea_ilayout, flu_iflux, tvl_ucontrolbinder,
+  LMessages;
 
 type
+
+  { TMessageNotifierBinder }
+
+  TMessageNotifierBinder = class(TControlBinder, IMessageNotifierBinder)
+  protected
+    procedure DoControlWndProc(var TheMessage: TLMessage); override;
+  protected
+    fNotifier: IFluxNotifier;
+    fMsg: Cardinal;
+  published
+    property Notifier: IFluxNotifier read fNotifier write fNotifier;
+    property Msg: Cardinal read fMsg write fMsg;
+  end;
 
   { TBit }
 
@@ -33,6 +47,7 @@ type
     fColor: TColor;
     function AsControl: TControl;
     procedure SetControl(AValue: TControl);
+    function NewProps: IProps;
   protected
     procedure DoRender; virtual;
     procedure DoRenderPaint(const ACanvas: TCanvas); virtual;
@@ -87,7 +102,6 @@ type
     property Color: TColor read fColor write fColor;
   end;
 
-
   { TFormBit }
 
   TFormBit = class(TBit, IFormBit)
@@ -96,8 +110,12 @@ type
     procedure ResetScroll;
     procedure OnResize(Sender: TObject);
     procedure ResizeNotifierData(const AProps: IProps);
+    procedure SizeNotifierData(const AProps: IProps);
+    procedure MoveNotifierData(const AProps: IProps);
     procedure OnPaint(Sender: TObject);
   protected
+    fSizeMsgBinder: IMessageNotifierBinder;
+    fMoveMsgBinder: IMessageNotifierBinder;
     procedure DoRender; override;
   public
     destructor Destroy; override;
@@ -105,10 +123,14 @@ type
     fTiler: ITiler;
     fTitle: string;
     fResizeNotifier: IFluxNotifier;
+    fSizeNotifier: IFluxNotifier;
+    fMoveNotifier: IFluxNotifier;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
     property ResizeNotifier: IFluxNotifier read fResizeNotifier write fResizeNotifier;
+    property SizeNotifier: IFluxNotifier read fSizeNotifier write fSizeNotifier;
+    property MoveNotifier: IFluxNotifier read fMoveNotifier write fMoveNotifier;
   end;
 
   TMainFormBit = class(TFormBit, IMainFormBit)
@@ -185,6 +207,17 @@ type
   end;
 
 implementation
+
+{ TMessageNotifierBinder }
+
+procedure TMessageNotifierBinder.DoControlWndProc(var TheMessage: TLMessage);
+begin
+  inherited DoControlWndProc(TheMessage);
+  if TheMessage.Msg = Msg then begin
+    if Notifier <> nil then
+      Notifier.Notify;
+  end;
+end;
 
 { TStripBit }
 
@@ -378,6 +411,20 @@ begin
   .SetInt('Height', AsControl.Height);
 end;
 
+procedure TFormBit.SizeNotifierData(const AProps: IProps);
+begin
+  AProps
+  .SetInt('Width', AsControl.Width)
+  .SetInt('Height', AsControl.Height);
+end;
+
+procedure TFormBit.MoveNotifierData(const AProps: IProps);
+begin
+  AProps
+  .SetInt('Left', AsControl.Left)
+  .SetInt('Top', AsControl.Top);
+end;
+
 procedure TFormBit.OnPaint(Sender: TObject);
 var
   mChild: INode;
@@ -397,7 +444,14 @@ begin
   //AsForm.OnResize := nil;
   if ResizeNotifier <> nil then
     ResizeNotifier.Enabled := False;
+
+  if SizeNotifier <> nil then
+    SizeNotifier.Enabled := False;
+  if MoveNotifier <> nil then
+    MoveNotifier.Enabled := False;
+
   inherited;
+
   //Layouter.ReplaceChildren(Self);
   Tiler.ReplaceChildren(Self);
   ResetScroll;
@@ -413,6 +467,24 @@ begin
     ResizeNotifier.Add(@ResizeNotifierData);
     ResizeNotifier.Enabled := True;
   end;
+
+
+  if SizeNotifier <> nil then begin
+    fSizeMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', SizeNotifier).SetInt('Msg', LM_SIZE)));
+    fSizeMsgBinder.Bind(AsForm);
+    SizeNotifier.Add(@SizeNotifierData);
+    SizeNotifier.Enabled := True;
+  end else
+    fSizeMsgBinder := nil;
+  if MoveNotifier <> nil then begin
+    fMoveMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', MoveNotifier).SetInt('Msg', LM_Move)));
+    fMoveMsgBinder.Bind(AsForm);
+    MoveNotifier.Add(@MoveNotifierData);
+    MoveNotifier.Enabled := True;
+  end else
+    fMoveMsgBinder := nil;
+
+
 
   for mChild in Node do
     (mChild as IBit).HookParent(AsForm);
@@ -432,6 +504,11 @@ begin
     Exit;
   fControl := AValue;
   Color := Control.Color;
+end;
+
+function TBit.NewProps: IProps;
+begin
+  Result := IProps(Factory.Locate(IProps));
 end;
 
 procedure TBit.AddChild(const ANode: INode);

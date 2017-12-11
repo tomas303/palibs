@@ -15,7 +15,7 @@ type
 
   { TControlBinder }
 
-  TControlBinder = class
+  TControlBinder = class(TInterfacedObject)
   private type
 
     PMethod = ^TMethod;

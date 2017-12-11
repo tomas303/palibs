@@ -68,6 +68,7 @@ type
   TComposite = class(TInterfacedObject, IComposite)
   protected
     function NewNotifier(const AActionID: integer): IFluxNotifier;
+    function NewNotifier(const AActionID: integer; const ADispatecher: IFluxDispatcher): IFluxNotifier;
     function NewProps: IProps;
   protected
     function ComposeElement(const AProps: IProps; const AChildren: array of IMetaElement): IMetaElement; virtual; abstract;
@@ -99,9 +100,23 @@ type
 
   { TMainFormComposite }
 
-  TMainFormComposite = class(TComposite, IMainFormComposite)
+  TMainFormComposite = class(TComposite, IMainFormComposite, IFluxDispatcher)
+  protected const
+    cResize = 1;
+    cActionSize = 2;
+    cActionMove = 3;
+  protected
+    fTop: integer;
+    fLeft: integer;
+    fWidth: integer;
+    fHeight: integer;
+  protected
+    // IFluxDispatcher
+    procedure Dispatch(const AAppAction: IFluxAction);
   protected
     function ComposeElement(const AProps: IProps; const AChildren: array of IMetaElement): IMetaElement; override;
+  public
+    procedure AfterConstruction; override;
   end;
 
   { TEditComposite }
@@ -278,15 +293,57 @@ implementation
 
 { TMainFormComposite }
 
+procedure TMainFormComposite.Dispatch(const AAppAction: IFluxAction);
+begin
+  case AAppAction.ID of
+    cResize:
+      begin
+        fWidth := AAppAction.Props.AsInt('Width');
+        fHeight := AAppAction.Props.AsInt('Height');
+      end;
+    cActionMove:
+      begin
+        fLeft := AAppAction.Props.AsInt('Left');
+        fTop := AAppAction.Props.AsInt('Top');
+      end;
+    cActionSize:
+      begin
+        fWidth := AAppAction.Props.AsInt('Width');
+        fHeight := AAppAction.Props.AsInt('Height');
+      end;
+  end;
+end;
+
 function TMainFormComposite.ComposeElement(const AProps: IProps;
   const AChildren: array of IMetaElement): IMetaElement;
 var
   mChild: IMetaElement;
 begin
+
+  //AProps.SetIntf('ResizeNotifier', NewNotifier(cResize, Self));
+  AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, Self));
+  AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, Self));
+
+  if fWidth > 0 then
+    AProps.SetInt('Width', fWidth);
+  if fHeight > 0 then
+    AProps.SetInt('Height', fHeight);
+
+  if fLeft > 0 then
+    AProps.SetInt('Left', fLeft);
+  if fTop > 0 then
+    AProps.SetInt('Top', fTop);
+
+
   Result := ElementFactory.CreateElement(IMainFormBit, AProps);
   for mChild in AChildren do begin
     (Result as INode).AddChild(mChild as INode);
   end;
+end;
+
+procedure TMainFormComposite.AfterConstruction;
+begin
+  inherited AfterConstruction;
 end;
 
 { TButtonsComposite }
@@ -588,6 +645,18 @@ end;
 function TComposite.NewNotifier(const AActionID: integer): IFluxNotifier;
 begin
   Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '', TProps.New.SetInt('ActionID', AActionID)));
+end;
+
+function TComposite.NewNotifier(const AActionID: integer;
+  const ADispatecher: IFluxDispatcher): IFluxNotifier;
+begin
+  Result := IFluxNotifier(
+    Factory.Locate(IFluxNotifier, '',
+      TProps.New
+      .SetInt('ActionID', AActionID)
+      .SetIntf('Dispatcher', ADispatecher)
+      )
+    );
 end;
 
 function TComposite.NewProps: IProps;
