@@ -20,6 +20,7 @@ type
     function Clone: IProp; virtual; abstract;
     function GetName: string;
     function GetPropType: TPropType; virtual;
+    function GetDebugInfo: string; virtual;
     function GetAsInteger: integer; virtual;
     procedure SetAsInteger(AValue: integer); virtual;
     function GetAsString: string; virtual;
@@ -59,6 +60,7 @@ type
     function Equals(const AProp: IProp): Boolean; override;
     function Clone: IProp; override;
     function GetPropType: TPropType; override;
+    function GetDebugInfo: string; override;
     function GetAsString: string; override;
     procedure SetAsString(AValue: string); override;
   public
@@ -74,6 +76,7 @@ type
     function Equals(const AProp: IProp): Boolean; override;
     function Clone: IProp; override;
     function GetPropType: TPropType; override;
+    function GetDebugInfo: string; override;
     function GetAsInteger: integer; override;
     procedure SetAsInteger(AValue: integer); override;
   public
@@ -89,6 +92,7 @@ type
     function Equals(const AProp: IProp): Boolean; override;
     function Clone: IProp; override;
     function GetPropType: TPropType; override;
+    function GetDebugInfo: string; override;
     function GetAsBoolean: Boolean; override;
     procedure SetAsBoolean(AValue: Boolean); override;
   public
@@ -104,6 +108,7 @@ type
     function Equals(const AProp: IProp): Boolean; override;
     function Clone: IProp; override;
     function GetPropType: TPropType; override;
+    function GetDebugInfo: string; override;
     function GetAsTGuid: TGuid; override;
     procedure SetAsTGuid(AValue: TGuid); override;
   public
@@ -119,6 +124,7 @@ type
     function Equals(const AProp: IProp): Boolean; override;
     function Clone: IProp; override;
     function GetPropType: TPropType; override;
+    function GetDebugInfo: string; override;
     function GetAsInterface: IUnknown; override;
     procedure SetAsInterface(AValue: IUnknown); override;
   public
@@ -218,6 +224,14 @@ begin
   Result := ptInterface;
 end;
 
+function TInterfaceProp.GetDebugInfo: string;
+begin
+  if fValue = nil then
+    Result := ''
+  else
+    Result := 'interface of ' + (fValue as TObject).ClassName;
+end;
+
 function TInterfaceProp.GetAsInterface: IUnknown;
 begin
   Result := fValue;
@@ -255,6 +269,11 @@ begin
   Result := ptGuid;
 end;
 
+function TGuidProp.GetDebugInfo: string;
+begin
+  Result := GUIDToString(fValue);
+end;
+
 function TGuidProp.GetAsTGuid: TGuid;
 begin
   Result := fValue;
@@ -286,6 +305,11 @@ end;
 function TBooleanProp.GetPropType: TPropType;
 begin
   Result := ptBool;
+end;
+
+function TBooleanProp.GetDebugInfo: string;
+begin
+  Result := BoolToStr(fValue);
 end;
 
 function TBooleanProp.GetAsBoolean: Boolean;
@@ -321,6 +345,11 @@ begin
   Result := ptInt;
 end;
 
+function TIntegerProp.GetDebugInfo: string;
+begin
+  Result := IntToStr(fValue);
+end;
+
 function TIntegerProp.GetAsInteger: integer;
 begin
   Result := fValue;
@@ -343,6 +372,11 @@ begin
 end;
 
 { TStringProp }
+
+function TStringProp.GetDebugInfo: string;
+begin
+  Result := fValue;
+end;
 
 function TStringProp.Equals(const AProp: IProp): Boolean;
 begin
@@ -390,6 +424,11 @@ end;
 function TProp.GetPropType: TPropType;
 begin
   raise Exception.Create('unsupported');
+end;
+
+function TProp.GetDebugInfo: string;
+begin
+  Result := '';
 end;
 
 function TProp.GetAsInteger: integer;
@@ -699,7 +738,7 @@ begin
   Result := '';
   for i := 0 to Count - 1 do
   begin
-    Result := Result + Prop[i].Name + ' , ';
+    Result := Result + Prop[i].Name + '=' + Prop[i].DebugInfo + ', ';
   end;
 end;
 

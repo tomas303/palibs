@@ -20,6 +20,7 @@ type
     function Clone: IProp;
     function GetName: string;
     function GetPropType: TPropType; //??? probably own type and if necessary map it to typekind
+    function GetDebugInfo: string;
     function GetAsInteger: integer;
     procedure SetAsInteger(AValue: integer);
     function GetAsString: string;
@@ -38,6 +39,7 @@ type
     procedure SetAsTGuid(AValue: TGuid);
     property Name: string read GetName;
     property PropType: TPropType read GetPropType;
+    property DebugInfo: string read GetDebugInfo;
     property AsString: string read GetAsString write SetAsString;
     property AsInteger: integer read GetAsInteger write SetAsInteger;
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
