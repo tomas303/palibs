@@ -40,6 +40,7 @@ type
     function RegisterReconciliator: TDIReg;
     function RegisterComposite(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;
+    function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -128,7 +129,7 @@ function TReg.RegisterReact: TDIReg;
 begin
   Result := DIC.Add(TReact, IReact);
   Result.InjectProp('Log', ILog);
-  Result.InjectProp('ReactFactory', IReactFactory);
+  //Result.InjectProp('ReactFactory', IReactFactory);
   Result.InjectProp('Injector', IInjector);
   Result.InjectProp('Reconciliator', IReconciliator);
   Result.InjectProp('RootComponent', IReactComponent);
@@ -136,7 +137,7 @@ end;
 
 function TReg.RegisterReactFactory: TDIReg;
 begin
-  Result := DIC.Add(TReactFactory, IReactFactory);
+  //Result := DIC.Add(TReactFactory, IReactFactory);
   Result.InjectProp('Container', TDIContainer, '', DIC);
   Result.InjectProp('Log', ILog);
 end;
@@ -147,14 +148,14 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('Reconciliator', IReconciliator);
-  Result.InjectProp('ReactFactory', IReactFactory);
+  //Result.InjectProp('ReactFactory', IReactFactory);
 end;
 
 function TReg.RegisterReconciliator: TDIReg;
 begin
   Result := DIC.Add(TReconciliator, IReconciliator);
   Result.InjectProp('Log', ILog);
-  Result.InjectProp('ReactFactory', IReactFactory);
+  //Result.InjectProp('ReactFactory', IReactFactory);
   Result.InjectProp('Injector', IInjector);
 end;
 
@@ -174,7 +175,14 @@ begin
   for mKey in AMapStateKeys do
     mReg.InjectProp('AddKey', mKey);
   //
-  Result.InjectProp('MapStateToProps', IMapStateToProps, ACompositeClass.ClassName);
+  //Result.InjectProp('MapStateToProps', IMapStateToProps, ACompositeClass.ClassName);
+end;
+
+function TReg.RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
+begin
+  Result := DIC.Add(AMachineryCompositeClass, AMachineryInterface);
+  Result.InjectProp('Log', ILog);
+  Result.InjectProp('Factory', IDIFactory);
 end;
 
 procedure TReg.RegisterCommon;
@@ -185,6 +193,8 @@ begin
   RegisterReact;
   RegisterReactFactory;
   RegisterReactComponent;
+  RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
+  RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);
   RegisterReconciliator;
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TMainFormBit, IMainFormBit, TMainForm, '', cR_DesktopTiler);

@@ -33,7 +33,9 @@ type
     function RegisterComposite(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;
 
-    procedure RegisterCommon;
+    function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
+
+  procedure RegisterCommon;
   end;
 
 

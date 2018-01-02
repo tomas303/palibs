@@ -38,7 +38,8 @@ begin
   //
   Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
   Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('React', IReact);
+  //Result.InjectProp('React', IReact);
+  Result.InjectProp('RootComponent', IReactComponentApp);
   Result.InjectProp('AppStore', IFluxStore);
   Result.InjectProp('ElFactory', IMetaElementFactory);
 end;
