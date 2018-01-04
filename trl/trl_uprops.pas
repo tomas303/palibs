@@ -147,7 +147,6 @@ type
     TItems = class(specialize TFPGMapInterfacedObjectData<string, IProp>)
     protected
       procedure Deref(Item: Pointer); override;
-      procedure CopyData(Src, Dest: Pointer); override;
     end;
 
   protected
@@ -202,14 +201,9 @@ begin
   // in TFPGMapInterfacedObjectData.CopyData is error
   // TData(Dest^) := TData(Src^); will also ref. data
   // based on similar list it should be pointer(Dest^) := pointer(Src^);
+  // -- that is why inherited is called 2x
   inherited Deref(Item);
-end;
-
-procedure TProps.TItems.CopyData(Src, Dest: Pointer);
-begin
-  inherited CopyData(Src, Dest);
-  //if Assigned(Pointer(Dest^)) then
-  //  IProp(Dest^)._Release;
+  inherited Deref(Item);
 end;
 
 { TInterfaceProp }
