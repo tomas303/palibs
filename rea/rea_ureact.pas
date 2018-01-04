@@ -160,7 +160,7 @@ type
     function NewNotifier(const AActionID: integer): IFluxNotifier;
     function NewNotifier(const AActionID: integer; const ADispatecher: IFluxDispatcher): IFluxNotifier;
     function NewProps: IProps;
-
+    function GetSelfAsWeakDispatcher: IFluxDispatcher;
   protected
     // IReactComponent
     procedure Rerender(const AUpperComponent: IReactComponent);
@@ -496,8 +496,8 @@ var
 begin
 
   //AProps.SetIntf('ResizeNotifier', NewNotifier(cResize, Self));
-  AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, Self));
-  AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, Self));
+  AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, GetSelfAsWeakDispatcher));
+  AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, GetSelfAsWeakDispatcher));
 
   if fWidth > 0 then
     AProps.SetInt('Width', fWidth);
@@ -688,6 +688,16 @@ end;
 function TReactComponent.NewProps: IProps;
 begin
   Result := IProps(Factory.Locate(IProps));
+end;
+
+function TReactComponent.GetSelfAsWeakDispatcher: IFluxDispatcher;
+begin
+  // dispatcher is added to notifier which is added to Bit which ReactComponent(or possibly
+  // one of his subcomponets) own ... thus create circle. That is why weak reference is needed
+  if not GetInterfaceWeak(IFluxDispatcher, Result) then
+  begin
+    raise Exception.CreateFmt('class %s do not support IFluxDispatcher', [ClassName]);
+  end;
 end;
 
 procedure TReactComponent.Rerender(const AUpperComponent: IReactComponent);
