@@ -118,24 +118,15 @@ type
 
   TReactComponent = class(TInterfacedObject, IReactComponent, INode)
   protected
-    // later remove setting from interface and made it part of on demand injection
-    // in place, where react component is created
-    fElement: IMetaElement;
-    //fBit: IBit;
-  protected
-    // new implementation ....
     fMachinery: IReactComponentMachinery;
     function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; virtual; abstract;
-    procedure Render(const AParentElement: IMetaElement);
-
     function NewNotifier(const AActionID: integer): IFluxNotifier;
     function NewNotifier(const AActionID: integer; const ADispatecher: IFluxDispatcher): IFluxNotifier;
     function NewProps: IProps;
     function GetSelfAsWeakDispatcher: IFluxDispatcher;
   protected
     // IReactComponent
-    function GetElement: IMetaElement;
-    property Element: IMetaElement read GetElement;
+    procedure Render(const AParentElement: IMetaElement);
     function GetBit: IBit;
     property Bit: IBit read GetBit;
   protected
@@ -606,14 +597,8 @@ begin
   end;
 end;
 
-function TReactComponent.GetElement: IMetaElement;
-begin
-  Result := fElement;
-end;
-
 function TReactComponent.GetBit: IBit;
 begin
-  //Result := fBit;
   Result := fMachinery.Bit;
 end;
 

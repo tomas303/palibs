@@ -68,9 +68,6 @@ type
   IReactComponent = interface
   ['{FB2D2C72-1E52-40C0-BE52-63AFA7448590}']
     procedure Render(const AParentElement: IMetaElement);
-    //
-    function GetElement: IMetaElement;
-    property Element: IMetaElement read GetElement;
     function GetBit: IBit;
     property Bit: IBit read GetBit;
   end;
