@@ -25,11 +25,9 @@ type
 
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
-    function RegisterReact: TDIReg;
-    function RegisterReactComponent: TDIReg;
     function RegisterReconciliator: TDIReg;
 
-    function RegisterComposite(ACompositeClass: TClass; ACompositeInterface: TGuid;
+    function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;
 
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;

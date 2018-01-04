@@ -65,30 +65,6 @@ type
     property Node: INode read fNode write fNode;
   end;
 
-  //{ TComposite }
-  //
-  //TComposite = class(TInterfacedObject, IComposite)
-  //protected
-  //  function NewNotifier(const AActionID: integer): IFluxNotifier;
-  //  function NewNotifier(const AActionID: integer; const ADispatecher: IFluxDispatcher): IFluxNotifier;
-  //  function NewProps: IProps;
-  //protected
-  //  function ComposeElement(const AProps: IProps; const AChildren: array of IMetaElement): IMetaElement; virtual; abstract;
-  //protected
-  //  // IComposite
-  //  function CreateElement(const ASourceElement: IMetaElement): IMetaElement;
-  //protected
-  //  fFactory: IDIFactory;
-  //  fElementFactory: IMetaElementFactory;
-  //  fMapStateToProps: IMapStateToProps;
-  //  fLog: ILog;
-  //published
-  //  property Factory: IDIFactory read fFactory write fFactory;
-  //  property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
-  //  property MapStateToProps: IMapStateToProps read fMapStateToProps write fMapStateToProps;
-  //  property Log: ILog read fLog write fLog;
-  //end;
-
   { TReactComponentMachinery }
 
   TReactComponentMachinery = class(TInterfacedObject, IReactComponentMachinery)
@@ -145,7 +121,6 @@ type
     // later remove setting from interface and made it part of on demand injection
     // in place, where react component is created
     fElement: IMetaElement;
-    //fComposite: IComposite;
     //fBit: IBit;
   protected
     // new implementation ....
@@ -159,14 +134,8 @@ type
     function GetSelfAsWeakDispatcher: IFluxDispatcher;
   protected
     // IReactComponent
-    procedure Rerender(const AUpperComponent: IReactComponent);
-    //procedure AddComposite(const AComposite: IComposite);
-    //procedure ResetData(const AElement: IMetaElement; const AComposite: IComposite;
-    //  const ABit: IBit);
     function GetElement: IMetaElement;
     property Element: IMetaElement read GetElement;
-    //function GetComposite: IComposite;
-    //property Composite: IComposite read GetComposite;
     function GetBit: IBit;
     property Bit: IBit read GetBit;
   protected
@@ -306,28 +275,6 @@ type
     property Log: ILog read fLog write fLog;
     //property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Injector: IInjector read fInjector write fInjector;
-  end;
-
-  { TReact }
-
-  TReact = class(TInterfacedObject, IReact)
-  protected
-    fTopBit: IBit;
-    fTopElement: IMetaElement;
-  protected
-    //IReact
-    procedure Render(const AElement: IMetaElement);
-    procedure Rerender;
-  protected
-    fLog: ILog;
-    fInjector: IInjector;
-    fReconciliator: IReconciliator;
-    fRootComponent: IReactComponent;
-  published
-    property Log: ILog read fLog write fLog;
-    property Injector: IInjector read fInjector write fInjector;
-    property Reconciliator: IReconciliator read fReconciliator write fReconciliator;
-    property RootComponent: IReactComponent read fRootComponent write fRootComponent;
   end;
 
 implementation
@@ -659,65 +606,10 @@ begin
   end;
 end;
 
-procedure TReactComponent.Rerender(const AUpperComponent: IReactComponent);
-var
-  mNewBit: IBit;
-  mNewElement: IMetaElement;
-  mChildNode: INode;
-  mChildComponent: IReactComponent;
-begin
-  ////if composite.shouldupdate ... and later througs all, maybe via composites
-  //if Composite <> nil then
-  //begin
-  //  Log.DebugLn('rerendering %s', [(Composite as TObject).ClassName]);
-  //  mNewBit := Bit;
-  //  mNewElement := Composite.CreateElement(Element);
-  //  if Element <> nil then
-  //    Log.DebugLn('ELEMENT: %s', [Element.Info]);
-  //  if mNewElement <> nil then
-  //   Log.DebugLn('NEW ELEMENT: %s', [mNewElement.Info]);
-  //  if Reconciliator.Reconciliate(self, mNewBit, Element, mNewElement) then
-  //  begin
-  //    if Bit <> mNewBit  then begin
-  //      fBit := mNewBit;
-  //    end;
-  //    Bit.Render;
-  //    fElement := mNewElement;
-  //  end
-  //  else
-  //  begin
-  //    for mChildNode in Node do begin
-  //      mChildComponent := mChildNode as IReactComponent;
-  //      mChildComponent.Rerender(Self);
-  //    end;
-  //  end;
-  //end
-  //else
-  //begin
-  //  for mChildNode in Node do begin
-  //    mChildComponent := mChildNode as IReactComponent;
-  //    mChildComponent.Rerender(Self);
-  //  end;
-  //end;
-end;
-
-//procedure TReactComponent.ResetData(const AElement: IMetaElement;
-//  const AComposite: IComposite; const ABit: IBit);
-//begin
-//  fElement := AElement;
-//  fComposite := AComposite;
-//  fBit := ABit;
-//end;
-
 function TReactComponent.GetElement: IMetaElement;
 begin
   Result := fElement;
 end;
-
-//function TReactComponent.GetComposite: IComposite;
-//begin
-//  Result := fComposite;
-//end;
 
 function TReactComponent.GetBit: IBit;
 begin
@@ -776,53 +668,6 @@ begin
     (Result as INode).AddChild(mChild as INode);
   end;
 end;
-
-//{ TComposite }
-//
-//function TComposite.NewNotifier(const AActionID: integer): IFluxNotifier;
-//begin
-//  Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '', TProps.New.SetInt('ActionID', AActionID)));
-//end;
-//
-//function TComposite.NewNotifier(const AActionID: integer;
-//  const ADispatecher: IFluxDispatcher): IFluxNotifier;
-//begin
-//  Result := IFluxNotifier(
-//    Factory.Locate(IFluxNotifier, '',
-//      TProps.New
-//      .SetInt('ActionID', AActionID)
-//      .SetIntf('Dispatcher', ADispatecher)
-//      )
-//    );
-//end;
-//
-//function TComposite.NewProps: IProps;
-//begin
-//  Result := IProps(Factory.Locate(IProps));
-//end;
-//
-//function TComposite.CreateElement(const ASourceElement: IMetaElement): IMetaElement;
-//var
-//  mProps: IProps;
-//  mChildren: TMetaElementArray;
-//  i: integer;
-//begin
-//  if MapStateToProps <> nil then
-//  begin
-//    Log.DebugLn('map props %s info %s', [ClassName, ASourceElement.Props.Info]);
-//    mProps := MapStateToProps.Map(ASourceElement.Props);
-//  end
-//  else
-//  begin
-//    Log.DebugLn('clone props %s info %s', [ClassName, ASourceElement.Props.Info]);
-//    mProps := ASourceElement.Props.Clone;
-//  end;
-//  SetLength(mChildren, (ASourceElement as INode).Count);
-//  for i := 0 to (ASourceElement as INode).Count - 1 do begin
-//    mChildren[i] := (ASourceElement as INode).Child[i] as IMetaElement;
-//  end;
-//  Result := ComposeElement(mProps, mChildren);
-//end;
 
 { TReconciliator }
 
@@ -1016,23 +861,6 @@ begin
   for mChild in AChildren do begin
     (Result as INode).AddChild(mChild as INode);
   end;
-end;
-
-{ TReact }
-
-procedure TReact.Render(const AElement: IMetaElement);
-var
-  mNewTopBit: IBit;
-  mBit: IBit;
-begin
-  //mBit := ReactFactory.New(AElement, RootComponent);
-  //RootComponent.ResetData(AElement, nil, mBit);
-  //RootComponent.Bit.Render;
-end;
-
-procedure TReact.Rerender;
-begin
-  RootComponent.Rerender(nil);
 end;
 
 { TMetaElement }

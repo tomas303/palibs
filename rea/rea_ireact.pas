@@ -49,17 +49,6 @@ type
       const AChildren: array of IMetaElement): IMetaElement;
   end;
 
-  //IComposite = interface
-  //['{177488BD-84E8-4E08-821E-A3D25DE36B5C}']
-  //  function CreateElement(const ASourceElement: IMetaElement): IMetaElement;
-  //end;
-
-  IReact = interface
-  ['{AE38F1CF-3993-425E-AF47-065ED87D11BA}']
-    procedure Render(const AElement: IMetaElement);
-    procedure Rerender;
-  end;
-
   IReactComponentMachinery = interface
   ['{B4CFF5F0-7493-414C-B540-F5CF9F2AA74E}']
     procedure RenderChildren(const AElement: IMetaElement);
@@ -80,13 +69,8 @@ type
   ['{FB2D2C72-1E52-40C0-BE52-63AFA7448590}']
     procedure Render(const AParentElement: IMetaElement);
     //
-    procedure Rerender(const AUpperComponent: IReactComponent);
-    //procedure AddComposite(const AComposite: IComposite);
-    //procedure ResetData(const AElement: IMetaElement; const AComposite: IComposite; const ABit: IBit);
     function GetElement: IMetaElement;
     property Element: IMetaElement read GetElement;
-    //function GetComposite: IComposite;
-    //property Composite: IComposite read GetComposite;
     function GetBit: IBit;
     property Bit: IBit read GetBit;
   end;

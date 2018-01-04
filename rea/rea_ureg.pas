@@ -34,10 +34,8 @@ type
     function RegisterMessageNotifierBinder: TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
-    function RegisterReact: TDIReg;
-    function RegisterReactComponent: TDIReg;
     function RegisterReconciliator: TDIReg;
-    function RegisterComposite(ACompositeClass: TClass; ACompositeInterface: TGuid;
+    function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     procedure RegisterCommon;
@@ -124,23 +122,6 @@ begin
   Result.InjectProp('Log', ILog);
 end;
 
-function TReg.RegisterReact: TDIReg;
-begin
-  Result := DIC.Add(TReact, IReact);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('Injector', IInjector);
-  Result.InjectProp('Reconciliator', IReconciliator);
-  Result.InjectProp('RootComponent', IReactComponent);
-end;
-
-function TReg.RegisterReactComponent: TDIReg;
-begin
-  Result := DIC.Add(TReactComponent, IReactComponent);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('Node', INode, 'parent');
-  Result.InjectProp('Reconciliator', IReconciliator);
-end;
-
 function TReg.RegisterReconciliator: TDIReg;
 begin
   Result := DIC.Add(TReconciliator, IReconciliator);
@@ -148,7 +129,7 @@ begin
   Result.InjectProp('Injector', IInjector);
 end;
 
-function TReg.RegisterComposite(ACompositeClass: TClass;
+function TReg.RegisterReactComponent(ACompositeClass: TClass;
   ACompositeInterface: TGuid; AMapStateKeys: array of string): TDIReg;
 var
   mReg: TDIReg;
@@ -179,8 +160,6 @@ begin
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterElement;
   RegisterElementFactory;
-  RegisterReact;
-  RegisterReactComponent;
   RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
   RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);
   RegisterReconciliator;
