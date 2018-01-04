@@ -35,7 +35,6 @@ type
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReact: TDIReg;
-    function RegisterReactFactory: TDIReg;
     function RegisterReactComponent: TDIReg;
     function RegisterReconciliator: TDIReg;
     function RegisterComposite(ACompositeClass: TClass; ACompositeInterface: TGuid;
@@ -129,17 +128,9 @@ function TReg.RegisterReact: TDIReg;
 begin
   Result := DIC.Add(TReact, IReact);
   Result.InjectProp('Log', ILog);
-  //Result.InjectProp('ReactFactory', IReactFactory);
   Result.InjectProp('Injector', IInjector);
   Result.InjectProp('Reconciliator', IReconciliator);
   Result.InjectProp('RootComponent', IReactComponent);
-end;
-
-function TReg.RegisterReactFactory: TDIReg;
-begin
-  //Result := DIC.Add(TReactFactory, IReactFactory);
-  Result.InjectProp('Container', TDIContainer, '', DIC);
-  Result.InjectProp('Log', ILog);
 end;
 
 function TReg.RegisterReactComponent: TDIReg;
@@ -148,14 +139,12 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('Reconciliator', IReconciliator);
-  //Result.InjectProp('ReactFactory', IReactFactory);
 end;
 
 function TReg.RegisterReconciliator: TDIReg;
 begin
   Result := DIC.Add(TReconciliator, IReconciliator);
   Result.InjectProp('Log', ILog);
-  //Result.InjectProp('ReactFactory', IReactFactory);
   Result.InjectProp('Injector', IInjector);
 end;
 
@@ -191,7 +180,6 @@ begin
   RegisterElement;
   RegisterElementFactory;
   RegisterReact;
-  RegisterReactFactory;
   RegisterReactComponent;
   RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
   RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);

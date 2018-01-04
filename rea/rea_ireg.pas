@@ -26,7 +26,6 @@ type
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReact: TDIReg;
-    function RegisterReactFactory: TDIReg;
     function RegisterReactComponent: TDIReg;
     function RegisterReconciliator: TDIReg;
 

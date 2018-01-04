@@ -123,11 +123,6 @@ type
   ['{4F6C423B-D002-4717-B455-67232370A145}']
   end;
 
-  //IReactFactory = interface
-  //['{6F9A1695-2442-401C-98ED-893CFF586962}']
-  //  function New(const AMetaElement: IMetaElement; const AComponent: IReactComponent): IBit;
-  //end;
-
   IReconciliator = interface
   ['{066DDE74-0738-4636-B8DD-E3E1BA873D2E}']
     function Reconciliate(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
