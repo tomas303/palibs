@@ -69,10 +69,10 @@ type
 
   TReactComponentMachinery = class(TInterfacedObject, IReactComponentMachinery)
   protected
-    procedure RenderChildren(const AParentElement: IMetaElement);
+    procedure RenderChildren(const AElement: IMetaElement);
     function Bit: IBit;
   protected
-    procedure DoRenderChildren(const AParentElement: IMetaElement); virtual; abstract;
+    procedure DoRenderChildren(const AElement: IMetaElement); virtual; abstract;
     function DoGetBit: IBit; virtual; abstract;
   protected
     fFactory: IDIFactory;
@@ -87,7 +87,7 @@ type
   TReactComponentMachineryMiddle = class(TReactComponentMachinery, IReactComponentMachineryMiddle)
   protected
     fComponent: IReactComponent;
-    procedure DoRenderChildren(const AParentElement: IMetaElement); override;
+    procedure DoRenderChildren(const AElement: IMetaElement); override;
     function DoGetBit: IBit; override;
   published
     property Component: IReactComponent read fComponent write fComponent;
@@ -102,9 +102,9 @@ type
     fMiddles: TMiddles;
     function GetMiddles: TMiddles;
     property Middles: TMiddles read GetMiddles;
-    procedure ProcessChildren(const ABit: IBit; const AParentElement: IMetaElement);
+    procedure ProcessChildren(const ABit: IBit; const AElement: IMetaElement);
   protected
-    procedure DoRenderChildren(const AParentElement: IMetaElement); override;
+    procedure DoRenderChildren(const AElement: IMetaElement); override;
     function DoGetBit: IBit; override;
   public
     destructor Destroy; override;
@@ -126,7 +126,7 @@ type
     function GetSelfAsWeakDispatcher: IFluxDispatcher;
   protected
     // IReactComponent
-    procedure Render(const AParentElement: IMetaElement);
+    procedure Render(const AProps: IProps; const AParentElement: IMetaElement);
     function GetBit: IBit;
     property Bit: IBit read GetBit;
   protected
@@ -272,9 +272,9 @@ implementation
 
 { TReactComponentMachinery }
 
-procedure TReactComponentMachinery.RenderChildren(const AParentElement: IMetaElement);
+procedure TReactComponentMachinery.RenderChildren(const AElement: IMetaElement);
 begin
-  DoRenderChildren(AParentElement);
+  DoRenderChildren(AElement);
 end;
 
 function TReactComponentMachinery.Bit: IBit;
@@ -298,7 +298,7 @@ begin
 end;
 
 procedure TReactComponentMachineryLeaf.ProcessChildren(const ABit: IBit;
-  const AParentElement: IMetaElement);
+  const AElement: IMetaElement);
 var
   mNew: IUnknown;
   mElement: IMetaElement;
@@ -306,21 +306,26 @@ var
   mChildBit: IBit;
   mChildComponent: IReactComponent;
 begin
+
+  // AProps - in case of bit there should be mainly props already published on BIT
+  // and so setted when BIT was created
+  // But when some not publish prop exist, here will be place where to process it
+
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  for mChildEl in AParentElement do
+  for mChildEl in AElement do
   begin
     mNew := IUnknown(Factory.Locate(mChildEl.Guid, mChildEl.TypeID, mChildEl.Props.Clone));
     if Supports(mNew, IBit, mChildBit) then
     begin
       // what render to IBit will be use directly
       (ABit as INode).AddChild(mChildBit as INode);
-      ProcessChildren(mChildBit, mChildEl);
+      ProcessChildren(mChildBit, AElement);
     end
     else
     if Supports(mNew, IReactComponent, mChildComponent) then
     begin
       // what render to IReactComponent need to be first rendered and its Result is used
-      mChildComponent.Render(mChildEl);
+      mChildComponent.Render(mChildEl.Props, AElement);
       (ABit as INode).AddChild(mChildComponent.Bit as INode);
       Middles.Add(mChildComponent);
     end
@@ -332,10 +337,10 @@ begin
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
-procedure TReactComponentMachineryLeaf.DoRenderChildren(const AParentElement: IMetaElement);
+procedure TReactComponentMachineryLeaf.DoRenderChildren(const AElement: IMetaElement);
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  ProcessChildren(Bit, AParentElement);
+  ProcessChildren(Bit, AElement);
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
@@ -346,10 +351,10 @@ end;
 
 { TReactComponentMachineryMiddle }
 
-procedure TReactComponentMachineryMiddle.DoRenderChildren(const AParentElement: IMetaElement);
+procedure TReactComponentMachineryMiddle.DoRenderChildren(const AElement: IMetaElement);
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  Component.Render(AParentElement);
+  Component.Render(AElement.Props, AElement);
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
@@ -411,6 +416,8 @@ begin
   if fTop > 0 then
     AProps.SetInt('Top', fTop);
 
+  AProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
+
 
   Result := ElementFactory.CreateElement(IMainFormBit, AProps);
   for mChild in AParentElement do begin
@@ -448,14 +455,13 @@ end;
 
 function TReactComponentButton.ComposeElement(const AProps: IProps;
   const AParentElement: IMetaElement): IMetaElement;
-var
-  m: string;
 begin
-  m:=AProps.Info;
   if ActionClick <> 0 then
   begin
     AProps.SetIntf('ClickNotifier', NewNotifier(ActionClick));
   end;
+  if AProps.AsBool('ParentColor') then
+    AProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
   Result := ElementFactory.CreateElement(IButtonBit, AProps);
 end;
 
@@ -530,7 +536,7 @@ end;
 
 { TReactComponent }
 
-procedure TReactComponent.Render(const AParentElement: IMetaElement);
+procedure TReactComponent.Render(const AProps: IProps; const AParentElement: IMetaElement);
 var
   mElement: IMetaElement;
   mNew: IUnknown;
@@ -538,7 +544,7 @@ var
   mComponent: IReactComponent;
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  mElement := ComposeElement(AParentElement.Props.Clone, AParentElement);
+  mElement := ComposeElement(AProps.Clone, AParentElement);
 
   // tady by melo byt reconciliation - nejspis jen konkretni uzel bez deti a prebrat
   // vysledek, na zaklade nej to tady rozstrelit, zatim vzdy nove

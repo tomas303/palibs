@@ -46,7 +46,7 @@ begin
   (AppStore as IFluxDispatcher).Dispatch(mAction);
   //React.Render(ElFactory.CreateElement(IReactComponentApp));
 
-  RootComponent.Render(ElFactory.CreateElement(GUID_NULL));
+  RootComponent.Render(TProps.Create, ElFactory.CreateElement(GUID_NULL));
   RootComponent.Bit.Render;
 end;
 
@@ -61,7 +61,7 @@ begin
   // react componenets itself
   //React.Rerender;
   // in some react description was that react somehow store changed nodes and rerendere only this(or those)
-  RootComponent.Render(ElFactory.CreateElement(GUID_NULL));
+  RootComponent.Render(TProps.Create, ElFactory.CreateElement(GUID_NULL));
   RootComponent.Bit.Render;
 end;
 
