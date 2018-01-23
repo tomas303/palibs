@@ -18,6 +18,7 @@ type
     property Props: IProps read GetProps;
   end;
 
+  TFluxDispatchEvent = procedure(const AAppAction: IFluxAction) of object;
 
   { IFluxDispatcher }
 
