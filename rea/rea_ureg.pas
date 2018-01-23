@@ -141,7 +141,7 @@ begin
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Log', ILog);
-  Result.InjectProp('React', IReact, '', True);
+  Result.InjectProp('React', IReact, '');
   //
   mReg := DIC.Add(TMapStateToProps, IMapStateToProps, ACompositeClass.ClassName);
   mReg.InjectProp('State', IFluxState);
