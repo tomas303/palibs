@@ -15,7 +15,8 @@ uses
   rdx_ireg, rdx_ureg,
   flu_ireg, flu_ureg,
   tal_ireg, tal_ureg,
-  trl_ireg, trl_ureg;
+  trl_ireg, trl_ureg,
+  tvl_ireg, tvl_ureg;
 
 type
 
@@ -53,16 +54,19 @@ type
     fRegFlux: flu_ireg.IReg;
     fRegApps: tal_ireg.IReg;
     fRegRuntime: trl_ireg.IReg;
+    fRegVL: tvl_ireg.IReg;
     function GetRegReact: rea_ireg.IReg;
     function GetRegRedux: rdx_ireg.IReg;
     function GetRegFlux: flu_ireg.IReg;
     function GetRegApps: tal_ireg.IReg;
     function GetRegRuntime: trl_ireg.IReg;
+    function GetRegVL: tvl_ireg.IReg;
     property RegReact: rea_ireg.IReg read GetRegReact;
     property RegRedux: rdx_ireg.IReg read GetRegRedux;
     property RegFlux: flu_ireg.IReg read GetRegFlux;
     property RegApps: tal_ireg.IReg read GetRegApps;
     property RegRuntime: trl_ireg.IReg read GetRegRuntime;
+    property RegVL: tvl_ireg.IReg read GetRegVL;
   public
     constructor Create;
     destructor Destroy; override;
@@ -191,6 +195,9 @@ begin
   //
   mReg := DIC.Add(trl_ureg.TReg, trl_ireg.IReg);
   mReg.InjectProp('DIC', TDIContainer, '', DIC);
+  //
+  mReg := DIC.Add(tvl_ureg.TReg, tvl_ireg.IReg);
+  mReg.InjectProp('DIC', TDIContainer, '', DIC);
 end;
 
 procedure TALApp.Setup;
@@ -249,9 +256,17 @@ begin
   Result := fRegRuntime;
 end;
 
+function TALApp.GetRegVL: tvl_ireg.IReg;
+begin
+  if fRegVL = nil then
+    fRegVL := tvl_ireg.IReg(DIC.Locate(tvl_ireg.IReg));
+  Result := fRegVL;
+end;
+
 procedure TALApp.RegisterAppServices;
 begin
   RegRuntime.RegisterCommon;
+  RegVL.RegisterCommon;
 end;
 
 procedure TALApp.BeforeLaunch;

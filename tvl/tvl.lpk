@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="17">
+    <Files Count="21">
       <Item1>
         <Filename Value="tvl_udatabinder.pas"/>
         <UnitName Value="tvl_udatabinder"/>
@@ -78,20 +78,39 @@
         <Filename Value="tvl_imainform.pas"/>
         <UnitName Value="tvl_imainform"/>
       </Item17>
+      <Item18>
+        <Filename Value="tvl_itimer.pas"/>
+        <UnitName Value="tvl_itimer"/>
+      </Item18>
+      <Item19>
+        <Filename Value="tvl_utimer.pas"/>
+        <UnitName Value="tvl_utimer"/>
+      </Item19>
+      <Item20>
+        <Filename Value="tvl_ureg.pas"/>
+        <UnitName Value="tvl_ureg"/>
+      </Item20>
+      <Item21>
+        <Filename Value="tvl_ireg.pas"/>
+        <UnitName Value="tvl_ireg"/>
+      </Item21>
     </Files>
-    <RequiredPkgs Count="4">
+    <RequiredPkgs Count="5">
       <Item1>
-        <PackageName Value="SynEdit"/>
+        <PackageName Value="flu"/>
       </Item1>
       <Item2>
-        <PackageName Value="trl"/>
+        <PackageName Value="SynEdit"/>
       </Item2>
       <Item3>
-        <PackageName Value="LCL"/>
+        <PackageName Value="trl"/>
       </Item3>
       <Item4>
-        <PackageName Value="FCL"/>
+        <PackageName Value="LCL"/>
       </Item4>
+      <Item5>
+        <PackageName Value="FCL"/>
+      </Item5>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
