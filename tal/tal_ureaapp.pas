@@ -6,7 +6,10 @@ interface
 
 uses
   SysUtils, rea_ireact, trl_uprops,
-  trl_idifactory, flu_iflux, rea_iapp;
+  trl_idifactory, flu_iflux, rea_iapp,
+  trl_iExecutor,
+  Forms,  // later remove and make Application accessible through interface
+  LMessages;
 
 type
 
@@ -18,19 +21,22 @@ type
     procedure StartUp;
     procedure ShutDown;
   protected
+    procedure AppStoreChanged(const AAppState: IFluxState);
+    procedure IdleHandler(Sender: TObject; var Done: Boolean);
+  protected
     fFactory: IDIFactory;
-    //fReact: IReact;
     fRootComponent: IReactComponent;
     fAppStore: IFluxStore;
     fElFactory: IMetaElementFactory;
-  protected
-    procedure AppStoreChanged(const AAppState: IFluxState);
+    fExecutor: IExecutor;
+    fReact: IReact;
   published
     property Factory: IDIFactory read fFactory write FFactory;
-    //property React: IReact read fReact write fReact;
     property RootComponent: IReactComponent read fRootComponent write fRootComponent;
     property AppStore: IFluxStore read fAppStore write fAppStore;
     property ElFactory: IMetaElementFactory read fElFactory write fElFactory;
+    property Executor: IExecutor read fExecutor write fExecutor;
+    property React: IReact read fReact write fReact;
   end;
 
 implementation
@@ -41,28 +47,27 @@ procedure TReactApp.StartUp;
 var
   mAction: IFluxAction;
 begin
+  Application.AddOnIdleHandler(@IdleHandler);
   AppStore.Add(@AppStoreChanged);
   mAction := IFluxAction(Factory.Locate(IFluxAction, '', TProps.New.SetInt('ID', 0)));
   (AppStore as IFluxDispatcher).Dispatch(mAction);
-  //React.Render(ElFactory.CreateElement(IReactComponentApp));
-
-  RootComponent.Render(TProps.Create, ElFactory.CreateElement(GUID_NULL));
-  RootComponent.Bit.Render;
+  React.Render(RootComponent);
 end;
 
 procedure TReactApp.ShutDown;
 begin
+  Application.RemoveOnIdleHandler(@IdleHandler);
   AppStore.Remove(@AppStoreChanged);
 end;
 
 procedure TReactApp.AppStoreChanged(const AAppState: IFluxState);
 begin
-  // for now synchronous change, what all will be rendered will be decided by
-  // react componenets itself
-  //React.Rerender;
-  // in some react description was that react somehow store changed nodes and rerendere only this(or those)
-  RootComponent.Render(TProps.Create, ElFactory.CreateElement(GUID_NULL));
-  RootComponent.Bit.Render;
+  React.RenderAsync(RootComponent);
+end;
+
+procedure TReactApp.IdleHandler(Sender: TObject; var Done: Boolean);
+begin
+  Executor.ExecuteAll;
 end;
 
 end.
