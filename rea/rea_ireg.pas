@@ -31,8 +31,9 @@ type
       AMapStateKeys: array of string): TDIReg;
 
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
+    function RegisterReact(const AID: string = ''): TDIReg;
 
-  procedure RegisterCommon;
+    procedure RegisterCommon;
   end;
 
 

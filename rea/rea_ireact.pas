@@ -67,9 +67,11 @@ type
 
   IReactComponent = interface
   ['{FB2D2C72-1E52-40C0-BE52-63AFA7448590}']
+    procedure Render;
     procedure Render(const AProps: IProps; const AParentElement: IMetaElement);
     function GetBit: IBit;
     property Bit: IBit read GetBit;
+    function IsDirty: Boolean;
   end;
 
   IReactComponentApp = interface(IReactComponent)
@@ -107,6 +109,12 @@ type
   IReconciliator = interface
   ['{066DDE74-0738-4636-B8DD-E3E1BA873D2E}']
     function Reconciliate(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
+  end;
+
+  IReact = interface
+  ['{21EAABB4-22F1-461B-A2A7-2B6CD05B04DB}']
+    procedure Render(const AComponent: IReactComponent);
+    procedure RenderAsync(const AComponent: IReactComponent);
   end;
 
 implementation

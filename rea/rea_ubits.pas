@@ -108,29 +108,28 @@ type
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
-    procedure OnResize(Sender: TObject);
-    procedure ResizeNotifierData(const AProps: IProps);
+    procedure OnPaint(Sender: TObject);
     procedure SizeNotifierData(const AProps: IProps);
     procedure MoveNotifierData(const AProps: IProps);
-    procedure OnPaint(Sender: TObject);
   protected
     fSizeMsgBinder: IMessageNotifierBinder;
     fMoveMsgBinder: IMessageNotifierBinder;
+    fActivateMsgBinder: IMessageNotifierBinder;
     procedure DoRender; override;
   public
     destructor Destroy; override;
   protected
     fTiler: ITiler;
     fTitle: string;
-    fResizeNotifier: IFluxNotifier;
     fSizeNotifier: IFluxNotifier;
     fMoveNotifier: IFluxNotifier;
+    fActivateNotifier: IFluxNotifier;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
-    property ResizeNotifier: IFluxNotifier read fResizeNotifier write fResizeNotifier;
     property SizeNotifier: IFluxNotifier read fSizeNotifier write fSizeNotifier;
     property MoveNotifier: IFluxNotifier read fMoveNotifier write fMoveNotifier;
+    property ActivateNotifier: IFluxNotifier read fActivateNotifier write fActivateNotifier;
   end;
 
   TMainFormBit = class(TFormBit, IMainFormBit)
@@ -396,21 +395,6 @@ begin
   end;
 end;
 
-procedure TFormBit.OnResize(Sender: TObject);
-begin
-  if ResizeNotifier <> nil then
-    ResizeNotifier.Notify;
-end;
-
-procedure TFormBit.ResizeNotifierData(const AProps: IProps);
-begin
-  AProps
-  //.SetInt('Left', AsControl.Left)
-  //.SetInt('Top', AsControl.Top)
-  .SetInt('Width', AsControl.Width)
-  .SetInt('Height', AsControl.Height);
-end;
-
 procedure TFormBit.SizeNotifierData(const AProps: IProps);
 begin
   AProps
@@ -441,14 +425,12 @@ begin
   // another render call .... anyway, do not want to allow whatsever call back during
   // render - because of kiss - so need to cement it somewhere - maybe notifief active
   // property and set it for all notifiers before and after render)
-  //AsForm.OnResize := nil;
-  if ResizeNotifier <> nil then
-    ResizeNotifier.Enabled := False;
-
   if SizeNotifier <> nil then
     SizeNotifier.Enabled := False;
   if MoveNotifier <> nil then
     MoveNotifier.Enabled := False;
+  if ActivateNotifier <> nil then
+    ActivateNotifier.Enabled := False;
 
   inherited;
 
@@ -461,34 +443,36 @@ begin
   AsForm.OnPaint := @OnPaint;
   AsForm.Caption := Title;
   AsForm.Show;
-  AsForm.OnResize := @OnResize;
 
-  if ResizeNotifier <> nil then begin
-    ResizeNotifier.Add(@ResizeNotifierData);
-    ResizeNotifier.Enabled := True;
-  end;
-
-
-  if SizeNotifier <> nil then begin
+  if SizeNotifier <> nil then
+  begin
     fSizeMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', SizeNotifier).SetInt('Msg', LM_SIZE)));
     fSizeMsgBinder.Bind(AsForm);
     SizeNotifier.Add(@SizeNotifierData);
     SizeNotifier.Enabled := True;
-  end else
+  end
+  else
     fSizeMsgBinder := nil;
-  if MoveNotifier <> nil then begin
+  if MoveNotifier <> nil then
+  begin
     fMoveMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', MoveNotifier).SetInt('Msg', LM_Move)));
     fMoveMsgBinder.Bind(AsForm);
     MoveNotifier.Add(@MoveNotifierData);
     MoveNotifier.Enabled := True;
-  end else
+  end
+  else
     fMoveMsgBinder := nil;
-
-
+  if ActivateNotifier <> nil then
+  begin
+    fActivateMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', ActivateNotifier).SetInt('Msg', LM_ACTIVATE)));
+    fActivateMsgBinder.Bind(AsForm);
+    ActivateNotifier.Enabled := True;
+  end
+  else
+    fActivateMsgBinder := nil;
 
   for mChild in Node do
     (mChild as IBit).HookParent(AsForm);
-
 end;
 
 destructor TFormBit.Destroy;

@@ -13,7 +13,8 @@ uses
   rea_imaps, rea_umaps,
   flu_iflux,
   Forms, StdCtrls,
-  rea_mainform;
+  rea_mainform,
+  trl_iExecutor;
 
 type
 
@@ -38,6 +39,7 @@ type
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
+    function RegisterReact(const AID: string = ''): TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -139,6 +141,7 @@ begin
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Log', ILog);
+  Result.InjectProp('React', IReact, '', True);
   //
   mReg := DIC.Add(TMapStateToProps, IMapStateToProps, ACompositeClass.ClassName);
   mReg.InjectProp('State', IFluxState);
@@ -152,6 +155,16 @@ function TReg.RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInte
 begin
   Result := DIC.Add(AMachineryCompositeClass, AMachineryInterface);
   Result.InjectProp('Log', ILog);
+  Result.InjectProp('Factory', IDIFactory);
+end;
+
+function TReg.RegisterReact(const AID: string): TDIReg;
+begin
+  DIC.Add(TRenderExecute, IExecute, 'TRenderExecute');
+  Result := DIC.Add(TReact, IReact, AID, ckSingle);
+  Result.InjectProp('Log', ILog);
+  Result.InjectProp('Executor', IExecutor);
+  Result.InjectProp('ElFactory', IMetaElementFactory);
   Result.InjectProp('Factory', IDIFactory);
 end;
 
@@ -170,6 +183,7 @@ begin
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
   RegisterBitTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
   RegisterMessageNotifierBinder;
+  RegisterReact;
 end;
 
 end.

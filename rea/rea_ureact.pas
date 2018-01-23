@@ -10,7 +10,8 @@ uses
   trl_uprops, trl_udifactory,
   trl_ilog, trl_iinjector, rea_ilayout,
   graphics, flu_iflux,
-  rea_imaps, fgl, typinfo;
+  rea_imaps, fgl, typinfo,
+  trl_iExecutor;
 
 type
 
@@ -57,8 +58,6 @@ type
     function GetChild(const AIndex: integer): INode;
     function GetNodeEnumerator: INodeEnumerator;
     function INode.GetEnumerator = GetNodeEnumerator;
-  public
-    destructor Destroy; override;
   protected
     fNode: INode;
   published
@@ -117,18 +116,39 @@ type
   { TReactComponent }
 
   TReactComponent = class(TInterfacedObject, IReactComponent, INode)
+  protected type
+
+    { TFD }
+
+    // todo - move it to extra unit and regiter
+    TFD = class(TInterfacedObject, IFluxDispatcher)
+    protected
+      // IFluxDispatcher
+      procedure Dispatch(const AAppAction: IFluxAction);
+    protected
+      fOnDispatch: TFluxDispatchEvent;
+    published
+      property OnDispatch: TFluxDispatchEvent read fOnDispatch write fOnDispatch;
+    end;
+
   protected
     fMachinery: IReactComponentMachinery;
+    fRenderProps: IProps;
+    fRenderParent: IMetaElement;
+    fIsDirty: Boolean;
     function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; virtual; abstract;
     function NewNotifier(const AActionID: integer): IFluxNotifier;
     function NewNotifier(const AActionID: integer; const ADispatecher: IFluxDispatcher): IFluxNotifier;
     function NewProps: IProps;
-    function GetSelfAsWeakDispatcher: IFluxDispatcher;
+    function NewEventDispatcher(ADispatchEvent: TFluxDispatchEvent): IFluxDispatcher;
+    procedure SetDirty(const AValue: Boolean);
   protected
     // IReactComponent
+    procedure Render;
     procedure Render(const AProps: IProps; const AParentElement: IMetaElement);
     function GetBit: IBit;
     property Bit: IBit read GetBit;
+    function IsDirty: Boolean;
   protected
     // INode
     procedure AddChild(const ANode: INode);
@@ -145,12 +165,16 @@ type
     fReconciliator: IReconciliator;
     fFactory: IDIFactory;
     fElementFactory: IMetaElementFactory;
+    fExecutor: IExecutor;
+    fReact: IReact;
   published
     property Log: ILog read fLog write fLog;
     property Node: INode read fNode write fNode;
     property Reconciliator: IReconciliator read fReconciliator write fReconciliator;
     property Factory: IDIFactory read fFactory write fFactory;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
+    property Executor: IExecutor read fExecutor write fExecutor;
+    property React: IReact read fReact write fReact;
   end;
 
   { TReactComponentForm }
@@ -168,9 +192,9 @@ type
 
   TReactComponentMainForm = class(TReactComponent, IReactComponentMainForm, IFluxDispatcher)
   protected const
-    cResize = 1;
-    cActionSize = 2;
-    cActionMove = 3;
+    cActionSize = 1;
+    cActionMove = 2;
+    cActionActivate = 3;
   protected
     fTop: integer;
     fLeft: integer;
@@ -268,7 +292,73 @@ type
     property Injector: IInjector read fInjector write fInjector;
   end;
 
+  { TRenderExecute }
+
+  TRenderExecute = class(TInterfacedObject, IExecute)
+  protected
+    // IExecute
+    procedure Execute;
+  protected
+    fComponent: IReactComponent;
+  published
+    property Component: IReactComponent read fComponent write fComponent;
+  end;
+
+  { TReact }
+
+  TReact = class(TInterfacedObject, IReact)
+  protected
+    // IReact
+    procedure Render(const AComponent: IReactComponent);
+    procedure RenderAsync(const AComponent: IReactComponent);
+  protected
+    fLog: ILog;
+    fExecutor: IExecutor;
+    fElFactory: IMetaElementFactory;
+    fFactory: IDIFactory;
+  published
+    property Log: ILog read fLog write fLog;
+    property Executor: IExecutor read fExecutor write fExecutor;
+    property ElFactory: IMetaElementFactory read fElFactory write fElFactory;
+    property Factory: IDIFactory read fFactory write fFactory;
+  end;
+
 implementation
+
+{ TReactComponent.TFD }
+
+procedure TReactComponent.TFD.Dispatch(const AAppAction: IFluxAction);
+begin
+  OnDispatch(AAppAction);
+end;
+
+{ TRenderExecute }
+
+procedure TRenderExecute.Execute;
+begin
+  if Component.IsDirty then
+  begin
+    Component.Render;
+    Component.Bit.Render;
+  end;
+end;
+
+{ TReact }
+
+procedure TReact.Render(const AComponent: IReactComponent);
+begin
+  AComponent.Render;
+  AComponent.Bit.Render;
+end;
+
+procedure TReact.RenderAsync(const AComponent: IReactComponent);
+var
+  mE: IExecute;
+begin
+  mE := IUnknown(Factory.Locate(IExecute, 'TRenderExecute',
+     TProps.New.SetIntf('Component', AComponent))) as IExecute;
+  Executor.Add(mE);
+end;
 
 { TReactComponentMachinery }
 
@@ -368,11 +458,6 @@ end;
 procedure TReactComponentMainForm.Dispatch(const AAppAction: IFluxAction);
 begin
   case AAppAction.ID of
-    cResize:
-      begin
-        fWidth := AAppAction.Props.AsInt('Width');
-        fHeight := AAppAction.Props.AsInt('Height');
-      end;
     cActionMove:
       begin
         fLeft := AAppAction.Props.AsInt('Left');
@@ -382,6 +467,12 @@ begin
       begin
         fWidth := AAppAction.Props.AsInt('Width');
         fHeight := AAppAction.Props.AsInt('Height');
+        SetDirty(True);
+      end;
+    cActionActivate:
+      begin
+        if IsDirty then
+          React.RenderAsync(Self);
       end;
   end;
 end;
@@ -391,20 +482,9 @@ function TReactComponentMainForm.ComposeElement(const AProps: IProps;
 var
   mChild: IMetaElement;
 begin
-
-  //AProps.SetIntf('ResizeNotifier', NewNotifier(cResize, Self));
-
-  // maybe all this will be different ... during change not set sizes and leave
-  // what is actually on control(in fact they are neede only for the first time)
-  // but of cause is good to set direct info delivering to component ... really not
-  // all data are needed to go through redux paradigm
-
-  // maybe sometimes redux or other component will need event aswell ... so here
-  // could be some chaining(when will come with upper props) ... so in such case
-  // retrive this notifier and call it from Dispatch.
-
-  AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, GetSelfAsWeakDispatcher));
-  AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, GetSelfAsWeakDispatcher));
+  AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, NewEventDispatcher(@Dispatch)));
+  AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, NewEventDispatcher(@Dispatch)));
+  AProps.SetIntf('ActivateNotifier', NewNotifier(cActionActivate, NewEventDispatcher(@Dispatch)));
 
   if fWidth > 0 then
     AProps.SetInt('Width', fWidth);
@@ -536,7 +616,7 @@ end;
 
 { TReactComponent }
 
-procedure TReactComponent.Render(const AProps: IProps; const AParentElement: IMetaElement);
+procedure TReactComponent.Render;
 var
   mElement: IMetaElement;
   mNew: IUnknown;
@@ -544,7 +624,12 @@ var
   mComponent: IReactComponent;
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  mElement := ComposeElement(AProps.Clone, AParentElement);
+
+  if fRenderProps = nil then
+    fRenderProps := TProps.Create;
+  if fRenderParent = nil then
+    fRenderParent := ElementFactory.CreateElement(GUID_NULL);
+  mElement := ComposeElement(fRenderProps, fRenderParent);
 
   // tady by melo byt reconciliation - nejspis jen konkretni uzel bez deti a prebrat
   // vysledek, na zaklade nej to tady rozstrelit, zatim vzdy nove
@@ -568,6 +653,16 @@ begin
     raise Exception.Create('bad element declaration');
   end;
   fMachinery.RenderChildren(mElement);
+  SetDirty(False);
+  Log.DebugLnExit({$I %CURRENTROUTINE%});
+end;
+
+procedure TReactComponent.Render(const AProps: IProps; const AParentElement: IMetaElement);
+begin
+  Log.DebugLnEnter({$I %CURRENTROUTINE%});
+  fRenderProps := AProps.Clone;
+  fRenderParent := AParentElement;
+  Render;
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
@@ -593,19 +688,32 @@ begin
   Result := IProps(Factory.Locate(IProps));
 end;
 
-function TReactComponent.GetSelfAsWeakDispatcher: IFluxDispatcher;
+function TReactComponent.NewEventDispatcher(ADispatchEvent: TFluxDispatchEvent): IFluxDispatcher;
+var
+  mFD: TFD;
 begin
-  // dispatcher is added to notifier which is added to Bit which ReactComponent(or possibly
-  // one of his subcomponets) own ... thus create circle. That is why weak reference is needed
-  if not GetInterfaceWeak(IFluxDispatcher, Result) then
-  begin
-    raise Exception.CreateFmt('class %s do not support IFluxDispatcher', [ClassName]);
-  end;
+  // this is necessary, put self as IFluxDispatcher lock interfaces, even taking
+  // weak reference cause problems, because FluxDispatcher is connected in BIT and
+  // during connectiong / disconnection references are knocked down and so object
+  // is destroyed
+  mFD := TFD.Create;
+  mFD.OnDispatch := ADispatchEvent;
+  Result := mFD;
+end;
+
+procedure TReactComponent.SetDirty(const AValue: Boolean);
+begin
+  fIsDirty := AValue;
 end;
 
 function TReactComponent.GetBit: IBit;
 begin
   Result := fMachinery.Bit;
+end;
+
+function TReactComponent.IsDirty: Boolean;
+begin
+  Result := fIsDirty;
 end;
 
 procedure TReactComponent.AddChild(const ANode: INode);
@@ -922,11 +1030,6 @@ end;
 function TMetaElement.GetChild(const AIndex: integer): INode;
 begin
   Result := Node[AIndex];
-end;
-
-destructor TMetaElement.Destroy;
-begin
-  inherited Destroy;
 end;
 
 function TMetaElement.GetNodeEnumerator: INodeEnumerator;
