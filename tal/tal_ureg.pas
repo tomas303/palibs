@@ -7,7 +7,8 @@ interface
 uses
   tal_ireg, trl_idifactory, rea_ireact, trl_dicontainer,
   tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
-  trl_ilog, tal_uwindowlog, flu_iflux;
+  trl_ilog, tal_uwindowlog, flu_iflux,
+  trl_iExecutor;
 
 type
 
@@ -38,10 +39,11 @@ begin
   //
   Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
   Result.InjectProp('Factory', IDIFactory);
-  //Result.InjectProp('React', IReact);
   Result.InjectProp('RootComponent', IReactComponentApp);
   Result.InjectProp('AppStore', IFluxStore);
   Result.InjectProp('ElFactory', IMetaElementFactory);
+  Result.InjectProp('Executor', IExecutor);
+  Result.InjectProp('React', IReact);
 end;
 
 function TReg.RegisterWindowLog: TDIReg;
