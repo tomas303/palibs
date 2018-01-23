@@ -16,6 +16,7 @@ type
     function RegisterInjector: TDIReg;
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
+    function RegisterExecutor(const AID: string = ''): TDIReg;
     procedure RegisterCommon;
   end;
 

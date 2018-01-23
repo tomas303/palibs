@@ -10,7 +10,9 @@ uses
   trl_iprops, trl_uprops,
   trl_itree, trl_utree,
   trl_idifactory, trl_udifactory,
-  trl_isysutils, trl_usysutils;
+  trl_isysutils, trl_usysutils,
+  trl_iExecutor, trl_uExecutor,
+  trl_ilog;
 
 type
 
@@ -25,6 +27,7 @@ type
     function RegisterInjector: TDIReg;
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
+    function RegisterExecutor(const AID: string = ''): TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -69,6 +72,12 @@ begin
   DIC.Add(TLeafNode, INode, 'leaf');
 end;
 
+function TReg.RegisterExecutor(const AID: string = ''): TDIReg;
+begin
+  Result := DIC.Add(TExecutor, IExecutor, AID, ckSingle);
+  Result.InjectProp('Log', ILog);
+end;
+
 procedure TReg.RegisterCommon;
 begin
   RegisterSysUtils;
@@ -77,6 +86,7 @@ begin
   RegisterInjector;
   RegisterProps;
   RegisterTreeNodes;
+  RegisterExecutor;
 end;
 
 end.
