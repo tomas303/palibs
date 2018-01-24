@@ -409,13 +409,13 @@ begin
     begin
       // what render to IBit will be use directly
       (ABit as INode).AddChild(mChildBit as INode);
-      ProcessChildren(mChildBit, AElement);
+      ProcessChildren(mChildBit, mChildEl);
     end
     else
     if Supports(mNew, IReactComponent, mChildComponent) then
     begin
       // what render to IReactComponent need to be first rendered and its Result is used
-      mChildComponent.Render(mChildEl.Props, AElement);
+      mChildComponent.Render(mChildEl.Props, mChildEl);
       (ABit as INode).AddChild(mChildComponent.Bit as INode);
       Middles.Add(mChildComponent);
     end
