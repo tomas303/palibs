@@ -25,7 +25,6 @@ type
 
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
-    function RegisterReconciliator: TDIReg;
 
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;

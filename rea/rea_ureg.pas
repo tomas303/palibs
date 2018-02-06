@@ -35,7 +35,6 @@ type
     function RegisterMessageNotifierBinder: TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
-    function RegisterReconciliator: TDIReg;
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       AMapStateKeys: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
@@ -124,13 +123,6 @@ begin
   Result.InjectProp('Log', ILog);
 end;
 
-function TReg.RegisterReconciliator: TDIReg;
-begin
-  Result := DIC.Add(TReconciliator, IReconciliator);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('Injector', IInjector);
-end;
-
 function TReg.RegisterReactComponent(ACompositeClass: TClass;
   ACompositeInterface: TGuid; AMapStateKeys: array of string): TDIReg;
 var
@@ -156,6 +148,8 @@ begin
   Result := DIC.Add(AMachineryCompositeClass, AMachineryInterface);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('Injector', IInjector);
+  Result.InjectProp('ElementFactory', IMetaElementFactory);
 end;
 
 function TReg.RegisterReact(const AID: string): TDIReg;
@@ -175,7 +169,6 @@ begin
   RegisterElementFactory;
   RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
   RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);
-  RegisterReconciliator;
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TMainFormBit, IMainFormBit, TMainForm, '', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);

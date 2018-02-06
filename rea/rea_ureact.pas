@@ -11,7 +11,7 @@ uses
   trl_ilog, trl_iinjector, rea_ilayout,
   graphics, flu_iflux,
   rea_imaps, fgl, typinfo,
-  trl_iExecutor;
+  trl_iExecutor, Math;
 
 type
 
@@ -33,10 +33,11 @@ type
 
   TMetaElement = class(TInterfacedObject, IMetaElement, INode)
   protected
-    // IMetaElement
     fTypeGuid: string;
     fTypeID: string;
     fProps: IProps;
+  protected
+    // IMetaElement
     function Guid: TGuid;
     function GetTypeGuid: string;
     function GetTypeID: string;
@@ -68,17 +69,24 @@ type
 
   TReactComponentMachinery = class(TInterfacedObject, IReactComponentMachinery)
   protected
+    // IReactComponentMachinery
     procedure RenderChildren(const AElement: IMetaElement);
     function Bit: IBit;
+    procedure ChangeProps(const AProps: IProps);
   protected
     procedure DoRenderChildren(const AElement: IMetaElement); virtual; abstract;
     function DoGetBit: IBit; virtual; abstract;
+    procedure DoChangeProps(const AProps: IProps); virtual; abstract;
   protected
     fFactory: IDIFactory;
     fLog: ILog;
+    fInjector: IInjector;
+    fElementFactory: IMetaElementFactory;
   published
     property Factory: IDIFactory read fFactory write fFactory;
     property Log: ILog read fLog write fLog;
+    property Injector: IInjector read fInjector write fInjector;
+    property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
   end;
 
   { TReactComponentMachineryMiddle }
@@ -88,6 +96,7 @@ type
     fComponent: IReactComponent;
     procedure DoRenderChildren(const AElement: IMetaElement); override;
     function DoGetBit: IBit; override;
+    procedure DoChangeProps(const AProps: IProps); override;
   published
     property Component: IReactComponent read fComponent write fComponent;
   end;
@@ -99,12 +108,19 @@ type
     TMiddles = specialize TFPGInterfacedObjectList<IReactComponent>;
   protected
     fMiddles: TMiddles;
+    fElement: IMetaElement;
     function GetMiddles: TMiddles;
     property Middles: TMiddles read GetMiddles;
-    procedure ProcessChildren(const ABit: IBit; const AElement: IMetaElement);
+    function IndexOfMiddle(const ABit: IBit): integer;
+  protected
+    procedure RemoveChild(const AParentBit: IBit; AIndex: integer);
+    procedure AddChild(const AParentBit: IBit; const AChildElement: IMetaElement);
+    procedure DiffChild(const AParentBit: IBit; const ANewChildElement, AOldChildElement: IMetaElement; AIndex: integer);
+    procedure ProcessChildren(const ABit: IBit; const AOldElement, ANewElement: IMetaElement);
   protected
     procedure DoRenderChildren(const AElement: IMetaElement); override;
     function DoGetBit: IBit; override;
+    procedure DoChangeProps(const AProps: IProps); override;
   public
     destructor Destroy; override;
   protected
@@ -133,6 +149,7 @@ type
 
   protected
     fMachinery: IReactComponentMachinery;
+    fElement: IMetaElement;
     fRenderProps: IProps;
     fRenderParent: IMetaElement;
     fIsDirty: Boolean;
@@ -142,6 +159,8 @@ type
     function NewProps: IProps;
     function NewEventDispatcher(ADispatchEvent: TFluxDispatchEvent): IFluxDispatcher;
     procedure SetDirty(const AValue: Boolean);
+    function NewMachinery(const AElement: IMetaElement): IReactComponentMachinery;
+    function Reconciliate(const AMachinery: IReactComponentMachinery; const AOldElement, ANewElement: IMetaElement): IReactComponentMachinery;
   protected
     // IReactComponent
     procedure Render;
@@ -162,7 +181,6 @@ type
   protected
     fLog: ILog;
     fNode: INode;
-    fReconciliator: IReconciliator;
     fFactory: IDIFactory;
     fElementFactory: IMetaElementFactory;
     fExecutor: IExecutor;
@@ -170,7 +188,6 @@ type
   published
     property Log: ILog read fLog write fLog;
     property Node: INode read fNode write fNode;
-    property Reconciliator: IReconciliator read fReconciliator write fReconciliator;
     property Factory: IDIFactory read fFactory write fFactory;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Executor: IExecutor read fExecutor write fExecutor;
@@ -268,30 +285,6 @@ type
     property Log: ILog read fLog write fLog;
   end;
 
-  { TReconciliator }
-
-  TReconciliator = class(TInterfacedObject, IReconciliator)
-  protected
-    // setup diff of props between AOldElement / ANewElement to ABit
-    function EqualizeProps(var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-    // elements exists in both old and new structure or only in old structure
-    function EqualizeOriginalChildren(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-    // elements exists only in new structure
-    function EqualizeNewChildren(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-    function Equalize(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-  protected
-    // IReconciliator
-    function Reconciliate(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-  protected
-    fLog: ILog;
-    //fElementFactory: IMetaElementFactory;
-    fInjector: IInjector;
-  published
-    property Log: ILog read fLog write fLog;
-    //property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
-    property Injector: IInjector read fInjector write fInjector;
-  end;
-
   { TRenderExecute }
 
   TRenderExecute = class(TInterfacedObject, IExecute)
@@ -372,6 +365,11 @@ begin
   Result := DoGetBit;
 end;
 
+procedure TReactComponentMachinery.ChangeProps(const AProps: IProps);
+begin
+  DoChangeProps(AProps);
+end;
+
 { TReactComponentMachineryLeaf }
 
 function TReactComponentMachineryLeaf.GetMiddles: TMiddles;
@@ -381,14 +379,34 @@ begin
   Result := fMiddles;
 end;
 
-destructor TReactComponentMachineryLeaf.Destroy;
+function TReactComponentMachineryLeaf.IndexOfMiddle(const ABit: IBit): integer;
+var
+  i: integer;
 begin
-  FreeAndNil(fMiddles);
-  inherited Destroy;
+  Result := -1;
+  for i := 0 to Middles.Count - 1 do
+  begin
+    if Middles[i].Bit = ABit then
+    begin
+      Result := i;
+      Exit;
+    end;
+  end;
 end;
 
-procedure TReactComponentMachineryLeaf.ProcessChildren(const ABit: IBit;
-  const AElement: IMetaElement);
+procedure TReactComponentMachineryLeaf.RemoveChild(const AParentBit: IBit; AIndex: integer);
+var
+  mInd: integer;
+  mChildBit: IBit;
+begin
+  mChildBit := (AParentBit as INode).Child[AIndex] as IBit;
+  mInd := IndexOfMiddle(mChildBit);
+  if mInd <> -1 then
+    Middles.Delete(mInd);
+  (AParentBit as INode).RemoveChild(mChildBit as INode);
+end;
+
+procedure TReactComponentMachineryLeaf.AddChild(const AParentBit: IBit; const AChildElement: IMetaElement);
 var
   mNew: IUnknown;
   mElement: IMetaElement;
@@ -396,32 +414,95 @@ var
   mChildBit: IBit;
   mChildComponent: IReactComponent;
 begin
-
-  // AProps - in case of bit there should be mainly props already published on BIT
-  // and so setted when BIT was created
-  // But when some not publish prop exist, here will be place where to process it
-
-  Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  for mChildEl in AElement do
+  mNew := IUnknown(Factory.Locate(AChildElement.Guid, AChildElement.TypeID, AChildElement.Props.Clone));
+  if Supports(mNew, IBit, mChildBit) then
   begin
-    mNew := IUnknown(Factory.Locate(mChildEl.Guid, mChildEl.TypeID, mChildEl.Props.Clone));
-    if Supports(mNew, IBit, mChildBit) then
+    // what render to IBit will be use directly
+    (AParentBit as INode).AddChild(mChildBit as INode);
+    ProcessChildren(mChildBit, nil, AChildElement);
+  end
+  else
+  if Supports(mNew, IReactComponent, mChildComponent) then
+  begin
+    // what render to IReactComponent need to be first rendered and its Result is used
+    mChildComponent.Render(AChildElement.Props, AChildElement);
+    (AParentBit as INode).AddChild(mChildComponent.Bit as INode);
+    Middles.Add(mChildComponent);
+  end
+  else
+  begin
+    raise exception.create('todo');
+  end;
+end;
+
+procedure TReactComponentMachineryLeaf.DiffChild(const AParentBit: IBit;
+  const ANewChildElement, AOldChildElement: IMetaElement; AIndex: integer);
+var
+  mDiffProps: IProps;
+  mInd: integer;
+  mChildBit: IBit;
+begin
+  mDiffProps := ANewChildElement.Props.Diff(AOldChildElement.Props);
+  if mDiffProps.Count > 0 then
+  begin
+    mChildBit := (AParentBit as INode).Child[AIndex] as IBit;
+    mInd := IndexOfMiddle(mChildBit);
+    if mInd = -1 then
     begin
-      // what render to IBit will be use directly
-      (ABit as INode).AddChild(mChildBit as INode);
-      ProcessChildren(mChildBit, mChildEl);
+      Injector.Write(mChildBit as TObject, mDiffProps);
     end
     else
-    if Supports(mNew, IReactComponent, mChildComponent) then
     begin
-      // what render to IReactComponent need to be first rendered and its Result is used
-      mChildComponent.Render(mChildEl.Props, mChildEl);
-      (ABit as INode).AddChild(mChildComponent.Bit as INode);
-      Middles.Add(mChildComponent);
+      Injector.Write(Middles[mInd] as TObject, mDiffProps);
+    end;
+  end;
+end;
+
+destructor TReactComponentMachineryLeaf.Destroy;
+begin
+  FreeAndNil(fMiddles);
+  inherited Destroy;
+end;
+
+procedure TReactComponentMachineryLeaf.ProcessChildren(const ABit: IBit;
+  const AOldElement, ANewElement: IMetaElement);
+var
+  mOldChildEl: IMetaElement;
+  mNewChildEl: IMetaElement;
+  i: Integer;
+begin
+  Log.DebugLnEnter({$I %CURRENTROUTINE%});
+  for i := 0 to Min((AOldElement as INode).Count, (ANewElement as INode).Count) - 1 do
+  begin
+    mOldChildEl := (AOldElement as INode).Child[i] as IMetaElement;
+    mNewChildEl := (ANewElement as INode).Child[i] as IMetaElement;
+    if (mOldChildEl.TypeGuid <> mNewChildEl.TypeGuid) or (mOldChildEl.TypeID <> mNewChildEl.TypeID) then
+    begin
+      // change of type
+      RemoveChild(ABit, i);
+      AddChild(ABit, mNewChildEl);
     end
     else
     begin
-      raise exception.create('todo');
+      // same type - process difference
+      DiffChild(ABit, mNewChildEl, mOldChildEl, i);
+    end;
+  end;
+  if (ANewElement as INode).Count > (AOldElement as INode).Count then
+  begin
+    // add new ones
+    for i := (AOldElement as INode).Count to (ANewElement as INode).Count - 1 do
+    begin
+      mNewChildEl := (ANewElement as INode).Child[i] as IMetaElement;
+      AddChild(ABit, mNewChildEl);
+    end;
+  end
+  else
+  begin
+    // remove old ones
+    for i := (ANewElement as INode).Count to (AOldElement as INode).Count - 1 do
+    begin
+      RemoveChild(ABit, (ANewElement as INode).Count);
     end;
   end;
   Log.DebugLnExit({$I %CURRENTROUTINE%});
@@ -430,13 +511,21 @@ end;
 procedure TReactComponentMachineryLeaf.DoRenderChildren(const AElement: IMetaElement);
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  ProcessChildren(Bit, AElement);
+  if fElement = nil then
+    fElement := ElementFactory.CreateElement(GUID_NULL);
+  ProcessChildren(Bit, fElement, AElement);
+  fElement := AElement;
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
 function TReactComponentMachineryLeaf.DoGetBit: IBit;
 begin
   Result := fBit;
+end;
+
+procedure TReactComponentMachineryLeaf.DoChangeProps(const AProps: IProps);
+begin
+  Injector.Write(Bit as TObject, AProps);
 end;
 
 { TReactComponentMachineryMiddle }
@@ -451,6 +540,11 @@ end;
 function TReactComponentMachineryMiddle.DoGetBit: IBit;
 begin
   Result := Component.Bit;
+end;
+
+procedure TReactComponentMachineryMiddle.DoChangeProps(const AProps: IProps);
+begin
+  Injector.Write(Component as TObject, AProps);
 end;
 
 { TReactComponentMainForm }
@@ -619,40 +713,16 @@ end;
 procedure TReactComponent.Render;
 var
   mElement: IMetaElement;
-  mNew: IUnknown;
-  mBit: IBit;
-  mComponent: IReactComponent;
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-
   if fRenderProps = nil then
     fRenderProps := TProps.Create;
   if fRenderParent = nil then
     fRenderParent := ElementFactory.CreateElement(GUID_NULL);
-  mElement := ComposeElement(fRenderProps, fRenderParent);
-
-  // tady by melo byt reconciliation - nejspis jen konkretni uzel bez deti a prebrat
-  // vysledek, na zaklade nej to tady rozstrelit, zatim vzdy nove
-
-  mNew := IUnknown(Factory.Locate(mElement.Guid, mElement.TypeID, mElement.Props));
-  if Supports(mNew, IBit, mBit) then
-  begin
-    fMachinery := IUnknown(Factory.Locate(IReactComponentMachineryLeaf, '',
-      TProps.New.SetIntf('Bit', mBit)))
-      as IReactComponentMachinery;
-  end
-  else
-  if Supports(mNew, IReactComponent, mComponent) then
-  begin
-    fMachinery := IUnknown(Factory.Locate(IReactComponentMachineryMiddle, '',
-      TProps.New.SetIntf('Component', mComponent)))
-      as IReactComponentMachinery;
-  end
-  else
-  begin
-    raise Exception.Create('bad element declaration');
-  end;
-  fMachinery.RenderChildren(mElement);
+  mElement := ComposeElement(fRenderProps.Clone, fRenderParent);
+  fMachinery := Reconciliate(fMachinery, fElement, mElement);
+  fElement := mElement;
+  fMachinery.RenderChildren(fElement);
   SetDirty(False);
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
@@ -704,6 +774,67 @@ end;
 procedure TReactComponent.SetDirty(const AValue: Boolean);
 begin
   fIsDirty := AValue;
+end;
+
+function TReactComponent.NewMachinery(const AElement: IMetaElement
+  ): IReactComponentMachinery;
+var
+  mNew: IUnknown;
+  mBit: IBit;
+  mComponent: IReactComponent;
+begin
+  Log.DebugLnEnter({$I %CURRENTROUTINE%});
+  mNew := IUnknown(Factory.Locate(AElement.Guid, AElement.TypeID, AElement.Props));
+  if Supports(mNew, IBit, mBit) then
+  begin
+    Result := IUnknown(Factory.Locate(IReactComponentMachineryLeaf, '',
+      TProps.New.SetIntf('Bit', mBit)))
+      as IReactComponentMachinery;
+  end
+  else
+  if Supports(mNew, IReactComponent, mComponent) then
+  begin
+    Result := IUnknown(Factory.Locate(IReactComponentMachineryMiddle, '',
+      TProps.New.SetIntf('Component', mComponent)))
+      as IReactComponentMachinery;
+  end
+  else
+  begin
+    raise Exception.Create('bad element declaration');
+  end;
+  Log.DebugLnExit({$I %CURRENTROUTINE%});
+end;
+
+function TReactComponent.Reconciliate(
+  const AMachinery: IReactComponentMachinery; const AOldElement,
+  ANewElement: IMetaElement): IReactComponentMachinery;
+var
+  mDiffProps: IProps;
+begin
+  Log.DebugLnEnter({$I %CURRENTROUTINE%});
+  if (AOldElement = nil) and (ANewElement = nil) then begin
+    Log.DebugLn('both nil');
+    Result := nil;
+  end else
+  if (AOldElement <> nil) and (ANewElement = nil) then begin
+    Log.DebugLn(AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to nil');
+    Result := nil;
+  end else
+  if (AOldElement = nil) and (ANewElement <> nil) then begin
+    Log.DebugLn('from nil to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
+    Result := NewMachinery(ANewElement);
+  end else
+  if (AOldElement.TypeGuid <> ANewElement.TypeGuid) or (AOldElement.TypeID <> ANewElement.TypeID) then begin
+    Log.DebugLn('from ' + AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
+    Result := NewMachinery(ANewElement);
+  end else begin
+    Log.DebugLn('equalize props');
+    mDiffProps := ANewElement.Props.Diff(AOldElement.Props);
+    if mDiffProps.Count > 0 then
+      AMachinery.ChangeProps(mDiffProps);
+    Result := AMachinery;
+  end;
+  Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
 function TReactComponent.GetBit: IBit;
@@ -766,119 +897,6 @@ begin
   for mChild in AParentElement do begin
     (Result as INode).AddChild(mChild as INode);
   end;
-end;
-
-{ TReconciliator }
-
-function TReconciliator.Equalize(const AComponent: IReactComponent;
-  var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-var
-  mRender: Boolean;
-begin
-  Result := EqualizeProps(ABit, AOldElement, ANewElement);
-  if EqualizeOriginalChildren(AComponent, ABit, AOldElement, ANewElement) then
-    Result := True;
-  if EqualizeNewChildren(AComponent, ABit, AOldElement, ANewElement) then
-    Result := True;
-end;
-
-function TReconciliator.EqualizeNewChildren(const AComponent: IReactComponent; var ABit: IBit;
-  const AOldElement, ANewElement: IMetaElement): Boolean;
-var
-  i: integer;
-  mNewBit: IBit;
-  mNewEl: IMetaElement;
-begin
-  Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  Result := False;
-  for i := (AOldElement as INode).Count to (ANewElement as INode).Count - 1 do begin
-    mNewBit := nil;
-    mNewEl := (ANewElement as INode).Child[i] as IMetaElement;
-    Result := Reconciliate(AComponent, mNewBit, nil, mNewEl);
-    if mNewBit <> nil then begin
-      (ABit as INode).AddChild(mNewBit as INode);
-    end;
-  end;
-  Log.DebugLnExit({$I %CURRENTROUTINE%});
-end;
-
-function TReconciliator.EqualizeOriginalChildren(const AComponent: IReactComponent;
-  var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-var
-  i: integer;
-  mRemoved: integer;
-  mBit: IBit;
-  mNewBit: IBit;
-  mOldEl: IMetaElement;
-  mNewEl: IMetaElement;
-begin
-  Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  Result := False;
-  mRemoved := 0;
-  for i := 0 to (AOldElement as INode).Count - 1 do begin
-    mBit := (ABit as INode).Child[i - mRemoved] as IBit;
-    mOldEl := (AOldElement as INode).Child[i] as IMetaElement;
-    if i <= (ANewElement as INode).Count - 1 then begin
-      mNewEl := (ANewElement as INode).Child[i] as IMetaElement;
-    end
-    else
-      mNewEl := nil;
-    mNewBit := mBit;
-    Result := Reconciliate(AComponent, mNewBit, mOldEl, mNewEl);
-    if mNewBit <> mBit then begin
-      (ABit as INode).Delete(i - mRemoved);
-      if mNewBit <> nil then begin
-        (ABit as INode).Insert(i - mRemoved, mNewBit as INode);
-        dec(mRemoved);
-      end;
-      inc(mRemoved);
-    end;
-  end;
-  Log.DebugLnExit({$I %CURRENTROUTINE%});
-end;
-
-function TReconciliator.EqualizeProps(var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-var
-  mDiffProps: IProps;
-  mRender: Boolean;
-begin
-  Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  Result := False;
-  mDiffProps := ANewElement.Props.Diff(AOldElement.Props);
-  if mDiffProps.Count > 0 then begin
-    Injector.Write(ABit as TObject, mDiffProps);
-    Result := True;
-  end;
-  Log.DebugLnExit({$I %CURRENTROUTINE%});
-end;
-
-function TReconciliator.Reconciliate(const AComponent: IReactComponent;
-  var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
-begin
-  Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  //Result := False;
-  //if (AOldElement = nil) and (ANewElement = nil) then begin
-  //  ABit := nil;
-  //  Log.DebugLn('both nil');
-  //end else
-  //if (AOldElement <> nil) and (ANewElement = nil) then begin
-  //  ABit := nil;
-  //  Log.DebugLn(AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to nil');
-  //  Result := True;
-  //end else
-  //if (AOldElement = nil) and (ANewElement <> nil) then begin
-  //  ABit := ReactFactory.New(ANewElement, AComponent) as IBit;
-  //  Log.DebugLn('from nil to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
-  //  Result := True;
-  //end else
-  //if (AOldElement.TypeGuid <> ANewElement.TypeGuid) or (AOldElement.TypeID <> ANewElement.TypeID) then begin
-  //  ABit := ReactFactory.New(ANewElement, AComponent) as IBit;
-  //  Log.DebugLn('from ' + AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
-  //  Result := True;
-  //end else begin
-  //  Result := Equalize(AComponent, ABit, AOldElement, ANewElement);
-  //end;
-  Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
 { TMetaElementEnumerator }

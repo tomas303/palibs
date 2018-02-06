@@ -53,6 +53,7 @@ type
   ['{B4CFF5F0-7493-414C-B540-F5CF9F2AA74E}']
     procedure RenderChildren(const AElement: IMetaElement);
     function Bit: IBit;
+    procedure ChangeProps(const AProps: IProps);
   end;
 
   IReactComponentMachineryMiddle = interface(IReactComponentMachinery)
@@ -104,11 +105,6 @@ type
 
   IReactComponentHeader = interface(IReactComponent)
   ['{4F6C423B-D002-4717-B455-67232370A145}']
-  end;
-
-  IReconciliator = interface
-  ['{066DDE74-0738-4636-B8DD-E3E1BA873D2E}']
-    function Reconciliate(const AComponent: IReactComponent; var ABit: IBit; const AOldElement, ANewElement: IMetaElement): Boolean;
   end;
 
   IReact = interface
