@@ -93,6 +93,7 @@ type
     function ElasticMMSize(const ANode: INode; const AClass: TUniItemClass): integer;
     function ResizeFixed(const ANode: INode; const AClass: TUniItemClass; const AScale: IScale): integer;
     function ResizeElastic(const ANode: INode; const AClass: TUniItemClass; const AElasticMMTotal, AElasticTotal: integer): integer;
+    function ResizeElasticAutoSize(const ANode: INode; const AClass: TUniItemClass; ARestSize: integer): integer;
     procedure Spread(const ANode: INode; const AClass: TUniItemClass; ASize, AUsedSize: integer);
     procedure Replace(const ANode: INode; const AClass: TUniItemClass; ASize: integer; const AScale: IScale);
   protected
@@ -185,16 +186,47 @@ begin
     case mUni.Place of
       cPlace.Elastic:
         begin
-          if AElasticMMTotal = 0 then
-          begin
-            // this is special case when all sizes are 0 - so we resize them equally
-            mUni.Size :=  Round(AElasticTotal / ANode.Count);
-          end
-          else
+          if mUni.Size > 0 then
           begin
             mUni.Size :=  Round(AElasticTotal * mUni.MMSize / AElasticMMTotal);
+            Result := Result + mUni.Size;
           end;
-          Result := Result + mUni.Size;
+        end;
+    end;
+  end;
+end;
+
+function TDesktopTiler.ResizeElasticAutoSize(const ANode: INode; const AClass: TUniItemClass;
+  ARestSize: integer): integer;
+var
+  mChild: INode;
+  mUni: IUniItem;
+  mAutoSize: integer;
+  mAutoSizeCnt: integer;
+begin
+  Result := 0;
+  mAutoSizeCnt := 0;
+  for mChild in ANode do begin
+    mUni := AClass.Create(mChild);
+    case mUni.Place of
+      cPlace.Elastic:
+        begin
+          if mUni.Size = 0 then
+            inc(mAutoSizeCnt);
+        end;
+    end;
+  end;
+  mAutoSize := Round(ARestSize / mAutoSizeCnt);
+  for mChild in ANode do begin
+    mUni := AClass.Create(mChild);
+    case mUni.Place of
+      cPlace.Elastic:
+        begin
+          if mUni.Size = 0 then
+          begin
+            mUni.Size := mAutoSize;
+            Result := Result + mUni.Size;
+          end;
         end;
     end;
   end;
@@ -273,11 +305,13 @@ var
   mElasticMMTotal: integer;
   mFixedSize: integer;
   mElasticSize: integer;
+  mElasticAutoSize: integer;
 begin
   mElasticMMTotal := ElasticMMSize(ANode, AClass);
   mFixedSize := ResizeFixed(ANode, AClass, AScale);
   mElasticSize := ResizeElastic(ANode, AClass, mElasticMMTotal, ASize - mFixedSize);
-  Spread(ANode, AClass, ASize, mFixedSize + mElasticSize);
+  mElasticAutoSize := ResizeElasticAutoSize(ANode, AClass, ASize - mFixedSize - mElasticSize);
+  Spread(ANode, AClass, ASize, mFixedSize + mElasticSize + mElasticAutoSize);
 end;
 
 procedure TDesktopTiler.ReplaceChildren(const AContainer: IBit);
