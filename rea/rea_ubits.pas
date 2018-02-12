@@ -27,7 +27,7 @@ type
 
   { TBit }
 
-  TBit = class(TInterfacedObject, IBit, INode, IPlacement, IPlace)
+  TBit = class(TInterfacedObject, IBit, INode, IBitPosition)
   protected
     // INode
     procedure AddChild(const ANode: INode);
@@ -57,14 +57,20 @@ type
   protected
     fLayout: integer;
     fPlace: integer;
+    fMMLeft: integer;
+    fMMTop: integer;
     fMMWidth: integer;
     fMMHeight: integer;
     function GetLayout: integer;
     function GetPlace: integer;
+    function GetMMLeft: integer;
+    function GetMMTop: integer;
     function GetMMWidth: integer;
     function GetMMHeight: integer;
     procedure SetLayout(AValue: integer);
     procedure SetPlace(AValue: integer);
+    procedure SetMMLeft(AValue: integer);
+    procedure SetMMTop(AValue: integer);
     procedure SetMMWidth(AValue: integer);
     procedure SetMMHeight(AValue: integer);
   protected
@@ -85,21 +91,29 @@ type
     fLog: ILog;
     fNode: INode;
     fFactory: IDIFactory;
+    fHScale: IScale;
+    fVScale: IScale;
     fControl: TControl;
   published
     property Log: ILog read fLog write fLog;
     property Node: INode read fNode write fNode;
     property Factory: IDIFactory read fFactory write fFactory;
+    property HScale: IScale read fHScale write fHScale;
+    property VScale: IScale read fVScale write fVScale;
     property Control: TControl read fControl write SetControl;
+  published
+    property Color: TColor read fColor write fColor;
+  published
     property Layout: integer read GetLayout write SetLayout;
     property Place: integer read GetPlace write SetPlace;
+    property MMLeft: integer read GetMMLeft write SetMMLeft;
+    property MMTop: integer read GetMMTop write SetMMTop;
     property MMWidth: integer read GetMMWidth write SetMMWidth;
     property MMHeight: integer read GetMMHeight write SetMMHeight;
     property Left: integer read GetLeft write SetLeft;
     property Top: integer read GetTop write SetTop;
     property Width: integer read GetWidth write SetWidth;
     property Height: integer read GetHeight write SetHeight;
-    property Color: TColor read fColor write fColor;
   end;
 
   { TFormBit }
@@ -223,15 +237,15 @@ end;
 procedure TStripBit.DoRender;
 var
   mChild: INode;
-  mPlace: IPlace;
+  mPosition: IBitPosition;
 begin
   // need to shift children relatively to surface this strip is on(because strip
   // has no control to render ... intentionaly)
   Tiler.ReplaceChildren(Self);
   for mChild in (Self as INode) do begin
-    mPlace := mChild as IPlace;
-    mPlace.Left := Left + mPlace.Left;
-    mPlace.Top := Top + mPlace.Top;
+    mPosition := mChild as IBitPosition;
+    mPosition.Left := Left + mPosition.Left;
+    mPosition.Top := Top + mPosition.Top;
   end;
 end;
 
@@ -382,12 +396,12 @@ begin
     mLastChild := Node[Node.Count - 1];
   if mLastChild <> nil then
   begin
-    mOpposite := (mLastChild as IPlace).Left + (mLastChild as IPlace).Width - 1;
+    mOpposite := (mLastChild as IBitPosition).Left + (mLastChild as IBitPosition).Width - 1;
     if mOpposite > Width then
        AsForm.HorzScrollBar.Range := mOpposite
      else
        AsForm.HorzScrollBar.Range := 0;
-    mOpposite := (mLastChild as IPlace).Top + (mLastChild as IPlace).Height - 1;
+    mOpposite := (mLastChild as IBitPosition).Top + (mLastChild as IBitPosition).Height - 1;
     if mOpposite > Height then
        AsForm.VertScrollBar.Range := mOpposite
      else
@@ -398,15 +412,15 @@ end;
 procedure TFormBit.SizeNotifierData(const AProps: IProps);
 begin
   AProps
-  .SetInt('Width', AsControl.Width)
-  .SetInt('Height', AsControl.Height);
+  .SetInt('MMWidth', HScale.Unscale(AsControl.Width))
+  .SetInt('MMHeight', VScale.Unscale(AsControl.Height));
 end;
 
 procedure TFormBit.MoveNotifierData(const AProps: IProps);
 begin
   AProps
-  .SetInt('Left', AsControl.Left)
-  .SetInt('Top', AsControl.Top);
+  .SetInt('MMLeft', HScale.Unscale(AsControl.Left))
+  .SetInt('MMTop', VScale.Unscale(AsControl.Top));
 end;
 
 procedure TFormBit.OnPaint(Sender: TObject);
@@ -434,11 +448,8 @@ begin
 
   inherited;
 
-  //Layouter.ReplaceChildren(Self);
   Tiler.ReplaceChildren(Self);
   ResetScroll;
-  //AsForm.HorzScrollBar.Range:=;
-  //AsForm.VertScrollBar.Range:=;
 
   AsForm.OnPaint := @OnPaint;
   AsForm.Caption := Title;
@@ -535,6 +546,7 @@ var
   mChild: INode;
 begin
   //AsControl.Hide;
+
   DoRender;
   if AsControl <> nil then
     Log.DebugLn('RENDERED ' + ClassName
@@ -556,6 +568,8 @@ begin
 
   for mChild in Node do
     (mChild as IBit).Render;
+
+
   //AsControl.Show;
 end;
 
@@ -581,6 +595,16 @@ end;
 function TBit.GetPlace: integer;
 begin
   Result := fPlace;
+end;
+
+function TBit.GetMMLeft: integer;
+begin
+  Result := fMMLeft;
+end;
+
+function TBit.GetMMTop: integer;
+begin
+  Result := fMMTop;
 end;
 
 function TBit.GetMMWidth: integer;
@@ -623,14 +647,28 @@ begin
   fPlace := AValue;
 end;
 
+procedure TBit.SetMMLeft(AValue: integer);
+begin
+  fMMLeft := AValue;
+  Left := HScale.Scale(MMLeft);
+end;
+
+procedure TBit.SetMMTop(AValue: integer);
+begin
+  fMMTop := AValue;
+  Top := VScale.Scale(MMTop);
+end;
+
 procedure TBit.SetMMWidth(AValue: integer);
 begin
   fMMWidth := AValue;
+  Width := HScale.Scale(MMWidth);
 end;
 
 procedure TBit.SetMMHeight(AValue: integer);
 begin
   fMMHeight := AValue;
+  Height := VScale.Scale(MMHeight);
 end;
 
 procedure TBit.SetLeft(AValue: integer);
@@ -664,6 +702,7 @@ end;
 procedure TBit.DoRender;
 begin
   AsControl.AutoSize := False;
+
   AsControl.Left := Left;
   AsControl.Top := Top;
   AsControl.Width := Width;

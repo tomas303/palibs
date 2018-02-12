@@ -39,6 +39,7 @@ type
       AMapStateKeys: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     function RegisterReact(const AID: string = ''): TDIReg;
+    procedure RegisterScales;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -63,6 +64,8 @@ begin
   Result := DIC.Add(ABitClass, ABitInterface);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('HScale', IScale, 'horizontal');
+  Result.InjectProp('VScale', IScale, 'vertical');
   Result.InjectProp('Control', AControlClass, AControlID);
   Result.InjectProp('Node', INode, 'leaf');
 end;
@@ -75,6 +78,8 @@ begin
   Result := DIC.Add(ABitClass, ABitInterface);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('HScale', IScale, 'horizontal');
+  Result.InjectProp('VScale', IScale, 'vertical');
   if AControlClass <> nil then
     Result.InjectProp('Control', AControlClass, AControlID);
   Result.InjectProp('Node', INode, 'parent');
@@ -89,20 +94,8 @@ end;
 
 function TReg.RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid;
   const ATilerID: string; AScaleClass: TClass): TDIReg;
-var
-  mReg: TDIReg;
 begin
-  // for recount size to pixel(for now nothing)
-  mReg := DIC.Add(AScaleClass, IScale, ATilerID+'horizontal');
-  mReg.InjectProp('Multiplicator', 1);
-  mReg.InjectProp('Divider', 1);
-  mReg := DIC.Add(AScaleClass, IScale, ATilerID+'vertical');
-  mReg.InjectProp('Multiplicator', 1);
-  mReg.InjectProp('Divider', 1);
-  // layout
-  mReg := DIC.Add(ATilerClass, ATilerInterface, ATilerID);
-  mReg.InjectProp('HScale', IScale, ATilerID+'horizontal');
-  mReg.InjectProp('VScale', IScale, ATilerID+'vertical');
+  Result := DIC.Add(ATilerClass, ATilerInterface, ATilerID);
 end;
 
 function TReg.RegisterMessageNotifierBinder: TDIReg;
@@ -162,6 +155,19 @@ begin
   Result.InjectProp('Factory', IDIFactory);
 end;
 
+procedure TReg.RegisterScales;
+var
+  mReg: TDIReg;
+begin
+  // for recount size to pixel(for now nothing)
+  mReg := DIC.Add(TScale, IScale, 'horizontal', ckSingle);
+  mReg.InjectProp('Multiplicator', 1);
+  mReg.InjectProp('Divider', 1);
+  mReg := DIC.Add(TScale, IScale, 'vertical', ckSingle);
+  mReg.InjectProp('Multiplicator', 1);
+  mReg.InjectProp('Divider', 1);
+end;
+
 procedure TReg.RegisterCommon;
 begin
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
@@ -175,6 +181,7 @@ begin
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
   RegisterBitTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
+  RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterReact;
 end;

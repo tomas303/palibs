@@ -213,10 +213,10 @@ type
     cActionMove = 2;
     cActionActivate = 3;
   protected
-    fTop: integer;
-    fLeft: integer;
-    fWidth: integer;
-    fHeight: integer;
+    fMMTop: integer;
+    fMMLeft: integer;
+    fMMWidth: integer;
+    fMMHeight: integer;
   protected
     // IFluxDispatcher
     procedure Dispatch(const AAppAction: IFluxAction);
@@ -554,13 +554,13 @@ begin
   case AAppAction.ID of
     cActionMove:
       begin
-        fLeft := AAppAction.Props.AsInt('Left');
-        fTop := AAppAction.Props.AsInt('Top');
+        fMMLeft := AAppAction.Props.AsInt('MMLeft');
+        fMMTop := AAppAction.Props.AsInt('MMTop');
       end;
     cActionSize:
       begin
-        fWidth := AAppAction.Props.AsInt('Width');
-        fHeight := AAppAction.Props.AsInt('Height');
+        fMMWidth := AAppAction.Props.AsInt('MMWidth');
+        fMMHeight := AAppAction.Props.AsInt('MMHeight');
         SetDirty(True);
       end;
     cActionActivate:
@@ -579,20 +579,18 @@ begin
   AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, NewEventDispatcher(@Dispatch)));
   AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, NewEventDispatcher(@Dispatch)));
   AProps.SetIntf('ActivateNotifier', NewNotifier(cActionActivate, NewEventDispatcher(@Dispatch)));
-
-  if fWidth > 0 then
-    AProps.SetInt('Width', fWidth);
-  if fHeight > 0 then
-    AProps.SetInt('Height', fHeight);
-
-  if fLeft > 0 then
-    AProps.SetInt('Left', fLeft);
-  if fTop > 0 then
-    AProps.SetInt('Top', fTop);
-
+  // todo: later samewhat unify - better in global tree - first time initialize with begin
+  // or saved values, from this point will be actualized by handler
+  if fMMWidth > 0 then
+    AProps.SetInt('MMWidth', fMMWidth);
+  if fMMHeight > 0 then
+    AProps.SetInt('MMHeight', fMMHeight);
+  if fMMLeft > 0 then
+    AProps.SetInt('MMLeft', fMMLeft);
+  if fMMTop > 0 then
+    AProps.SetInt('MMTop', fMMTop);
+  //
   AProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
-
-
   Result := ElementFactory.CreateElement(IMainFormBit, AProps);
   for mChild in AParentElement do begin
     (Result as INode).AddChild(mChild as INode);

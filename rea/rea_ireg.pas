@@ -31,7 +31,7 @@ type
 
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     function RegisterReact(const AID: string = ''): TDIReg;
-
+    procedure RegisterScales;
     procedure RegisterCommon;
   end;
 

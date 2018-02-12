@@ -36,32 +36,14 @@ type
     Overlay = 2;  // all same size as container(suppose app. will make visible one of them)
   end;
 
-  { IPlacement }
+  { IBitPosition }
 
-  IPlacement = interface
-  ['{197AD85C-B4FC-4AC8-8951-9BC04E06FB25}']
+  IBitPosition = interface
+  ['{6F549B99-D125-4D6C-B93D-E4ACB2B59E4D}']
     function GetLayout: integer;
     function GetPlace: integer;
-    function GetMMWidth: integer;
-    function GetMMHeight: integer;
-    procedure SetLayout(AValue: integer);
-    procedure SetPlace(AValue: integer);
-    procedure SetMMWidth(AValue: integer);
-    procedure SetMMHeight(AValue: integer);
-    // how organize child elements
-    property Layout: integer read GetLayout write SetLayout;
-    // how element should be placed inside parent
-    property Place: integer read GetPlace write SetPlace;
-    // horizontal width in 10 x milimmeters
-    property MMWidth: integer read GetMMWidth write SetMMWidth;
-    // vertical height in 10 x milimmeters
-    property MMHeight: integer read GetMMHeight write SetMMHeight;
-  end;
-
-  { IPlace }
-
-  IPlace = interface
-  ['{CF0A8291-FA25-4D20-B12C-8A417E32B3D4}']
+    property Layout: integer read GetLayout;
+    property Place: integer read GetPlace;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;
@@ -70,26 +52,25 @@ type
     procedure SetTop(AValue: integer);
     procedure SetWidth(AValue: integer);
     procedure SetHeight(AValue: integer);
-    // pixels left
     property Left: integer read GetLeft write SetLeft;
-    // pixels top
     property Top: integer read GetTop write SetTop;
-    // pixels width
     property Width: integer read GetWidth write SetWidth;
-    // pixels height
     property Height: integer read GetHeight write SetHeight;
   end;
 
-  { IUIRelativePoint }
+  { ITiler }
 
   ITiler = interface
   ['{E658DAE2-51E6-4CC0-86F6-055E5888E5E4}']
     procedure ReplaceChildren(const AContainer: IBit);
   end;
 
+  { IScale }
+
   IScale = interface
   ['{1AD4124D-F767-4E1E-AC33-303384E9FBE9}']
     function Scale(const ASize: integer): integer;
+    function Unscale(const ASize: integer): integer;
   end;
 
 
