@@ -13,7 +13,7 @@ uses
   trl_icryptic, trl_processrunner, trl_idifactory, trl_udifactory, trl_ilog, 
   trl_ulazlog, trl_isysutils, trl_usysutils, trl_iprops, trl_uprops, 
   trl_iinjector, trl_uinjector, trl_itree, trl_utree, trl_ureg, trl_ireg, 
-  trl_ilauncher, trl_iExecutor, trl_uexecutor;
+  trl_ilauncher, trl_iExecutor, trl_uexecutor, trl_usystem;
 
 implementation
 

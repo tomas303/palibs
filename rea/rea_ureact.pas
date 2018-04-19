@@ -11,7 +11,7 @@ uses
   trl_ilog, trl_iinjector, rea_ilayout,
   graphics, flu_iflux,
   rea_imaps, fgl, typinfo,
-  trl_iExecutor, Math;
+  trl_iExecutor, Math, trl_usystem;
 
 type
 
@@ -127,17 +127,6 @@ type
     fBit: IBit;
   published
     property Bit: IBit read fBit write fBit;
-  end;
-
-  { TDynaObject }
-
-  TDynaObject = class(TInterfacedObject)
-  public
-    class function newinstance : tobject;override;
-  protected
-    fSelfProps: IProps;
-  published
-    property SelfProps: IProps read fSelfProps;
   end;
 
   { TReactComponent }
@@ -327,14 +316,6 @@ type
   end;
 
 implementation
-
-{ TDynaObject }
-
-class function TDynaObject.newinstance: tobject;
-begin
-  Result := inherited newinstance;
-  (Result as TDynaObject).fSelfProps := TProps.Create;
-end;
 
 { TReactComponent.TFD }
 
