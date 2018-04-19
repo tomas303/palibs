@@ -92,6 +92,7 @@ type
     function Implements(AIntf: TGuid; const AID: string): Boolean;
     function Instantiate(AClass: TClass; const AID: string): Boolean; overload;
     function Instantiate(const AClass: string; const AID: string): Boolean; overload;
+    function FindSelfProps(const ARBData: IRBData): IProps;
     procedure Inject(AInstance: TObject);
     procedure Inject2(AInstance: TObject; const AProps: IProps);
     procedure AddSupportedInterfaces(AInterfaces: array of TGuid);
@@ -507,6 +508,17 @@ begin
   Result := (ID = AID) and (InstantiatedClass.ClassName = AClass);
 end;
 
+function TDIReg.FindSelfProps(const ARBData: IRBData): IProps;
+var
+  mRBItem: IRBDataItem;
+begin
+  mRBItem := ARBData.FindItem('SELFPROPS');
+  if mRBItem <> nil then
+    Result := mRBItem.AsInterface as IProps
+  else
+    Result := nil;
+end;
+
 procedure TDIReg.Inject(AInstance: TObject);
 var
   mRB: IRBData;
@@ -517,9 +529,11 @@ var
   i: integer;
   mcname: string;
   miname:string;
+  mSelfProps: IProps;
 begin
   mcname := ainstance.ClassName;
   mRB := TRBData.Create(AInstance, True);
+  mSelfProps := FindSelfProps(mRB);
   for mIP in fInjectProps do
   begin
     if (mIP.Name <> '') and (mRB.FindItem(mIP.Name) = nil) then
@@ -533,6 +547,7 @@ begin
             tkClassRef:
               //if mIP.ValueClass <> nil then
                 mRBItem.AsPtrInt := PtrInt(mIP.ValueClass);
+              //mSelfProps  unsupported for now
             tkClass:
               //if mIP.ValueClass <> nil then
               begin
@@ -541,6 +556,7 @@ begin
                 else
                   mObject := fDIC.Locate(mIP.ValueClass, mIP.ID);
                 mRBItem.AsObject := mObject;
+                //mSelfProps  unsupported for now
               end;
             tkInterface:
               //if not CompareMem(@mIP.VGuid, @GUID_NULL, SizeOf(mIP.VGuid)) then
@@ -550,10 +566,25 @@ begin
                 else
                   mInterface := fDIC.Locate(mIP.VGuid, mIP.ID);
                 mRBItem.AsInterface := mInterface;
+                if mSelfProps <> nil then
+                  mSelfProps.SetIntf(mIP.Name, mInterface);
               end;
           else
             //if not VarIsNull(mIP.Value) then
+            begin
               mRBItem.AsVariant := mIP.Value;
+              if mSelfProps <> nil then
+              begin
+                if VarIsStr(mIP.Value) then
+                  mSelfProps.SetStr(mIP.Name, mIP.Value)
+                else if VarIsOrdinal(mIP.Value) then
+                  mSelfProps.SetInt(mIP.Name, mIP.Value)
+                else if VarIsBool(mIP.Value) then
+                  mSelfProps.SetBool(mIP.Name, mIP.Value)
+                else
+                  raise Exception.CreateFmt('unsupported type %s', [VarTypeAsText(mIP.Value)]);
+              end;
+            end;
           end;
         end;
         // event
@@ -575,21 +606,25 @@ var
   mRBItem: IRBDataItem;
   i: integer;
   mInterface: IUnknown;
-  mm: string;
+  mSelfProps: IProps;
+  mProp: IProp;
 begin
   if AProps = nil then
     Exit;
   mRB := TRBData.Create(AInstance, True);
+  mSelfProps := FindSelfProps(mRB);
   for i := 0 to AProps.Count - 1 do begin
-    mRBItem := mRB.FindItem(AProps.Name(i));
+    mProp := AProps.Prop[i];
+    if mSelfProps <> nil then
+      mSelfProps.SetProp(mProp.Name, mProp);
+    mRBItem := mRB.FindItem(mProp.Name);
     if mRBItem = nil then
       Continue;
-    mm := mRBItem.Name;
-    case AProps.PropType(i) of
+    case mProp.PropType of
       ptInt:
-        mRBItem.AsInteger := AProps.AsInt(i);
+        mRBItem.AsInteger := mProp.AsInteger;
       ptStr:
-        mRBItem.AsString := AProps.AsStr(i);
+        mRBItem.AsString := mProp.AsString;
       ptBool:
         mRBItem.AsBoolean := AProps.AsBool(i);
       ptGuid:
