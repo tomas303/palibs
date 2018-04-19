@@ -129,9 +129,20 @@ type
     property Bit: IBit read fBit write fBit;
   end;
 
+  { TDynaObject }
+
+  TDynaObject = class(TInterfacedObject)
+  public
+    class function newinstance : tobject;override;
+  protected
+    fSelfProps: IProps;
+  published
+    property SelfProps: IProps read fSelfProps;
+  end;
+
   { TReactComponent }
 
-  TReactComponent = class(TInterfacedObject, IReactComponent, INode)
+  TReactComponent = class(TDynaObject, IReactComponent, INode)
   protected type
 
     { TFD }
@@ -150,10 +161,9 @@ type
   protected
     fMachinery: IReactComponentMachinery;
     fElement: IMetaElement;
-    fRenderProps: IProps;
     fRenderParent: IMetaElement;
     fIsDirty: Boolean;
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; virtual; abstract;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; virtual; abstract;
     function NewNotifier(const AActionID: integer): IFluxNotifier;
     function NewNotifier(const AActionID: integer; const ADispatecher: IFluxDispatcher): IFluxNotifier;
     function NewProps: IProps;
@@ -164,7 +174,7 @@ type
   protected
     // IReactComponent
     procedure Render;
-    procedure Render(const AProps: IProps; const AParentElement: IMetaElement);
+    procedure Render(const AParentElement: IMetaElement);
     function GetBit: IBit;
     property Bit: IBit read GetBit;
     function IsDirty: Boolean;
@@ -198,7 +208,7 @@ type
 
   TReactComponentForm = class(TReactComponent, IReactComponentForm)
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   protected
     fActionResize: integer;
   published
@@ -221,28 +231,28 @@ type
     // IFluxDispatcher
     procedure Dispatch(const AAppAction: IFluxAction);
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
   { TReactComponentEdit }
 
   TReactComponentEdit = class(TReactComponent, IReactComponentEdit)
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
   { TReactComponentEdits }
 
   TReactComponentEdits = class(TReactComponent, IReactComponentEdits)
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
   { TReactComponentButton }
 
   TReactComponentButton = class(TReactComponent, IReactComponentButton)
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   protected
     fActionClick: integer;
   published
@@ -253,14 +263,14 @@ type
 
   TReactComponentButtons = class(TReactComponent, IReactComponentButtons)
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
   { TReactComponentHeader }
 
   TReactComponentHeader = class(TReactComponent, IReactComponentHeader)
   protected
-    function ComposeElement(const AProps: IProps; const AParentElement: IMetaElement): IMetaElement; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
 
@@ -317,6 +327,14 @@ type
   end;
 
 implementation
+
+{ TDynaObject }
+
+class function TDynaObject.newinstance: tobject;
+begin
+  Result := inherited newinstance;
+  (Result as TDynaObject).fSelfProps := TProps.Create;
+end;
 
 { TReactComponent.TFD }
 
@@ -425,7 +443,7 @@ begin
   if Supports(mNew, IReactComponent, mChildComponent) then
   begin
     // what render to IReactComponent need to be first rendered and its Result is used
-    mChildComponent.Render(AChildElement.Props, AChildElement);
+    mChildComponent.Render(AChildElement);
     (AParentBit as INode).AddChild(mChildComponent.Bit as INode);
     Middles.Add(mChildComponent);
   end
@@ -533,7 +551,7 @@ end;
 procedure TReactComponentMachineryMiddle.DoRenderChildren(const AElement: IMetaElement);
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  Component.Render(AElement.Props, AElement);
+  Component.Render(AElement);
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
@@ -571,27 +589,31 @@ begin
   end;
 end;
 
-function TReactComponentMainForm.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentMainForm.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mChild: IMetaElement;
+  mProps: IProps;
+  m: string;
 begin
-  AProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, NewEventDispatcher(@Dispatch)));
-  AProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, NewEventDispatcher(@Dispatch)));
-  AProps.SetIntf('ActivateNotifier', NewNotifier(cActionActivate, NewEventDispatcher(@Dispatch)));
+  mProps := NewProps;
+  //mProps := SelfProps.Clone;
+  mProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, NewEventDispatcher(@Dispatch)));
+  mProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, NewEventDispatcher(@Dispatch)));
+  mProps.SetIntf('ActivateNotifier', NewNotifier(cActionActivate, NewEventDispatcher(@Dispatch)));
   // todo: later samewhat unify - better in global tree - first time initialize with begin
   // or saved values, from this point will be actualized by handler
   if fMMWidth > 0 then
-    AProps.SetInt('MMWidth', fMMWidth);
+    mProps.SetInt('MMWidth', fMMWidth);
   if fMMHeight > 0 then
-    AProps.SetInt('MMHeight', fMMHeight);
+    mProps.SetInt('MMHeight', fMMHeight);
   if fMMLeft > 0 then
-    AProps.SetInt('MMLeft', fMMLeft);
+    mProps.SetInt('MMLeft', fMMLeft);
   if fMMTop > 0 then
-    AProps.SetInt('MMTop', fMMTop);
+    mProps.SetInt('MMTop', fMMTop);
   //
-  AProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
-  Result := ElementFactory.CreateElement(IMainFormBit, AProps);
+  mProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
+  Result := ElementFactory.CreateElement(IMainFormBit, mProps);
+  m := mProps.Info;
   for mChild in AParentElement do begin
     (Result as INode).AddChild(mChild as INode);
   end;
@@ -599,15 +621,14 @@ end;
 
 { TReactComponentButtons }
 
-function TReactComponentButtons.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentButtons.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   i: integer;
   mButtons: IProps;
   mButton: IProps;
 begin
-  Result := ElementFactory.CreateElement(IStripBit, TProps.New.SetInt('Layout', AProps.AsInt('Layout')));
-  mButtons := AProps.AsIntf('Buttons') as IProps;
+  Result := ElementFactory.CreateElement(IStripBit, TProps.New.SetInt('Layout', SelfProps.AsInt('Layout')));
+  mButtons := SelfProps.AsIntf('Buttons') as IProps;
   for i := 0 to mButtons.Count - 1 do
   begin
     mButton := mButtons.AsIntf(i) as IProps;
@@ -625,31 +646,32 @@ end;
 
 { TReactComponentButton }
 
-function TReactComponentButton.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentButton.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
+var
+  mProps: IProps;
 begin
+  mProps := NewProps;
   if ActionClick <> 0 then
   begin
-    AProps.SetIntf('ClickNotifier', NewNotifier(ActionClick));
+    mProps.SetIntf('ClickNotifier', NewNotifier(ActionClick));
   end;
-  if AProps.AsBool('ParentColor') then
-    AProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
-  Result := ElementFactory.CreateElement(IButtonBit, AProps);
+  if SelfProps.AsBool('ParentColor') then
+    mProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
+  Result := ElementFactory.CreateElement(IButtonBit, mProps);
 end;
 
 { TReactComponentEdits }
 
-function TReactComponentEdits.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentEdits.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mTitles, mValues: TStringArray;
   mTitle: String;
   i: integer;
 begin
   // maybe add support for array ... as generic? probably with new fpc sources
-  mTitles := AProps.AsStr('Titles').Split('|');
-  mValues := AProps.AsStr('Values').Split('|');
-  Result := ElementFactory.CreateElement(IStripBit, AProps{.SetInt('Layout', uiLayoutVertical)});
+  mTitles := SelfProps.AsStr('Titles').Split('|');
+  mValues := SelfProps.AsStr('Values').Split('|');
+  Result := ElementFactory.CreateElement(IStripBit, NewProps{.SetInt('Layout', uiLayoutVertical)});
   for i := 0 to High(mValues) do begin
     if i > High(mTitles) then
       mTitle := ''
@@ -668,14 +690,13 @@ end;
 
 { TReactComponentEdit }
 
-function TReactComponentEdit.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentEdit.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mTitle, mValue: string;
 begin
   // can make it aswell as property .... then there will be values from create time
-  mTitle := AProps.AsStr('Title');
-  mValue := AProps.AsStr('Value');
+  mTitle := SelfProps.AsStr('Title');
+  mValue := SelfProps.AsStr('Value');
   {
   Result := ElementFactory.CreateElement(IStripBit,
     AProps.SetInt('Layout', 0),
@@ -684,24 +705,19 @@ begin
      ]
    );
   }
-  Result := ElementFactory.CreateElement(IStripBit, AProps.SetInt('Layout', cLayout.Horizontal));
+  Result := ElementFactory.CreateElement(IStripBit, NewProps.SetInt('Layout', cLayout.Horizontal));
   if mTitle <> '' then
-    (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, TProps.New.SetStr('Text', mTitle)) as INode);
-  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit, TProps.New.SetStr('Text', mValue)) as INode);
+    (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, NewProps.SetStr('Text', mTitle)) as INode);
+  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit, NewProps.SetStr('Text', mValue)) as INode);
 end;
 
 { TReactComponentHeader }
 
-function TReactComponentHeader.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentHeader.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mChild: IMetaElement;
-  m: string;
 begin
-
-  m:=AProps.Info;
-
-  Result := ElementFactory.CreateElement(IStripBit, AProps);
+  Result := ElementFactory.CreateElement(IStripBit, NewProps);
   for mChild in AParentElement do
     (Result as INode).AddChild(mChild as INode);
 end;
@@ -713,11 +729,9 @@ var
   mElement: IMetaElement;
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  if fRenderProps = nil then
-    fRenderProps := TProps.Create;
   if fRenderParent = nil then
     fRenderParent := ElementFactory.CreateElement(GUID_NULL);
-  mElement := ComposeElement(fRenderProps.Clone, fRenderParent);
+  mElement := ComposeElement(fRenderParent);
   fMachinery := Reconciliate(fMachinery, fElement, mElement);
   fElement := mElement;
   fMachinery.RenderChildren(fElement);
@@ -725,10 +739,9 @@ begin
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
-procedure TReactComponent.Render(const AProps: IProps; const AParentElement: IMetaElement);
+procedure TReactComponent.Render(const AParentElement: IMetaElement);
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
-  fRenderProps := AProps.Clone;
   fRenderParent := AParentElement;
   Render;
   Log.DebugLnExit({$I %CURRENTROUTINE%});
@@ -753,7 +766,8 @@ end;
 
 function TReactComponent.NewProps: IProps;
 begin
-  Result := IProps(Factory.Locate(IProps));
+  //Result := IProps(Factory.Locate(IProps));
+  Result := SelfProps.Clone;
 end;
 
 function TReactComponent.NewEventDispatcher(ADispatchEvent: TFluxDispatchEvent): IFluxDispatcher;
@@ -882,16 +896,17 @@ end;
 
 { TReactComponentForm }
 
-function TReactComponentForm.ComposeElement(const AProps: IProps;
-  const AParentElement: IMetaElement): IMetaElement;
+function TReactComponentForm.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mChild: IMetaElement;
+  mProps: IProps;
 begin
+  mProps := NewProps;
   if ActionResize <> 0 then
   begin
-    AProps.SetIntf('ResizeNotifier', NewNotifier(ActionResize));
+    mProps.SetIntf('ResizeNotifier', NewNotifier(ActionResize));
   end;
-  Result := ElementFactory.CreateElement(IFormBit, AProps);
+  Result := ElementFactory.CreateElement(IFormBit, mProps);
   for mChild in AParentElement do begin
     (Result as INode).AddChild(mChild as INode);
   end;
