@@ -16,6 +16,7 @@ type
     class function newinstance : tobject;override;
   protected
     fSelfProps: IProps;
+    procedure InitValues; virtual;
   published
     property SelfProps: IProps read fSelfProps;
   end;
@@ -28,6 +29,11 @@ class function TDynaObject.newinstance: tobject;
 begin
   Result := inherited newinstance;
   (Result as TDynaObject).fSelfProps := TProps.Create;
+  (Result as TDynaObject).InitValues;
+end;
+
+procedure TDynaObject.InitValues;
+begin
 end;
 
 end.
