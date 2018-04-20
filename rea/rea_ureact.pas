@@ -11,7 +11,8 @@ uses
   trl_ilog, trl_iinjector, rea_ilayout,
   graphics, flu_iflux,
   rea_imaps, fgl, typinfo,
-  trl_iExecutor, Math, trl_usystem;
+  trl_iExecutor, Math, trl_usystem,
+  LCLIntf, LCLType;
 
 type
 
@@ -212,15 +213,21 @@ type
     cActionMove = 2;
     cActionActivate = 3;
   protected
+    // IFluxDispatcher
+    procedure Dispatch(const AAppAction: IFluxAction);
+  protected
+    procedure InitValues; override;
+    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
+  protected
     fMMTop: integer;
     fMMLeft: integer;
     fMMWidth: integer;
     fMMHeight: integer;
-  protected
-    // IFluxDispatcher
-    procedure Dispatch(const AAppAction: IFluxAction);
-  protected
-    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
+  published
+    property MMTop: integer read fMMTop write fMMTop;
+    property MMLeft: integer read fMMLeft write fMMLeft;
+    property MMWidth: integer read fMMWidth write fMMWidth;
+    property MMHeight: integer read fMMHeight write fMMHeight;
   end;
 
   { TReactComponentEdit }
@@ -553,13 +560,13 @@ begin
   case AAppAction.ID of
     cActionMove:
       begin
-        fMMLeft := AAppAction.Props.AsInt('MMLeft');
-        fMMTop := AAppAction.Props.AsInt('MMTop');
+        MMLeft := AAppAction.Props.AsInt(cProps.MMLeft);
+        MMTop := AAppAction.Props.AsInt(cProps.MMTop);
       end;
     cActionSize:
       begin
-        fMMWidth := AAppAction.Props.AsInt('MMWidth');
-        fMMHeight := AAppAction.Props.AsInt('MMHeight');
+        MMWidth := AAppAction.Props.AsInt(cProps.MMWidth);
+        MMHeight := AAppAction.Props.AsInt(cProps.MMHeight);
         SetDirty(True);
       end;
     cActionActivate:
@@ -570,31 +577,39 @@ begin
   end;
 end;
 
+procedure TReactComponentMainForm.InitValues;
+var
+  mScreenWidth, mScreenHeight: integer;
+begin
+  inherited InitValues;
+  mScreenWidth := GetSystemMetrics(SM_CXSCREEN);
+  mScreenHeight := GetSystemMetrics(SM_CYSCREEN);
+  MMLeft := mScreenWidth div 4;
+  MMTop := mScreenHeight div 4;
+  MMWidth := mScreenWidth div 2;
+  MMHeight := mScreenHeight div 2;
+end;
+
 function TReactComponentMainForm.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mChild: IMetaElement;
   mProps: IProps;
-  m: string;
 begin
-  mProps := NewProps;
-  //mProps := SelfProps.Clone;
-  mProps.SetIntf('SizeNotifier', NewNotifier(cActionSize, NewEventDispatcher(@Dispatch)));
-  mProps.SetIntf('MoveNotifier', NewNotifier(cActionMove, NewEventDispatcher(@Dispatch)));
-  mProps.SetIntf('ActivateNotifier', NewNotifier(cActionActivate, NewEventDispatcher(@Dispatch)));
-  // todo: later samewhat unify - better in global tree - first time initialize with begin
-  // or saved values, from this point will be actualized by handler
-  if fMMWidth > 0 then
-    mProps.SetInt('MMWidth', fMMWidth);
-  if fMMHeight > 0 then
-    mProps.SetInt('MMHeight', fMMHeight);
-  if fMMLeft > 0 then
-    mProps.SetInt('MMLeft', fMMLeft);
-  if fMMTop > 0 then
-    mProps.SetInt('MMTop', fMMTop);
-  //
-  mProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
+  mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color,
+    cProps.SizeNotifier, cProps.MoveNotifier, cProps.ActivateNotifier]);
+  if mProps.PropByName[cProps.SizeNotifier] = nil then
+    mProps.SetIntf(cProps.SizeNotifier, NewNotifier(cActionSize, NewEventDispatcher(@Dispatch)));
+  if mProps.PropByName[cProps.MoveNotifier] = nil then
+    mProps.SetIntf(cProps.MoveNotifier, NewNotifier(cActionMove, NewEventDispatcher(@Dispatch)));
+  if mProps.PropByName[cProps.ActivateNotifier] = nil then
+    mProps.SetIntf(cProps.ActivateNotifier, NewNotifier(cActionActivate, NewEventDispatcher(@Dispatch)));
+  if mProps.PropByName[cProps.Color] = nil then
+    mProps.SetProp(AParentElement.Props.PropByName[cProps.Color]);
+  mProps.SetInt(cProps.MMWidth, MMWidth);
+  mProps.SetInt(cProps.MMHeight, MMHeight);
+  mProps.SetInt(cProps.MMLeft, MMLeft);
+  mProps.SetInt(cProps.MMTop, MMTop);
   Result := ElementFactory.CreateElement(IMainFormBit, mProps);
-  m := mProps.Info;
   for mChild in AParentElement do begin
     (Result as INode).AddChild(mChild as INode);
   end;
@@ -747,8 +762,7 @@ end;
 
 function TReactComponent.NewProps: IProps;
 begin
-  //Result := IProps(Factory.Locate(IProps));
-  Result := SelfProps.Clone;
+  Result := IProps(Factory.Locate(IProps));
 end;
 
 function TReactComponent.NewEventDispatcher(ADispatchEvent: TFluxDispatchEvent): IFluxDispatcher;

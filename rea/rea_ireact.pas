@@ -113,6 +113,22 @@ type
     procedure RenderAsync(const AComponent: IReactComponent);
   end;
 
+  cProps = class
+  public const
+    Layout = 'Layout';
+    Title = 'Title';
+    Color = 'Color';
+    Width = 'Width';
+    Height = 'Height';
+    MMLeft = 'MMLeft';
+    MMTop = 'MMTop';
+    MMWidth = 'MMWidth';
+    MMHeight = 'MMHeight';
+    SizeNotifier = 'SizeNotifier';
+    MoveNotifier = 'MoveNotifier';
+    ActivateNotifier = 'ActivateNotifier';
+  end;
+
 implementation
 
 end.
