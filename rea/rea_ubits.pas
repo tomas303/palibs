@@ -212,10 +212,10 @@ type
   protected
     procedure DoRender; override;
   protected
-    fCaption: string;
+    fText: string;
     fClickNotifier: IFluxNotifier;
   published
-    property Caption: string read fCaption write fCaption;
+    property Text: string read fText write fText;
     property ClickNotifier: IFluxNotifier read fClickNotifier write fClickNotifier;
   end;
 
@@ -345,7 +345,7 @@ end;
 procedure TButtonBit.DoRender;
 begin
   inherited DoRender;
-  AsButton.Caption := Caption;
+  AsButton.Caption := Text;
   AsButton.OnClick := @OnClick;
   if ClickNotifier <> nil then
     ClickNotifier.Enabled := True;

@@ -199,10 +199,6 @@ type
   TReactComponentForm = class(TReactComponent, IReactComponentForm)
   protected
     function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
-  protected
-    fActionResize: integer;
-  published
-    property ActionResize: integer read fActionResize write fActionResize;
   end;
 
   { TReactComponentMainForm }
@@ -237,13 +233,6 @@ type
     function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
-  { TReactComponentEdits }
-
-  TReactComponentEdits = class(TReactComponent, IReactComponentEdits)
-  protected
-    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
-  end;
-
   { TReactComponentButton }
 
   TReactComponentButton = class(TReactComponent, IReactComponentButton)
@@ -253,13 +242,6 @@ type
     fActionClick: integer;
   published
     property ActionClick: integer read fActionClick write fActionClick;
-  end;
-
-  { TReactComponentButtons }
-
-  TReactComponentButtons = class(TReactComponent, IReactComponentButtons)
-  protected
-    function ComposeElement(const AParentElement: IMetaElement): IMetaElement; override;
   end;
 
   { TReactComponentHeader }
@@ -425,7 +407,8 @@ begin
   begin
     // what render to IBit will be use directly
     (AParentBit as INode).AddChild(mChildBit as INode);
-    ProcessChildren(mChildBit, nil, AChildElement);
+    // instead nil dummy GUID_NULL element
+    ProcessChildren(mChildBit, ElementFactory.CreateElement(GUID_NULL), AChildElement);
   end
   else
   if Supports(mNew, IReactComponent, mChildComponent) then
@@ -615,96 +598,33 @@ begin
   end;
 end;
 
-{ TReactComponentButtons }
-
-function TReactComponentButtons.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
-var
-  i: integer;
-  mButtons: IProps;
-  mButton: IProps;
-begin
-  Result := ElementFactory.CreateElement(IStripBit, TProps.New.SetInt('Layout', SelfProps.AsInt('Layout')));
-  mButtons := SelfProps.AsIntf('Buttons') as IProps;
-  for i := 0 to mButtons.Count - 1 do
-  begin
-    mButton := mButtons.AsIntf(i) as IProps;
-    (Result as INode).AddChild(
-      ElementFactory.CreateElement(IReactComponentButton,
-        TProps.New
-        .SetStr('Caption', mButton.AsStr('Caption'))
-        .SetInt('ActionClick', mButton.AsInt('ActionClick'))
-        .SetInt('Place', cPlace.FixFront)
-        .SetInt('MMWidth', 100)
-        .SetInt('MMHeight', 22)
-        ) as INode);
-  end;
-end;
-
 { TReactComponentButton }
 
 function TReactComponentButton.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mProps: IProps;
 begin
-  mProps := NewProps;
-  if ActionClick <> 0 then
+  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight, cProps.Color, cProps.Text, cProps.ClickNotifier]);
+  if (mProps.PropByName[cProps.ClickNotifier] = nil) and (ActionClick <> 0) then
   begin
-    mProps.SetIntf('ClickNotifier', NewNotifier(ActionClick));
+    mProps.SetIntf(cProps.ClickNotifier, NewNotifier(ActionClick));
   end;
-  if SelfProps.AsBool('ParentColor') then
-    mProps.SetInt('Color', AParentElement.Props.AsInt('Color'));
   Result := ElementFactory.CreateElement(IButtonBit, mProps);
-end;
-
-{ TReactComponentEdits }
-
-function TReactComponentEdits.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
-var
-  mTitles, mValues: TStringArray;
-  mTitle: String;
-  i: integer;
-begin
-  // maybe add support for array ... as generic? probably with new fpc sources
-  mTitles := SelfProps.AsStr('Titles').Split('|');
-  mValues := SelfProps.AsStr('Values').Split('|');
-  Result := ElementFactory.CreateElement(IStripBit, NewProps{.SetInt('Layout', uiLayoutVertical)});
-  for i := 0 to High(mValues) do begin
-    if i > High(mTitles) then
-      mTitle := ''
-    else
-      mTitle := mTitles[i];
-    (Result as INode).AddChild(
-      ElementFactory.CreateElement(IReactComponentEdit,
-        TProps.New
-        .SetStr('Title', mTitle)
-        .SetStr('Value', mValues[i])
-        .SetInt('Place', cPlace.FixFront)
-        .SetInt('MMHeight', 22)
-        ) as INode);
-  end;
 end;
 
 { TReactComponentEdit }
 
 function TReactComponentEdit.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
-  mTitle, mValue: string;
+  mTitle: IProp;
+  mProps: IProps;
 begin
-  // can make it aswell as property .... then there will be values from create time
-  mTitle := SelfProps.AsStr('Title');
-  mValue := SelfProps.AsStr('Value');
-  {
-  Result := ElementFactory.CreateElement(IStripBit,
-    AProps.SetInt('Layout', 0),
-    [ElementFactory.CreateElement(ITextBit, TProps.New.SetStr('Text', mTitle)),
-     ElementFactory.CreateElement(IEditBit, TProps.New.SetStr('Text', mValue)))
-     ]
-   );
-  }
-  Result := ElementFactory.CreateElement(IStripBit, NewProps.SetInt('Layout', cLayout.Horizontal));
-  if mTitle <> '' then
-    (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, NewProps.SetStr('Text', mTitle)) as INode);
-  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit, NewProps.SetStr('Text', mValue)) as INode);
+  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
+  Result := ElementFactory.CreateElement(IStripBit, mProps);
+  mTitle := SelfProps.PropByName[cProps.Title];
+  if mTitle <> nil then
+    (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, NewProps.SetProp(cProps.Text, mTitle)) as INode);
+  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit, NewProps.SetProp(cProps.Text, SelfProps.PropByName[cProps.Value])) as INode);
 end;
 
 { TReactComponentHeader }
@@ -712,8 +632,11 @@ end;
 function TReactComponentHeader.ComposeElement(const AParentElement: IMetaElement): IMetaElement;
 var
   mChild: IMetaElement;
+  mProps: IProps;
 begin
-  Result := ElementFactory.CreateElement(IStripBit, NewProps);
+  mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
+    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent]);
+  Result := ElementFactory.CreateElement(IStripBit, mProps);
   for mChild in AParentElement do
     (Result as INode).AddChild(mChild as INode);
 end;
@@ -896,11 +819,7 @@ var
   mChild: IMetaElement;
   mProps: IProps;
 begin
-  mProps := NewProps;
-  if ActionResize <> 0 then
-  begin
-    mProps.SetIntf('ResizeNotifier', NewNotifier(ActionResize));
-  end;
+  mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color]);
   Result := ElementFactory.CreateElement(IFormBit, mProps);
   for mChild in AParentElement do begin
     (Result as INode).AddChild(mChild as INode);

@@ -91,16 +91,8 @@ type
   ['{E649F83B-D785-4209-B2F1-B072ECFDC680}']
   end;
 
-  IReactComponentEdits = interface(IReactComponent)
-  ['{B5B85863-29E5-4444-A65C-890A713E51C6}']
-  end;
-
   IReactComponentButton = interface(IReactComponent)
   ['{F4526301-63C9-4270-B61F-AD8BFAC60220}']
-  end;
-
-  IReactComponentButtons = interface(IReactComponent)
-  ['{F350FB28-34B2-4626-ABD9-ABA2AE87B760}']
   end;
 
   IReactComponentHeader = interface(IReactComponent)
@@ -116,6 +108,7 @@ type
   cProps = class
   public const
     Layout = 'Layout';
+    Place = 'Place';
     Title = 'Title';
     Color = 'Color';
     Width = 'Width';
@@ -124,9 +117,16 @@ type
     MMTop = 'MMTop';
     MMWidth = 'MMWidth';
     MMHeight = 'MMHeight';
+    Value = 'Value';
+    Text = 'Text';
+    Border = 'Border';
+    BorderColor = 'BorderColor';
+    FontColor = 'FontColor';
+    Transparent = 'Transparent';
     SizeNotifier = 'SizeNotifier';
     MoveNotifier = 'MoveNotifier';
     ActivateNotifier = 'ActivateNotifier';
+    ClickNotifier = 'ClickNotifier';
   end;
 
 implementation
