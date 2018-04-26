@@ -17,7 +17,7 @@ type
   IProp = interface
   ['{B36E5E43-AFB2-4A28-8E09-E7BC682BE1F0}']
     function Equals(const AProp: IProp): Boolean;
-    function Clone: IProp;
+    function Clone(const AName: string = ''): IProp;
     function GetName: string;
     function GetPropType: TPropType; //??? probably own type and if necessary map it to typekind
     function GetDebugInfo: string;
@@ -66,6 +66,7 @@ type
     property PropByName[const AName: string]: IProp read GetPropByName;
     function Equals(const AProps: IProps): Boolean;
     function Clone: IProps;
+    function Clone(ANames: array of string): IProps;
     function PropType(const AName: string): TPropType;
     function PropType(const AIndex: integer): TPropType;
     function Name(const AIndex: integer): string;
@@ -76,6 +77,7 @@ type
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
     function SetProp(const AName: string; const AProp: IProp): IProps;
+    function SetProp(const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
     function AsInt(const AName: string): integer;
     function AsBool(const AName: string): Boolean;

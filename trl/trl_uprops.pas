@@ -17,7 +17,7 @@ type
   protected
     //IProp
     function Equals(const AProp: IProp): Boolean; virtual;
-    function Clone: IProp; virtual; abstract;
+    function Clone(const AName: string = ''): IProp; virtual; abstract;
     function GetName: string;
     function GetPropType: TPropType; virtual;
     function GetDebugInfo: string; virtual;
@@ -58,7 +58,7 @@ type
     fValue: String;
   protected
     function Equals(const AProp: IProp): Boolean; override;
-    function Clone: IProp; override;
+    function Clone(const AName: string = ''): IProp; override;
     function GetPropType: TPropType; override;
     function GetDebugInfo: string; override;
     function GetAsString: string; override;
@@ -74,7 +74,7 @@ type
     fValue: Integer;
   protected
     function Equals(const AProp: IProp): Boolean; override;
-    function Clone: IProp; override;
+    function Clone(const AName: string = ''): IProp; override;
     function GetPropType: TPropType; override;
     function GetDebugInfo: string; override;
     function GetAsInteger: integer; override;
@@ -90,7 +90,7 @@ type
     fValue: Boolean;
   protected
     function Equals(const AProp: IProp): Boolean; override;
-    function Clone: IProp; override;
+    function Clone(const AName: string = ''): IProp; override;
     function GetPropType: TPropType; override;
     function GetDebugInfo: string; override;
     function GetAsBoolean: Boolean; override;
@@ -106,7 +106,7 @@ type
     fValue: TGuid;
   protected
     function Equals(const AProp: IProp): Boolean; override;
-    function Clone: IProp; override;
+    function Clone(const AName: string = ''): IProp; override;
     function GetPropType: TPropType; override;
     function GetDebugInfo: string; override;
     function GetAsTGuid: TGuid; override;
@@ -122,7 +122,7 @@ type
     fValue: IUnknown;
   protected
     function Equals(const AProp: IProp): Boolean; override;
-    function Clone: IProp; override;
+    function Clone(const AName: string = ''): IProp; override;
     function GetPropType: TPropType; override;
     function GetDebugInfo: string; override;
     function GetAsInterface: IUnknown; override;
@@ -161,6 +161,7 @@ type
     property PropByName[const AName: string]: IProp read GetPropByName;
     function Equals(const AProps: IProps): Boolean;
     function Clone: IProps;
+    function Clone(ANames: array of string): IProps;
     function PropType(const AName: string): TPropType;
     function PropType(const AIndex: integer): TPropType;
     function Name(const AIndex: integer): string;
@@ -171,6 +172,7 @@ type
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
     function SetProp(const AName: string; const AProp: IProp): IProps;
+    function SetProp(const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
     function AsInt(const AName: string): integer;
     function AsBool(const AName: string): Boolean;
@@ -236,9 +238,12 @@ begin
   fValue := AValue;
 end;
 
-function TInterfaceProp.Clone: IProp;
+function TInterfaceProp.Clone(const AName: string = ''): IProp;
 begin
-  Result := TInterfaceProp.Create(Name, AsInterface);
+  if AName <> '' then
+    Result := TInterfaceProp.Create(AName, AsInterface)
+  else
+    Result := TInterfaceProp.Create(Name, AsInterface);
 end;
 
 constructor TInterfaceProp.Create(const AName: string; const AValue: IUnknown);
@@ -278,9 +283,12 @@ begin
   fValue := AValue;
 end;
 
-function TGuidProp.Clone: IProp;
+function TGuidProp.Clone(const AName: string = ''): IProp;
 begin
-  Result := TGuidProp.Create(Name, AsTGuid);
+  if AName <> '' then
+    Result := TGuidProp.Create(AName, AsTGuid)
+  else
+    Result := TGuidProp.Create(Name, AsTGuid);
 end;
 
 constructor TGuidProp.Create(const AName: string; const AValue: TGuid);
@@ -316,9 +324,12 @@ begin
   fValue := AValue;
 end;
 
-function TBooleanProp.Clone: IProp;
+function TBooleanProp.Clone(const AName: string = ''): IProp;
 begin
-  Result := TBooleanProp.Create(Name, AsBoolean);
+  if AName <> '' then
+    Result := TBooleanProp.Create(AName, AsBoolean)
+  else
+    Result := TBooleanProp.Create(Name, AsBoolean);
 end;
 
 constructor TBooleanProp.Create(const AName: string; const AValue: Boolean);
@@ -354,9 +365,12 @@ begin
   fValue := AValue;
 end;
 
-function TIntegerProp.Clone: IProp;
+function TIntegerProp.Clone(const AName: string = ''): IProp;
 begin
-  Result := TIntegerProp.Create(Name, AsInteger);
+  if AName <> '' then
+    Result := TIntegerProp.Create(AName, AsInteger)
+  else
+    Result := TIntegerProp.Create(Name, AsInteger);
 end;
 
 constructor TIntegerProp.Create(const AName: string; const AValue: Integer);
@@ -392,9 +406,12 @@ begin
   fValue := AValue;
 end;
 
-function TStringProp.Clone: IProp;
+function TStringProp.Clone(const AName: string = ''): IProp;
 begin
-  Result := TStringProp.Create(Name, AsString);
+  if AName <> '' then
+    Result := TStringProp.Create(AName, AsString)
+  else
+    Result := TStringProp.Create(Name, AsString);
 end;
 
 constructor TStringProp.Create(const AName: string; const AValue: string);
@@ -584,6 +601,21 @@ begin
     Result.SetProp(Name(i), Prop[i]);
 end;
 
+function TProps.Clone(ANames: array of string): IProps;
+var
+  mProp: IProp;
+  i: integer;
+  mName: string;
+begin
+  Result := TProps.Create;
+  for mName in ANames do
+  begin
+    mProp := PropByName[mName];
+    if mProp <> nil then
+      Result.SetProp(mProp.Name, mProp);
+  end;
+end;
+
 function TProps.PropType(const AName: string): TPropType;
 begin
   Result := PropType(fItems.IndexOf(AName));
@@ -642,8 +674,20 @@ end;
 
 function TProps.SetProp(const AName: string; const AProp: IProp): IProps;
 begin
-  Result := Self;
-  fItems.AddOrSetData(AName, AProp.Clone);
+  if AProp <> nil then
+  begin
+    Result := Self;
+    fItems.AddOrSetData(AName, AProp.Clone(AName));
+  end;
+end;
+
+function TProps.SetProp(const AProp: IProp): IProps;
+begin
+  if AProp <> nil then
+  begin
+    Result := Self;
+    fItems.AddOrSetData(AProp.Name, AProp.Clone);
+  end;
 end;
 
 function TProps.AsStr(const AName: string): string;
