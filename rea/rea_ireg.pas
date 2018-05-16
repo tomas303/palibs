@@ -27,7 +27,7 @@ type
     function RegisterElementFactory: TDIReg;
 
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
-      AMapStateKeys: array of string): TDIReg;
+      const APaths: array of string): TDIReg;
 
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     function RegisterReact(const AID: string = ''): TDIReg;

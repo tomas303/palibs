@@ -76,6 +76,11 @@ type
     function SetBool(const AName: string; const AValue: Boolean): IProps;
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
+    function SetStr(const AIndex: integer; const AValue: string): IProps;
+    function SetInt(const AIndex: integer; const AValue: integer): IProps;
+    function SetBool(const AIndex: integer; const AValue: Boolean): IProps;
+    function SetGuid(const AIndex: integer; const AValue: TGUID): IProps;
+    function SetIntf(const AIndex: integer; const AValue: IUnknown): IProps;
     function SetProp(const AName: string; const AProp: IProp): IProps;
     function SetProp(const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
@@ -92,10 +97,18 @@ type
     function Info: string;
   end;
 
+  TPropPath = array of string;
+
   IPropFinder = interface
   ['{982480ED-701A-4D12-8569-9C5B14F37502}']
-    function Find(const APath: string): IProp;
+    function Find(const AID: string): IProp;
   end;
+
+  IPropsMap = interface
+  ['{DA286FCA-FD6B-40F6-A713-95B933CF0F32}']
+    procedure Map(const AProps: IProps);
+  end;
+
 
 implementation
 

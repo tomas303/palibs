@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="5">
+    <Files Count="6">
       <Item1>
         <Filename Value="rdx_ufunc.pas"/>
         <UnitName Value="rdx_ufunc"/>
@@ -30,6 +30,10 @@
         <Filename Value="rdx_ireg.pas"/>
         <UnitName Value="rdx_ireg"/>
       </Item5>
+      <Item6>
+        <Filename Value="rdx_urttistate.pas"/>
+        <UnitName Value="rdx_urttistate"/>
+      </Item6>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

@@ -62,7 +62,7 @@ var
   mo: TInterfacedObject;
   m1,m2: integer;
 begin
-  Log.DebugLnEnter({$I %CURRENTROUTINE%});
+  //Log.DebugLnEnter({$I %CURRENTROUTINE%});
   mCount := fItems.Count;
   for i := 0 to mCount - 1 do
   begin
@@ -79,7 +79,7 @@ begin
       end;
     end;
   end;
-  Log.DebugLnExit({$I %CURRENTROUTINE%});
+  //Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
 
 procedure TExecutor.AfterConstruction;

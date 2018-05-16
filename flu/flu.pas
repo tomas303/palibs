@@ -8,7 +8,7 @@ unit flu;
 interface
 
 uses
-  flu_iflux, flu_uflux, flu_ureg, flu_ireg;
+  flu_iflux, flu_uflux, flu_ureg, flu_ireg, flu_umap;
 
 implementation
 

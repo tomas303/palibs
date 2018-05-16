@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="12">
+    <Files Count="10">
       <Item1>
         <Filename Value="rea_iapp.pas"/>
         <UnitName Value="rea_iapp"/>
@@ -47,17 +47,9 @@
         <UnitName Value="rea_ureg"/>
       </Item9>
       <Item10>
-        <Filename Value="rea_imaps.pas"/>
-        <UnitName Value="rea_imaps"/>
-      </Item10>
-      <Item11>
-        <Filename Value="rea_umaps.pas"/>
-        <UnitName Value="rea_umaps"/>
-      </Item11>
-      <Item12>
         <Filename Value="rea_mainform.pas"/>
         <UnitName Value="rea_mainform"/>
-      </Item12>
+      </Item10>
     </Files>
     <RequiredPkgs Count="5">
       <Item1>

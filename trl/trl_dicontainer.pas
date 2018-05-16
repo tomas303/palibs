@@ -95,6 +95,7 @@ type
     function FindSelfProps(const ARBData: IRBData): IProps;
     procedure Inject(AInstance: TObject);
     procedure Inject2(AInstance: TObject; const AProps: IProps);
+    procedure SelfPropsMap(AInstance: TObject);
     procedure AddSupportedInterfaces(AInterfaces: array of TGuid);
     function NewObject: TObject; virtual; abstract;
     procedure FreeSingleObject; virtual;
@@ -654,6 +655,24 @@ begin
   end;
 end;
 
+procedure TDIReg.SelfPropsMap(AInstance: TObject);
+var
+  mRB: IRBData;
+  mRBItem: IRBDataItem;
+  mSelfProps: IProps;
+begin
+  mRB := TRBData.Create(AInstance, True);
+  mRBItem := mRB.FindItem('SELFPROPSMAP');
+  if mRBItem <> nil then
+  begin
+    mSelfProps := FindSelfProps(mRB);
+    if mSelfProps <> nil then
+      (mRBItem.AsInterface as IPropsMap).Map(mSelfProps)
+    else
+      raise Exception.Create('SELFPROPSMAP is registered, but SELFPROPS not');
+  end;
+end;
+
 procedure TDIReg.AddSupportedInterfaces(AInterfaces: array of TGuid);
 var
   mImpl: TGuid;
@@ -699,6 +718,7 @@ begin
     Result := NewObject;
     Inject(Result);
     Inject2(Result, AProps);
+    SelfPropsMap(Result);
     if (fCreateKind = ckSingle) then
       fSingleObject := Result;
   end;

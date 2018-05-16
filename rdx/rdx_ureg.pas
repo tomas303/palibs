@@ -16,9 +16,12 @@ type
   protected
     // IReg
     function RegisterFunc(const ASubFuncs: array of TClass): TDIReg;
-    function RegisterState: TDIReg;
+    function RegisterStateHub(const AClass: TClass; const AID: string;
+      const ASubstateIDs: array of string): TDIReg;
+    function RegisterState(const AClass: TClass; const AID: string): TDIReg;
     function RegisterStore: TDIReg;
-    procedure RegisterCommon(const ASubFuncs: array of TClass);
+    procedure RegisterCommon(const ASubstateIDs: array of string;
+      const ASubFuncs: array of TClass);
   protected
     fDIC: TDIContainer;
   published
@@ -42,11 +45,22 @@ begin
   end;
 end;
 
-function TReg.RegisterState: TDIReg;
+function TReg.RegisterStateHub(const AClass: TClass; const AID: string;
+  const ASubstateIDs: array of string): TDIReg;
+var
+  mSubstateID: string;
 begin
-  Result := DIC.Add(TRdxState, IFluxState, '', ckSingle);
-  Result.InjectProp('Factory', IDIFactory);
+  Result := DIC.Add(AClass, IFluxState, AID);
+  Result.InjectProp('ID', AID);
   Result.InjectProp('Data', IProps);
+  for mSubstateID in ASubstateIDs do
+    Result.InjectProp('AddState', IFluxState, mSubstateID);
+end;
+
+function TReg.RegisterState(const AClass: TClass; const AID: string): TDIReg;
+begin
+  Result := DIC.Add(AClass, IFluxState, AID);
+  Result.InjectProp('ID', AID);
 end;
 
 function TReg.RegisterStore: TDIReg;
@@ -56,9 +70,10 @@ begin
   Result.InjectProp('Func', IFluxFunc);
 end;
 
-procedure TReg.RegisterCommon(const ASubFuncs: array of TClass);
+procedure TReg.RegisterCommon(const ASubstateIDs: array of string;
+  const ASubFuncs: array of TClass);
 begin
-  RegisterState;
+  RegisterStateHub(TRdxState, '', ASubstateIDs);
   RegisterFunc(ASubFuncs);
   RegisterStore;
 end;

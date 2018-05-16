@@ -152,6 +152,7 @@ type
   protected
     fItems: TItems;
     function IndexFit(const AIndex: integer): Boolean;
+    procedure CheckIndexFit(const AIndex: integer);
   protected
     //IProps
     function Count: integer;
@@ -171,6 +172,11 @@ type
     function SetBool(const AName: string; const AValue: Boolean): IProps;
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
+    function SetStr(const AIndex: integer; const AValue: string): IProps;
+    function SetInt(const AIndex: integer; const AValue: integer): IProps;
+    function SetBool(const AIndex: integer; const AValue: Boolean): IProps;
+    function SetGuid(const AIndex: integer; const AValue: TGUID): IProps;
+    function SetIntf(const AIndex: integer; const AValue: IUnknown): IProps;
     function SetProp(const AName: string; const AProp: IProp): IProps;
     function SetProp(const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
@@ -187,7 +193,7 @@ type
     function Info: string;
   protected
     // IPropFinder
-    function Find(const APath: string): IProp;
+    function Find(const AID: string): IProp;
   public
     procedure AfterConstruction; override;
     destructor Destroy; override;
@@ -552,6 +558,12 @@ begin
   Result := (AIndex >= 0) and (AIndex <= fItems.Count -1);
 end;
 
+procedure TProps.CheckIndexFit(const AIndex: integer);
+begin
+  if not IndexFit(AIndex) then
+    raise Exception.CreateFmt('Index %0:d not fit, last index is %0:d', [AIndex, Count - 1]);
+end;
+
 function TProps.Count: integer;
 begin
   Result := fItems.Count;
@@ -672,6 +684,41 @@ begin
   fItems.AddOrSetData(AName, TInterfaceProp.Create(AName, AValue));
 end;
 
+function TProps.SetStr(const AIndex: integer; const AValue: string): IProps;
+begin
+  Result := Self;
+  CheckIndexFit(AIndex);
+  fItems.Data[AIndex] := TStringProp.Create(fItems.Keys[AIndex], AValue);
+end;
+
+function TProps.SetInt(const AIndex: integer; const AValue: integer): IProps;
+begin
+  Result := Self;
+  CheckIndexFit(AIndex);
+  fItems.Data[AIndex] := TIntegerProp.Create(fItems.Keys[AIndex], AValue);
+end;
+
+function TProps.SetBool(const AIndex: integer; const AValue: Boolean): IProps;
+begin
+  Result := Self;
+  CheckIndexFit(AIndex);
+  fItems.Data[AIndex] := TBooleanProp.Create(fItems.Keys[AIndex], AValue);
+end;
+
+function TProps.SetGuid(const AIndex: integer; const AValue: TGUID): IProps;
+begin
+  Result := Self;
+  CheckIndexFit(AIndex);
+  fItems.Data[AIndex] := TGuidProp.Create(fItems.Keys[AIndex], AValue);
+end;
+
+function TProps.SetIntf(const AIndex: integer; const AValue: IUnknown): IProps;
+begin
+  Result := Self;
+  CheckIndexFit(AIndex);
+  fItems.Data[AIndex] := TInterfaceProp.Create(fItems.Keys[AIndex], AValue);
+end;
+
 function TProps.SetProp(const AName: string; const AProp: IProp): IProps;
 begin
   if AProp <> nil then
@@ -780,39 +827,9 @@ begin
   end;
 end;
 
-function TProps.Find(const APath: string): IProp;
-{
-var
-  mSplit: TStringArray;
+function TProps.Find(const AID: string): IProp;
 begin
-  Result := nil;
-  mSplit := APath.Split(['.']);
-  if Length(mSplit) > 0 then
-  begin
-    Result := PropByName[mSplit[0]];
-    if (Result <> nil) and (Length(mSplit) > 1) then
-    begin
-      Result := (Result.AsInterface as IPropFinder).Find(mSplit[1]);
-    end;
-  end;
-end;
-}
-var
-  mPath: TStringArray;
-  i: integer;
-  mFinder: IPropFinder;
-begin
-  Result := nil;
-  mPath := APath.Split('.');
-  Result := PropByName[mPath[0]];
-  for i := 1 to High(mPath) do
-  begin
-    if Result = nil then
-      raise Exception.CreateFmt('Property %s identified by key %s not found', [mPath[i - 1], APath]);
-    if not Supports(Result.AsInterface, IPropFinder, mFinder) {and (mPath[i] <> mPath[High(mPath)])} then
-      raise Exception.CreateFmt('Property %s identified by key %s does not support find', [mPath[i - 1], APath]);
-    Result := (Result.AsInterface as IPropFinder).Find(mPath[i]);
-  end;
+  Result := PropByName[AID];
 end;
 
 end.

@@ -10,7 +10,7 @@ uses
   trl_uprops, trl_udifactory,
   trl_ilog, trl_iinjector, rea_ilayout,
   graphics, flu_iflux,
-  rea_imaps, fgl, typinfo,
+  fgl, typinfo,
   trl_iExecutor, Math, trl_usystem,
   LCLIntf, LCLType;
 
@@ -185,6 +185,7 @@ type
     fElementFactory: IMetaElementFactory;
     fExecutor: IExecutor;
     fReact: IReact;
+    fSelfPropsMap: IPropsMap;
   published
     property Log: ILog read fLog write fLog;
     property Node: INode read fNode write fNode;
@@ -192,6 +193,7 @@ type
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Executor: IExecutor read fExecutor write fExecutor;
     property React: IReact read fReact write fReact;
+    property SelfPropsMap: IPropsMap read fSelfPropsMap write fSelfPropsMap;
   end;
 
   { TReactComponentForm }

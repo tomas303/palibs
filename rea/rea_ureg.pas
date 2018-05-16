@@ -10,11 +10,11 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_ireact, rea_ureact,
-  rea_imaps, rea_umaps,
-  flu_iflux,
+  flu_iflux, flu_umap,
   Forms, StdCtrls,
   rea_mainform,
-  trl_iExecutor;
+  trl_iExecutor,
+  trl_iprops;
 
 type
 
@@ -36,7 +36,7 @@ type
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
-      AMapStateKeys: array of string): TDIReg;
+      const APaths: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     function RegisterReact(const AID: string = ''): TDIReg;
     procedure RegisterScales;
@@ -117,10 +117,10 @@ begin
 end;
 
 function TReg.RegisterReactComponent(ACompositeClass: TClass;
-  ACompositeInterface: TGuid; AMapStateKeys: array of string): TDIReg;
+  ACompositeInterface: TGuid; const APaths: array of string): TDIReg;
 var
   mReg: TDIReg;
-  mKey: string;
+  mPath: string;
 begin
   Result := DIC.Add(ACompositeClass, ACompositeInterface);
   Result.InjectProp('Factory', IDIFactory);
@@ -128,12 +128,12 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('React', IReact, '');
   //
-  mReg := DIC.Add(TMapStateToProps, IMapStateToProps, ACompositeClass.ClassName);
+  mReg := DIC.Add(TFluxStateToPropsMap, IPropsMap, ACompositeClass.ClassName);
   mReg.InjectProp('State', IFluxState);
-  for mKey in AMapStateKeys do
-    mReg.InjectProp('AddKey', mKey);
+  for mPath in APaths do
+    mReg.InjectProp('AddPath', mPath);
   //
-  //Result.InjectProp('MapStateToProps', IMapStateToProps, ACompositeClass.ClassName);
+  Result.InjectProp('SelfPropsMap', IPropsMap, ACompositeClass.ClassName);
 end;
 
 function TReg.RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
