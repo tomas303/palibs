@@ -11,7 +11,9 @@ type
   IGUI = interface
   ['{1A8B76A0-A1FB-42DC-B133-9DFAFB153229}']
     function MenuHeight: integer;
-  end;
+    function ScreenWidth: integer;
+    function ScrenHeight: integer;
+end;
 
 implementation
 
