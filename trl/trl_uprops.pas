@@ -79,6 +79,8 @@ type
     function GetDebugInfo: string; override;
     function GetAsInteger: integer; override;
     procedure SetAsInteger(AValue: integer); override;
+    function GetAsString: string; override;
+    procedure SetAsString(AValue: string); override;
   public
     constructor Create(const AName: string; const AValue: Integer);
   end;
@@ -369,6 +371,16 @@ end;
 procedure TIntegerProp.SetAsInteger(AValue: integer);
 begin
   fValue := AValue;
+end;
+
+function TIntegerProp.GetAsString: string;
+begin
+  Result := IntToStr(AsInteger);
+end;
+
+procedure TIntegerProp.SetAsString(AValue: string);
+begin
+  AsInteger := StrToInt(AValue);
 end;
 
 function TIntegerProp.Clone(const AName: string = ''): IProp;
