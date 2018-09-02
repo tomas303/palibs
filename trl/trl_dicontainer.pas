@@ -26,6 +26,14 @@ type
     function Locate(const AClass: string; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
   end;
 
+  { TDIInjector }
+
+  TDIInjector = class
+  public
+    class function FindSelfProps(const ARBData: IRBData): IProps;
+    class procedure Inject(ADIC: TDICustomContainer; AInstance: TObject; const AProps: IProps);
+  end;
+
   TDIRegCreateKind = (ckTransient, ckSingle);
 
   { TDIReg }
@@ -250,6 +258,74 @@ type
   end;
 
 implementation
+
+{ TDIInjector }
+
+class function TDIInjector.FindSelfProps(const ARBData: IRBData): IProps;
+var
+  mRBItem: IRBDataItem;
+begin
+  mRBItem := ARBData.FindItem('SELFPROPS');
+  if mRBItem <> nil then
+    Result := mRBItem.AsInterface as IProps
+  else
+    Result := nil;
+end;
+
+class procedure TDIInjector.Inject(ADIC: TDICustomContainer; AInstance: TObject;
+  const AProps: IProps);
+var
+  mRB: IRBData;
+  mRBItem: IRBDataItem;
+  i: integer;
+  mInterface: IUnknown;
+  mSelfProps: IProps;
+  mProp: IProp;
+begin
+  if AProps = nil then
+    Exit;
+  mRB := TRBData.Create(AInstance, True);
+  mSelfProps := FindSelfProps(mRB);
+  for i := 0 to AProps.Count - 1 do begin
+    mProp := AProps.Prop[i];
+    if mSelfProps <> nil then
+      mSelfProps.SetProp(mProp.Name, mProp);
+    mRBItem := mRB.FindItem(mProp.Name);
+    if mRBItem = nil then
+      Continue;
+    case mProp.PropType of
+      ptInt:
+        mRBItem.AsInteger := mProp.AsInteger;
+      ptStr:
+        mRBItem.AsString := mProp.AsString;
+      ptBool:
+        mRBItem.AsBoolean := AProps.AsBool(i);
+      ptGuid:
+        // maybe not suitable here - anyway not able to specify ID
+        // it will be possible only with special locator types(aka record - guid and id)
+        // OP paradigm - like strategy ... which itself is object and pass as parametr
+        // something like decoration .... draw frame around, debug mode, anything changable
+        // at runtime and possibly different for kind of component
+        // maybe general Edit and here specify for number, string, date, directory .....like Behavior
+        // (allowed chars, format, maybe added dialog ... but it will be more appropriate for IComposite
+        // .. yes it will specify vizual, but behavior belongs to this)
+        // for real create object without constraint it should be new type ... ptMetadata
+        case mRBItem.TypeKind of
+          tkInterface:
+            begin
+              mInterface := ADIC.Locate(AProps.AsGuid(i));
+              mRBItem.AsInterface := mInterface;
+            end;
+          tkAString:
+            mRBItem.AsString := GUIDToString(AProps.AsGuid(i));
+          else
+            raise Exception.CreateFmt('Error when injecting property "%s.%s": ' + LineEnding, [mRB.ClassName, mRBItem.Name]);
+        end;
+      ptInterface:
+        mRBItem.AsInterface := AProps.AsIntf(i);
+    end;
+  end;
+end;
 
 { TDI_TOuterObjectReg }
 
@@ -602,57 +678,8 @@ begin
 end;
 
 procedure TDIReg.Inject2(AInstance: TObject; const AProps: IProps);
-var
-  mRB: IRBData;
-  mRBItem: IRBDataItem;
-  i: integer;
-  mInterface: IUnknown;
-  mSelfProps: IProps;
-  mProp: IProp;
 begin
-  if AProps = nil then
-    Exit;
-  mRB := TRBData.Create(AInstance, True);
-  mSelfProps := FindSelfProps(mRB);
-  for i := 0 to AProps.Count - 1 do begin
-    mProp := AProps.Prop[i];
-    if mSelfProps <> nil then
-      mSelfProps.SetProp(mProp.Name, mProp);
-    mRBItem := mRB.FindItem(mProp.Name);
-    if mRBItem = nil then
-      Continue;
-    case mProp.PropType of
-      ptInt:
-        mRBItem.AsInteger := mProp.AsInteger;
-      ptStr:
-        mRBItem.AsString := mProp.AsString;
-      ptBool:
-        mRBItem.AsBoolean := AProps.AsBool(i);
-      ptGuid:
-        // maybe not suitable here - anyway not able to specify ID
-        // it will be possible only with special locator types(aka record - guid and id)
-        // OP paradigm - like strategy ... which itself is object and pass as parametr
-        // something like decoration .... draw frame around, debug mode, anything changable
-        // at runtime and possibly different for kind of component
-        // maybe general Edit and here specify for number, string, date, directory .....like Behavior
-        // (allowed chars, format, maybe added dialog ... but it will be more appropriate for IComposite
-        // .. yes it will specify vizual, but behavior belongs to this)
-        // for real create object without constraint it should be new type ... ptMetadata
-        case mRBItem.TypeKind of
-          tkInterface:
-            begin
-              mInterface := fDIC.Locate(AProps.AsGuid(i));
-              mRBItem.AsInterface := mInterface;
-            end;
-          tkAString:
-            mRBItem.AsString := GUIDToString(AProps.AsGuid(i));
-          else
-            raise Exception.CreateFmt('Error when injecting property "%s.%s": ' + LineEnding, [mRB.ClassName, mRBItem.Name]);
-        end;
-      ptInterface:
-        mRBItem.AsInterface := AProps.AsIntf(i);
-    end;
-  end;
+  TDIInjector.Inject(fDIC, AInstance, AProps);
 end;
 
 procedure TDIReg.SelfPropsMap(AInstance: TObject);

@@ -13,6 +13,8 @@ type
 
   TInjector = class(TInterfacedObject, IInjector)
   protected
+    function FindSelfProps(const ARBData: IRBData): IProps;
+  protected
     // IInjector
     procedure Write(AInstance: TObject; const AProps: IProps);
     procedure Read(AInstance: TObject; const AProps: IProps);
@@ -25,16 +27,28 @@ implementation
 
   { TInjector }
 
+  function TInjector.FindSelfProps(const ARBData: IRBData): IProps;
+  var
+    mRBItem: IRBDataItem;
+  begin
+    mRBItem := ARBData.FindItem('SELFPROPS');
+    if mRBItem <> nil then
+      Result := mRBItem.AsInterface as IProps
+    else
+      Result := nil;
+  end;
+
   procedure TInjector.Write(AInstance: TObject; const AProps: IProps);
   var
     mRB: IRBData;
     mRBItem: IRBDataItem;
     i: integer;
-  //  mInterface: IUnknown;
+    mSelfProps: IProps;
   begin
     if AProps = nil then
       Exit;
     mRB := TRBData.Create(AInstance, True);
+    mSelfProps := FindSelfProps(mRB);
     for i := 0 to AProps.Count - 1 do begin
       mRBItem := mRB.FindItem(AProps.Name(i));
       if mRBItem = nil then
@@ -48,11 +62,6 @@ implementation
           mRBItem.AsBoolean := AProps.AsBool(i);
         ptGuid:
           case mRBItem.TypeKind of
-            //tkInterface:
-            //  begin
-            //    mInterface := fDIC.Locate(AProps.AsGuid(i));
-            //    mRBItem.AsInterface := mInterface;
-            //  end;
             tkAString:
               mRBItem.AsString := GUIDToString(AProps.AsGuid(i));
             else
@@ -61,6 +70,8 @@ implementation
         ptInterface:
           mRBItem.AsInterface := AProps.AsIntf(i);
       end;
+      if mSelfProps <> nil then
+        mSelfProps.SetProp(AProps[i].Name, AProps[i]);
     end;
   end;
 
