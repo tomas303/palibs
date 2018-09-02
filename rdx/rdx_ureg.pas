@@ -59,7 +59,7 @@ end;
 
 function TReg.RegisterState(const AClass: TClass; const AID: string): TDIReg;
 begin
-  Result := DIC.Add(AClass, IFluxState, AID);
+  Result := DIC.Add(AClass, IFluxState, AID, ckSingle);
   Result.InjectProp('ID', AID);
 end;
 
