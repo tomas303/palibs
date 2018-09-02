@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="29">
+    <Files Count="33">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -126,6 +126,22 @@
         <Filename Value="trl_igenericaccess.pas"/>
         <UnitName Value="trl_igenericaccess"/>
       </Item29>
+      <Item30>
+        <Filename Value="trl_imetaelement.pas"/>
+        <UnitName Value="trl_imetaelement"/>
+      </Item30>
+      <Item31>
+        <Filename Value="trl_umetaelement.pas"/>
+        <UnitName Value="trl_umetaelement"/>
+      </Item31>
+      <Item32>
+        <Filename Value="trl_imetaelementfactory.pas"/>
+        <UnitName Value="trl_imetaelementfactory"/>
+      </Item32>
+      <Item33>
+        <Filename Value="trl_umetaelementfactory.pas"/>
+        <UnitName Value="trl_umetaelementfactory"/>
+      </Item33>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

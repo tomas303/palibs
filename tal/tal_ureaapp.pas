@@ -9,7 +9,8 @@ uses
   trl_idifactory, flu_iflux, rea_iapp,
   trl_iExecutor,
   Forms,  // later remove and make Application accessible through interface
-  LMessages;
+  LMessages,
+  trl_imetaelementfactory;
 
 type
 

@@ -23,9 +23,6 @@ type
 
     function RegisterMessageNotifierBinder: TDIReg;
 
-    function RegisterElement: TDIReg;
-    function RegisterElementFactory: TDIReg;
-
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
 

@@ -8,7 +8,7 @@ uses
   tal_ireg, trl_idifactory, rea_ireact, trl_dicontainer,
   tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
   trl_ilog, tal_uwindowlog, flu_iflux,
-  trl_iExecutor;
+  trl_iExecutor, trl_imetaelementfactory;
 
 type
 

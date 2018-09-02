@@ -12,6 +12,8 @@ uses
   trl_idifactory, trl_udifactory,
   trl_isysutils, trl_usysutils,
   trl_iExecutor, trl_uExecutor,
+  trl_imetaelement, trl_umetaelement,
+  trl_imetaelementfactory, trl_umetaelementfactory,
   trl_ilog;
 
 type
@@ -28,6 +30,8 @@ type
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
     function RegisterExecutor(const AID: string = ''): TDIReg;
+    function RegisterElement: TDIReg;
+    function RegisterElementFactory: TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -78,6 +82,19 @@ begin
   Result.InjectProp('Log', ILog);
 end;
 
+function TReg.RegisterElement: TDIReg;
+begin
+  Result := DIC.Add(TMetaElement, IMetaElement);
+  Result.InjectProp('Node', INode, 'parent');
+end;
+
+function TReg.RegisterElementFactory: TDIReg;
+begin
+  Result := DIC.Add(TMetaElementFactory, IMetaElementFactory);
+  Result.InjectProp('Container', TDIContainer, '', DIC);
+  Result.InjectProp('Log', ILog);
+end;
+
 procedure TReg.RegisterCommon;
 begin
   RegisterSysUtils;
@@ -87,6 +104,8 @@ begin
   RegisterProps;
   RegisterTreeNodes;
   RegisterExecutor;
+  RegisterElement;
+  RegisterElementFactory;
 end;
 
 end.

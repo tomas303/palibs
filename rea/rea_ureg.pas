@@ -14,7 +14,8 @@ uses
   Forms, StdCtrls,
   rea_mainform,
   trl_iExecutor,
-  trl_iprops;
+  trl_iprops,
+  trl_imetaelementfactory;
 
 type
 
@@ -33,8 +34,6 @@ type
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
     function RegisterMessageNotifierBinder: TDIReg;
-    function RegisterElement: TDIReg;
-    function RegisterElementFactory: TDIReg;
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
@@ -103,19 +102,6 @@ begin
   Result := DIC.Add(TMessageNotifierBinder, IMessageNotifierBinder);
 end;
 
-function TReg.RegisterElement: TDIReg;
-begin
-  Result := DIC.Add(TMetaElement, IMetaElement);
-  Result.InjectProp('Node', INode, 'parent');
-end;
-
-function TReg.RegisterElementFactory: TDIReg;
-begin
-  Result := DIC.Add(TMetaElementFactory, IMetaElementFactory);
-  Result.InjectProp('Container', TDIContainer, '', DIC);
-  Result.InjectProp('Log', ILog);
-end;
-
 function TReg.RegisterReactComponent(ACompositeClass: TClass;
   ACompositeInterface: TGuid; const APaths: array of string): TDIReg;
 var
@@ -171,8 +157,6 @@ end;
 procedure TReg.RegisterCommon;
 begin
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
-  RegisterElement;
-  RegisterElementFactory;
   RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
   RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);

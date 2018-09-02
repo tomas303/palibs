@@ -5,49 +5,9 @@ unit rea_ireact;
 interface
 
 uses
-  trl_iprops, rea_ibits;
+  trl_iprops, rea_ibits, trl_imetaelement;
 
 type
-
-  { IMetaElement }
-
-  IMetaElement = interface;
-
-  IMetaElementEnumerator = interface
-  ['{986E6CB6-E8A2-42AA-819E-7BB1F1A2C1A7}']
-    function MoveNext: Boolean;
-    function GetCurrent: IMetaElement;
-    property Current: IMetaElement read GetCurrent;
-  end;
-
-  IMetaElement = interface
-  ['{13BBE7DA-46FC-4DC1-97AD-73913576EC12}']
-    function Guid: TGuid;
-    function GetTypeGuid: string;
-    function GetTypeID: string;
-    function GetProps: IProps;
-    property TypeGuid: string read GetTypeGuid;
-    property TypeID: string read GetTypeID;
-    property Props: IProps read GetProps;
-    function Info: string;
-    function GetEnumerator: IMetaElementEnumerator;
-  end;
-
-  TMetaElementArray = array of IMetaElement;
-
-  IMetaElementFactory = interface
-  ['{64895959-43CF-43E3-A3CE-1EF69608BEBE}']
-    function CreateElement(const ATypeGuid: TGuid): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const AProps: IProps): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const AChildren: array of IMetaElement): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const AProps: IProps;
-      const AChildren: array of IMetaElement): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string; const AProps: IProps): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string; const AChildren: array of IMetaElement): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string; const AProps: IProps;
-      const AChildren: array of IMetaElement): IMetaElement;
-  end;
 
   IReactComponentMachinery = interface
   ['{B4CFF5F0-7493-414C-B540-F5CF9F2AA74E}']
