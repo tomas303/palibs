@@ -9,6 +9,11 @@ uses
 
 type
 
+  ILogSupport = interface
+  ['{BCAA7B90-8D8A-46CB-8F72-B1FB29A3D399}']
+    function LogInfo: string;
+  end;
+
   ILog = interface
   ['{5F619DCC-AC09-4617-B9F5-7789E36FA39C}']
     procedure DebugLn(const s: string = ''); overload;

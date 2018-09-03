@@ -5,7 +5,7 @@ unit trl_umetaelement;
 interface
 
 uses
-  trl_imetaelement, trl_itree, trl_iprops, SysUtils;
+  trl_imetaelement, trl_itree, trl_iprops, SysUtils, trl_ilog;
 
 type
 
@@ -25,7 +25,7 @@ type
 
   { TMetaElement }
 
-  TMetaElement = class(TInterfacedObject, IMetaElement, INode)
+  TMetaElement = class(TInterfacedObject, IMetaElement, INode, ILogSupport)
   protected
     fTypeGuid: string;
     fTypeID: string;
@@ -36,9 +36,11 @@ type
     function GetTypeGuid: string;
     function GetTypeID: string;
     function GetProps: IProps;
-    function Info: string;
     function GetMetaElementEnumerator: IMetaElementEnumerator;
     function IMetaElement.GetEnumerator = GetMetaElementEnumerator;
+  protected
+    // ILogSupport
+    function LogInfo: string;
   published
     property TypeGuid: string read GetTypeGuid write fTypeGuid;
     property TypeID: string read GetTypeID write fTypeID;
@@ -101,7 +103,7 @@ begin
   Result := fProps;
 end;
 
-function TMetaElement.Info: string;
+function TMetaElement.LogInfo: string;
 var
   mChild: INode;
   mChildEl: IMetaElement;
@@ -110,7 +112,7 @@ begin
   for mChild in Node do
   begin
     mChildEl := mChild as IMetaElement;
-    Result := Result + LineEnding + '->' +  mChildEl.Info;
+    Result := Result + LineEnding + '->' +  (mChildEl as ILogSupport).LogInfo;
   end;
 end;
 

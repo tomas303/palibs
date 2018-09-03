@@ -26,7 +26,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="2">
+    <Units Count="3">
       <Unit0>
         <Filename Value="trltests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -35,6 +35,10 @@
         <Filename Value="trl_dicontainer_tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="trl_umetaelement_tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -44,7 +48,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../../3rd/fpg/src;../../../3rd/fpg/src/corelib/x11"/>
-      <OtherUnitFiles Value="..;../../../3rd/fptest/src;../../../3rd/fptest/src/fpGUI;../../../3rd/fpg/src/corelib;../../../3rd/fpg/src/corelib/x11;../../../3rd/fpg/src/gui;../../../3rd/fptest/3rdparty/epiktimer"/>
+      <OtherUnitFiles Value="..;../../../tests;../../../3rd/fptest/src;../../../3rd/fptest/src/fpGUI;../../../3rd/fpg/src/corelib;../../../3rd/fpg/src/corelib/x11;../../../3rd/fpg/src/gui;../../../3rd/fptest/3rdparty/epiktimer"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
