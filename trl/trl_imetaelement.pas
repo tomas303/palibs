@@ -26,13 +26,23 @@ type
     function GetTypeGuid: string;
     function GetTypeID: string;
     function GetProps: IProps;
+    function GetIsMetaElementProvider: Boolean;
     property TypeGuid: string read GetTypeGuid;
     property TypeID: string read GetTypeID;
     property Props: IProps read GetProps;
+    property IsMetaElementProvider: Boolean read GetIsMetaElementProvider;
     function GetEnumerator: IMetaElementEnumerator;
   end;
 
   TMetaElementArray = array of IMetaElement;
+
+  { IMetaElementProvider }
+
+  IMetaElementProvider = interface
+  ['{C6217A1B-069F-4E21-A798-18C007D84008}']
+    function ProvideMetaElement: IMetaElement;
+  end;
+
 
 implementation
 

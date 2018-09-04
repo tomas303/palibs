@@ -6,7 +6,10 @@ interface
 
 uses
   TestFramework, uDICTestCase, SysUtils, trl_imetaelement, trl_umetaelement, trl_ilog,
-  trl_itree, trl_utree, trl_dicontainer;
+  trl_dicontainer,
+  trl_itree, trl_utree,
+  trl_iinjector, trl_uinjector,
+  trl_iprops, trl_uprops;
 
 type
 
@@ -19,6 +22,7 @@ type
     procedure TearDown; override;
   published
     procedure TestLogInfo;
+    procedure TestIsMetaElementProvider;
   end;
 
 procedure RegisterTests;
@@ -52,6 +56,13 @@ end;
 procedure TMetaElementTests.TestLogInfo;
 begin
   CheckEquals('()', (fMetaElement as ILogSupport).LogInfo);
+end;
+
+procedure TMetaElementTests.TestIsMetaElementProvider;
+begin
+  CheckFalse(fMetaElement.IsMetaElementProvider);
+  Inject(fMetaElement, 'IsMetaElementProvider', True);
+  CheckTrue(fMetaElement.IsMetaElementProvider);
 end;
 
 end.

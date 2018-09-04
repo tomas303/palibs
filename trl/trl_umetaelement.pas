@@ -30,6 +30,7 @@ type
     fTypeGuid: string;
     fTypeID: string;
     fProps: IProps;
+    fIsMetaElementProvider: Boolean;
   protected
     // IMetaElement
     function Guid: TGuid;
@@ -38,6 +39,7 @@ type
     function GetProps: IProps;
     function GetMetaElementEnumerator: IMetaElementEnumerator;
     function IMetaElement.GetEnumerator = GetMetaElementEnumerator;
+    function GetIsMetaElementProvider: Boolean;
   protected
     // ILogSupport
     function LogInfo: string;
@@ -45,6 +47,7 @@ type
     property TypeGuid: string read GetTypeGuid write fTypeGuid;
     property TypeID: string read GetTypeID write fTypeID;
     property Props: IProps read GetProps write fProps;
+    property IsMetaElementProvider: Boolean read GetIsMetaElementProvider write fIsMetaElementProvider;
   protected
     // INode
     procedure AddChild(const ANode: INode);
@@ -119,6 +122,11 @@ end;
 function TMetaElement.GetMetaElementEnumerator: IMetaElementEnumerator;
 begin
   Result := TMetaElementEnumerator.Create(GetNodeEnumerator);
+end;
+
+function TMetaElement.GetIsMetaElementProvider: Boolean;
+begin
+  Result := fIsMetaElementProvider;
 end;
 
 procedure TMetaElement.AddChild(const ANode: INode);
