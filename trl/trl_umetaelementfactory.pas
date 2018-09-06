@@ -14,16 +14,21 @@ type
   TMetaElementFactory = class(TDIFactory, IMetaElementFactory)
   protected
     //IMetaElementFactory
-    function CreateElement(const ATypeGuid: TGuid): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const AProps: IProps): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const AChildren: array of IMetaElement): IMetaElement;
+    function CreateElement(const ATypeGuid: TGuid; AIsMetaElementProvider: Boolean = false): IMetaElement;
     function CreateElement(const ATypeGuid: TGuid; const AProps: IProps;
-      const AChildren: array of IMetaElement): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string; const AProps: IProps): IMetaElement;
-    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string; const AChildren: array of IMetaElement): IMetaElement;
+      AIsMetaElementProvider: Boolean = false): IMetaElement;
+    function CreateElement(const ATypeGuid: TGuid; const AChildren: array of IMetaElement;
+      AIsMetaElementProvider: Boolean = false): IMetaElement;
+    function CreateElement(const ATypeGuid: TGuid; const AProps: IProps;
+      const AChildren: array of IMetaElement; AIsMetaElementProvider: Boolean = false): IMetaElement;
+    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string;
+      AIsMetaElementProvider: Boolean = false): IMetaElement;
+    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string;
+      const AProps: IProps; AIsMetaElementProvider: Boolean = false): IMetaElement;
+    function CreateElement(const ATypeGuid: TGuid; const ATypeID: string;
+      const AChildren: array of IMetaElement; AIsMetaElementProvider: Boolean = false): IMetaElement;
     function CreateElement(const ATypeGuid: TGuid; const ATypeID: string; const AProps: IProps;
-      const AChildren: array of IMetaElement): IMetaElement;
+      const AChildren: array of IMetaElement; AIsMetaElementProvider: Boolean = false): IMetaElement;
   protected
     fLog: ILog;
   published
@@ -34,51 +39,55 @@ implementation
 
 { TMetaElementFactory }
 
-function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid
-  ): IMetaElement;
+function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
+  AIsMetaElementProvider: Boolean = false): IMetaElement;
 begin
-  Result := CreateElement(ATypeGuid, '', TProps.New, []);
+  Result := CreateElement(ATypeGuid, '', TProps.New, [], AIsMetaElementProvider);
 end;
 
 function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
-  const AProps: IProps): IMetaElement;
+  const AProps: IProps; AIsMetaElementProvider: Boolean = false): IMetaElement;
 begin
-  Result := CreateElement(ATypeGuid, '', AProps, []);
+  Result := CreateElement(ATypeGuid, '', AProps, [], AIsMetaElementProvider);
 end;
 
 function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
-  const AChildren: array of IMetaElement): IMetaElement;
+  const AChildren: array of IMetaElement; AIsMetaElementProvider: Boolean = false): IMetaElement;
 begin
-  Result := CreateElement(ATypeGuid, '', TProps.New, AChildren);
+  Result := CreateElement(ATypeGuid, '', TProps.New, AChildren, AIsMetaElementProvider);
 end;
 
 function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
-  const AProps: IProps; const AChildren: array of IMetaElement): IMetaElement;
+  const AProps: IProps; const AChildren: array of IMetaElement;
+  AIsMetaElementProvider: Boolean = false): IMetaElement;
 begin
-  Result := CreateElement(ATypeGuid, '', AProps, AChildren);
+  Result := CreateElement(ATypeGuid, '', AProps, AChildren, AIsMetaElementProvider);
 end;
 
 function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
-  const ATypeID: string): IMetaElement;
+  const ATypeID: string; AIsMetaElementProvider: Boolean = false): IMetaElement;
 begin
-  Result := CreateElement(ATypeGuid, ATypeID, TProps.New, []);
-end;
-
-function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
-  const ATypeID: string; const AProps: IProps): IMetaElement;
-begin
-  Result := CreateElement(ATypeGuid, ATypeID, AProps, []);
-end;
-
-function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
-  const ATypeID: string; const AChildren: array of IMetaElement): IMetaElement;
-begin
-  Result := CreateElement(ATypeGuid, ATypeID, TProps.New, AChildren);
+  Result := CreateElement(ATypeGuid, ATypeID, TProps.New, [], AIsMetaElementProvider);
 end;
 
 function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
   const ATypeID: string; const AProps: IProps;
-  const AChildren: array of IMetaElement): IMetaElement;
+  AIsMetaElementProvider: Boolean = false): IMetaElement;
+begin
+  Result := CreateElement(ATypeGuid, ATypeID, AProps, [], AIsMetaElementProvider);
+end;
+
+function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
+  const ATypeID: string; const AChildren: array of IMetaElement;
+  AIsMetaElementProvider: Boolean = false): IMetaElement;
+begin
+  Result := CreateElement(ATypeGuid, ATypeID, TProps.New, AChildren, AIsMetaElementProvider);
+end;
+
+function TMetaElementFactory.CreateElement(const ATypeGuid: TGuid;
+  const ATypeID: string; const AProps: IProps;
+  const AChildren: array of IMetaElement;
+  AIsMetaElementProvider: Boolean = false): IMetaElement;
 var
   mChild: IMetaElement;
   mP: Pointer;
@@ -87,7 +96,9 @@ begin
     TProps.New
     .SetStr('TypeGuid', GUIDToString(ATypeGuid))
     .SetStr('TypeID', ATypeID)
-    .SetIntf('Props', AProps));
+    .SetIntf('Props', AProps)
+    .SetBool('IsMetaElementProvider', AIsMetaElementProvider)
+    );
   Result := IMetaElement(mP);
   for mChild in AChildren do begin
     (Result as INode).AddChild(mChild as INode);

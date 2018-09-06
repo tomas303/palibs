@@ -37,7 +37,8 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
     procedure CheckMetaElement(const AElement: IMetaElement; AGuid: TGuid;
-      const AID: string; const AProps: IProps; const AChildren: array of IMetaElement);
+      const AID: string; const AProps: IProps; const AChildren: array of IMetaElement;
+      AIsMetaElementProvider: Boolean);
   published
     procedure TestCreateElement_1;
     procedure TestCreateElement_2;
@@ -81,7 +82,8 @@ begin
 end;
 
 procedure TMetaElementFactoryTests.CheckMetaElement(const AElement: IMetaElement;
-  AGuid: TGuid; const AID: string; const AProps: IProps; const AChildren: array of IMetaElement);
+  AGuid: TGuid; const AID: string; const AProps: IProps;
+  const AChildren: array of IMetaElement; AIsMetaElementProvider: Boolean);
 var
   mEl: IMetaElement;
   i: integer;
@@ -103,14 +105,15 @@ begin
     inc(i);
   end;
   CheckEquals(Length(AChildren), i, 'expected number of children differs from enumerated ones');
+  CheckEquals(AIsMetaElementProvider, AElement.IsMetaElementProvider, 'property IsMetaElementProvider');
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_1;
 var
   mElement: IMetaElement;
 begin
-  mElement := fMetaElementFactory.CreateElement(IDummyObject);
-  CheckMetaElement(mElement, IDummyObject, '', nil, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, True);
+  CheckMetaElement(mElement, IDummyObject, '', nil, [], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_2;
@@ -119,21 +122,21 @@ var
   mProps: IProps;
 begin
   mProps := TProps.New;
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, mProps);
-  CheckMetaElement(mElement, IDummyObject, '', mProps, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, mProps, True);
+  CheckMetaElement(mElement, IDummyObject, '', mProps, [], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_3;
 var
   mElement, mEl1, mEl2: IMetaElement;
 begin
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, []);
-  CheckMetaElement(mElement, IDummyObject, '', nil, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, [], True);
+  CheckMetaElement(mElement, IDummyObject, '', nil, [], True);
   //
   mEl1 := IMetaElement(DIC.Locate(IMetaElement));
   mEl2 := IMetaElement(DIC.Locate(IMetaElement));
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, [mEl1, mEl2]);
-  CheckMetaElement(mElement, IDummyObject, '', nil, [mEl1, mEl2]);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, [mEl1, mEl2], True);
+  CheckMetaElement(mElement, IDummyObject, '', nil, [mEl1, mEl2], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_4;
@@ -142,21 +145,21 @@ var
   mProps: IProps;
 begin
   mProps := TProps.New;
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, mProps, []);
-  CheckMetaElement(mElement, IDummyObject, '', mProps, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, mProps, [], True);
+  CheckMetaElement(mElement, IDummyObject, '', mProps, [], True);
   //
   mEl1 := IMetaElement(DIC.Locate(IMetaElement));
   mEl2 := IMetaElement(DIC.Locate(IMetaElement));
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, mProps, [mEl1, mEl2]);
-  CheckMetaElement(mElement, IDummyObject, '', mProps, [mEl1, mEl2]);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, mProps, [mEl1, mEl2], True);
+  CheckMetaElement(mElement, IDummyObject, '', mProps, [mEl1, mEl2], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_5;
 var
   mElement: IMetaElement;
 begin
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID);
-  CheckMetaElement(mElement, IDummyObject, cTypeID, nil, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, True);
+  CheckMetaElement(mElement, IDummyObject, cTypeID, nil, [], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_6;
@@ -165,21 +168,21 @@ var
   mProps: IProps;
 begin
   mProps := TProps.New;
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, mProps);
-  CheckMetaElement(mElement, IDummyObject, cTypeID, mProps, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, mProps, True);
+  CheckMetaElement(mElement, IDummyObject, cTypeID, mProps, [], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_7;
 var
   mElement, mEl1, mEl2: IMetaElement;
 begin
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, []);
-  CheckMetaElement(mElement, IDummyObject, cTypeID, nil, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, [], True);
+  CheckMetaElement(mElement, IDummyObject, cTypeID, nil, [], True);
   //
   mEl1 := IMetaElement(DIC.Locate(IMetaElement));
   mEl2 := IMetaElement(DIC.Locate(IMetaElement));
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, [mEl1, mEl2]);
-  CheckMetaElement(mElement, IDummyObject, cTypeID, nil, [mEl1, mEl2]);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, [mEl1, mEl2], True);
+  CheckMetaElement(mElement, IDummyObject, cTypeID, nil, [mEl1, mEl2], True);
 end;
 
 procedure TMetaElementFactoryTests.TestCreateElement_8;
@@ -188,13 +191,13 @@ var
   mProps: IProps;
 begin
   mProps := TProps.New;
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, mProps, []);
-  CheckMetaElement(mElement, IDummyObject, cTypeID, mProps, []);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, mProps, [], True);
+  CheckMetaElement(mElement, IDummyObject, cTypeID, mProps, [], True);
   //
   mEl1 := IMetaElement(DIC.Locate(IMetaElement));
   mEl2 := IMetaElement(DIC.Locate(IMetaElement));
-  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, mProps, [mEl1, mEl2]);
-  CheckMetaElement(mElement, IDummyObject, cTypeID, mProps, [mEl1, mEl2]);
+  mElement := fMetaElementFactory.CreateElement(IDummyObject, cTypeID, mProps, [mEl1, mEl2], True);
+  CheckMetaElement(mElement, IDummyObject, cTypeID, mProps, [mEl1, mEl2], True);
 end;
 
 end.
