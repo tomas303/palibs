@@ -61,7 +61,7 @@ end;
 procedure TMetaElementTests.TestIsMetaElementProvider;
 begin
   CheckFalse(fMetaElement.IsMetaElementProvider);
-  Inject(fMetaElement, 'IsMetaElementProvider', True);
+  WriteProp(fMetaElement, 'IsMetaElementProvider', True);
   CheckTrue(fMetaElement.IsMetaElementProvider);
 end;
 
