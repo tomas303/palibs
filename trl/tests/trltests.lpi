@@ -3,8 +3,13 @@
   <ProjectOptions>
     <Version Value="10"/>
     <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+      </Flags>
       <SessionStorage Value="InProjectDir"/>
       <MainUnit Value="0"/>
+      <AutoCreateForms Value="False"/>
       <Title Value="trltests"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
@@ -51,8 +56,8 @@
       <Filename Value="trltests"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);../../../3rd/fpg/src;../../../3rd/fpg/src/corelib/x11"/>
-      <OtherUnitFiles Value="..;../../../tests;../../../3rd/fptest/src;../../../3rd/fptest/src/fpGUI;../../../3rd/fpg/src/corelib;../../../3rd/fpg/src/corelib/x11;../../../3rd/fpg/src/gui;../../../3rd/fptest/3rdparty/epiktimer"/>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value=".."/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -62,6 +67,12 @@
         </Win32>
       </Options>
     </Linking>
+    <Other>
+      <ConfigFile>
+        <CustomConfigFile Value="True"/>
+        <ConfigFilePath Value="../../tests.cfg"/>
+      </ConfigFile>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">
