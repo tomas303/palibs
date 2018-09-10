@@ -24,6 +24,12 @@ type
     function Locate(AClass: TClass; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
     function Locate(AInterface: TGUID; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
     function Locate(const AClass: string; const AID: string = ''; const AProps: IProps = nil): pointer; virtual; overload; abstract;
+    function CanLocateAs(AClass: TClass; const AAsInterface: TGUID): Boolean; virtual; overload; abstract;
+    function CanLocateAs(AClass: TClass; const AID: string; const AAsInterface: TGUID): Boolean; virtual; overload; abstract;
+    function CanLocateAs(const AInterface: TGUID; const AAsInterface: TGUID): Boolean; virtual; overload; abstract;
+    function CanLocateAs(const AInterface: TGUID; const AID: string; const AAsInterface: TGUID): Boolean; virtual; overload; abstract;
+    function CanLocateAs(const AClass: string; const AAsInterface: TGUID): Boolean; virtual; overload; abstract;
+    function CanLocateAs(const AClass: string; const AID: string; const AAsInterface: TGUID): Boolean; virtual; overload; abstract;
   end;
 
   { TDIInjector }
@@ -107,6 +113,7 @@ type
     procedure AddSupportedInterfaces(AInterfaces: array of TGuid);
     function NewObject: TObject; virtual; abstract;
     procedure FreeSingleObject; virtual;
+    function HasInterfaceEntry(const AIntf: TGuid): Boolean; virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
@@ -131,6 +138,7 @@ type
   protected
     function NewObject: TObject; override;
     function InstantiatedClass: TClass; override;
+    function HasInterfaceEntry(const AIntf: TGuid): Boolean; override;
   public
     constructor Create(AClass: TClass; AInterfaces: array of TGuid);
   end;
@@ -143,6 +151,7 @@ type
   protected
     function NewObject: TObject; override;
     function InstantiatedClass: TClass; override;
+    function HasInterfaceEntry(const AIntf: TGuid): Boolean; override;
   public
     constructor Create(AClass: TDIClass; AInterfaces: array of TGuid);
   end;
@@ -156,6 +165,7 @@ type
   protected
     function NewObject: TObject; override;
     function InstantiatedClass: TClass; override;
+    function HasInterfaceEntry(const AIntf: TGuid): Boolean; override;
   public
     constructor Create(AClass: TComponentClass; AOwner: TComponent;
       AInterfaces: array of TGuid);
@@ -173,6 +183,7 @@ type
   protected
     function NewObject: TObject; override;
     function InstantiatedClass: TClass; override;
+    function HasInterfaceEntry(const AIntf: TGuid): Boolean; override;
   public
     constructor Create(ACreateEvent: TDI_CreateInstanceEvent;
       const AClass: TClass; AInterfaces: array of TGuid);
@@ -186,6 +197,7 @@ type
   protected
     function NewObject: TObject; override;
     function InstantiatedClass: TClass; override;
+    function HasInterfaceEntry(const AIntf: TGuid): Boolean; override;
   public
     constructor Create(AObject: TObject);
     procedure FreeSingleObject; override;
@@ -214,6 +226,12 @@ type
     function Locate(AClass: TClass; const AID: string = ''; const AProps: IProps = nil): pointer; override; overload;
     function Locate(AInterface: TGUID; const AID: string = ''; const AProps: IProps = nil): pointer; override; overload;
     function Locate(const AClass: string; const AID: string = ''; const AProps: IProps = nil): pointer; override; overload;
+    function CanLocateAs(AClass: TClass; const AAsInterface: TGUID): Boolean; override; overload;
+    function CanLocateAs(AClass: TClass; const AID: string; const AAsInterface: TGUID): Boolean; override; overload;
+    function CanLocateAs(const AInterface: TGUID; const AAsInterface: TGUID): Boolean; override; overload;
+    function CanLocateAs(const AInterface: TGUID; const AID: string; const AAsInterface: TGUID): Boolean; override; overload;
+    function CanLocateAs(const AClass: string; const AAsInterface: TGUID): Boolean; override; overload;
+    function CanLocateAs(const AClass: string; const AID: string; const AAsInterface: TGUID): Boolean; override; overload;
     // TObject
     function Add(const AClass: TClass; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
     function Add(const AClass: TClass; AInterface: TGUID; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg; overload;
@@ -339,6 +357,11 @@ begin
   Result := fObject.ClassType;
 end;
 
+function TDI_TOuterObjectReg.HasInterfaceEntry(const AIntf: TGuid): Boolean;
+begin
+  Result := fObject.GetInterfaceEntry(AIntf) <> nil;
+end;
+
 constructor TDI_TOuterObjectReg.Create(AObject: TObject);
 begin
   inherited Create;
@@ -361,6 +384,11 @@ end;
 function TDI_TCreateViaEventReg.InstantiatedClass: TClass;
 begin
   Result := fClass;
+end;
+
+function TDI_TCreateViaEventReg.HasInterfaceEntry(const AIntf: TGuid): Boolean;
+begin
+  Result := fClass.GetInterfaceEntry(AIntf) <> nil;
 end;
 
 constructor TDI_TCreateViaEventReg.Create(ACreateEvent: TDI_CreateInstanceEvent;
@@ -452,6 +480,11 @@ begin
   Result := fClass;
 end;
 
+function TDI_TDIObjectReg.HasInterfaceEntry(const AIntf: TGuid): Boolean;
+begin
+  Result := fClass.GetInterfaceEntry(AIntf) <> nil;
+end;
+
 constructor TDI_TDIObjectReg.Create(AClass: TDIClass;
   AInterfaces: array of TGuid);
 begin
@@ -472,6 +505,11 @@ begin
   Result := fClass;
 end;
 
+function TDI_TObjectReg.HasInterfaceEntry(const AIntf: TGuid): Boolean;
+begin
+  Result := fClass.GetInterfaceEntry(AIntf) <> nil;
+end;
+
 constructor TDI_TObjectReg.Create(AClass: TClass; AInterfaces: array of TGuid);
 begin
   inherited Create;
@@ -489,6 +527,11 @@ end;
 function TDI_TComponentReg.InstantiatedClass: TClass;
 begin
   Result := fClass;
+end;
+
+function TDI_TComponentReg.HasInterfaceEntry(const AIntf: TGuid): Boolean;
+begin
+  Result := fClass.GetInterfaceEntry(AIntf) <> nil;
 end;
 
 constructor TDI_TComponentReg.Create(AClass: TComponentClass; AOwner: TComponent;
@@ -966,6 +1009,57 @@ begin
   if mReg = nil then
     raise Exception.CreateFmt('registration for class %s not found', [AClass]);
   Result := mReg.Make(AProps);
+end;
+
+function TDIContainer.CanLocateAs(AClass: TClass; const AAsInterface: TGUID
+  ): Boolean;
+begin
+  Result := CanLocateAs(AClass, '', AAsInterface);
+end;
+
+function TDIContainer.CanLocateAs(AClass: TClass; const AID: string;
+  const AAsInterface: TGUID): Boolean;
+var
+  mReg: TDIReg;
+begin
+  mReg := Find(AClass, AID);
+  if mReg = nil then
+    raise Exception.CreateFmt('registration not found(class:%s id:%s)', [AClass.ClassName, AID]);
+  Result := mReg.HasInterfaceEntry(AAsInterface);
+end;
+
+function TDIContainer.CanLocateAs(const AInterface: TGUID;
+  const AAsInterface: TGUID): Boolean;
+begin
+  Result := CanLocateAs(AInterface, '', AAsInterface);
+end;
+
+function TDIContainer.CanLocateAs(const AInterface: TGUID; const AID: string;
+  const AAsInterface: TGUID): Boolean;
+var
+  mReg: TDIReg;
+begin
+  mReg := Find(AInterface, AID);
+  if mReg = nil then
+    raise Exception.CreateFmt('Registration for interface: %s ID:%s not found', [GUIDToString(AInterface), AID]);
+  Result := mReg.HasInterfaceEntry(AAsInterface);
+end;
+
+function TDIContainer.CanLocateAs(const AClass: string;
+  const AAsInterface: TGUID): Boolean;
+begin
+  Result := CanLocateAs(AClass, '', AAsInterface);
+end;
+
+function TDIContainer.CanLocateAs(const AClass: string; const AID: string;
+  const AAsInterface: TGUID): Boolean;
+var
+  mReg: TDIReg;
+begin
+  mReg := Find(AClass, AID);
+  if mReg = nil then
+    raise Exception.CreateFmt('registration for class %s not found', [AClass]);
+  Result := mReg.HasInterfaceEntry(AAsInterface);
 end;
 
 function TDIContainer.Add(const AClass: TClass; const AID: string = ''; ACreateKind: TDIRegCreateKind = ckTransient): TDIReg;

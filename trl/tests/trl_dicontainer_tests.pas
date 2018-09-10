@@ -17,9 +17,21 @@ type
     function GetDummy1: IDummy;
   end;
 
+  { IDummy1 }
+
+  IDummy1 = interface
+  ['{F0EED38F-2CFF-4E1E-81FA-5D6FFD051898}']
+  end;
+
+  { IDummy1 }
+
+  IDummy2 = interface
+  ['{93849999-B113-41EB-B7BD-264FEF5126A8}']
+  end;
+
   { TDummy }
 
-  TDummy = class(TInterfacedObject, IDummy)
+  TDummy = class(TInterfacedObject, IDummy, IDummy1)
   protected class var
     fInstances: integer;
   protected
@@ -38,6 +50,8 @@ type
   { TDIContainerTests }
 
   TDIContainerTests = class(TTestCase)
+  private const
+    cID = 'testid';
   protected
     fDIContainer: TDIContainer;
     procedure SetUp; override;
@@ -55,6 +69,12 @@ type
     procedure TestSetIntf;
     procedure TestLocate_InterfaceObject;
     procedure TestLocate_InterfaceObjectWithProps;
+    procedure TestCanLocateAs1;
+    procedure TestCanLocateAs2;
+    procedure TestCanLocateAs3;
+    procedure TestCanLocateAs4;
+    procedure TestCanLocateAs5;
+    procedure TestCanLocateAs6;
   end;
 
 procedure RegisterTests;
@@ -104,6 +124,7 @@ begin
   inherited SetUp;
   fDIContainer := TDIContainer.Create;
   fDIContainer.Add(TDummy, IDummy);
+  fDIContainer.Add(TDummy, IDummy, cID);
 end;
 
 procedure TDIContainerTests.TearDown;
@@ -219,6 +240,42 @@ begin
   mDummy := IUnknown(fDIContainer.Locate(IDummy, '', TProps.New.SetIntf('Dummy1', mDummy1))) as IDummy;
   //CheckEquals(1, mDummy.GetRefCount);
   mDummy := nil;
+end;
+
+procedure TDIContainerTests.TestCanLocateAs1;
+begin
+  CheckTrue(fDIContainer.CanLocateAs(TDummy, '', IDummy1));
+  CheckFalse(fDIContainer.CanLocateAs(TDummy, '', IDummy2));
+end;
+
+procedure TDIContainerTests.TestCanLocateAs2;
+begin
+  CheckTrue(fDIContainer.CanLocateAs(TDummy, cID, IDummy1));
+  CheckFalse(fDIContainer.CanLocateAs(TDummy, cID, IDummy2));
+end;
+
+procedure TDIContainerTests.TestCanLocateAs3;
+begin
+  CheckTrue(fDIContainer.CanLocateAs(IDummy, '', IDummy1));
+  CheckFalse(fDIContainer.CanLocateAs(IDummy, '', IDummy2));
+end;
+
+procedure TDIContainerTests.TestCanLocateAs4;
+begin
+  CheckTrue(fDIContainer.CanLocateAs(IDummy, cID, IDummy1));
+  CheckFalse(fDIContainer.CanLocateAs(IDummy, cID, IDummy2));
+end;
+
+procedure TDIContainerTests.TestCanLocateAs5;
+begin
+  CheckTrue(fDIContainer.CanLocateAs('TDummy', '', IDummy1));
+  CheckFalse(fDIContainer.CanLocateAs('TDummy', '', IDummy2));
+end;
+
+procedure TDIContainerTests.TestCanLocateAs6;
+begin
+  CheckTrue(fDIContainer.CanLocateAs('TDummy', cID, IDummy1));
+  CheckFalse(fDIContainer.CanLocateAs('TDummy', cID, IDummy2));
 end;
 
 end.
