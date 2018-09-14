@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="33">
+    <Files Count="34">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -142,6 +142,10 @@
         <Filename Value="trl_umetaelementfactory.pas"/>
         <UnitName Value="trl_umetaelementfactory"/>
       </Item33>
+      <Item34>
+        <Filename Value="trl_uinterfacedownedobject.pas"/>
+        <UnitName Value="trl_uinterfacedownedobject"/>
+      </Item34>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
