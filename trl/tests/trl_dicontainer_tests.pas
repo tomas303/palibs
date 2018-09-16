@@ -5,7 +5,8 @@ unit trl_dicontainer_tests;
 interface
 
 uses
-  TestFramework, trl_dicontainer, sysutils, trl_iprops, trl_uprops;
+  TestFramework, trl_dicontainer, sysutils, trl_iprops, trl_uprops,
+  trl_uinterfacedownedobject;
 
 type
 
@@ -29,9 +30,21 @@ type
   ['{93849999-B113-41EB-B7BD-264FEF5126A8}']
   end;
 
+  { ISomeService }
+
+  ISomeService = interface
+  ['{D9F904D0-F809-4868-8215-C6C14579034D}']
+  end;
+
+  { TSomeService }
+
+  TSomeService = class(TInterfacedOwnedObject, ISomeService)
+  end;
+
+
   { TDummy }
 
-  TDummy = class(TInterfacedObject, IDummy, IDummy1)
+  TDummy = class(TInterfacedObject, IDummy, IDummy1, ISomeService)
   protected class var
     fInstances: integer;
   protected
@@ -43,8 +56,38 @@ type
     destructor Destroy; override;
   protected
     fDummy1: IDummy;
+    fSomeService: ISomeService;
+    property SomeServiceIMPL: ISomeService read fSomeService implements ISomeService;
   published
     property Dummy1: IDummy read fDummy1 write fDummy1;
+    property SomeService: ISomeService read fSomeService write fSomeService;
+  end;
+
+  { TDIRegTests }
+
+  TDIRegTests = class(TTestCase)
+  private type
+
+    { TTestingDIReg }
+
+    TTestingDIReg = class(TDIReg)
+    protected
+      function InstantiatedClass: TClass; override;
+    end;
+
+    { TTestingDIContainer }
+
+    TTestingDIContainer = class(TDIContainer)
+    end;
+
+  private
+    fDIReg: TTestingDIReg;
+    fDIContainer: TTestingDIContainer;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure TestInject_InterfaceOwned;
   end;
 
   { TDIContainerTests }
@@ -83,7 +126,49 @@ implementation
 
 procedure RegisterTests;
 begin
+  TestFramework.RegisterTest(TDIRegTests.Suite);
   TestFramework.RegisterTest(TDIContainerTests.Suite);
+end;
+
+{ TDIRegTests.TTestingDIReg }
+
+function TDIRegTests.TTestingDIReg.InstantiatedClass: TClass;
+begin
+  // when add registration, it controls if not exists already with same class
+  // so returning nil will effectively make control succeed
+  Result := nil;
+end;
+
+{ TDIRegTests }
+
+procedure TDIRegTests.SetUp;
+begin
+  inherited;
+  fDIContainer := TTestingDIContainer.Create;
+  fDIReg := TTestingDIReg.Create;
+  fDIContainer.RegisterReg(fDIReg);
+end;
+
+procedure TDIRegTests.TearDown;
+begin
+  FreeAndNil(fDIReg);
+  inherited;
+end;
+
+procedure TDIRegTests.TestInject_InterfaceOwned;
+var
+  mDummy: IDummy;
+  mSomeService: ISomeService;
+begin
+  fDIContainer.Add(TSomeService, ISomeService, '', ckSingle);
+  fDIReg.InjectProp('SomeService', ISomeService);
+  mDummy := TDummy.Create;
+  fDIReg.Inject(mDummy as TObject);
+  // 2 is beacause type ... as TObject create one temporal reference
+  CheckEquals(2, (mDummy as TInterfacedObject).RefCount, 'reference count problem');
+  // check that OwningObject was set
+  mSomeService := ISomeService(fDIContainer.Locate(ISomeService));
+  CheckSame(mDummy as TInterfacedObject, (mSomeService as TInterfacedOwnedObject).OwningObject);
 end;
 
 { TDummy }

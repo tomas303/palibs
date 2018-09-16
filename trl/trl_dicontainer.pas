@@ -107,6 +107,7 @@ type
     function Instantiate(AClass: TClass; const AID: string): Boolean; overload;
     function Instantiate(const AClass: string; const AID: string): Boolean; overload;
     function FindSelfProps(const ARBData: IRBData): IProps;
+    procedure TrySetOwningObject(AOwner: TObject; const AOwned: IUnknown);
     procedure Inject(AInstance: TObject);
     procedure Inject2(AInstance: TObject; const AProps: IProps);
     procedure SelfPropsMap(AInstance: TObject);
@@ -639,6 +640,23 @@ begin
     Result := nil;
 end;
 
+procedure TDIReg.TrySetOwningObject(AOwner: TObject; const AOwned: IUnknown);
+var
+  mRB: IRBData;
+  mRBItem: IRBDataItem;
+begin
+  if AOwner is TInterfacedObject then
+  begin
+    mRB := TRBData.Create(AOwned as TObject, True);
+    mRBItem := mRB.FindItem('OwningObject');
+    if mRBItem <> nil then
+    begin
+      mRBItem.AsObject := AOwner as TInterfacedObject;
+      AOwned._Release;
+    end;
+  end;
+end;
+
 procedure TDIReg.Inject(AInstance: TObject);
 var
   mRB: IRBData;
@@ -688,6 +706,7 @@ begin
                 mRBItem.AsInterface := mInterface;
                 if mSelfProps <> nil then
                   mSelfProps.SetIntf(mIP.Name, mInterface);
+                TrySetOwningObject(AInstance, mInterface);
               end;
           else
             //if not VarIsNull(mIP.Value) then
