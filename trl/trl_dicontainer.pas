@@ -652,7 +652,6 @@ begin
     if mRBItem <> nil then
     begin
       mRBItem.AsObject := AOwner as TInterfacedObject;
-      AOwned._Release;
     end;
   end;
 end;

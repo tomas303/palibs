@@ -164,8 +164,8 @@ begin
   fDIReg.InjectProp('SomeService', ISomeService);
   mDummy := TDummy.Create;
   fDIReg.Inject(mDummy as TObject);
-  // 2 is beacause type ... as TObject create one temporal reference
-  CheckEquals(2, (mDummy as TInterfacedObject).RefCount, 'reference count problem');
+  // 3 is beacause type ... as TObject(aswell as TInterfacedObject) create one temporal reference
+  CheckEquals(3, (mDummy as TInterfacedObject).RefCount, 'reference count problem');
   // check that OwningObject was set
   mSomeService := ISomeService(fDIContainer.Locate(ISomeService));
   CheckSame(mDummy as TInterfacedObject, (mSomeService as TInterfacedOwnedObject).OwningObject);
