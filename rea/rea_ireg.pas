@@ -28,6 +28,7 @@ type
 
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     function RegisterReact(const AID: string = ''): TDIReg;
+    procedure RegisterBrace;
     procedure RegisterScales;
     procedure RegisterCommon;
   end;

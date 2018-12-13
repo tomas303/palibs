@@ -10,6 +10,7 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_ireact, rea_ureact,
+  rea_ibrace, rea_ubrace,
   flu_iflux, flu_umap,
   Forms, StdCtrls,
   rea_mainform,
@@ -38,6 +39,7 @@ type
       const APaths: array of string): TDIReg;
     function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
     function RegisterReact(const AID: string = ''): TDIReg;
+    procedure RegisterBrace;
     procedure RegisterScales;
     procedure RegisterCommon;
   protected
@@ -141,6 +143,15 @@ begin
   Result.InjectProp('Factory', IDIFactory);
 end;
 
+procedure TReg.RegisterBrace;
+var
+  mReg: TDIReg;
+begin
+  mReg := DIC.Add(TBrace, IBrace);
+  mReg.InjectProp('Log', ILog);
+  mReg.InjectProp('Node', INode);
+end;
+
 procedure TReg.RegisterScales;
 var
   mReg: TDIReg;
@@ -156,6 +167,7 @@ end;
 
 procedure TReg.RegisterCommon;
 begin
+  RegisterBrace;
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
   RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);
