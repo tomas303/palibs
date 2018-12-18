@@ -14,6 +14,7 @@ uses
   trl_iExecutor, trl_uExecutor,
   trl_imetaelement, trl_umetaelement,
   trl_imetaelementfactory, trl_umetaelementfactory,
+  trl_ilink, trl_ulink,
   trl_ilog;
 
 type
@@ -29,6 +30,7 @@ type
     function RegisterInjector: TDIReg;
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
+    procedure RegisterLink;
     function RegisterExecutor(const AID: string = ''): TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
@@ -76,6 +78,11 @@ begin
   DIC.Add(TLeafNode, INode, 'leaf');
 end;
 
+procedure TReg.RegisterLink;
+begin
+  DIC.Add(TLink, ILink);
+end;
+
 function TReg.RegisterExecutor(const AID: string = ''): TDIReg;
 begin
   Result := DIC.Add(TExecutor, IExecutor, AID, ckSingle);
@@ -103,6 +110,7 @@ begin
   RegisterInjector;
   RegisterProps;
   RegisterTreeNodes;
+  RegisterLink;
   RegisterExecutor;
   RegisterElement;
   RegisterElementFactory;

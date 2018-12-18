@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="34">
+    <Files Count="36">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -146,6 +146,14 @@
         <Filename Value="trl_uinterfacedownedobject.pas"/>
         <UnitName Value="trl_uinterfacedownedobject"/>
       </Item34>
+      <Item35>
+        <Filename Value="trl_ilink.pas"/>
+        <UnitName Value="trl_ilink"/>
+      </Item35>
+      <Item36>
+        <Filename Value="trl_ulink.pas"/>
+        <UnitName Value="trl_ulink"/>
+      </Item36>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
