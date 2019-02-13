@@ -16,7 +16,7 @@ uses
   trl_ilauncher, trl_iExecutor, trl_uexecutor, trl_usystem, 
   trl_igenericaccess, trl_imetaelement, trl_umetaelement, 
   trl_imetaelementfactory, trl_umetaelementfactory, 
-  trl_ilink, trl_ulink;
+  trl_uinterfacedownedobject, trl_ilink, trl_ulink;
 
 implementation
 
