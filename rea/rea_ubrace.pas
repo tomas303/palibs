@@ -13,16 +13,7 @@ type
 
   TBrace = class(TInterfacedObject, IBrace, INode)
   protected
-    fOrigin: IMetaElement;
-    fGist: INode;
-  protected
     // IBrace
-    function GetGist: INode;
-    function GetOrigin: IMetaElement;
-    procedure SetGist(AValue: INode);
-    procedure SetOrigin(AValue: IMetaElement);
-    property Origin: IMetaElement read GetOrigin write SetOrigin;
-    property Gist: INode read GetGist write SetGist;  protected
     // INode
     procedure AddChild(const ANode: INode);
     procedure RemoveChild(const ANode: INode);
@@ -43,26 +34,6 @@ type
 implementation
 
 { TBrace }
-
-function TBrace.GetGist: INode;
-begin
-  Result := fGist;
-end;
-
-function TBrace.GetOrigin: IMetaElement;
-begin
-  Result := fOrigin;
-end;
-
-procedure TBrace.SetGist(AValue: INode);
-begin
-  fGist := AValue;
-end;
-
-procedure TBrace.SetOrigin(AValue: IMetaElement);
-begin
-  fOrigin := AValue;
-end;
 
 procedure TBrace.AddChild(const ANode: INode);
 begin
