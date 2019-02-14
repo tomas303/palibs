@@ -21,6 +21,7 @@ type
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReconciler: TDIReg;
+    function RegisterNexus: TDIReg;
     procedure RegisterCommon;
   end;
 

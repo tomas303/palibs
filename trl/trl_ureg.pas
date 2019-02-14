@@ -16,7 +16,8 @@ uses
   trl_imetaelementfactory, trl_umetaelementfactory,
   trl_ilink, trl_ulink,
   trl_ilog,
-  trl_ireconciler, trl_ureconciler;
+  trl_ireconciler, trl_ureconciler,
+  trl_inexus, trl_unexus;
 
 type
 
@@ -36,6 +37,7 @@ type
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReconciler: TDIReg;
+    function RegisterNexus: TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -112,6 +114,13 @@ begin
   Result.InjectProp('Injector', IInjector);
 end;
 
+function TReg.RegisterNexus: TDIReg;
+begin
+  Result := DIC.Add(TNexus, INexus);
+  Result.InjectProp('Log', ILog);
+  Result.InjectProp('Reconciler', IReconciler);
+end;
+
 procedure TReg.RegisterCommon;
 begin
   RegisterSysUtils;
@@ -125,6 +134,7 @@ begin
   RegisterElement;
   RegisterElementFactory;
   RegisterReconciler;
+  RegisterNexus;
 end;
 
 end.
