@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="36">
+    <Files Count="38">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -154,6 +154,14 @@
         <Filename Value="trl_ulink.pas"/>
         <UnitName Value="trl_ulink"/>
       </Item36>
+      <Item37>
+        <Filename Value="trl_ireconciler.pas"/>
+        <UnitName Value="trl_ireconciler"/>
+      </Item37>
+      <Item38>
+        <Filename Value="trl_ureconciler.pas"/>
+        <UnitName Value="trl_ureconciler"/>
+      </Item38>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

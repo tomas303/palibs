@@ -20,6 +20,7 @@ type
     function RegisterExecutor(const AID: string = ''): TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
+    function RegisterReconciler: TDIReg;
     procedure RegisterCommon;
   end;
 

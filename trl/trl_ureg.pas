@@ -15,7 +15,8 @@ uses
   trl_imetaelement, trl_umetaelement,
   trl_imetaelementfactory, trl_umetaelementfactory,
   trl_ilink, trl_ulink,
-  trl_ilog;
+  trl_ilog,
+  trl_ireconciler, trl_ureconciler;
 
 type
 
@@ -34,6 +35,7 @@ type
     function RegisterExecutor(const AID: string = ''): TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
+    function RegisterReconciler: TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -102,6 +104,14 @@ begin
   Result.InjectProp('Log', ILog);
 end;
 
+function TReg.RegisterReconciler: TDIReg;
+begin
+  Result := DIC.Add(TReconciler, IReconciler);
+  Result.InjectProp('Log', ILog);
+  Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('Injector', IInjector);
+end;
+
 procedure TReg.RegisterCommon;
 begin
   RegisterSysUtils;
@@ -114,6 +124,7 @@ begin
   RegisterExecutor;
   RegisterElement;
   RegisterElementFactory;
+  RegisterReconciler;
 end;
 
 end.
