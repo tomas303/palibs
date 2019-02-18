@@ -18,6 +18,7 @@ type
   protected
    // INexus
    function Renew(const AElement: IMetaElement): IUnknown;
+   function Instance: IUnknown;
   protected
     fLog: ILog;
     fReconciler: IReconciler;
@@ -33,6 +34,11 @@ implementation
 function TNexus.Renew(const AElement: IMetaElement): IUnknown;
 begin
   fInstance := Reconciler.Reconcile(fElement, fInstance, AElement);
+end;
+
+function TNexus.Instance: IUnknown;
+begin
+  Result := fInstance;
 end;
 
 

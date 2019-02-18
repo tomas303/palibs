@@ -11,6 +11,7 @@ type
   INexus = interface
   ['{DE2BD10D-CE83-4748-AE69-C303AEEFB1DF}']
     function Renew(const AElement: IMetaElement): IUnknown;
+    function Instance: IUnknown;
   end;
 
 implementation
