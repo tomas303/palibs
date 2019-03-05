@@ -29,6 +29,9 @@ type
     procedure DebugLnEnter(s: string; Args: array of const); overload;
     procedure DebugLnExit(const s: string = ''); overload;
     procedure DebugLnExit(s: string; Args: array of const); overload;
+    function GetVisible: Boolean;
+    procedure SetVisible(AValue: Boolean);
+    property Visible: Boolean read GetVisible write SetVisible;
   public
     procedure AfterConstruction; override;
     destructor Destroy; override;
@@ -105,6 +108,16 @@ end;
 procedure TLazLog.DebugLnExit(s: string; Args: array of const);
 begin
   fLog.DebugLnExit(AddTimeStamp(s), Args);
+end;
+
+function TLazLog.GetVisible: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TLazLog.SetVisible(AValue: Boolean);
+begin
+
 end;
 
 procedure TLazLog.AfterConstruction;

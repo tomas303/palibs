@@ -14,6 +14,8 @@ type
     function LogInfo: string;
   end;
 
+  { ILog }
+
   ILog = interface
   ['{5F619DCC-AC09-4617-B9F5-7789E36FA39C}']
     procedure DebugLn(const s: string = ''); overload;
@@ -22,6 +24,9 @@ type
     procedure DebugLnEnter(s: string; Args: array of const); overload;
     procedure DebugLnExit(const s: string = ''); overload;
     procedure DebugLnExit(s: string; Args: array of const); overload;
+    function GetVisible: Boolean;
+    procedure SetVisible(AValue: Boolean);
+    property Visible: Boolean read GetVisible write SetVisible;
   end;
 
 implementation

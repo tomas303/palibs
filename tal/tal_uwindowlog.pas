@@ -29,6 +29,9 @@ type
     procedure DebugLnEnter(s: string; Args: array of const); overload;
     procedure DebugLnExit(const s: string = ''); overload;
     procedure DebugLnExit(s: string; Args: array of const); overload;
+    function GetVisible: Boolean;
+    procedure SetVisible(AValue: Boolean);
+    property Visible: Boolean read GetVisible write SetVisible;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -60,7 +63,6 @@ begin
   fLogMemo.Font.Name := 'DejaVu Sans Mono';
   fLogMemo.Font.Size := 10;
   fLogMemo.Visible := True;
-  fLogForm.Visible := True;
   fLogForm.Left := Screen.Width - fLogForm.Width;
   fLogForm.Top := Screen.Height - fLogForm.Height;
   fLogForm.WindowState := wsMinimized;
@@ -108,6 +110,16 @@ end;
 procedure TWindowLog.DebugLnExit(s: string; Args: array of const);
 begin
   DebugLnExit(Format(s, Args));
+end;
+
+function TWindowLog.GetVisible: Boolean;
+begin
+  Result := fLogForm.Visible;
+end;
+
+procedure TWindowLog.SetVisible(AValue: Boolean);
+begin
+  fLogForm.Visible := AValue;
 end;
 
 procedure TWindowLog.AfterConstruction;

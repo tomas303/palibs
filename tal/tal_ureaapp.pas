@@ -8,9 +8,11 @@ uses
   SysUtils, rea_ireact, trl_uprops,
   trl_idifactory, flu_iflux, rea_iapp,
   trl_iExecutor,
+  trl_ilog,
   Forms,  // later remove and make Application accessible through interface
-  LMessages,
-  trl_imetaelementfactory;
+  LMessages, LCLType, LCLIntf,
+  trl_imetaelementfactory,
+  rea_ibrace, rea_ibits, trl_imetaelement, Classes;
 
 type
 
@@ -24,7 +26,9 @@ type
   protected
     procedure AppStoreChanged(const AAppState: IFluxState);
     procedure IdleHandler(Sender: TObject; var Done: Boolean);
+    procedure KeyDownBeforeHandler(Sender: TObject; var Key: Word; Shift: TShiftState);
   protected
+    fLog: ILog;
     fFactory: IDIFactory;
     fRootComponent: IReactComponent;
     fAppStore: IFluxStore;
@@ -32,6 +36,7 @@ type
     fExecutor: IExecutor;
     fReact: IReact;
   published
+    property Log: ILog read fLog write fLog;
     property Factory: IDIFactory read fFactory write FFactory;
     property RootComponent: IReactComponent read fRootComponent write fRootComponent;
     property AppStore: IFluxStore read fAppStore write fAppStore;
@@ -49,6 +54,7 @@ var
   mAction: IFluxAction;
 begin
   Application.AddOnIdleHandler(@IdleHandler);
+  Application.AddOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
   AppStore.Add(@AppStoreChanged);
   mAction := IFluxAction(Factory.Locate(IFluxAction, '', TProps.New.SetInt('ID', 0)));
   (AppStore as IFluxDispatcher).Dispatch(mAction);
@@ -58,6 +64,7 @@ end;
 procedure TReactApp.ShutDown;
 begin
   Application.RemoveOnIdleHandler(@IdleHandler);
+  Application.RemoveOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
   AppStore.Remove(@AppStoreChanged);
 end;
 
@@ -69,6 +76,15 @@ end;
 procedure TReactApp.IdleHandler(Sender: TObject; var Done: Boolean);
 begin
   Executor.ExecuteAll;
+end;
+
+procedure TReactApp.KeyDownBeforeHandler(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Key = VK_L) and (Shift = [ssCtrl])
+  then begin
+    Log.Visible := not Log.Visible;
+  end;
 end;
 
 end.

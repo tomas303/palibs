@@ -38,6 +38,7 @@ begin
   mReg.InjectProp('ReactApp', IReactApp);
   //
   Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
+  Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('RootComponent', IReactComponentApp);
   Result.InjectProp('AppStore', IFluxStore);
