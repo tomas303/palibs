@@ -28,6 +28,8 @@ type
     procedure IdleHandler(Sender: TObject; var Done: Boolean);
     procedure KeyDownBeforeHandler(Sender: TObject; var Key: Word; Shift: TShiftState);
   protected
+    fHeadBit: IBit;
+  protected
     fLog: ILog;
     fFactory: IDIFactory;
     fRootComponent: IReactComponent;
@@ -35,6 +37,10 @@ type
     fElFactory: IMetaElementFactory;
     fExecutor: IExecutor;
     fReact: IReact;
+
+    fHead: IBrace;
+    fHeadProvider: IMetaElementProvider;
+
   published
     property Log: ILog read fLog write fLog;
     property Factory: IDIFactory read fFactory write FFactory;
@@ -43,6 +49,9 @@ type
     property ElFactory: IMetaElementFactory read fElFactory write fElFactory;
     property Executor: IExecutor read fExecutor write fExecutor;
     property React: IReact read fReact write fReact;
+
+    property Head: IBrace read fHead write fHead;
+    property HeadProvider: IMetaElementProvider read fHeadProvider write fHeadProvider;
   end;
 
 implementation
@@ -58,7 +67,9 @@ begin
   AppStore.Add(@AppStoreChanged);
   mAction := IFluxAction(Factory.Locate(IFluxAction, '', TProps.New.SetInt('ID', 0)));
   (AppStore as IFluxDispatcher).Dispatch(mAction);
-  React.Render(RootComponent);
+  //React.Render(RootComponent);
+  fHeadBit := Head.Refresh(HeadProvider.ProvideMetaElement);
+  fHeadBit.Render;
 end;
 
 procedure TReactApp.ShutDown;
@@ -70,12 +81,14 @@ end;
 
 procedure TReactApp.AppStoreChanged(const AAppState: IFluxState);
 begin
-  React.RenderAsync(RootComponent);
+  //React.RenderAsync(RootComponent);
+  fHeadBit := Head.Refresh(HeadProvider.ProvideMetaElement);
+  fHeadBit.Render;
 end;
 
 procedure TReactApp.IdleHandler(Sender: TObject; var Done: Boolean);
 begin
-  Executor.ExecuteAll;
+  //Executor.ExecuteAll;
 end;
 
 procedure TReactApp.KeyDownBeforeHandler(Sender: TObject; var Key: Word;

@@ -13,7 +13,8 @@ uses
   fgl, typinfo,
   trl_iExecutor, Math, trl_usystem,
   LCLIntf, LCLType,
-  trl_imetaelement, trl_imetaelementfactory;
+  trl_imetaelement, trl_imetaelementfactory,
+  rea_ibrace;
 
 type
 
@@ -83,7 +84,7 @@ type
 
   { TReactComponent }
 
-  TReactComponent = class(TDynaObject, IReactComponent, INode)
+  TReactComponent = class(TDynaObject, IReactComponent, INode, IMetaElementProvider)
   protected type
 
     { TFD }
@@ -129,6 +130,9 @@ type
     function GetChild(const AIndex: integer): INode;
     function GetNodeEnumerator: INodeEnumerator;
     function INode.GetEnumerator = GetNodeEnumerator;
+  protected
+    // IMetaElementProvider
+    function ProvideMetaElement: IMetaElement;
   protected
     fLog: ILog;
     fNode: INode;
@@ -471,6 +475,7 @@ end;
 
 procedure TReactComponentMainForm.Dispatch(const AAppAction: IFluxAction);
 begin
+  exit;
   case AAppAction.ID of
     cActionMove:
       begin
@@ -524,8 +529,11 @@ begin
   mProps.SetInt(cProps.MMLeft, MMLeft);
   mProps.SetInt(cProps.MMTop, MMTop);
   Result := ElementFactory.CreateElement(IMainFormBit, mProps);
-  for mChild in AParentElement do begin
-    (Result as INode).AddChild(mChild as INode);
+  if AParentElement <> nil then
+  begin
+    for mChild in AParentElement do begin
+      (Result as INode).AddChild(mChild as INode);
+    end;
   end;
 end;
 
@@ -741,6 +749,11 @@ end;
 function TReactComponent.GetNodeEnumerator: INodeEnumerator;
 begin
   Result := Node.GetEnumerator;
+end;
+
+function TReactComponent.ProvideMetaElement: IMetaElement;
+begin
+  Result := ComposeElement(nil);
 end;
 
 { TReactComponentForm }

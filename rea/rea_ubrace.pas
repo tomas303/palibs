@@ -30,11 +30,12 @@ type
     function GetNodeEnumerator: INodeEnumerator;
     function INode.GetEnumerator = GetNodeEnumerator;
   protected
+    fComponentChain: TComponentChain;
+  protected
     fLog: ILog;
     fNode: INode;
     fFactory: IDIFactory;
-    fComponentChain: TComponentChain;
-    fBit: INexus;
+    fNexus: INexus;
     function ChainBitElement(const AInput: IMetaElement): IMetaElement;
     procedure ProcessChildren(const ABitElement: IMetaElement);
   public
@@ -44,6 +45,7 @@ type
     property Log: ILog read fLog write fLog;
     property Node: INode read fNode write fNode;
     property Factory: IDIFactory read fFactory write fFactory;
+    property Nexus: INexus read fNexus write fNexus;
   end;
 
 implementation
@@ -59,9 +61,23 @@ var
   mBit: IBit;
   mChild: IBrace;
   mNewChildBit: IBit;
+
+  mmm: IUnknown;
+  sss: string;
 begin
   mNewBitElement := ChainBitElement(AElement);
-  Result := fBit.Renew(mNewBitElement) as IBit;
+
+  //if fNexus = nil then
+  //  fNexus := IBit(Factory.Locate(mNewBitElement.Guid, mNewBitElement.TypeID, mNewBitElement.Props))
+  //else
+  //  fNexus := fNexus.Renew(mNewBitElement) as IBit;
+
+
+  mmm := fNexus.Renew(mNewBitElement);
+  sss := (mmm as TObject).ClassName;
+
+  Result := fNexus.Renew(mNewBitElement) as IBit;
+
 
   // result has children elements - should fit with brace children ... based on order
   for i := 0 to Count - 1 do
@@ -71,11 +87,12 @@ begin
     mNewChildBit := mChild.Refresh(mNewChildEl);
     //(Result as INode).Child[i] := mNewChildBit;
   end;
+
 end;
 
 function TBrace.Remove(const AParent: IBit): IBit;
 begin
-  (AParent as INode).RemoveChild(fBit.Instance as INode);
+  (AParent as INode).RemoveChild(fNexus.Instance as INode);
 end;
 
 procedure TBrace.AddChild(const ANode: INode);
@@ -116,11 +133,15 @@ end;
 function TBrace.ChainBitElement(const AInput: IMetaElement): IMetaElement;
 var
   mProvider: IMetaElementProvider;
+  sss: string;
+  mEl: IMetaElement;
 begin
   if Factory.CanLocateAs(AInput.Guid, IMetaElementProvider) then
   begin
-    mProvider := IMetaElementProvider(Factory.Locate(AInput.Guid, AInput.TypeID, AInput.Props));
-    Result := ChainBitElement(mProvider.ProvideMetaElement);
+    mProvider := IUnknown(Factory.Locate(AInput.Guid, AInput.TypeID, AInput.Props)) as IMetaElementProvider;
+    sss := (mProvider as tobject).ClassName;
+    mEl := mProvider.ProvideMetaElement;
+    Result := ChainBitElement(mEl);
   end
   else
     Result := AInput;
@@ -141,8 +162,8 @@ begin
     mNewChildEl := (ABitElement as INode).Child[i] as IMetaElement;
     mChild := (Self as INode).Child[i] as IBrace;
     mChildBit := mChild.Refresh(mNewChildEl);
-    (fBit as INode).Delete(i);
-    (fBit as INode).Insert(i, mChildBit as INode);
+    (fNexus as INode).Delete(i);
+    (fNexus as INode).Insert(i, mChildBit as INode);
   end;
   if (Self as INode).Count < (ABitElement as INode).Count then
   begin
@@ -152,7 +173,7 @@ begin
       mNewChildEl := (ABitElement as INode).Child[i] as IMetaElement;
       mChild := IBrace(Factory.Locate(IBrace));
       mChildBit := mChild.Refresh(mNewChildEl);
-      (fBit as INode).AddChild(mChildBit as INode);
+      (fNexus as INode).AddChild(mChildBit as INode);
     end;
   end
   else
@@ -161,7 +182,7 @@ begin
     while (Self as INode).Count > (ABitElement as INode).Count do
     begin
       mChild := (Self as INode).Child[(Self as INode).Count - 1] as IBrace;
-      mChild.Remove(fBit.Instance as IBit);
+      mChild.Remove(fNexus.Instance as IBit);
       (Self as INode).RemoveChild(mChild as INode);
     end;
   end;

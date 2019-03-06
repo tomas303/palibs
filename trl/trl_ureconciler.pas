@@ -46,11 +46,11 @@ begin
   end else
   if (AOldElement = nil) and (ANewElement <> nil) then begin
     Log.DebugLn('from nil to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
-    Result := IUnknown(Factory.Locate(ANewElement.TypeGuid, ANewElement.TypeID));
+    Result := IUnknown(Factory.Locate(ANewElement.Guid, ANewElement.TypeID));
   end else
   if (AOldElement.TypeGuid <> ANewElement.TypeGuid) or (AOldElement.TypeID <> ANewElement.TypeID) then begin
     Log.DebugLn('from ' + AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
-    Result := IUnknown(Factory.Locate(ANewElement.TypeGuid, ANewElement.TypeID));
+    Result := IUnknown(Factory.Locate(ANewElement.Guid, ANewElement.TypeID));
   end else begin
     Log.DebugLn('equalize props');
     mDiffProps := ANewElement.Props.Diff(AOldElement.Props);

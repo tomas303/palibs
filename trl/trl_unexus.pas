@@ -34,6 +34,8 @@ implementation
 function TNexus.Renew(const AElement: IMetaElement): IUnknown;
 begin
   fInstance := Reconciler.Reconcile(fElement, fInstance, AElement);
+  fElement := AElement;
+  Result := fInstance;
 end;
 
 function TNexus.Instance: IUnknown;

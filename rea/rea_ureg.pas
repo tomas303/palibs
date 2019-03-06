@@ -16,7 +16,8 @@ uses
   rea_mainform,
   trl_iExecutor,
   trl_iprops,
-  trl_imetaelementfactory;
+  trl_imetaelementfactory,
+  trl_inexus;
 
 type
 
@@ -149,7 +150,9 @@ var
 begin
   mReg := DIC.Add(TBrace, IBrace);
   mReg.InjectProp('Log', ILog);
-  mReg.InjectProp('Node', INode);
+  mReg.InjectProp('Node', INode, 'parent');
+  mReg.InjectProp('Factory', IDIFactory);
+  mReg.InjectProp('Nexus', INexus);
 end;
 
 procedure TReg.RegisterScales;

@@ -8,10 +8,6 @@ uses
   Classes, SysUtils;
 
 type
-  //IProp = interface;
-  //// children???
-  //IPropArray = array of IProp;
-
   TPropType = (ptUndefined, ptInt, ptStr, ptBool, ptGuid, ptInterface);
 
   IProp = interface

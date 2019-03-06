@@ -67,6 +67,7 @@ type
 
   cProps = class
   public const
+    Children = 'Children';
     Layout = 'Layout';
     Place = 'Place';
     Title = 'Title';
