@@ -1,5 +1,7 @@
 unit trl_urttibroker;
 
+{$mode delphi}{$H+}
+
 interface
 
 uses
@@ -219,9 +221,9 @@ type
     procedure AssignObject(const ASource, ATarget: TObject);
     procedure Assign(const AData: IRBData);
   public
-    constructor Create(AObject: TObject; ASkipUnsupported: Boolean = False);
-    constructor Create(AObject: TObject; const APropNameFilter: string);
-    constructor Create(AClass: TClass; ASkipUnsupported: Boolean = False);
+    constructor Create(AObject: TObject; ASkipUnsupported: Boolean = False); overload;
+    constructor Create(AObject: TObject; const APropNameFilter: string); overload;
+    constructor Create(AClass: TClass; ASkipUnsupported: Boolean = False); overload;
     destructor Destroy; override;
     property ClassName: string read GetClassName;
     property ClassType: TClass read GetClassType;

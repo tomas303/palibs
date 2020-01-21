@@ -1,5 +1,7 @@
 unit trl_upersistxml;
 
+{$mode delphi}{$H+}
+
 interface
 
 uses
@@ -77,8 +79,8 @@ type
     procedure CheckOpen;
     property Doc: TXMLDocument read GetDoc;
   public
-    constructor Create(AFactory: IFactory; const AFile: string);
-    constructor Create;
+    constructor Create(AFactory: IFactory; const AFile: string); overload;
+    constructor Create; overload;
     destructor Destroy; override;
     procedure AfterConstruction; override;
     // IPersistStoreDevice

@@ -1,5 +1,7 @@
 unit tvl_udatabinder;
 
+{$mode delphi}{$H+}
+
 interface
 
 uses
@@ -31,7 +33,7 @@ type
 
   TDataSlotsItem = class(TCustomDataSlotsItem)
   protected type
-    TBinderItems = specialize TFPGObjectList<TEditBinder>;
+    TBinderItems = TFPGObjectList<TEditBinder>;
   private
     fBinders: TBinderItems;
     fRecallDataChangeEvents: TBinderChangeEvents;
@@ -55,7 +57,7 @@ type
 
   TObjectSlotsItem = class(TCustomDataSlotsItem)
   protected type
-    TBinderItems = specialize TFPGMapInterfacedObjectData<Pointer, IRBDataBinder>;
+    TBinderItems = TFPGMapInterfacedObjectData<Pointer, IRBDataBinder>;
   private
     fBinders: TBinderItems;
   protected
@@ -73,7 +75,7 @@ type
 
   TDataSlots = class
   private type
-   TDataEditItems = specialize TFPGMapObject<string, TCustomDataSlotsItem>;
+   TDataEditItems = TFPGMapObject<string, TCustomDataSlotsItem>;
   private
     fItems: TDataEditItems;
     fData: IRBData;
@@ -92,8 +94,8 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
     procedure BindArea(const AContainer: TWinControl; const AData: IRBData);
-    procedure BindControl(AControl: TWinControl; const AName: string);
-    procedure BindControl(AControl: TWinControl; const AItem: IRBDataItem);
+    procedure BindControl(AControl: TWinControl; const AName: string); overload;
+    procedure BindControl(AControl: TWinControl; const AItem: IRBDataItem); overload;
     procedure DataChange;
     procedure Flush(AControl: TControl = nil);
     property Data: IRBData read GetData write SetData;
@@ -271,8 +273,8 @@ begin
   mBinder := FindBinder(AControl);
   if mBinder = nil then begin
     mBinder := CreateBinder(AControl);
-    mBinder.RegisterChangeEvent(@PushDataChange);
-    mBinder.RegisterChangeEvent(@RecallDataChange);
+    mBinder.RegisterChangeEvent(PushDataChange);
+    mBinder.RegisterChangeEvent(RecallDataChange);
     fBinders.Add(mBinder);
   end;
   mBinder.Unbind;

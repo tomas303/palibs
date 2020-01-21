@@ -208,7 +208,7 @@ type
 
   TDIContainer = class(TDICustomContainer)
   private type
-    TDIRegs = class(specialize TFPGObjectList<TDIReg>)
+    TDIRegs = class(TFPGObjectList<TDIReg>)
     end;
   private
     fRegs: TDIRegs;

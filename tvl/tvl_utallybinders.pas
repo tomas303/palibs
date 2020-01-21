@@ -1,6 +1,6 @@
 unit tvl_utallybinders;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 
 interface
 
@@ -61,7 +61,7 @@ type
     procedure Bind(const AColumn: TGridColumn; const ADataList: IPersistRefList; AClassData: IRBData);
   end;
 
-  TGridColumnBinders = specialize TFPGObjectList<TGridColumnBinder>;
+  TGridColumnBinders = TFPGObjectList<TGridColumnBinder>;
 
   { TCustomDrawGridHelper }
 
@@ -411,7 +411,7 @@ procedure TDrawGridBinder.BindControl;
 begin
   //RefreshData;
   Grid.DefaultDrawing := True;
-  Grid.OnDrawCell := @DrawCellEventHandler;
+  Grid.OnDrawCell := DrawCellEventHandler;
 end;
 
 procedure TDrawGridBinder.UnbindControl;

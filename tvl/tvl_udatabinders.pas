@@ -1,5 +1,7 @@
 unit tvl_udatabinders;
 
+{$mode delphi}{$H+}
+
 interface
 
 uses
@@ -374,7 +376,7 @@ end;
 procedure TTextBtnBinder.BindControl;
 begin
   inherited;
-  Control.OnChange := @OnChangeHandler;
+  Control.OnChange := OnChangeHandler;
 end;
 
 procedure TTextBtnBinder.UnbindControl;
@@ -429,7 +431,7 @@ end;
 procedure TMemoBinder.BindControl;
 begin
   inherited;
-  Control.OnChange := @OnChangeHandler;
+  Control.OnChange := OnChangeHandler;
 end;
 
 procedure TMemoBinder.UnbindControl;
@@ -464,7 +466,7 @@ end;
 procedure TBoolBinder.BindControl;
 begin
   inherited;
-  Control.OnChange := @OnChangeHandler;
+  Control.OnChange := OnChangeHandler;
 end;
 
 procedure TBoolBinder.UnbindControl;
@@ -700,7 +702,7 @@ constructor TListBinder.TGridEditorSupport.Create(AEditor: TWinControl);
 begin
   fEditor := AEditor;
   fSupportBinder := TSupportBinder.Create;
-  fSupportBinder.OnEditorSupportGrid := @GetEditorSupportGridEvent;
+  fSupportBinder.OnEditorSupportGrid := GetEditorSupportGridEvent;
   fSupportBinder.Bind(fEditor);
 end;
 
@@ -884,7 +886,7 @@ procedure TOfferBinder.BindControl;
 begin
   inherited;
   FillOffer;
-  Control.OnChange := @OnChangeHandler;
+  Control.OnChange := OnChangeHandler;
   Control.AutoComplete := True;
 end;
 
@@ -1230,11 +1232,11 @@ begin
   // on the end, otherway are called when assign collcount - rowcount
   Control.AutoFillColumns := True;
   Control.Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAutoAddRows, goTabs, {goAlwaysShowEditor,} goSmoothScroll];
-  Control.OnColRowInserted := @OnColRowInsertedHandler;
-  Control.OnColRowDeleted := @OnColRowDeletedHandler;
-  Control.OnSelectEditor := @OnSelectEditorHandler;
-  Control.OnKeyDown := @OnKeyDownHandler;
-  Control.H_OnEditingDone := @OnEditingDoneHandler;
+  Control.OnColRowInserted := OnColRowInsertedHandler;
+  Control.OnColRowDeleted := OnColRowDeletedHandler;
+  Control.OnSelectEditor := OnSelectEditorHandler;
+  Control.OnKeyDown := OnKeyDownHandler;
+  Control.H_OnEditingDone := OnEditingDoneHandler;
 end;
 
 procedure TListBinder.UnbindControl;
@@ -1364,7 +1366,7 @@ end;
 procedure TTextBinder.BindControl;
 begin
   inherited;
-  Control.OnChange := @OnChangeHandler;
+  Control.OnChange := OnChangeHandler;
 end;
 
 procedure TTextBinder.UnbindControl;
