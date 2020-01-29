@@ -31,6 +31,7 @@ type
     procedure RegisterBrace;
     procedure RegisterScales;
     procedure RegisterCommon;
+    function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
   end;
 
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="rea"/>
     <Type Value="RunTimeOnly"/>
     <CompilerOptions>
@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="12">
+    <Files Count="14">
       <Item1>
         <Filename Value="rea_iapp.pas"/>
         <UnitName Value="rea_iapp"/>
@@ -58,6 +58,14 @@
         <Filename Value="rea_ubrace.pas"/>
         <UnitName Value="rea_ubrace"/>
       </Item12>
+      <Item13>
+        <Filename Value="rea_idesigncomponent.pas"/>
+        <UnitName Value="rea_idesigncomponent"/>
+      </Item13>
+      <Item14>
+        <Filename Value="rea_udesigncomponent.pas"/>
+        <UnitName Value="rea_udesigncomponent"/>
+      </Item14>
     </Files>
     <RequiredPkgs Count="5">
       <Item1>

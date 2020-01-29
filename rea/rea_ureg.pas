@@ -43,6 +43,7 @@ type
     procedure RegisterBrace;
     procedure RegisterScales;
     procedure RegisterCommon;
+    function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -183,6 +184,18 @@ begin
   RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterReact;
+end;
+
+function TReg.RegisterDesignComponent(AComponentClass: TClass;
+  AComponentInterface: TGuid): TDIReg;
+var
+  mReg: TDIReg;
+  mPath: string;
+begin
+  Result := DIC.Add(AComponentClass, AComponentInterface);
+  Result.InjectProp('Log', ILog);
+  Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('ElementFactory', IMetaElementFactory);
 end;
 
 end.
