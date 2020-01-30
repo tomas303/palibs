@@ -23,6 +23,7 @@ type
     // INode
     procedure AddChild(const ANode: INode);
     procedure RemoveChild(const ANode: INode);
+    procedure ExchangeChild(const AFromNode, AToNode: INode);
     procedure Insert(const AIndex: integer; const ANode: INode);
     procedure Delete(const AIndex: integer);
     function Count: integer;
@@ -103,6 +104,11 @@ end;
 procedure TBrace.RemoveChild(const ANode: INode);
 begin
   Node.RemoveChild(ANode);
+end;
+
+procedure TBrace.ExchangeChild(const AFromNode, AToNode: INode);
+begin
+  Node.ExchangeChild(AFromNode, AToNode);
 end;
 
 procedure TBrace.Insert(const AIndex: integer; const ANode: INode);

@@ -74,6 +74,7 @@ type
     //INode
     procedure AddChild(const ANode: INode); virtual; abstract;
     procedure RemoveChild(const ANode: INode); virtual; abstract;
+    procedure ExchangeChild(const AFromNode, AToNode: INode); virtual; abstract;
     procedure Insert(const AIndex: integer; const ANode: INode); virtual; abstract;
     procedure Delete(const AIndex: integer); virtual; abstract;
     function Count: integer; virtual; abstract;
@@ -96,6 +97,7 @@ type
     function MoveNext(const ACursor: IBlackBox): INode; override;
     procedure AddChild(const ANode: INode); override;
     procedure RemoveChild(const ANode: INode); override;
+    procedure ExchangeChild(const AFromNode, AToNode: INode); override;
     procedure Insert(const AIndex: integer; const ANode: INode); override;
     procedure Delete(const AIndex: integer); override;
     function Count: integer; override;
@@ -111,6 +113,7 @@ type
     function MoveNext(const ACursor: IBlackBox): INode; override;
     procedure AddChild(const ANode: INode); override;
     procedure RemoveChild(const ANode: INode); override;
+    procedure ExchangeChild(const AFromNode, AToNode: INode); override;
     procedure Insert(const AIndex: integer; const ANode: INode); override;
     procedure Delete(const AIndex: integer); override;
     function Count: integer; override;
@@ -169,6 +172,18 @@ begin
   Children.Remove(ANode);
 end;
 
+procedure TParentNode.ExchangeChild(const AFromNode, AToNode: INode);
+var
+  i: integer;
+begin
+  if AFromNode =  AToNode then
+    Exit;
+  i := Children.IndexOf(AFromNode);
+  Assert(i > -1);
+  Delete(i);
+  Insert(i,  AToNode);
+end;
+
 procedure TParentNode.Insert(const AIndex: integer; const ANode: INode);
 begin
   Children.Insert(AIndex, ANode);
@@ -207,6 +222,10 @@ begin
 end;
 
 procedure TLeafNode.RemoveChild(const ANode: INode);
+begin
+end;
+
+procedure TLeafNode.ExchangeChild(const AFromNode, AToNode: INode);
 begin
 end;
 
