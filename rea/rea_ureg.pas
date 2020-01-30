@@ -11,6 +11,7 @@ uses
   rea_ibits, rea_ubits,
   rea_ireact, rea_ureact,
   rea_ibrace, rea_ubrace,
+  rea_irenderer, rea_urenderer,
   flu_iflux, flu_umap,
   Forms, StdCtrls,
   rea_mainform,
@@ -44,6 +45,7 @@ type
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
+    function RegisterRenderer: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -196,6 +198,13 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
+end;
+
+function TReg.RegisterRenderer: TDIReg;
+begin
+  Result := DIC.Add(TRenderer, IRenderer);
+  Result.InjectProp('Log', ILog);
+  Result.InjectProp('Factory', IDIFactory);
 end;
 
 end.

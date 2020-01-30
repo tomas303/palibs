@@ -32,6 +32,7 @@ type
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
+    function RegisterRenderer: TDIReg;
   end;
 
 
