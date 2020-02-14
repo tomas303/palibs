@@ -9,7 +9,8 @@ uses
   tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
   trl_ilog, tal_uwindowlog, flu_iflux,
   trl_iExecutor, trl_imetaelementfactory,
-  rea_ibrace, trl_imetaelement;
+  rea_ibrace, trl_imetaelement,
+  trl_ireconciler, rea_idesigncomponent, rea_irenderer;
 
 type
 
@@ -41,13 +42,16 @@ begin
   Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('RootComponent', IReactComponentApp);
+  //Result.InjectProp('RootComponent', IReactComponentApp);
   Result.InjectProp('AppStore', IFluxStore);
   Result.InjectProp('ElFactory', IMetaElementFactory);
-  Result.InjectProp('Executor', IExecutor);
-  Result.InjectProp('React', IReact);
-  Result.InjectProp('Head', IBrace);
-  Result.InjectProp('HeadProvider', IMetaElementProvider, 'boot');
+  //Result.InjectProp('Executor', IExecutor);
+  //Result.InjectProp('React', IReact);
+  //Result.InjectProp('Head', IBrace);
+  //Result.InjectProp('HeadProvider', IMetaElementProvider, 'boot');
+  Result.InjectProp('Reconciler', IReconciler);
+  Result.InjectProp('AppComponent', IDesignComponentApp);
+  Result.InjectProp('Renderer', IRenderer);
 end;
 
 function TReg.RegisterWindowLog: TDIReg;

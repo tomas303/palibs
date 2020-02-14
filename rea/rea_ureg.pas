@@ -186,6 +186,7 @@ begin
   RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterReact;
+  RegisterRenderer;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -198,6 +199,7 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
+  Result.InjectProp('Node', INode, 'parent');
 end;
 
 function TReg.RegisterRenderer: TDIReg;

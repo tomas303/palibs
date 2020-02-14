@@ -125,6 +125,9 @@ function TReconciler.Reconcile(const AOldElement: IMetaElement;
   const AOldEntity: IUnknown; const ANewElement: IMetaElement): IUnknown;
 var
   i: integer;
+  mb: INode;
+  mch: INode;
+  mchE: IMetaElement;
 begin
   Log.DebugLnEnter({$I %CURRENTROUTINE%});
   if (AOldElement = nil) and (ANewElement = nil) then begin
@@ -139,7 +142,13 @@ begin
     Log.DebugLn('from nil to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
     Result := IUnknown(Factory.Locate(ANewElement.Guid, ANewElement.TypeID, ANewElement.Props.Clone));
     for i := 0 to (ANewElement as INode).Count - 1 do
-      AddChild(Result as INode, (ANewElement as INode).Child[i] as IMetaElement);
+    begin
+      //AddChild(Result as INode, (ANewElement as INode).Child[i] as IMetaElement);
+      mb := Result as INode;
+      mch := (ANewElement as INode).Child[i];
+      mchE := mch as IMetaElement;
+      AddChild(mb, mchE);
+    end;
   end else
   if (AOldElement.TypeGuid <> ANewElement.TypeGuid) or (AOldElement.TypeID <> ANewElement.TypeID) then begin
     Log.DebugLn('from ' + AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);

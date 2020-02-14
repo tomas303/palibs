@@ -12,51 +12,64 @@ type
 
   { TDesignComponent }
 
-  TDesignComponent = class(TDynaObject, IDesignComponent)
+  TDesignComponent = class(TDynaObject, IDesignComponent, INode)
   protected
     function NewProps: IProps;
     function NewNotifier(const AActionID: integer): IFluxNotifier;
   protected
-    function DoCompose(const AParentElement: IMetaElement): IMetaElement; virtual; abstract;
+    function DoCompose(const AProps: IProps): IMetaElement; virtual; abstract;
   protected
     // IDesignComponent = interface
-    function Compose(const AParentElement: IMetaElement): IMetaElement;
+    function Compose(const AProps: IProps): IMetaElement;
+  protected
+    // INode
+    procedure AddChild(const ANode: INode);
+    procedure RemoveChild(const ANode: INode);
+    procedure ExchangeChild(const AFromNode, AToNode: INode);
+    procedure Insert(const AIndex: integer; const ANode: INode);
+    procedure Delete(const AIndex: integer);
+    function Count: integer;
+    function GetChild(const AIndex: integer): INode;
+    function GetNodeEnumerator: INodeEnumerator;
+    function INode.GetEnumerator = GetNodeEnumerator;
   protected
     fLog: ILog;
     fElementFactory: IMetaElementFactory;
     fFactory: IDIFactory;
+    fNode: INode;
   published
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Factory: IDIFactory read fFactory write fFactory;
+    property Node: INode read fNode write fNode;
   end;
 
   { TDesignComponentForm }
 
   TDesignComponentForm = class(TDesignComponent, IDesignComponentForm)
   protected
-    function DoCompose(const AParentElement: IMetaElement): IMetaElement; override;
+    function DoCompose(const AProps: IProps): IMetaElement; override;
   end;
 
   { TDesignComponentEdit }
 
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
   protected
-    function DoCompose(const AParentElement: IMetaElement): IMetaElement; override;
+    function DoCompose(const AProps: IProps): IMetaElement; override;
   end;
 
   { TDesignComponentButton }
 
   TDesignComponentButton = class(TDesignComponent, IDesignComponentButton)
   protected
-    function DoCompose(const AParentElement: IMetaElement): IMetaElement; override;
+    function DoCompose(const AProps: IProps): IMetaElement; override;
   end;
 
   { TDesignComponentHeader }
 
   TDesignComponentHeader = class(TDesignComponent, IDesignComponentHeader)
   protected
-    function DoCompose(const AParentElement: IMetaElement): IMetaElement; override;
+    function DoCompose(const AProps: IProps): IMetaElement; override;
   end;
 
 
@@ -64,8 +77,7 @@ implementation
 
 { TDesignComponentHeader }
 
-function TDesignComponentHeader.DoCompose(const AParentElement: IMetaElement
-  ): IMetaElement;
+function TDesignComponentHeader.DoCompose(const AProps: IProps): IMetaElement;
 var
   mProps: IProps;
 begin
@@ -76,8 +88,7 @@ end;
 
 { TDesignComponentButton }
 
-function TDesignComponentButton.DoCompose(const AParentElement: IMetaElement
-  ): IMetaElement;
+function TDesignComponentButton.DoCompose(const AProps: IProps): IMetaElement;
 var
   mProps: IProps;
 begin
@@ -87,8 +98,7 @@ end;
 
 { TDesignComponentEdit }
 
-function TDesignComponentEdit.DoCompose(const AParentElement: IMetaElement
-  ): IMetaElement;
+function TDesignComponentEdit.DoCompose(const AProps: IProps): IMetaElement;
 var
   mTitle: IProp;
   mProps: IProps;
@@ -103,15 +113,14 @@ end;
 
 { TDesignComponentForm }
 
-function TDesignComponentForm.DoCompose(const AParentElement: IMetaElement
-  ): IMetaElement;
+function TDesignComponentForm.DoCompose(const AProps: IProps): IMetaElement;
 var
   mProps: IProps;
 begin
   mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color,
     cProps.SizeNotifier, cProps.MoveNotifier, cProps.ActivateNotifier]);
   if mProps.PropByName[cProps.Color] = nil then
-    mProps.SetProp(AParentElement.Props.PropByName[cProps.Color]);
+    mProps.SetProp(AProps.PropByName[cProps.Color]);
   { depend on size notifier above - will take info from storage, not from here
   mProps.SetInt(cProps.MMWidth, MMWidth);
   mProps.SetInt(cProps.MMHeight, MMHeight);
@@ -135,10 +144,49 @@ begin
   Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '', NewProps.SetInt('ActionID', AActionID)));
 end;
 
-function TDesignComponent.Compose(const AParentElement: IMetaElement
-  ): IMetaElement;
+function TDesignComponent.Compose(const AProps: IProps): IMetaElement;
 begin
-  Result := DoCompose(AParentElement);
+  Result := DoCompose(AProps);
+end;
+
+procedure TDesignComponent.AddChild(const ANode: INode);
+begin
+  Node.AddChild(ANode);
+end;
+
+procedure TDesignComponent.RemoveChild(const ANode: INode);
+begin
+  Node.RemoveChild(ANode);
+end;
+
+procedure TDesignComponent.ExchangeChild(const AFromNode, AToNode: INode);
+begin
+  Node.ExchangeChild(AFromNode, AToNode);
+end;
+
+procedure TDesignComponent.Insert(const AIndex: integer; const ANode: INode);
+begin
+  Node.Insert(AIndex, ANode);
+end;
+
+procedure TDesignComponent.Delete(const AIndex: integer);
+begin
+  Node.Delete(AIndex);
+end;
+
+function TDesignComponent.Count: integer;
+begin
+  Result := Node.Count;
+end;
+
+function TDesignComponent.GetChild(const AIndex: integer): INode;
+begin
+  Result := Node[AIndex];
+end;
+
+function TDesignComponent.GetNodeEnumerator: INodeEnumerator;
+begin
+  Result := Node.GetEnumerator;
 end;
 
 end.
