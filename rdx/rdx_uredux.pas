@@ -5,13 +5,13 @@ unit rdx_uredux;
 interface
 
 uses
-  Classes, SysUtils, fgl, trl_iprops, flu_iflux;
+  Classes, SysUtils, fgl, trl_iprops, flu_iflux, trl_igenericaccess;
 
 type
 
   { TRdxStore }
 
-  TRdxStore = class(TInterfacedObject, IFluxStore, IFluxDispatcher)
+  TRdxStore = class(TInterfacedObject, IFluxStore, IFluxDispatcher, IPropFinder)
   protected type
     TEvents = specialize TFPGList<TFluxStoreEvent>;
   protected
@@ -22,15 +22,17 @@ type
     // IFluxStore
     procedure Add(const AEvent: TFluxStoreEvent);
     procedure Remove(const AEvent: TFluxStoreEvent);
+    // IPropFinder
+    function Find(const AID: string): IProp;
   protected
     fRdxState: IFluxState;
-    fRdxFunc: IFluxFunc;
+    fDispatcher: IFluxDispatcher;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   published
     property State: IFluxState read fRdxState write fRdxState;
-    property Func: IFluxFunc read fRdxFunc write fRdxFunc;
+    property Dispatcher: IFluxDispatcher read fDispatcher write fDispatcher;
   end;
 
 implementation
@@ -41,9 +43,7 @@ procedure TRdxStore.Dispatch(const AAction: IFluxAction);
 var
   mEvent: TFluxStoreEvent;
 begin
-  State := Func.Redux(State, AAction);
-  if State = nil then
-    raise Exception.Create('Redux function returned nil instead of AppState');
+  Dispatcher.Dispatch(AAction);
   for mEvent in fEvents do begin
     mEvent(State);
   end;
@@ -62,6 +62,16 @@ begin
   mIndex := fEvents.IndexOf(AEvent);
   if mIndex <> -1 then
     fEvents.Delete(mIndex);
+end;
+
+function TRdxStore.Find(const AID: string): IProp;
+var
+  mProp: IProp;
+begin
+  mProp := (State as IPropFinder).Find(AID);
+  if mProp = nil then
+    raise Exception.CreateFmt('Cannot find state with path %s', [AID]);
+  Result := mProp;
 end;
 
 procedure TRdxStore.AfterConstruction;

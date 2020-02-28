@@ -5,7 +5,7 @@ unit rdx_ureg;
 interface
 
 uses
-  rdx_ireg, trl_dicontainer, flu_iflux, rdx_ufunc, trl_iinjector, trl_idifactory,
+  rdx_ireg, trl_dicontainer, flu_iflux, rdx_ufuncdispatcher, trl_iinjector, trl_idifactory,
   rdx_ustate, trl_iprops, rdx_uredux;
 
 type
@@ -15,13 +15,15 @@ type
   TReg = class(TInterfacedObject, IReg)
   protected
     // IReg
-    function RegisterFunc(const ASubFuncs: array of TClass): TDIReg;
+    function RegisterDispatcher(const ASubFuncs: array of string): TDIReg;
     function RegisterStateHub(const AClass: TClass; const AID: string;
       const ASubstateIDs: array of string): TDIReg;
     function RegisterState(const AClass: TClass; const AID: string): TDIReg;
+    function RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
+
     function RegisterStore: TDIReg;
     procedure RegisterCommon(const ASubstateIDs: array of string;
-      const ASubFuncs: array of TClass);
+      const ASubFuncs: array of string);
   protected
     fDIC: TDIContainer;
   published
@@ -32,16 +34,13 @@ implementation
 
 { TReg }
 
-function TReg.RegisterFunc(const ASubFuncs: array of TClass): TDIReg;
+function TReg.RegisterDispatcher(const ASubFuncs: array of string): TDIReg;
 var
-  mFuncClass: TClass;
+  mFunc: string;
 begin
-  Result := DIC.Add(TRdxFunc, IFluxFunc, '', ckSingle);
-  Result.InjectProp('Injector', IInjector);
-  Result.InjectProp('Factory', IDIFactory);
-  for mFuncClass in ASubFuncs do begin
-    DIC.Add(mFuncClass, IFluxFunc, mFuncClass.ClassName);
-    Result.InjectProp('AddFunc', IFluxFunc, mFuncClass.ClassName);
+  Result := DIC.Add(TRdxFuncDispatcher, IFluxDispatcher, '', ckSingle);
+  for mFunc in ASubFuncs do begin
+    Result.InjectProp('AddFunc', IFluxFunc, mFunc);
   end;
 end;
 
@@ -63,18 +62,24 @@ begin
   Result.InjectProp('ID', AID);
 end;
 
+function TReg.RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
+begin
+  Result := DIC.Add(AClass, IFluxFunc, AClass.ClassName);
+  Result.InjectProp('State', IFluxState, AState);
+end;
+
 function TReg.RegisterStore: TDIReg;
 begin
   Result := DIC.Add(TRdxStore, IFluxStore, '', ckSingle);
   Result.InjectProp('State', IFluxState);
-  Result.InjectProp('Func', IFluxFunc);
+  Result.InjectProp('Dispatcher', IFluxDispatcher);
 end;
 
 procedure TReg.RegisterCommon(const ASubstateIDs: array of string;
-  const ASubFuncs: array of TClass);
+  const ASubFuncs: array of string);
 begin
   RegisterStateHub(TRdxState, '', ASubstateIDs);
-  RegisterFunc(ASubFuncs);
+  RegisterDispatcher(ASubFuncs);
   RegisterStore;
 end;
 

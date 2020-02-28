@@ -56,7 +56,7 @@ type
 
   IFluxFunc = interface
   ['{D5CD4D66-CC4B-4A5E-A206-3D2838BB6CC6}']
-    function Redux(const AState: IFluxState; const AAction: IFluxAction): IFluxState;
+    procedure Execute(const AAction: IFluxAction);
   end;
 
   TFluxStoreEvent = procedure(const AAppState: IFluxState) of object;

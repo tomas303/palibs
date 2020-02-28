@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="rdx"/>
     <Type Value="RunTimeOnly"/>
     <CompilerOptions>
@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="7">
       <Item1>
         <Filename Value="rdx_ufunc.pas"/>
         <UnitName Value="rdx_ufunc"/>
@@ -34,6 +34,10 @@
         <Filename Value="rdx_urttistate.pas"/>
         <UnitName Value="rdx_urttistate"/>
       </Item6>
+      <Item7>
+        <Filename Value="rdx_ufuncdispatcher.pas"/>
+        <UnitName Value="rdx_ufuncdispatcher"/>
+      </Item7>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

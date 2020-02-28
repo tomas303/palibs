@@ -9,7 +9,8 @@ uses
   trl_urttibroker, TypInfo, sysutils;
 
 type
-  TRttiState = class(TInterfacedObject, IFluxState, IPropFinder, IGenericAccess)
+  TRttiState = class(TInterfacedObject, IFluxState, IPropFinder, IGenericAccess,
+    IGenericAccessRO)
   protected
     fRBData: IRBData;
     function DataItem2Prop(const AItem: IRBDataItem): IProp;

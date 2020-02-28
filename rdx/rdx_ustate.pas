@@ -18,7 +18,8 @@ type
 
   }
 
-  TRdxState = class(TInterfacedObject, IFluxState, IPropFinder, IGenericAccess)
+  TRdxState = class(TInterfacedObject, IFluxState, IPropFinder, IGenericAccess,
+    IGenericAccessRO)
   protected
     // IPropFinder
     function Find(const AID: string): IProp;

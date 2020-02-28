@@ -7,6 +7,22 @@ interface
 type
   TGenericAccessType = (gatUndefined, gatInt, gatStr, gatBool, gatGuid, gatInterface);
 
+  IGenericAccessRO = interface
+  ['{5690E2F4-C942-42EC-8937-43A0A9B504A6}']
+    function AsStr(const AName: string): string;
+    function AsInt(const AName: string): integer;
+    function AsBool(const AName: string): Boolean;
+    function AsGuid(const AName: string): TGUID;
+    function AsIntf(const AName: string): IUnknown;
+    function AsStr(const AIndex: integer): string;
+    function AsInt(const AIndex: integer): integer;
+    function AsBool(const AIndex: integer): Boolean;
+    function AsGuid(const AIndex: integer): TGUID;
+    function AsIntf(const AIndex: integer): IUnknown;
+    function Count: integer;
+    function Name(const AIndex: integer): string;
+  end;
+
   IGenericAccess = interface
   ['{F4195F07-5EF9-4916-B660-4327F8237B3B}']
     function AsStr(const AName: string): string;

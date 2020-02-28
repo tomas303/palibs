@@ -6,7 +6,8 @@ interface
 
 uses
   rea_idesigncomponent, trl_usystem, trl_imetaelement, rea_ireact, trl_imetaelementfactory,
-  trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog;
+  trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog, trl_igenericaccess,
+  sysutils;
 
 type
 
@@ -16,6 +17,7 @@ type
   protected
     function NewProps: IProps;
     function NewNotifier(const AActionID: integer): IFluxNotifier;
+    function NewState(const APath: string = ''): IGenericAccessRO;
   protected
     function DoCompose(const AProps: IProps): IMetaElement; virtual; abstract;
   protected
@@ -37,11 +39,13 @@ type
     fElementFactory: IMetaElementFactory;
     fFactory: IDIFactory;
     fNode: INode;
+    fState: IGenericAccessRO;
   published
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Factory: IDIFactory read fFactory write fFactory;
     property Node: INode read fNode write fNode;
+    property State: IGenericAccessRO read fState write fState;
   end;
 
   { TDesignComponentForm }
@@ -127,7 +131,11 @@ begin
   mProps.SetInt(cProps.MMLeft, MMLeft);
   mProps.SetInt(cProps.MMTop, MMTop);
   }
-  Result := ElementFactory.CreateElement(IMainFormBit, mProps);
+
+  mProps.SetInt(cProps.MMWidth, State.AsInt('Width'));
+  mProps.SetInt(cProps.MMHeight, State.AsInt('Height'));
+
+  Result := ElementFactory.CreateElement(IFormBit, mProps);
 end;
 
 { TDesignComponentMainForm }
@@ -142,6 +150,18 @@ end;
 function TDesignComponent.NewNotifier(const AActionID: integer): IFluxNotifier;
 begin
   Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '', NewProps.SetInt('ActionID', AActionID)));
+end;
+
+function TDesignComponent.NewState(const APath: string): IGenericAccessRO;
+var
+  mStore: IFluxStore;
+  mProp: IProp;
+begin
+  mStore := IFluxStore(Factory.Locate(IFluxStore));
+  mProp := (mStore as IPropFinder).Find(APath);
+  if mprop = nil then
+    raise Exception.Create('state isnil');
+  Result := mProp.AsInterface as IGenericAccessRO;
 end;
 
 function TDesignComponent.Compose(const AProps: IProps): IMetaElement;
