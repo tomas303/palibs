@@ -120,6 +120,10 @@ type
   { TFormBit }
 
   TFormBit = class(TBit, IFormBit)
+  private
+    procedure SetActivateNotifier(AValue: IFluxNotifier);
+    procedure SetMoveNotifier(AValue: IFluxNotifier);
+    procedure SetSizeNotifier(AValue: IFluxNotifier);
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -142,9 +146,9 @@ type
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
-    property SizeNotifier: IFluxNotifier read fSizeNotifier write fSizeNotifier;
-    property MoveNotifier: IFluxNotifier read fMoveNotifier write fMoveNotifier;
-    property ActivateNotifier: IFluxNotifier read fActivateNotifier write fActivateNotifier;
+    property SizeNotifier: IFluxNotifier read fSizeNotifier write SetSizeNotifier;
+    property MoveNotifier: IFluxNotifier read fMoveNotifier write SetMoveNotifier;
+    property ActivateNotifier: IFluxNotifier read fActivateNotifier write SetActivateNotifier;
   end;
 
   TMainFormBit = class(TFormBit, IMainFormBit)
@@ -383,6 +387,55 @@ end;
 
 { TFormBit }
 
+procedure TFormBit.SetActivateNotifier(AValue: IFluxNotifier);
+begin
+  if fActivateNotifier <> nil then
+  begin
+    fActivateMsgBinder.Unbind;
+    fActivateMsgBinder := nil;
+  end;
+  fActivateNotifier := AValue;
+  if fActivateNotifier <> nil then
+  begin
+    fActivateMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fActivateNotifier).SetInt('Msg', LM_ACTIVATE)));
+    fActivateMsgBinder.Bind(AsForm);
+  end;
+end;
+
+procedure TFormBit.SetMoveNotifier(AValue: IFluxNotifier);
+begin
+  if fMoveNotifier <> nil then
+  begin
+    fMoveMsgBinder.Unbind;
+    fMoveMsgBinder := nil;
+    fMoveNotifier.Remove(@MoveNotifierData);
+  end;
+  fMoveNotifier := AValue;
+  if fMoveNotifier <> nil then
+  begin
+    fMoveMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fMoveNotifier).SetInt('Msg', LM_MOVE)));
+    fMoveMsgBinder.Bind(AsForm);
+    fMoveNotifier.Add(@MoveNotifierData);
+  end;
+end;
+
+procedure TFormBit.SetSizeNotifier(AValue: IFluxNotifier);
+begin
+  if fSizeNotifier <> nil then
+  begin
+    fSizeMsgBinder.Unbind;
+    fSizeMsgBinder := nil;
+    fSizeNotifier.Remove(@SizeNotifierData);
+  end;
+  fSizeNotifier := AValue;
+  if fSizeNotifier <> nil then
+  begin
+    fSizeMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fSizeNotifier).SetInt('Msg', LM_SIZE)));
+    fSizeMsgBinder.Bind(AsForm);
+    fSizeNotifier.Add(@SizeNotifierData);
+  end;
+end;
+
 function TFormBit.AsForm: TCustomForm;
 begin
   Result := AsControl as TCustomForm;
@@ -446,43 +499,18 @@ begin
     MoveNotifier.Enabled := False;
   if ActivateNotifier <> nil then
     ActivateNotifier.Enabled := False;
-
   inherited;
-
   Tiler.ReplaceChildren(Self);
   ResetScroll;
-
   AsForm.OnPaint := @OnPaint;
   AsForm.Caption := Title;
   AsForm.Show;
-
   if SizeNotifier <> nil then
-  begin
-    fSizeMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', SizeNotifier).SetInt('Msg', LM_SIZE)));
-    fSizeMsgBinder.Bind(AsForm);
-    SizeNotifier.Add(@SizeNotifierData);
     SizeNotifier.Enabled := True;
-  end
-  else
-    fSizeMsgBinder := nil;
   if MoveNotifier <> nil then
-  begin
-    fMoveMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', MoveNotifier).SetInt('Msg', LM_Move)));
-    fMoveMsgBinder.Bind(AsForm);
-    MoveNotifier.Add(@MoveNotifierData);
     MoveNotifier.Enabled := True;
-  end
-  else
-    fMoveMsgBinder := nil;
   if ActivateNotifier <> nil then
-  begin
-    fActivateMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', ActivateNotifier).SetInt('Msg', LM_ACTIVATE)));
-    fActivateMsgBinder.Bind(AsForm);
     ActivateNotifier.Enabled := True;
-  end
-  else
-    fActivateMsgBinder := nil;
-
   for mChild in Node do
     (mChild as IBit).HookParent(AsForm);
 end;
