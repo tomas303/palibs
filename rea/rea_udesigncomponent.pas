@@ -132,6 +132,8 @@ begin
   mProps.SetInt(cProps.MMTop, MMTop);
   }
 
+  mProps.SetInt(cProps.MMLeft, State.AsInt('Left'));
+  mProps.SetInt(cProps.MMTop, State.AsInt('Top'));
   mProps.SetInt(cProps.MMWidth, State.AsInt('Width'));
   mProps.SetInt(cProps.MMHeight, State.AsInt('Height'));
 
