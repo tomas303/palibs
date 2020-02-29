@@ -158,7 +158,7 @@ begin
   end else begin
     Log.DebugLn('equalize props');
     Result := AOldEntity;
-    ProcessDiff(Result as INode, AOldElement, ANewElement);
+    ProcessDiff(Result as INode, ANewElement, AOldElement);
   end;
   Log.DebugLnExit({$I %CURRENTROUTINE%});
 end;
