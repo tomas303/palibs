@@ -112,7 +112,11 @@ begin
   mTitle := SelfProps.PropByName[cProps.Title];
   if mTitle <> nil then
     (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, NewProps.SetProp(cProps.Text, mTitle)) as INode);
-  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit, NewProps.SetProp(cProps.Text, SelfProps.PropByName[cProps.Value])) as INode);
+  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit,
+    NewProps
+    .SetProp(cProps.Text, SelfProps.PropByName[cProps.Value])
+    .SetProp(cProps.OnTextNotifier, SelfProps.PropByName[cProps.OnTextNotifier])
+    ) as INode);
 end;
 
 { TDesignComponentForm }

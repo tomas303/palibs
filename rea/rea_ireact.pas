@@ -88,6 +88,7 @@ type
     MoveNotifier = 'MoveNotifier';
     ActivateNotifier = 'ActivateNotifier';
     ClickNotifier = 'ClickNotifier';
+    OnTextNotifier = 'OnTextNotifier';
   end;
 
 implementation

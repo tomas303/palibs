@@ -186,13 +186,17 @@ type
 
   TEditBit = class(TBit, IEditBit)
   protected
+    procedure OnText(const AProps: IProps);
+  protected
     function AsEdit: TCustomEdit;
   protected
     procedure DoRender; override;
   protected
     fText: string;
+    fOnTextNotifier: IFluxNotifier;
   published
     property Text: string read fText write fText;
+    property OnTextNotifier: IFluxNotifier read fOnTextNotifier write fOnTextNotifier;
   end;
 
   { TTextBit }
@@ -373,6 +377,11 @@ end;
 
 { TEditBit }
 
+procedure TEditBit.OnText(const AProps: IProps);
+begin
+  AProps.SetStr('xxx', AsEdit.Text);
+end;
+
 function TEditBit.AsEdit: TCustomEdit;
 begin
   Result := AsControl as TCustomEdit;
@@ -382,6 +391,8 @@ procedure TEditBit.DoRender;
 begin
   inherited;
   AsEdit.Text := Text;
+  if OnTextNotifier <> nil then
+    OnTextNotifier.Add(@OnText);
   AsEdit.Show;
 end;
 
