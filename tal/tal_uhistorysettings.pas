@@ -81,18 +81,18 @@ type
 
   TControlVisitor = class
   protected type
-    TFinder<TDATA: THistoryData> = class
-    public
-      // temporarily instead of GetHistoryData
-      class function GetHistoryData(const AStore: IPersistStore; const AName, AID: string; ACanCreate: Boolean): IRBData;
-    end;
+    //TFinder<TDATA: THistoryData> = class
+    //public
+    //  // temporarily instead of GetHistoryData
+    //  class function GetHistoryData(const AStore: IPersistStore; const AName, AID: string; ACanCreate: Boolean): IRBData;
+    //end;
   protected const
     cMaxTexts = 10;
   protected
     fStore: IPersistStore;
   protected
     // it cause internal error when use TDATA type(like classname)
-    //function GetHistoryData<TDATA: THistoryData>(const AName, AID: string; ACanCreate: Boolean): TDATA;
+    function GetHistoryData<TDATA: THistoryData>(const AName, AID: string; ACanCreate: Boolean): IRBData;
   public
     constructor Create(AStore: IPersistStore);
     procedure Visit(AControl: TControl; const AID: string); virtual; abstract; overload;
@@ -176,7 +176,7 @@ var
   mTexts: THistoryDataTexts;
   mComboText: string;
 begin
-  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mData := GetHistoryData<THistoryDataTexts>(AControl.Name, AID, True);
   mTexts := mData.UnderObject as THistoryDataTexts;
   mComboText := AControl.Text;
   i := 0;
@@ -197,7 +197,7 @@ var
   mData: IRBData;
   mPosition: THistoryDataPosition;
 begin
-  mData := TFinder<THistoryDataPosition>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mData := GetHistoryData<THistoryDataPosition>(AControl.Name, AID, True);
   mPosition := mData.UnderObject as THistoryDataPosition;
   mPosition.Left := AControl.Left;
   mPosition.Top := AControl.Top;
@@ -211,7 +211,7 @@ var
   mData: IRBData;
   mIntegers: THistoryDataIntegers;
 begin
-  mData := TFinder<THistoryDataIntegers>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mData := GetHistoryData<THistoryDataIntegers>(AControl.Name, AID, True);
   mIntegers := mData.UnderObject as THistoryDataIntegers;
   mIntegers.Integers.Count := 1;
   if AControl.ResizeAnchor in [akLeft, akRight] then
@@ -226,7 +226,7 @@ var
   mData: IRBData;
   mCheckBoxState: THistoryDataCheckBoxState;
 begin
-  mData := TFinder<THistoryDataCheckBoxState>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mData := GetHistoryData<THistoryDataCheckBoxState>(AControl.Name, AID, True);
   mCheckBoxState := mData.UnderObject as THistoryDataCheckBoxState;
   mCheckBoxState.CheckBoxState := AControl.State;
   fStore.Save(mData);
@@ -237,7 +237,7 @@ var
   mData: IRBData;
   mMemo: THistoryDataMemo;
 begin
-  mData := TFinder<THistoryDataMemo>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mData := GetHistoryData<THistoryDataMemo>(AControl.Name, AID, True);
   mMemo := mData.UnderObject as THistoryDataMemo;
   mMemo.Memo := AControl.Lines.Text;
   fStore.Save(mData);
@@ -248,7 +248,7 @@ var
   mData: IRBData;
   mTexts: THistoryDataTexts;
 begin
-  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, True);
+  mData := GetHistoryData<THistoryDataTexts>(AControl.Name, AID, True);
   mTexts := mData.UnderObject as THistoryDataTexts;
   mTexts.Texts.Count := 1;
   mTexts.Texts[0] := AControl.Text;
@@ -267,7 +267,7 @@ var
   i: integer;
   mTexts: THistoryDataTexts;
 begin
-  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, False);
+  mData := GetHistoryData<THistoryDataTexts>(AControl.Name, AID, False);
   if mData = nil then
     Exit;
   mTexts := mData.UnderObject as THistoryDataTexts;
@@ -283,7 +283,7 @@ var
   mData: IRBData;
   mPosition: THistoryDataPosition;
 begin
-  mData := TFinder<THistoryDataPosition>.GetHistoryData(fStore, AControl.Name, AID, False);
+  mData := GetHistoryData<THistoryDataPosition>(AControl.Name, AID, False);
   if mData = nil then
     Exit;
   mPosition := mData.UnderObject as THistoryDataPosition;
@@ -298,7 +298,7 @@ var
   mData: IRBData;
   mIntegers: THistoryDataIntegers;
 begin
-  mData := TFinder<THistoryDataIntegers>.GetHistoryData(fStore, AControl.Name, AID, False);
+  mData := GetHistoryData<THistoryDataIntegers>(AControl.Name, AID, False);
   if mData = nil then
     Exit;
   mIntegers := mData.UnderObject as THistoryDataIntegers;
@@ -326,7 +326,7 @@ var
   mData: IRBData;
   mCheckBoxState: THistoryDataCheckBoxState;
 begin
-  mData := TFinder<THistoryDataCheckBoxState>.GetHistoryData(fStore, AControl.Name, AID, False);
+  mData := GetHistoryData<THistoryDataCheckBoxState>(AControl.Name, AID, False);
   if mData = nil then
     Exit;
   mCheckBoxState := mData.UnderObject as THistoryDataCheckBoxState;
@@ -338,7 +338,7 @@ var
   mData: IRBData;
   mMemo: THistoryDataMemo;
 begin
-  mData := TFinder<THistoryDataMemo>.GetHistoryData(fStore, AControl.Name, AID, False);
+  mData := GetHistoryData<THistoryDataMemo>(AControl.Name, AID, False);
   if mData = nil then
     Exit;
   mMemo := mData.UnderObject as THistoryDataMemo;
@@ -350,7 +350,7 @@ var
   mData: IRBData;
   mTexts: THistoryDataTexts;
 begin
-  mData := TFinder<THistoryDataTexts>.GetHistoryData(fStore, AControl.Name, AID, False);
+  mData := GetHistoryData<THistoryDataTexts>(AControl.Name, AID, False);
   if mData = nil then
     Exit;
   mTexts := mData.UnderObject as THistoryDataTexts;
@@ -476,41 +476,13 @@ end;
 
 { TControlVisitor }
 
-//function TControlVisitor.GetHistoryData<TDATA>(const AName, AID: string; ACanCreate: Boolean): TDATA;
-//var
-//  mList: IPersistRefList;
-//  i: integer;
-//begin
-//  Result := nil;
-//  mList := (fStore as IPersistQuery).SelectClass(''{TDATA.ClassName});
-//  for i := 0 to mList.Count - 1 do begin
-//    if (mList.Data[i].ItemByName['Name'].AsString = AName)
-//      and (mList.Data[i].ItemByName['ID'].AsString = AID)
-//    then begin
-//      Result := mList.Data[i].UnderObject as TDATA;
-//      Break;
-//    end;
-//  end;
-//  if (Result = nil) and ACanCreate then begin
-//    Result := fStore.New({TDATA.ClassName}'').UnderObject as TDATA;
-//    //Result.Name := AName;
-//    //Result.ID := AID;
-//  end;
-//end;
-
-constructor TControlVisitor.Create(AStore: IPersistStore);
-begin
-  fStore := AStore;
-end;
-
-class function TControlVisitor.TFinder<TDATA: THistoryData>.GetHistoryData(const AStore: IPersistStore;
-  const AName, AID: string; ACanCreate: Boolean): IRBData;
+function TControlVisitor.GetHistoryData<TDATA>(const AName, AID: string; ACanCreate: Boolean): IRBData;
 var
   mList: IPersistRefList;
   i: integer;
 begin
   Result := nil;
-  mList := (AStore as IPersistQuery).SelectClass(TDATA.ClassName);
+  mList := (fStore as IPersistQuery).SelectClass(TDATA.ClassName);
   for i := 0 to mList.Count - 1 do begin
     if (mList.Data[i].ItemByName['Name'].AsString = AName)
       and (mList.Data[i].ItemByName['ID'].AsString = AID)
@@ -520,11 +492,39 @@ begin
     end;
   end;
   if (Result = nil) and ACanCreate then begin
-    Result := AStore.New(TDATA.ClassName);
+    Result := fStore.New(TDATA.ClassName);
     Result.ItemByName['Name'].AsString := AName;
     Result.ItemByName['ID'].AsString := AID;
   end;
 end;
+
+constructor TControlVisitor.Create(AStore: IPersistStore);
+begin
+  fStore := AStore;
+end;
+
+//class function TControlVisitor.TFinder<TDATA: THistoryData>.GetHistoryData(const AStore: IPersistStore;
+//  const AName, AID: string; ACanCreate: Boolean): IRBData;
+//var
+//  mList: IPersistRefList;
+//  i: integer;
+//begin
+//  Result := nil;
+//  mList := (AStore as IPersistQuery).SelectClass(TDATA.ClassName);
+//  for i := 0 to mList.Count - 1 do begin
+//    if (mList.Data[i].ItemByName['Name'].AsString = AName)
+//      and (mList.Data[i].ItemByName['ID'].AsString = AID)
+//    then begin
+//      Result := mList.Data[i];
+//      Break;
+//    end;
+//  end;
+//  if (Result = nil) and ACanCreate then begin
+//    Result := AStore.New(TDATA.ClassName);
+//    Result.ItemByName['Name'].AsString := AName;
+//    Result.ItemByName['ID'].AsString := AID;
+//  end;
+//end;
 
 end.
 
