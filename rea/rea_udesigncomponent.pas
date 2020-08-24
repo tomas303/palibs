@@ -40,12 +40,14 @@ type
     fFactory: IDIFactory;
     fNode: INode;
     fState: IGenericAccessRO;
+    fDataPath: string;
   published
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Factory: IDIFactory read fFactory write fFactory;
     property Node: INode read fNode write fNode;
     property State: IGenericAccessRO read fState write fState;
+    property DataPath: string read fDataPath write fDataPath;
   end;
 
   { TDesignComponentForm }

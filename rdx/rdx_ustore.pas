@@ -1,4 +1,4 @@
-unit rdx_uredux;
+unit rdx_ustore;
 
 {$mode objfpc}{$H+}
 
