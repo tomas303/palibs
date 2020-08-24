@@ -9,43 +9,43 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="7">
-      <Item1>
+    <Files>
+      <Item>
         <Filename Value="rdx_ufunc.pas"/>
         <UnitName Value="rdx_ufunc"/>
-      </Item1>
-      <Item2>
-        <Filename Value="rdx_uredux.pas"/>
-        <UnitName Value="rdx_uredux"/>
-      </Item2>
-      <Item3>
+      </Item>
+      <Item>
+        <Filename Value="rdx_ustore.pas"/>
+        <UnitName Value="rdx_ustore"/>
+      </Item>
+      <Item>
         <Filename Value="rdx_ustate.pas"/>
         <UnitName Value="rdx_ustate"/>
-      </Item3>
-      <Item4>
+      </Item>
+      <Item>
         <Filename Value="rdx_ureg.pas"/>
         <UnitName Value="rdx_ureg"/>
-      </Item4>
-      <Item5>
+      </Item>
+      <Item>
         <Filename Value="rdx_ireg.pas"/>
         <UnitName Value="rdx_ireg"/>
-      </Item5>
-      <Item6>
+      </Item>
+      <Item>
         <Filename Value="rdx_urttistate.pas"/>
         <UnitName Value="rdx_urttistate"/>
-      </Item6>
-      <Item7>
+      </Item>
+      <Item>
         <Filename Value="rdx_ufuncdispatcher.pas"/>
         <UnitName Value="rdx_ufuncdispatcher"/>
-      </Item7>
+      </Item>
     </Files>
-    <RequiredPkgs Count="2">
-      <Item1>
+    <RequiredPkgs>
+      <Item>
         <PackageName Value="flu"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <PackageName Value="trl"/>
-      </Item2>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
