@@ -8,7 +8,7 @@ unit rdx;
 interface
 
 uses
-  rdx_ufunc, rdx_uredux, rdx_ustate, rdx_ureg, rdx_ireg, rdx_urttistate, 
+  rdx_ufunc, rdx_ustore, rdx_ustate, rdx_ureg, rdx_ireg, rdx_urttistate, 
   rdx_ufuncdispatcher;
 
 implementation

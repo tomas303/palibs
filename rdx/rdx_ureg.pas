@@ -6,7 +6,7 @@ interface
 
 uses
   rdx_ireg, trl_dicontainer, flu_iflux, rdx_ufuncdispatcher, trl_iinjector, trl_idifactory,
-  rdx_ustate, trl_iprops, rdx_uredux;
+  rdx_ustate, trl_iprops, rdx_ustore;
 
 type
 
