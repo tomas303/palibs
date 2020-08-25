@@ -74,6 +74,7 @@ begin
   Result := DIC.Add(TRdxStore, IFluxStore, '', ckSingle);
   Result.InjectProp('State', IFluxState);
   Result.InjectProp('Dispatcher', IFluxDispatcher);
+  Result.InjectProp('Data', IFluxData);
 end;
 
 function TReg.RegisterData: TDIReg;

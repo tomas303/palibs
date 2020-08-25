@@ -27,12 +27,14 @@ type
   protected
     fRdxState: IFluxState;
     fDispatcher: IFluxDispatcher;
+    fData: IFluxData;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   published
     property State: IFluxState read fRdxState write fRdxState;
     property Dispatcher: IFluxDispatcher read fDispatcher write fDispatcher;
+    property Data: IFluxData read fData write fData;
   end;
 
 implementation
