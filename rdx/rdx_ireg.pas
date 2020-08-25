@@ -18,6 +18,7 @@ type
     function RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
 
     function RegisterStore: TDIReg;
+    function RegisterData: TDIReg;
     procedure RegisterCommon(const ASubstateIDs: array of string;
       const ASubFuncs: array of string);
   end;

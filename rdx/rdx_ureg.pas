@@ -6,7 +6,7 @@ interface
 
 uses
   rdx_ireg, trl_dicontainer, flu_iflux, rdx_ufuncdispatcher, trl_iinjector, trl_idifactory,
-  rdx_ustate, trl_iprops, rdx_ustore;
+  rdx_ustate, trl_iprops, rdx_ustore, rdx_udata;
 
 type
 
@@ -22,6 +22,7 @@ type
     function RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
 
     function RegisterStore: TDIReg;
+    function RegisterData: TDIReg;
     procedure RegisterCommon(const ASubstateIDs: array of string;
       const ASubFuncs: array of string);
   protected
@@ -75,12 +76,19 @@ begin
   Result.InjectProp('Dispatcher', IFluxDispatcher);
 end;
 
+function TReg.RegisterData: TDIReg;
+begin
+  Result := DIC.Add(TRdxData, IFluxData);
+  Result.InjectProp('Factory', IDIFactory);
+end;
+
 procedure TReg.RegisterCommon(const ASubstateIDs: array of string;
   const ASubFuncs: array of string);
 begin
   RegisterStateHub(TRdxState, '', ASubstateIDs);
   RegisterDispatcher(ASubFuncs);
   RegisterStore;
+  RegisterData;
 end;
 
 end.

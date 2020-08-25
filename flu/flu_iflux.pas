@@ -5,7 +5,7 @@ unit flu_iflux;
 interface
 
 uses
-  trl_iprops;
+  trl_iprops, trl_igenericaccess;
 
 type
   { IFluxAction }
@@ -67,6 +67,15 @@ type
   ['{3E5DDFF7-63FD-4E14-A913-0A5909A55C7C}']
     procedure Add(const AEvent: TFluxStoreEvent);
     procedure Remove(const AEvent: TFluxStoreEvent);
+  end;
+
+  { IFluxData }
+
+  IFluxData = interface
+  ['{49ACEFF7-6973-4531-8B97-9D56F1786FA1}']
+    function New(const AKey: string): IGenericAccess;
+    function GetData(const AKey: string): IGenericAccess;
+    property Data[const AKey: string]: IGenericAccess read GetData; default;
   end;
 
 implementation

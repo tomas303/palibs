@@ -38,6 +38,10 @@
         <Filename Value="rdx_ufuncdispatcher.pas"/>
         <UnitName Value="rdx_ufuncdispatcher"/>
       </Item>
+      <Item>
+        <Filename Value="rdx_udata.pas"/>
+        <UnitName Value="rdx_udata"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
