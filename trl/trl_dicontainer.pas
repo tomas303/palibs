@@ -47,6 +47,10 @@ type
   TDIReg = class
   public type
 
+    TDIMessage = record
+      MsgStr: shortstring;
+    end;
+
     TOnInjectEvent = procedure(const AItem: IRBDataItem; ADIC: TDICustomContainer) of object;
 
     { TInjectProp }
@@ -798,6 +802,8 @@ begin
 end;
 
 function TDIReg.Make(const AProps: IProps): pointer;
+var
+  mMsg: TDIMessage;
 begin
   if (fCreateKind = ckSingle) and (fSingleObject <> nil) then
     Result := fSingleObject
@@ -809,6 +815,8 @@ begin
     SelfPropsMap(Result);
     if (fCreateKind = ckSingle) then
       fSingleObject := Result;
+    mMsg.MsgStr := 'LocateFinished';
+    TObject(Result).DispatchStr(mMsg);
   end;
 end;
 
