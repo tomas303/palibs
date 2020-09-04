@@ -18,10 +18,9 @@ type
 
   private
     fData: TData;
-    function DataExists(const AKey: string): Boolean;
+    function New(const AKey: string): IGenericAccess;
   protected
     // IFluxData
-    function New(const AKey: string): IGenericAccess;
     function GetData(const AKey: string): IGenericAccess;
   public
     procedure AfterConstruction; override;
@@ -36,26 +35,20 @@ implementation
 
 { TRdxData }
 
-function TRdxData.DataExists(const AKey: string): Boolean;
-var
-  mIndex: integer;
-begin
-  Result := fData.Find(AKey, mIndex);
-end;
-
 function TRdxData.New(const AKey: string): IGenericAccess;
 begin
-  if DataExists(AKey) then
-    raise Exception.CreateFmt('Data with key %s already exists', [AKey]);
   Result := IProps(Factory.Locate(IProps)) as IGenericAccess;
   fData.Add(AKey, Result);
 end;
 
 function TRdxData.GetData(const AKey: string): IGenericAccess;
+var
+  mIndex: integer;
 begin
-  if not DataExists(AKey) then
-    raise Exception.CreateFmt('Data with key %s don''t exists', [AKey]);
-  Result := fData.KeyData[AKey];
+  if fData.Find(AKey, mIndex) then
+    Result := fData.Data[mIndex]
+  else
+    Result := New(AKey);
 end;
 
 procedure TRdxData.BeforeDestruction;
