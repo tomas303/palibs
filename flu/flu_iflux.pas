@@ -14,8 +14,10 @@ type
   ['{8BFE6073-9272-4051-A3DA-CCFBCC6526CE}']
     function GetID: integer;
     function GetProps: IProps;
+    function GetState: IGenericAccess;
     property ID: integer read GetID;
     property Props: IProps read GetProps;
+    property State: IGenericAccess read GetState;
   end;
 
   TFluxDispatchEvent = procedure(const AAppAction: IFluxAction) of object;
@@ -67,6 +69,10 @@ type
   ['{3E5DDFF7-63FD-4E14-A913-0A5909A55C7C}']
     procedure Add(const AEvent: TFluxStoreEvent);
     procedure Remove(const AEvent: TFluxStoreEvent);
+  end;
+
+  IFluxStoreConnector = interface
+  ['{FD468584-9133-4543-8B2E-3D8F312C14D1}']
   end;
 
   { IFluxData }

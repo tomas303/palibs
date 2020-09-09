@@ -42,6 +42,10 @@
         <Filename Value="rdx_udata.pas"/>
         <UnitName Value="rdx_udata"/>
       </Item>
+      <Item>
+        <Filename Value="rdx_ustoreconnector.pas"/>
+        <UnitName Value="rdx_ustoreconnector"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

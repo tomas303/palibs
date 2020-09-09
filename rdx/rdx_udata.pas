@@ -37,7 +37,7 @@ implementation
 
 function TRdxData.New(const AKey: string): IGenericAccess;
 begin
-  Result := IProps(Factory.Locate(IProps)) as IGenericAccess;
+  Result := IFluxState(Factory.Locate(IFluxState)) as IGenericAccess;
   fData.Add(AKey, Result);
 end;
 
@@ -61,6 +61,7 @@ procedure TRdxData.AfterConstruction;
 begin
   inherited AfterConstruction;
   fData := TData.Create;
+  fData.Sorted := True;
 end;
 
 end.

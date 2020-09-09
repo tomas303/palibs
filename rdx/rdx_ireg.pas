@@ -19,6 +19,8 @@ type
 
     function RegisterStore: TDIReg;
     function RegisterData: TDIReg;
+    function RegisterState: TDIReg;
+    function RegisterStoreConnector: TDIReg;
     procedure RegisterCommon(const ASubstateIDs: array of string;
       const ASubFuncs: array of string);
   end;

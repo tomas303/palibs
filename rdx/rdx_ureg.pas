@@ -6,7 +6,7 @@ interface
 
 uses
   rdx_ireg, trl_dicontainer, flu_iflux, rdx_ufuncdispatcher, trl_iinjector, trl_idifactory,
-  rdx_ustate, trl_iprops, rdx_ustore, rdx_udata;
+  rdx_ustate, trl_iprops, rdx_ustore, rdx_udata, rdx_ustoreconnector;
 
 type
 
@@ -19,10 +19,13 @@ type
     function RegisterStateHub(const AClass: TClass; const AID: string;
       const ASubstateIDs: array of string): TDIReg;
     function RegisterState(const AClass: TClass; const AID: string): TDIReg;
+    function RegisterState: TDIReg;
     function RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
 
     function RegisterStore: TDIReg;
     function RegisterData: TDIReg;
+    function RegisterStoreConnector: TDIReg;
+
     procedure RegisterCommon(const ASubstateIDs: array of string;
       const ASubFuncs: array of string);
   protected
@@ -63,6 +66,11 @@ begin
   Result.InjectProp('ID', AID);
 end;
 
+function TReg.RegisterState: TDIReg;
+begin
+  Result := DIC.Add(TRdxState, IFluxState);
+end;
+
 function TReg.RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
 begin
   Result := DIC.Add(AClass, IFluxFunc, AClass.ClassName);
@@ -83,13 +91,21 @@ begin
   Result.InjectProp('Factory', IDIFactory);
 end;
 
+function TReg.RegisterStoreConnector: TDIReg;
+begin
+  Result := DIC.Add(TRdxStoreConnector, IFluxStoreConnector);
+  Result.InjectProp('Store', IFluxStore);
+end;
+
 procedure TReg.RegisterCommon(const ASubstateIDs: array of string;
   const ASubFuncs: array of string);
 begin
   RegisterStateHub(TRdxState, '', ASubstateIDs);
   RegisterDispatcher(ASubFuncs);
   RegisterStore;
+  RegisterStoreConnector;
   RegisterData;
+  //RegisterState; for now still registered via RegisterStateHub
 end;
 
 end.

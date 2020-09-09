@@ -74,8 +74,11 @@ begin
   Application.AddOnIdleHandler(@IdleHandler);
   Application.AddOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
   AppStore.Add(@AppStoreChanged);
+  {
   mAction := IFluxAction(Factory.Locate(IFluxAction, '', TProps.New.SetInt('ID', 0)));
   (AppStore as IFluxDispatcher).Dispatch(mAction);
+   }
+  //AppComponent.InitAction;
   //React.Render(RootComponent);
   //fHeadBit := Head.Refresh(HeadProvider.ProvideMetaElement);
   //fHeadBit.Render;

@@ -948,7 +948,7 @@ end;
 procedure TDIContainer.CheckRegNotExists(AClass: TClass; const AID: string);
 begin
   if Find(AClass, AID) <> nil then
-    raise Exception.Create('already registered');
+    raise Exception.CreateFmt('class %0:s (id: %1:s) already registered', [AClass.ClassName, AID]);
 end;
 
 function TDIContainer.RegisterReg(AReg: TDIReg): TDIReg;

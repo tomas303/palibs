@@ -11,7 +11,7 @@ type
 
   { TRdxStore }
 
-  TRdxStore = class(TInterfacedObject, IFluxStore, IFluxDispatcher, IPropFinder)
+  TRdxStore = class(TInterfacedObject, IFluxStore, IFluxDispatcher, IPropFinder, IFluxData)
   protected type
     TEvents = specialize TFPGList<TFluxStoreEvent>;
   protected
@@ -24,6 +24,8 @@ type
     procedure Remove(const AEvent: TFluxStoreEvent);
     // IPropFinder
     function Find(const AID: string): IProp;
+    // IFluxData
+    function GetData(const AKey: string): IGenericAccess;
   protected
     fRdxState: IFluxState;
     fDispatcher: IFluxDispatcher;
@@ -74,6 +76,11 @@ begin
   if mProp = nil then
     raise Exception.CreateFmt('Cannot find state with path %s', [AID]);
   Result := mProp;
+end;
+
+function TRdxStore.GetData(const AKey: string): IGenericAccess;
+begin
+  Result := Data[AKey];
 end;
 
 procedure TRdxStore.AfterConstruction;
