@@ -5,11 +5,11 @@ unit tal_ureg;
 interface
 
 uses
-  tal_ireg, trl_idifactory, rea_ireact, trl_dicontainer,
+  tal_ireg, trl_idifactory, trl_dicontainer,
   tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
   trl_ilog, tal_uwindowlog, flu_iflux,
   trl_iExecutor, trl_imetaelementfactory,
-  rea_ibrace, trl_imetaelement,
+  trl_imetaelement,
   trl_ireconciler, rea_idesigncomponent, rea_irenderer;
 
 type

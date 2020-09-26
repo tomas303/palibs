@@ -9,10 +9,8 @@ uses
   trl_itree, trl_iinjector,
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
-  rea_ireact, rea_ureact,
-  rea_ibrace, rea_ubrace,
   rea_irenderer, rea_urenderer,
-  flu_iflux, flu_umap,
+  flu_iflux,
   Forms, StdCtrls,
   rea_mainform,
   trl_iExecutor,
@@ -39,9 +37,6 @@ type
     function RegisterMessageNotifierBinder: TDIReg;
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
-    function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
-    function RegisterReact(const AID: string = ''): TDIReg;
-    procedure RegisterBrace;
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
@@ -111,51 +106,13 @@ end;
 function TReg.RegisterReactComponent(ACompositeClass: TClass;
   ACompositeInterface: TGuid; const APaths: array of string): TDIReg;
 var
-  mReg: TDIReg;
   mPath: string;
 begin
   Result := DIC.Add(ACompositeClass, ACompositeInterface);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Log', ILog);
-  Result.InjectProp('React', IReact, '');
-  //
-  mReg := DIC.Add(TFluxStateToPropsMap, IPropsMap, ACompositeClass.ClassName);
-  mReg.InjectProp('State', IFluxState);
-  for mPath in APaths do
-    mReg.InjectProp('AddPath', mPath);
-  //
   Result.InjectProp('SelfPropsMap', IPropsMap, ACompositeClass.ClassName);
-end;
-
-function TReg.RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
-begin
-  Result := DIC.Add(AMachineryCompositeClass, AMachineryInterface);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('Injector', IInjector);
-  Result.InjectProp('ElementFactory', IMetaElementFactory);
-end;
-
-function TReg.RegisterReact(const AID: string): TDIReg;
-begin
-  DIC.Add(TRenderExecute, IExecute, 'TRenderExecute');
-  Result := DIC.Add(TReact, IReact, AID, ckSingle);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('Executor', IExecutor);
-  Result.InjectProp('ElFactory', IMetaElementFactory);
-  Result.InjectProp('Factory', IDIFactory);
-end;
-
-procedure TReg.RegisterBrace;
-var
-  mReg: TDIReg;
-begin
-  mReg := DIC.Add(TBrace, IBrace);
-  mReg.InjectProp('Log', ILog);
-  mReg.InjectProp('Node', INode, 'parent');
-  mReg.InjectProp('Factory', IDIFactory);
-  mReg.InjectProp('Nexus', INexus);
 end;
 
 procedure TReg.RegisterScales;
@@ -173,10 +130,7 @@ end;
 
 procedure TReg.RegisterCommon;
 begin
-  RegisterBrace;
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
-  RegisterMachinery(TReactComponentMachineryMiddle, IReactComponentMachineryMiddle);
-  RegisterMachinery(TReactComponentMachineryLeaf, IReactComponentMachineryLeaf);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TMainFormBit, IMainFormBit, TMainForm, '', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
@@ -185,7 +139,6 @@ begin
   RegisterBitTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
   RegisterScales;
   RegisterMessageNotifierBinder;
-  RegisterReact;
   RegisterRenderer;
 end;
 

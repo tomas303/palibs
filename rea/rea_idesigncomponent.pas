@@ -33,6 +33,32 @@ type
   ['{B16AAF18-076F-449D-82B1-BB6AE4962B4B}']
   end;
 
+  cProps = class
+    public const
+      Children = 'Children';
+      Layout = 'Layout';
+      Place = 'Place';
+      Title = 'Title';
+      Color = 'Color';
+      Width = 'Width';
+      Height = 'Height';
+      MMLeft = 'MMLeft';
+      MMTop = 'MMTop';
+      MMWidth = 'MMWidth';
+      MMHeight = 'MMHeight';
+      Value = 'Value';
+      Text = 'Text';
+      Border = 'Border';
+      BorderColor = 'BorderColor';
+      FontColor = 'FontColor';
+      Transparent = 'Transparent';
+      SizeNotifier = 'SizeNotifier';
+      MoveNotifier = 'MoveNotifier';
+      ActivateNotifier = 'ActivateNotifier';
+      ClickNotifier = 'ClickNotifier';
+      OnTextNotifier = 'OnTextNotifier';
+    end;
+
 implementation
 
 end.

@@ -23,20 +23,12 @@
         <UnitName Value="rea_ilayout"/>
       </Item>
       <Item>
-        <Filename Value="rea_ireact.pas"/>
-        <UnitName Value="rea_ireact"/>
-      </Item>
-      <Item>
         <Filename Value="rea_ubits.pas"/>
         <UnitName Value="rea_ubits"/>
       </Item>
       <Item>
         <Filename Value="rea_ulayout.pas"/>
         <UnitName Value="rea_ulayout"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ureact.pas"/>
-        <UnitName Value="rea_ureact"/>
       </Item>
       <Item>
         <Filename Value="rea_ireg.pas"/>
@@ -49,14 +41,6 @@
       <Item>
         <Filename Value="rea_mainform.pas"/>
         <UnitName Value="rea_mainform"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ibrace.pas"/>
-        <UnitName Value="rea_ibrace"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ubrace.pas"/>
-        <UnitName Value="rea_ubrace"/>
       </Item>
       <Item>
         <Filename Value="rea_idesigncomponent.pas"/>

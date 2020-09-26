@@ -5,7 +5,7 @@ unit rea_udesigncomponent;
 interface
 
 uses
-  rea_idesigncomponent, trl_usystem, trl_imetaelement, rea_ireact, trl_imetaelementfactory,
+  rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog, trl_igenericaccess,
   sysutils;
 

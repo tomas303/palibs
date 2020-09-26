@@ -8,9 +8,9 @@ unit rea;
 interface
 
 uses
-  rea_iapp, rea_ibits, rea_ilayout, rea_ireact, rea_ubits, rea_ulayout, 
-  rea_ureact, rea_ireg, rea_ureg, rea_mainform, rea_ibrace, rea_ubrace, 
-  rea_idesigncomponent, rea_udesigncomponent, rea_irenderer, rea_urenderer;
+  rea_iapp, rea_ibits, rea_ilayout, rea_ubits, rea_ulayout, rea_ireg, 
+  rea_ureg, rea_mainform, rea_idesigncomponent, rea_udesigncomponent, 
+  rea_irenderer, rea_urenderer;
 
 implementation
 

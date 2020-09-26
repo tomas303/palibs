@@ -5,14 +5,14 @@ unit tal_ureaapp;
 interface
 
 uses
-  SysUtils, rea_ireact, trl_uprops,
+  SysUtils, trl_uprops,
   trl_idifactory, flu_iflux, rea_iapp,
   trl_iExecutor,
   trl_ilog,
   Forms,  // later remove and make Application accessible through interface
   LMessages, LCLType, LCLIntf,
   trl_imetaelementfactory,
-  rea_ibrace, rea_ibits, trl_imetaelement, Classes,
+  rea_ibits, trl_imetaelement, Classes,
   rea_idesigncomponent, rea_irenderer,
   trl_ireconciler;
 

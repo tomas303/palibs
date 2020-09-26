@@ -16,18 +16,12 @@ type
   protected
     // IReg
     function RegisterDispatcher(const ASubFuncs: array of string): TDIReg;
-    function RegisterStateHub(const AClass: TClass; const AID: string;
-      const ASubstateIDs: array of string): TDIReg;
-    function RegisterState(const AClass: TClass; const AID: string): TDIReg;
     function RegisterState: TDIReg;
-    function RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
-
+    function RegisterFunc(const AClass: TClass): TDIReg;
     function RegisterStore: TDIReg;
     function RegisterData: TDIReg;
     function RegisterStoreConnector: TDIReg;
-
-    procedure RegisterCommon(const ASubstateIDs: array of string;
-      const ASubFuncs: array of string);
+    procedure RegisterCommon(const ASubFuncs: array of string);
   protected
     fDIC: TDIContainer;
   published
@@ -48,33 +42,15 @@ begin
   end;
 end;
 
-function TReg.RegisterStateHub(const AClass: TClass; const AID: string;
-  const ASubstateIDs: array of string): TDIReg;
-var
-  mSubstateID: string;
-begin
-  Result := DIC.Add(AClass, IFluxState, AID);
-  Result.InjectProp('ID', AID);
-  Result.InjectProp('Data', IProps);
-  for mSubstateID in ASubstateIDs do
-    Result.InjectProp('AddState', IFluxState, mSubstateID);
-end;
-
-function TReg.RegisterState(const AClass: TClass; const AID: string): TDIReg;
-begin
-  Result := DIC.Add(AClass, IFluxState, AID, ckSingle);
-  Result.InjectProp('ID', AID);
-end;
-
 function TReg.RegisterState: TDIReg;
 begin
   Result := DIC.Add(TRdxState, IFluxState);
+  Result.InjectProp('Data', IProps);
 end;
 
-function TReg.RegisterFunc(const AClass: TClass; const AState: string): TDIReg;
+function TReg.RegisterFunc(const AClass: TClass): TDIReg;
 begin
   Result := DIC.Add(AClass, IFluxFunc, AClass.ClassName);
-  Result.InjectProp('State', IFluxState, AState);
 end;
 
 function TReg.RegisterStore: TDIReg;
@@ -97,15 +73,13 @@ begin
   Result.InjectProp('Store', IFluxStore);
 end;
 
-procedure TReg.RegisterCommon(const ASubstateIDs: array of string;
-  const ASubFuncs: array of string);
+procedure TReg.RegisterCommon(const ASubFuncs: array of string);
 begin
-  RegisterStateHub(TRdxState, '', ASubstateIDs);
+  RegisterState;
   RegisterDispatcher(ASubFuncs);
   RegisterStore;
   RegisterStoreConnector;
   RegisterData;
-  //RegisterState; for now still registered via RegisterStateHub
 end;
 
 end.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="flu"/>
     <Type Value="RunTimeOnly"/>
     <CompilerOptions>
@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="5">
       <Item1>
         <HasRegisterProc Value="True"/>
       </Item1>
@@ -29,11 +29,8 @@
         <Filename Value="flu_ireg.pas"/>
         <UnitName Value="flu_ireg"/>
       </Item5>
-      <Item6>
-        <Filename Value="flu_umap.pas"/>
-        <UnitName Value="flu_umap"/>
-      </Item6>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="trl"/>

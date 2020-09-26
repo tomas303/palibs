@@ -26,9 +26,6 @@ type
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
 
-    function RegisterMachinery(AMachineryCompositeClass: TClass; AMachineryInterface: TGuid): TDIReg;
-    function RegisterReact(const AID: string = ''): TDIReg;
-    procedure RegisterBrace;
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
