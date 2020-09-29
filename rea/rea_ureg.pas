@@ -154,6 +154,7 @@ begin
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('StoreConnector', IFluxStoreConnector);
+  Result.InjectProp('FluxFuncReg', IFluxDispatcher);
 end;
 
 function TReg.RegisterRenderer: TDIReg;

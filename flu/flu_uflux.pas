@@ -15,16 +15,13 @@ type
   protected
     fID: integer;
     fProps: IProps;
-    fState: IGenericAccess;
   protected
     //IFluxAction
     function GetID: integer;
     function GetProps: IProps;
-    function GetState: IGenericAccess;
   published
     property ID: integer read GetID write fID;
     property Props: IProps read GetProps write fProps;
-    property State: IGenericAccess read GetState write fState;
   end;
 
   { TFluxNotifier }
@@ -54,13 +51,11 @@ type
     fFactory: IDIFactory;
     fDispatcher: IFluxDispatcher;
     fEnabled: Boolean;
-    fState: IGenericAccess;
   published
     property ActionID: integer read fActionID write fActionID;
     property Factory: IDIFactory read fFactory write fFactory;
     property Dispatcher: IFluxDispatcher read fDispatcher write fDispatcher;
     property Enabled: Boolean read GetEnabled write SetEnabled;
-    property State: IGenericAccess read fState write fState;
   end;
 
 implementation
@@ -77,11 +72,6 @@ begin
   Result := fProps;
 end;
 
-function TFluxAction.GetState: IGenericAccess;
-begin
-  Result := fState;
-end;
-
 { TFluxNotifier }
 
 procedure TFluxNotifier.Notify;
@@ -95,7 +85,6 @@ begin
     Exit;
   mProps := IProps(Factory.Locate(IProps));
   mProps.SetInt('ID', ActionID);
-  mProps.SetIntf('State', State);
   mAction := IFluxAction(Factory.Locate(IFluxAction, '', mProps));
   for mEvent in fEvents do begin
     mEvent(mAction.Props);

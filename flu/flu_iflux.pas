@@ -14,10 +14,8 @@ type
   ['{8BFE6073-9272-4051-A3DA-CCFBCC6526CE}']
     function GetID: integer;
     function GetProps: IProps;
-    function GetState: IGenericAccess;
     property ID: integer read GetID;
     property Props: IProps read GetProps;
-    property State: IGenericAccess read GetState;
   end;
 
   TFluxDispatchEvent = procedure(const AAppAction: IFluxAction) of object;
@@ -43,6 +41,8 @@ type
     property Enabled: Boolean read GetEnabled write SetEnabled;
   end;
 
+
+
   TStatePath = string;
   TStatePaths = array of TStatePath;
 
@@ -59,6 +59,11 @@ type
   IFluxFunc = interface
   ['{D5CD4D66-CC4B-4A5E-A206-3D2838BB6CC6}']
     procedure Execute(const AAction: IFluxAction);
+  end;
+
+  IFluxFuncReg = interface
+  ['{B14EE8AB-2FD3-40AD-904B-8E6C111407F2}']
+    procedure RegisterFunc(const AFunc: IFluxFunc);
   end;
 
   TFluxStoreEvent = procedure(const AAppState: IFluxState) of object;

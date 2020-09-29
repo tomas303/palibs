@@ -11,15 +11,18 @@ type
 
   { TRdxFuncDispatcher }
 
-  TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher)
+  TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher, IFluxFuncReg)
   protected type
     TFuncs = specialize TFPGInterfacedObjectList<IFluxFunc>;
   protected
     fFuncs: TFuncs;
     procedure SetAddFunc(AValue: IFluxFunc);
   protected
-    // IFluxFunc
+    // IFluxDispatcher
     procedure Dispatch(const AAction: IFluxAction);
+  protected
+    // IFluxFuncReg
+    procedure RegisterFunc(const AFunc: IFluxFunc);
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -33,7 +36,7 @@ implementation
 
 procedure TRdxFuncDispatcher.SetAddFunc(AValue: IFluxFunc);
 begin
-  fFuncs.Add(AValue);
+  RegisterFunc(AValue);
 end;
 
 procedure TRdxFuncDispatcher.Dispatch(const AAction: IFluxAction);
@@ -43,6 +46,12 @@ begin
   for mFunc in fFuncs do begin
     mFunc.Execute(AAction);
   end;
+end;
+
+procedure TRdxFuncDispatcher.RegisterFunc(const AFunc: IFluxFunc);
+begin
+  if fFuncs.IndexOf(AFunc) = -1 then
+    fFuncs.Add(AFunc);
 end;
 
 procedure TRdxFuncDispatcher.AfterConstruction;

@@ -11,21 +11,29 @@ uses
 
 type
 
+  { TDesignComponentFunc }
+
+  TDesignComponentFunc = class(TInterfacedObject, IFluxFunc)
+  private
+    fState: IGenericAccess;
+  protected
+    procedure Execute(const AAction: IFluxAction);
+    procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
+  public
+    constructor Create(const AState: IGenericAccess);
+  end;
+
   { TDesignComponent }
 
-  TDesignComponent = class(TDynaObject, IDesignComponent, INode, IFluxDispatcher)
+  TDesignComponent = class(TDynaObject, IDesignComponent, INode)
   protected
     function NewProps: IProps;
     function NewAction(AActionID: integer): IFluxAction;
     function NewNotifier(const AActionID: integer): IFluxNotifier;
-    function NewNotifier(const AActionID: integer; const AState: IGenericAccess): IFluxNotifier;
-    function NewNotifier(const AActionID: integer; const AState: IGenericAccess;
-      const ADispatcher: IFluxDispatcher): IFluxNotifier;
     function NewState(const APath: string): IGenericAccessRO;
     function NewState: IGenericAccessRO;
   protected
     procedure DoInitValues; virtual;
-    procedure DoDispatch(const AAppAction: IFluxAction); virtual;
     function DoCompose(const AProps: IProps): IMetaElement; virtual; abstract;
   protected
     // IDesignComponent = interface
@@ -43,9 +51,6 @@ type
     function GetNodeEnumerator: INodeEnumerator;
     function INode.GetEnumerator = GetNodeEnumerator;
   protected
-    // IFluxDispatcher
-    procedure Dispatch(const AAppAction: IFluxAction);
-  protected
     fLog: ILog;
     fElementFactory: IMetaElementFactory;
     fFactory: IDIFactory;
@@ -53,6 +58,7 @@ type
     fState: IGenericAccessRO;
     fDataPath: string;
     fStoreConnector: IFluxData;
+    fFluxFuncReg: IFluxFuncReg;
   published
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
@@ -61,14 +67,29 @@ type
     property State: IGenericAccessRO read fState write fState;
     property DataPath: string read fDataPath write fDataPath;
     property StoreConnector: IFluxData read fStoreConnector write fStoreConnector;
+    property FluxFuncReg: IFluxFuncReg read fFluxFuncReg write fFluxFuncReg;
   end;
+
+  { TSizeFunc }
+
+  TSizeFunc = class(TDesignComponentFunc)
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  end;
+
+  { TMoveFunc }
+
+  TMoveFunc = class(TDesignComponentFunc)
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  end;
+
 
   { TDesignComponentForm }
 
   TDesignComponentForm = class(TDesignComponent, IDesignComponentForm)
   protected
     procedure DoInitValues; override;
-    procedure DoDispatch(const AAppAction: IFluxAction); override;
     function DoCompose(const AProps: IProps): IMetaElement; override;
   protected
     fSizeNotifier: IFluxNotifier;
@@ -101,6 +122,39 @@ type
 
 
 implementation
+
+{ TDesignComponentFunc }
+
+procedure TDesignComponentFunc.Execute(const AAction: IFluxAction);
+begin
+  DoExecute(AAction);
+end;
+
+constructor TDesignComponentFunc.Create(const AState: IGenericAccess);
+begin
+  inherited Create;
+  fState := AState;
+end;
+
+{ TMoveFunc }
+
+procedure TMoveFunc.DoExecute(const AAction: IFluxAction);
+begin
+  if AAction.ID = -2 then begin
+    fState.SetInt('Left', AAction.Props.AsInt('MMLeft'));
+    fState.SetInt('Top', AAction.Props.AsInt('MMTop'));
+  end;
+end;
+
+{ TSizeFunc }
+
+procedure TSizeFunc.DoExecute(const AAction: IFluxAction);
+begin
+  if AAction.ID = -1 then begin
+    fState.SetInt('Width', AAction.Props.AsInt('MMWidth'));
+    fState.SetInt('Height', AAction.Props.AsInt('MMHeight'));
+  end;
+end;
 
 { TDesignComponentHeader }
 
@@ -147,36 +201,24 @@ end;
 procedure TDesignComponentForm.DoInitValues;
 begin
   inherited DoInitValues;
-  if fSizeNotifier = nil then
+  if fSizeNotifier = nil then begin
     fSizeNotifier := NewNotifier(-1);
-  if fMoveNotifier = nil then
+    FluxFuncReg.RegisterFunc(TSizeFunc.Create(fState as IGenericAccess));
+  end;
+  if fMoveNotifier = nil then begin
     fMoveNotifier := NewNotifier(-2);
+    FluxFuncReg.RegisterFunc(TMoveFunc.Create(fState as IGenericAccess));
+  end;
   if State.AsInt('Width') = 0 then
     (State as IGenericAccess).SetInt('Width', 400);
   if State.AsInt('Height') = 0 then
     (State as IGenericAccess).SetInt('Height', 200);
 end;
 
-procedure TDesignComponentForm.DoDispatch(const AAppAction: IFluxAction);
-begin
-  inherited DoDispatch(AAppAction);
-  case AAppAction.ID of
-    -1: begin
-          AAppAction.State.SetInt('Width', AAppAction.Props.AsInt('MMWidth'));
-          AAppAction.State.SetInt('Height', AAppAction.Props.AsInt('MMHeight'));
-          (StoreConnector as IFluxDispatcher).Dispatch(NewAction(-11));
-        end;
-    -2: begin
-          AAppAction.State.SetInt('Left', AAppAction.Props.AsInt('MMLeft'));
-          AAppAction.State.SetInt('Top', AAppAction.Props.AsInt('MMTop'));
-          (StoreConnector as IFluxDispatcher).Dispatch(NewAction(-11));
-        end;
-  end;
-end;
-
 function TDesignComponentForm.DoCompose(const AProps: IProps): IMetaElement;
 var
   mProps: IProps;
+  mw: integer;
 begin
   mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color,
     {cProps.SizeNotifier, cProps.MoveNotifier,} cProps.ActivateNotifier]);
@@ -195,6 +237,7 @@ begin
 
   mProps.SetInt(cProps.MMLeft, State.AsInt('Left'));
   mProps.SetInt(cProps.MMTop, State.AsInt('Top'));
+  mw := State.AsInt('Left');
   mProps.SetInt(cProps.MMWidth, State.AsInt('Width'));
   mProps.SetInt(cProps.MMHeight, State.AsInt('Height'));
 
@@ -223,29 +266,9 @@ end;
 
 function TDesignComponent.NewNotifier(const AActionID: integer): IFluxNotifier;
 begin
-  Result := NewNotifier(AActionID, State as IGenericAccess, Self);
-end;
-
-function TDesignComponent.NewNotifier(const AActionID: integer; const AState: IGenericAccess): IFluxNotifier;
-begin
   Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '',
     NewProps
     .SetInt('ActionID', AActionID)
-    .SetIntf('State', AState)
-  ));
-
-  //property Dispatcher: IFluxDispatcher read fDispatcher write fDispatcher;
-end;
-
-function TDesignComponent.NewNotifier(const AActionID: integer;
-  const AState: IGenericAccess; const ADispatcher: IFluxDispatcher
-  ): IFluxNotifier;
-begin
-  Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '',
-    NewProps
-    .SetInt('ActionID', AActionID)
-    .SetIntf('State', AState)
-    .SetIntf('Dispatcher', ADispatcher)
   ));
 end;
 
@@ -263,11 +286,6 @@ procedure TDesignComponent.DoInitValues;
 begin
   if fState = nil then
     fState := NewState;
-end;
-
-procedure TDesignComponent.DoDispatch(const AAppAction: IFluxAction);
-begin
-
 end;
 
 function TDesignComponent.Compose(const AProps: IProps): IMetaElement;
@@ -319,11 +337,6 @@ end;
 function TDesignComponent.GetNodeEnumerator: INodeEnumerator;
 begin
   Result := Node.GetEnumerator;
-end;
-
-procedure TDesignComponent.Dispatch(const AAppAction: IFluxAction);
-begin
-  DoDispatch(AAppAction);
 end;
 
 end.
