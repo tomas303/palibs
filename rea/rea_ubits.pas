@@ -124,6 +124,7 @@ type
     procedure SetActivateNotifier(AValue: IFluxNotifier);
     procedure SetMoveNotifier(AValue: IFluxNotifier);
     procedure SetSizeNotifier(AValue: IFluxNotifier);
+    procedure SetCloseQueryNotifier(AValue: IFluxNotifier);
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -134,6 +135,7 @@ type
     fSizeMsgBinder: IMessageNotifierBinder;
     fMoveMsgBinder: IMessageNotifierBinder;
     fActivateMsgBinder: IMessageNotifierBinder;
+    fCloseQueryMsgBinder: IMessageNotifierBinder;
     procedure DoRender; override;
   public
     destructor Destroy; override;
@@ -143,13 +145,17 @@ type
     fSizeNotifier: IFluxNotifier;
     fMoveNotifier: IFluxNotifier;
     fActivateNotifier: IFluxNotifier;
+    fCloseQueryNotifier: IFluxNotifier;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
     property SizeNotifier: IFluxNotifier read fSizeNotifier write SetSizeNotifier;
     property MoveNotifier: IFluxNotifier read fMoveNotifier write SetMoveNotifier;
     property ActivateNotifier: IFluxNotifier read fActivateNotifier write SetActivateNotifier;
+    property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write SetCloseQueryNotifier;
   end;
+
+  { TMainFormBit }
 
   TMainFormBit = class(TFormBit, IMainFormBit)
   end;
@@ -413,6 +419,21 @@ begin
   end;
 end;
 
+procedure TFormBit.SetCloseQueryNotifier(AValue: IFluxNotifier);
+begin
+  if fCloseQueryNotifier <> nil then
+    begin
+      fCloseQueryMsgBinder.Unbind;
+      fCloseQueryMsgBinder := nil;
+    end;
+    fCloseQueryNotifier := AValue;
+    if fCloseQueryNotifier <> nil then
+    begin
+      fCloseQueryMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fCloseQueryNotifier).SetInt('Msg', LM_CloseQuery)));
+      fCloseQueryMsgBinder.Bind(AsForm);
+    end;
+end;
+
 procedure TFormBit.SetMoveNotifier(AValue: IFluxNotifier);
 begin
   if fMoveNotifier <> nil then
@@ -510,6 +531,8 @@ begin
     MoveNotifier.Enabled := False;
   if ActivateNotifier <> nil then
     ActivateNotifier.Enabled := False;
+  if CloseQueryNotifier <> nil then
+    CloseQueryNotifier.Enabled := False;
   inherited;
   Tiler.ReplaceChildren(Self);
   ResetScroll;
@@ -522,6 +545,8 @@ begin
     MoveNotifier.Enabled := True;
   if ActivateNotifier <> nil then
     ActivateNotifier.Enabled := True;
+  if CloseQueryNotifier <> nil then
+    CloseQueryNotifier.Enabled := True;
   for mChild in Node do
     (mChild as IBit).HookParent(AsForm);
 end;

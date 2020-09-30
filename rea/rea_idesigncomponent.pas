@@ -55,6 +55,7 @@ type
       SizeNotifier = 'SizeNotifier';
       MoveNotifier = 'MoveNotifier';
       ActivateNotifier = 'ActivateNotifier';
+      CloseQueryNotifier = 'CloseQueryNotifier';
       ClickNotifier = 'ClickNotifier';
       OnTextNotifier = 'OnTextNotifier';
     end;

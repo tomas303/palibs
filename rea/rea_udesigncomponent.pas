@@ -94,9 +94,11 @@ type
   protected
     fSizeNotifier: IFluxNotifier;
     fMoveNotifier: IFluxNotifier;
+    fCloseQueryNotifier: IFluxNotifier;
   published
     property SizeNotifier: IFluxNotifier read fSizeNotifier write fSizeNotifier;
     property MoveNotifier: IFluxNotifier read fMoveNotifier write fMoveNotifier;
+    property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write fCloseQueryNotifier;
   end;
 
   { TDesignComponentEdit }
@@ -233,6 +235,7 @@ begin
 
   mProps.SetIntf(cProps.SizeNotifier, SizeNotifier);
   mProps.SetIntf(cProps.MoveNotifier, MoveNotifier);
+  mProps.SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier);
 
 
   mProps.SetInt(cProps.MMLeft, State.AsInt('Left'));
