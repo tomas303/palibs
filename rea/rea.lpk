@@ -39,10 +39,6 @@
         <UnitName Value="rea_ureg"/>
       </Item>
       <Item>
-        <Filename Value="rea_mainform.pas"/>
-        <UnitName Value="rea_mainform"/>
-      </Item>
-      <Item>
         <Filename Value="rea_idesigncomponent.pas"/>
         <UnitName Value="rea_idesigncomponent"/>
       </Item>

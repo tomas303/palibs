@@ -26,10 +26,6 @@ type
   ['{64AAE7AE-AC24-4CBA-8430-2885CFC396AC}']
   end;
 
-  IMainFormBit = interface
-  ['{33738170-692B-4C90-9023-1FF244C5AC47}']
-  end;
-
   IStripBit = interface
   ['{354C99E0-E2B2-43CF-89E7-95057DF390F0}']
   end;

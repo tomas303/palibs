@@ -155,11 +155,6 @@ type
     property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write SetCloseQueryNotifier;
   end;
 
-  { TMainFormBit }
-
-  TMainFormBit = class(TFormBit, IMainFormBit)
-  end;
-
   { TStripBit }
 
   TStripBit = class(TBit, IStripBit)

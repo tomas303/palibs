@@ -12,7 +12,6 @@ uses
   rea_irenderer, rea_urenderer,
   flu_iflux,
   Forms, StdCtrls,
-  rea_mainform,
   trl_iExecutor,
   trl_iprops,
   trl_imetaelementfactory,
@@ -132,7 +131,6 @@ procedure TReg.RegisterCommon;
 begin
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
-  RegisterBitContainer(TMainFormBit, IMainFormBit, TMainForm, '', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
