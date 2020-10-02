@@ -33,6 +33,10 @@ type
   ['{B16AAF18-076F-449D-82B1-BB6AE4962B4B}']
   end;
 
+  IDesignComponentGrid = interface(IDesignComponent)
+  ['{72646A21-0264-4798-A9DE-C0B3E843806B}']
+  end;
+
   cProps = class
     public const
       Children = 'Children';
@@ -58,6 +62,12 @@ type
       CloseQueryNotifier = 'CloseQueryNotifier';
       ClickNotifier = 'ClickNotifier';
       OnTextNotifier = 'OnTextNotifier';
+      RowMMHeight = 'RowMMHeight';
+      ColMMWidth = 'ColMMWidth';
+      RowEvenColor = 'RowEvenColor';
+      RowOddColor = 'RowOddColor';
+      ColEvenColor = 'ColEvenColor';
+      ColOddColor = 'ColOddColor';
     end;
 
 implementation

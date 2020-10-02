@@ -7,7 +7,7 @@ interface
 uses
   rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog, trl_igenericaccess,
-  sysutils;
+  sysutils, rea_ilayout, Graphics;
 
 type
 
@@ -123,7 +123,104 @@ type
   end;
 
 
+  { TDesignComponentGrid }
+
+  TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
+  private
+    function RowProps(ANr: integer): IProps;
+    function ColProps(ANr: integer): IProps;
+    function GridProps: IProps;
+    function MakeRow: TMetaElementArray;
+    function MakeGrid: TMetaElementArray;
+  protected
+    function DoCompose(const AProps: IProps): IMetaElement; override;
+  protected
+    fHorizontalCount: integer;
+    fVerticalCount: integer;
+    fPosX: integer;
+    fPosY: integer;
+  published
+    property HorizontalCount: integer read fHorizontalCount write fHorizontalCount;
+    property VerticalCount: integer read fVerticalCount write fVerticalCount;
+    property PosX: integer read fPosX write fPosX;
+    property PosY: integer read fPosY write fPosY;
+  end;
+
 implementation
+
+{ TDesignComponentGrid }
+
+function TDesignComponentGrid.RowProps(ANr: integer): IProps;
+var
+  mProp: IProp;
+begin
+  Result := NewProps
+    .SetInt('Place', cPlace.Elastic)
+    .SetStr('Text', 'test')
+    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.ColMMWidth));
+  if ANr mod 2 = 1 then
+    mProp := SelfProps.PropByName[cProps.ColOddColor]
+  else
+    mProp := SelfProps.PropByName[cProps.ColEvenColor];
+  if mProp <> nil then
+    Result.SetInt(cProps.Color, mProp.AsInteger);
+end;
+
+function TDesignComponentGrid.ColProps(ANr: integer): IProps;
+var
+  mProp: IProp;
+begin
+  Result := NewProps
+    .SetInt('Place', cPlace.FixFront)
+    .SetInt('Layout', cLayout.Horizontal)
+    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.RowMMHeight));
+  if ANr mod 2 = 1 then begin
+    mProp := SelfProps.PropByName[cProps.RowOddColor];
+  end else begin
+    mProp := SelfProps.PropByName[cProps.RowEvenColor];
+  end;
+  if mProp <> nil then
+    Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False);
+end;
+
+function TDesignComponentGrid.GridProps: IProps;
+var
+  mProp: IProp;
+begin
+  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.MMWidth, cProps.MMHeight]);
+  Result
+   .SetInt('Place', cPlace.Elastic)
+   .SetInt('Layout', cLayout.Vertical);
+  mProp := SelfProps.PropByName[cProps.Color];
+  if mProp <> nil then
+    Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False)
+end;
+
+function TDesignComponentGrid.MakeRow: TMetaElementArray;
+var
+  i: integer;
+begin
+  Result := TMetaElementArray.Create;
+  SetLength(Result, HorizontalCount);
+  for i := 0 to HorizontalCount - 1 do
+    Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i));
+end;
+
+function TDesignComponentGrid.MakeGrid: TMetaElementArray;
+var
+  i: integer;
+begin
+  Result := TMetaElementArray.Create;
+  SetLength(Result, VerticalCount);
+  for i := 0 to VerticalCount - 1 do
+    Result[i] := ElementFactory.CreateElement(IStripBit, ColProps(i), MakeRow);
+end;
+
+function TDesignComponentGrid.DoCompose(const AProps: IProps): IMetaElement;
+begin
+  Result := ElementFactory.CreateElement(
+    IStripBit, GridProps, MakeGrid);
+end;
 
 { TDesignComponentFunc }
 
