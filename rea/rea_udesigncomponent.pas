@@ -101,11 +101,23 @@ type
     property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write fCloseQueryNotifier;
   end;
 
+  { TTextChangedFunc }
+
+  TTextChangedFunc = class(TDesignComponentFunc)
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  end;
+
   { TDesignComponentEdit }
 
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
   protected
+    procedure DoInitValues; override;
     function DoCompose(const AProps: IProps): IMetaElement; override;
+  protected
+    fTextChangedNotifier: IFluxNotifier;
+  published
+    property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write fTextChangedNotifier;
   end;
 
   { TDesignComponentButton }
@@ -130,7 +142,7 @@ type
     function RowProps(ANr: integer): IProps;
     function ColProps(ANr: integer): IProps;
     function GridProps: IProps;
-    function MakeRow: TMetaElementArray;
+    function MakeRow(ARowNr: integer): TMetaElementArray;
     function MakeGrid: TMetaElementArray;
   protected
     function DoCompose(const AProps: IProps): IMetaElement; override;
@@ -147,6 +159,15 @@ type
   end;
 
 implementation
+
+{ TTextChangedFunc }
+
+procedure TTextChangedFunc.DoExecute(const AAction: IFluxAction);
+begin
+  if AAction.ID = -11 then begin
+    fState.SetStr('Text', AAction.Props.AsStr('Text'));
+  end;
+end;
 
 { TDesignComponentGrid }
 
@@ -196,14 +217,18 @@ begin
     Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False)
 end;
 
-function TDesignComponentGrid.MakeRow: TMetaElementArray;
+function TDesignComponentGrid.MakeRow(ARowNr: integer): TMetaElementArray;
 var
   i: integer;
 begin
   Result := TMetaElementArray.Create;
   SetLength(Result, HorizontalCount);
   for i := 0 to HorizontalCount - 1 do
-    Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i));
+    if (ARowNr = PosX) and (i = PosY) then
+      //Result[i] := ElementFactory.CreateElement(IEditBit, RowProps(i))
+      Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, RowProps(i))
+    else
+      Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i));
 end;
 
 function TDesignComponentGrid.MakeGrid: TMetaElementArray;
@@ -213,7 +238,7 @@ begin
   Result := TMetaElementArray.Create;
   SetLength(Result, VerticalCount);
   for i := 0 to VerticalCount - 1 do
-    Result[i] := ElementFactory.CreateElement(IStripBit, ColProps(i), MakeRow);
+    Result[i] := ElementFactory.CreateElement(IStripBit, ColProps(i), MakeRow(i));
 end;
 
 function TDesignComponentGrid.DoCompose(const AProps: IProps): IMetaElement;
@@ -283,16 +308,30 @@ var
   mTitle: IProp;
   mProps: IProps;
 begin
+  //mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
+  //Result := ElementFactory.CreateElement(IStripBit, mProps);
+  //mTitle := SelfProps.PropByName[cProps.Title];
+  //if mTitle <> nil then
+  //  (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, NewProps.SetProp(cProps.Text, mTitle)) as INode);
+  //(Result as INode).AddChild(ElementFactory.CreateElement(IEditBit,
+  //  NewProps
+  //  .SetProp(cProps.Text, SelfProps.PropByName[cProps.Value])
+  //  .SetProp(cProps.OnTextNotifier, SelfProps.PropByName[cProps.OnTextNotifier])
+  //  ) as INode);
   mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
-  Result := ElementFactory.CreateElement(IStripBit, mProps);
-  mTitle := SelfProps.PropByName[cProps.Title];
-  if mTitle <> nil then
-    (Result as INode).AddChild(ElementFactory.CreateElement(ITextBit, NewProps.SetProp(cProps.Text, mTitle)) as INode);
-  (Result as INode).AddChild(ElementFactory.CreateElement(IEditBit,
-    NewProps
-    .SetProp(cProps.Text, SelfProps.PropByName[cProps.Value])
-    .SetProp(cProps.OnTextNotifier, SelfProps.PropByName[cProps.OnTextNotifier])
-    ) as INode);
+  mProps
+    .SetStr('Text', State.AsStr('Text'))
+    .SetIntf('TextChangedNotifier', TextChangedNotifier);
+  Result := ElementFactory.CreateElement(IEditBit, mProps);
+end;
+
+procedure TDesignComponentEdit.DoInitValues;
+begin
+  inherited DoInitValues;
+  if fTextChangedNotifier = nil then begin
+    fTextChangedNotifier := NewNotifier(-11);
+    FluxFuncReg.RegisterFunc(TTextChangedFunc.Create(fState as IGenericAccess));
+  end;
 end;
 
 { TDesignComponentForm }

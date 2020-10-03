@@ -186,18 +186,19 @@ type
   { TEditBit }
 
   TEditBit = class(TBit, IEditBit)
-  protected
-    procedure OnText(const AProps: IProps);
+  private
+    fTextChangedMsgBinder: IMessageNotifierBinder;
+    procedure TextChangedNotifierData(const AProps: IProps);
+    procedure SetTextChangedNotifier(AValue: IFluxNotifier);
   protected
     function AsEdit: TCustomEdit;
-  protected
     procedure DoRender; override;
   protected
     fText: string;
-    fOnTextNotifier: IFluxNotifier;
+    fTextChangedNotifier: IFluxNotifier;
   published
     property Text: string read fText write fText;
-    property OnTextNotifier: IFluxNotifier read fOnTextNotifier write fOnTextNotifier;
+    property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
   end;
 
   { TTextBit }
@@ -378,9 +379,27 @@ end;
 
 { TEditBit }
 
-procedure TEditBit.OnText(const AProps: IProps);
+procedure TEditBit.SetTextChangedNotifier(AValue: IFluxNotifier);
 begin
-  AProps.SetStr('xxx', AsEdit.Text);
+  if fTextChangedNotifier <> nil then
+  begin
+    fTextChangedMsgBinder.Unbind;
+    fTextChangedMsgBinder := nil;
+    fTextChangedNotifier.Remove(@TextChangedNotifierData);
+  end;
+  fTextChangedNotifier := AValue;
+  if fTextChangedNotifier <> nil then
+  begin
+    fTextChangedMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fTextChangedNotifier).SetInt('Msg', CM_TEXTCHANGED)));
+    fTextChangedMsgBinder.Bind(AsEdit);
+    fTextChangedNotifier.Add(@TextChangedNotifierData);
+  end;
+end;
+
+procedure TEditBit.TextChangedNotifierData(const AProps: IProps);
+begin
+  AProps
+    .SetStr('Text', AsEdit.Text);
 end;
 
 function TEditBit.AsEdit: TCustomEdit;
@@ -390,11 +409,13 @@ end;
 
 procedure TEditBit.DoRender;
 begin
+  if TextChangedNotifier <> nil then
+    TextChangedNotifier.Enabled := False;
   inherited;
   AsEdit.Text := Text;
-  if OnTextNotifier <> nil then
-    OnTextNotifier.Add(@OnText);
   AsEdit.Show;
+  if TextChangedNotifier <> nil then
+    TextChangedNotifier.Enabled := True;
 end;
 
 { TFormBit }
