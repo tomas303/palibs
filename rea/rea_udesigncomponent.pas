@@ -108,6 +108,13 @@ type
     procedure DoExecute(const AAction: IFluxAction); override;
   end;
 
+  { TKeyDownFunc }
+
+  TKeyDownFunc = class(TDesignComponentFunc)
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  end;
+
   { TDesignComponentEdit }
 
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
@@ -116,8 +123,10 @@ type
     function DoCompose(const AProps: IProps): IMetaElement; override;
   protected
     fTextChangedNotifier: IFluxNotifier;
+    fKeyDownNotifier: IFluxNotifier;
   published
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write fTextChangedNotifier;
+    property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write fKeyDownNotifier;
   end;
 
   { TDesignComponentButton }
@@ -159,6 +168,16 @@ type
   end;
 
 implementation
+
+{ TKeyDownFunc }
+
+procedure TKeyDownFunc.DoExecute(const AAction: IFluxAction);
+begin
+  if AAction.ID = -12 then begin
+    fState.SetInt('CharCode', AAction.Props.AsInt('CharCode'));
+    fState.SetInt('KeyData', AAction.Props.AsInt('KeyData'));
+  end;
+end;
 
 { TTextChangedFunc }
 
@@ -321,7 +340,8 @@ begin
   mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
   mProps
     .SetStr('Text', State.AsStr('Text'))
-    .SetIntf('TextChangedNotifier', TextChangedNotifier);
+    .SetIntf('TextChangedNotifier', TextChangedNotifier)
+    .SetIntf('KeyDownNotifier', KeyDownNotifier);
   Result := ElementFactory.CreateElement(IEditBit, mProps);
 end;
 
@@ -331,6 +351,10 @@ begin
   if fTextChangedNotifier = nil then begin
     fTextChangedNotifier := NewNotifier(-11);
     FluxFuncReg.RegisterFunc(TTextChangedFunc.Create(fState as IGenericAccess));
+  end;
+  if fKeyDownNotifier = nil then begin
+    fKeyDownNotifier := NewNotifier(-12);
+    FluxFuncReg.RegisterFunc(TKeyDownFunc.Create(fState as IGenericAccess));
   end;
 end;
 

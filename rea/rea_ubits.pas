@@ -15,6 +15,11 @@ type
   { TMessageNotifierBinder }
 
   TMessageNotifierBinder = class(TControlBinder, IMessageNotifierBinder)
+  private
+    fMessage: TLMessage;
+  protected
+    // IMessageNotifierBinder
+    function Message: TLMessage;
   protected
     procedure DoControlWndProc(var TheMessage: TLMessage); override;
   protected
@@ -188,17 +193,22 @@ type
   TEditBit = class(TBit, IEditBit)
   private
     fTextChangedMsgBinder: IMessageNotifierBinder;
+    fKeyDownMsgBinder: IMessageNotifierBinder;
     procedure TextChangedNotifierData(const AProps: IProps);
     procedure SetTextChangedNotifier(AValue: IFluxNotifier);
+    procedure KeyDownNotifierData(const AProps: IProps);
+    procedure SetKeyDownNotifier(AValue: IFluxNotifier);
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
   protected
     fText: string;
     fTextChangedNotifier: IFluxNotifier;
+    fKeyDownNotifier: IFluxNotifier;
   published
     property Text: string read fText write fText;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
+    property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write SetKeyDownNotifier;
   end;
 
   { TTextBit }
@@ -234,12 +244,19 @@ implementation
 
 { TMessageNotifierBinder }
 
+function TMessageNotifierBinder.Message: TLMessage;
+begin
+  Result := fMessage;
+end;
+
 procedure TMessageNotifierBinder.DoControlWndProc(var TheMessage: TLMessage);
 begin
   inherited DoControlWndProc(TheMessage);
   if TheMessage.Msg = Msg then begin
-    if Notifier <> nil then
+    if Notifier <> nil then begin
+      fMessage := TheMessage;
       Notifier.Notify;
+    end;
   end;
 end;
 
@@ -396,10 +413,35 @@ begin
   end;
 end;
 
+procedure TEditBit.KeyDownNotifierData(const AProps: IProps);
+var
+  mMessage: TLMKeyDown;
+begin
+  mMessage := TLMKeyDown(fKeyDownMsgBinder.Message);
+  AProps.SetInt('CharCode', mMessage.CharCode).SetInt('KeyData', mMessage.KeyData);
+end;
+
 procedure TEditBit.TextChangedNotifierData(const AProps: IProps);
 begin
   AProps
     .SetStr('Text', AsEdit.Text);
+end;
+
+procedure TEditBit.SetKeyDownNotifier(AValue: IFluxNotifier);
+begin
+  if fKeyDownNotifier <> nil then
+  begin
+    fKeyDownMsgBinder.Unbind;
+    fKeyDownMsgBinder := nil;
+    fKeyDownNotifier.Remove(@KeyDownNotifierData);
+  end;
+  fKeyDownNotifier := AValue;
+  if fKeyDownNotifier <> nil then
+  begin
+    fKeyDownMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fKeyDownNotifier).SetInt('Msg', CN_KEYDOWN)));
+    fKeyDownMsgBinder.Bind(AsEdit);
+    fKeyDownNotifier.Add(@KeyDownNotifierData);
+  end;
 end;
 
 function TEditBit.AsEdit: TCustomEdit;
@@ -411,11 +453,15 @@ procedure TEditBit.DoRender;
 begin
   if TextChangedNotifier <> nil then
     TextChangedNotifier.Enabled := False;
+  if KeyDownNotifier <> nil then
+    KeyDownNotifier.Enabled := False;
   inherited;
   AsEdit.Text := Text;
   AsEdit.Show;
   if TextChangedNotifier <> nil then
     TextChangedNotifier.Enabled := True;
+  if KeyDownNotifier <> nil then
+    KeyDownNotifier.Enabled := True;
 end;
 
 { TFormBit }

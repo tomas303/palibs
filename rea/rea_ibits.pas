@@ -5,13 +5,14 @@ unit rea_ibits;
 interface
 
 uses
-  Controls, Graphics;
+  Controls, Graphics, LMessages;
 
 type
   IMessageNotifierBinder = interface
   ['{639A647A-916B-4906-A4F8-89CD4C0E129D}']
     procedure Bind(AControl: TControl);
     procedure Unbind;
+    function Message: TLMessage;
   end;
 
   // wrapper for real control and its binder
