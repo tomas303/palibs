@@ -201,6 +201,8 @@ type
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
+  public
+    destructor Destroy; override;
   protected
     fText: string;
     fTextChangedNotifier: IFluxNotifier;
@@ -423,6 +425,7 @@ end;
 
 procedure TEditBit.TextChangedNotifierData(const AProps: IProps);
 begin
+  if AsEdit <> nil then
   AProps
     .SetStr('Text', AsEdit.Text);
 end;
@@ -462,6 +465,13 @@ begin
     TextChangedNotifier.Enabled := True;
   if KeyDownNotifier <> nil then
     KeyDownNotifier.Enabled := True;
+end;
+
+destructor TEditBit.Destroy;
+begin
+  TextChangedNotifier := nil;
+  KeyDownNotifier := nil;
+  inherited Destroy;
 end;
 
 { TFormBit }
@@ -615,6 +625,10 @@ end;
 
 destructor TFormBit.Destroy;
 begin
+  SizeNotifier := nil;
+  MoveNotifier := nil;
+  ActivateNotifier := nil;
+  CloseQueryNotifier := nil;
   inherited Destroy;
 end;
 
