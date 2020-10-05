@@ -15,6 +15,7 @@ type
   TReconciler = class(TInterfacedObject, IReconciler)
   protected
     procedure RemoveChild(const AParentBit: INode; AIndex: integer);
+    procedure InsertChild(const AParentBit: INode; const AChildElement: IMetaElement; AIndex: integer);
     procedure AddChild(const AParentBit: INode; const AChildElement: IMetaElement);
     procedure ProcessDiff(const ABit: INode; const ANewChildElement, AOldChildElement: IMetaElement);
     procedure ProcessChildren(const ABit: INode; const AOldElement, ANewElement: IMetaElement);
@@ -41,6 +42,27 @@ var
 begin
   mChildBit := (AParentBit as INode).Child[AIndex] as INode;
   (AParentBit as INode).RemoveChild(mChildBit as INode);
+end;
+
+procedure TReconciler.InsertChild(const AParentBit: INode;
+  const AChildElement: IMetaElement; AIndex: integer);
+var
+  mNew: IUnknown;
+  mChildBit: INode;
+  i: integer;
+begin
+  mNew := IUnknown(Factory.Locate(AChildElement.Guid, AChildElement.TypeID, AChildElement.Props.Clone));
+  if Supports(mNew, INode, mChildBit) then
+  begin
+    // what render to INode will be use directly
+    (AParentBit as INode).Insert(AIndex, mChildBit as INode);
+    for i := 0 to (AChildElement as INode).Count - 1 do
+      AddChild(mChildBit, (AChildElement as INode).Child[i] as IMetaElement);
+  end
+  else
+  begin
+    raise exception.create('todo');
+  end;
 end;
 
 procedure TReconciler.AddChild(const AParentBit: INode;
@@ -93,7 +115,7 @@ begin
     begin
       // change of type
       RemoveChild(ABit, i);
-      AddChild(ABit, mNewChildEl);
+      InsertChild(ABit, mNewChildEl, i);
     end
     else
     begin
