@@ -1,6 +1,7 @@
 unit flu_uflux;
 
 {$mode objfpc}{$H+}
+{$modeswitch advancedrecords}
 
 interface
 
@@ -33,7 +34,16 @@ type
   }
   TFluxNotifier = class(TInterfacedObject, IFluxNotifier)
   protected type
-    TEvents = specialize TFPGList<TFluxNotifierEvent>;
+
+    { TFluxNotifierEventRec }
+
+    TFluxNotifierEventRec = record
+      Event: TFluxNotifierEvent;
+      constructor Create(AEvent: TFluxNotifierEvent);
+      class operator =(a,b: TFluxNotifierEventRec): Boolean;
+    end;
+
+    TEvents = specialize TFPGList<TFluxNotifierEventRec>;
   protected
     fEvents: TEvents;
   protected
@@ -60,6 +70,26 @@ type
 
 implementation
 
+{ TFluxNotifier.TFluxNotifierEventRec }
+
+constructor TFluxNotifier.TFluxNotifierEventRec.Create(
+  AEvent: TFluxNotifierEvent);
+begin
+  Event := AEvent;
+end;
+
+class operator TFluxNotifier.TFluxNotifierEventRec.=(a, b: TFluxNotifierEventRec
+  ): Boolean;
+var
+  ma, mb: TMethod;
+begin
+  // compare just by a = b do not work, because same method with 2 different objects
+  // returns true (don't know reason)
+  ma := TMethod(a.Event);
+  mb := TMethod(b.Event);
+  Result := (ma.Code = mb.Code) and (ma.Data = mb.Data);
+end;
+
 { TFluxAction }
 
 function TFluxAction.GetID: integer;
@@ -78,7 +108,7 @@ procedure TFluxNotifier.Notify;
 var
   mProps: IProps;
   mAction: IFluxAction;
-  mEvent: TFluxNotifierEvent;
+  mEvent: TFluxNotifierEventRec;
   m: string;
 begin
   if not fEnabled then
@@ -87,23 +117,26 @@ begin
   mProps.SetInt('ID', ActionID);
   mAction := IFluxAction(Factory.Locate(IFluxAction, '', mProps));
   for mEvent in fEvents do begin
-    mEvent(mAction.Props);
+    mEvent.Event(mAction.Props);
   end;
   m := (Dispatcher as TObject).ClassName;
   Dispatcher.Dispatch(mAction);
 end;
 
 procedure TFluxNotifier.Add(const AEvent: TFluxNotifierEvent);
+var
+  mRec: TFluxNotifierEventRec;
 begin
-  if fEvents.IndexOf(AEvent) = -1 then
-    fEvents.Add(AEvent);
+  mRec := TFluxNotifierEventRec.Create(AEvent);
+  if fEvents.IndexOf(mRec) = -1 then
+    fEvents.Add(mRec);
 end;
 
 procedure TFluxNotifier.Remove(const AEvent: TFluxNotifierEvent);
 var
   mIndex: integer;
 begin
-  mIndex := fEvents.IndexOf(AEvent);
+  mIndex := fEvents.IndexOf(TFluxNotifierEventRec.Create(AEvent));
   if mIndex <> -1 then
     fEvents.Delete(mIndex);
 end;
