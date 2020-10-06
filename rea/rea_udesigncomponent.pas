@@ -16,11 +16,15 @@ type
   TDesignComponentFunc = class(TInterfacedObject, IFluxFunc)
   private
     fState: IGenericAccess;
+    fID: integer;
   protected
-    procedure Execute(const AAction: IFluxAction);
     procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
+  protected
+    // IFluxFunc
+    procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
   public
-    constructor Create(const AState: IGenericAccess);
+    constructor Create(AID: integer; const AState: IGenericAccess);
   end;
 
   { TDesignComponent }
@@ -150,7 +154,7 @@ type
   protected
     fEdState: IGenericAccess;
   public
-    constructor Create(const AState, AEdState: IGenericAccess);
+    constructor Create(AID: integer; const AState, AEdState: IGenericAccess);
   end;
 
   { TGridEdTextChangedFunc }
@@ -209,9 +213,10 @@ implementation
 
 { TGridFunc }
 
-constructor TGridFunc.Create(const AState, AEdState: IGenericAccess);
+constructor TGridFunc.Create(AID: integer; const AState,
+  AEdState: IGenericAccess);
 begin
-  inherited Create(AState);
+  inherited Create(AID, AState);
   fEdState := AEdState;
 end;
 
@@ -393,14 +398,14 @@ begin
   fEdTextChangedNotifier := State.AsIntf('EdTextChangedNotifier') as IFluxNotifier;
   if fEdTextChangedNotifier = nil then begin
     fEdTextChangedNotifier := NewNotifier(-41);
-    FluxFuncReg.RegisterFunc(TGridEdTextChangedFunc.Create(fState as IGenericAccess, fEdState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TGridEdTextChangedFunc.Create(-41, fState as IGenericAccess, fEdState as IGenericAccess));
     (State as IGenericAccess).SetIntf('EdTextChangedNotifier', fEdTextChangedNotifier);
   end;
 
   fEdKeyDownNotifier := State.AsIntf('EdKeyDownNotifier') as IFluxNotifier;
     if fEdKeyDownNotifier = nil then begin
     fEdKeyDownNotifier := NewNotifier(-42);
-    FluxFuncReg.RegisterFunc(TGridEdKeyDownFunc.Create(fState as IGenericAccess, fEdState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TGridEdKeyDownFunc.Create(-42, fState as IGenericAccess, fEdState as IGenericAccess));
     (State as IGenericAccess).SetIntf('EdKeyDownNotifier', fEdKeyDownNotifier);
   end;
 
@@ -419,9 +424,16 @@ begin
   DoExecute(AAction);
 end;
 
-constructor TDesignComponentFunc.Create(const AState: IGenericAccess);
+function TDesignComponentFunc.GetID: integer;
+begin
+  Result := fID;
+end;
+
+constructor TDesignComponentFunc.Create(AID: integer;
+  const AState: IGenericAccess);
 begin
   inherited Create;
+  fID := AID;
   fState := AState;
 end;
 
@@ -496,11 +508,11 @@ begin
   inherited DoInitValues;
   if fTextChangedNotifier = nil then begin
     fTextChangedNotifier := NewNotifier(-11);
-    FluxFuncReg.RegisterFunc(TTextChangedFunc.Create(fState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TTextChangedFunc.Create(-11, fState as IGenericAccess));
   end;
   if fKeyDownNotifier = nil then begin
     fKeyDownNotifier := NewNotifier(-12);
-    FluxFuncReg.RegisterFunc(TKeyDownFunc.Create(fState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TKeyDownFunc.Create(-12, fState as IGenericAccess));
   end;
 end;
 
@@ -511,11 +523,11 @@ begin
   inherited DoInitValues;
   if fSizeNotifier = nil then begin
     fSizeNotifier := NewNotifier(-1);
-    FluxFuncReg.RegisterFunc(TSizeFunc.Create(fState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TSizeFunc.Create(-1, fState as IGenericAccess));
   end;
   if fMoveNotifier = nil then begin
     fMoveNotifier := NewNotifier(-2);
-    FluxFuncReg.RegisterFunc(TMoveFunc.Create(fState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TMoveFunc.Create(-2, fState as IGenericAccess));
   end;
   if State.AsInt('Width') = 0 then
     (State as IGenericAccess).SetInt('Width', 400);

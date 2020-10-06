@@ -17,10 +17,13 @@ type
   protected
     // IFluxFunc
     procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
   protected
+    fID: integer;
     fState: IGenericAccess;
   published
     property State: IGenericAccess read fState write fState;
+    property ID: integer read GetID write fID;
   end;
 
 implementation
@@ -30,6 +33,11 @@ implementation
 procedure TRdxFunc.Execute(const AAction: IFluxAction);
 begin
   DoExecute(AAction);
+end;
+
+function TRdxFunc.GetID: integer;
+begin
+  Result := fID;
 end;
 
 end.

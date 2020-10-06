@@ -59,6 +59,8 @@ type
   IFluxFunc = interface
   ['{D5CD4D66-CC4B-4A5E-A206-3D2838BB6CC6}']
     procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
+    property ID: integer read GetID;
   end;
 
   IFluxFuncReg = interface
