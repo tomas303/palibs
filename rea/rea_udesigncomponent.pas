@@ -7,7 +7,7 @@ interface
 uses
   rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog, trl_igenericaccess,
-  sysutils, rea_ilayout, Graphics;
+  sysutils, rea_ilayout, Graphics, LCLType;
 
 type
 
@@ -144,30 +144,144 @@ type
   end;
 
 
+  { TGridFunc }
+
+  TGridFunc = class(TDesignComponentFunc)
+  protected
+    fEdState: IGenericAccess;
+  public
+    constructor Create(const AState, AEdState: IGenericAccess);
+  end;
+
+  { TGridEdTextChangedFunc }
+
+  TGridEdTextChangedFunc = class(TGridFunc)
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  end;
+
+
+  { TGridEdKeyDownFunc }
+
+  TGridEdKeyDownFunc = class(TGridFunc)
+  private
+    fBrowseMode: Boolean;
+    function GetHorizontalCount: integer;
+    function GetPosX: integer;
+    function GetPosY: integer;
+    function GetVerticalCount: integer;
+    procedure SetPosX(AValue: integer);
+    procedure SetPosY(AValue: integer);
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+    property HorizontalCount: integer read GetHorizontalCount;
+    property VerticalCount: integer read GetVerticalCount;
+    property PosX: integer read GetPosX write SetPosX;
+    property PosY: integer read GetPosY write SetPosY;
+  public
+    procedure AfterConstruction; override;
+  end;
+
   { TDesignComponentGrid }
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
   private
+    fEdTextChangedNotifier: IFluxNotifier;
+    fEdKeyDownNotifier: IFluxNotifier;
+    fEdState: IGenericAccessRO;
     function RowProps(ANr: integer): IProps;
     function ColProps(ANr: integer): IProps;
     function GridProps: IProps;
     function MakeRow(ARowNr: integer): TMetaElementArray;
     function MakeGrid: TMetaElementArray;
   protected
+    procedure DoInitValues; override;
     function DoCompose(const AProps: IProps): IMetaElement; override;
   protected
     fHorizontalCount: integer;
     fVerticalCount: integer;
-    fPosX: integer;
-    fPosY: integer;
   published
     property HorizontalCount: integer read fHorizontalCount write fHorizontalCount;
     property VerticalCount: integer read fVerticalCount write fVerticalCount;
-    property PosX: integer read fPosX write fPosX;
-    property PosY: integer read fPosY write fPosY;
   end;
 
 implementation
+
+{ TGridFunc }
+
+constructor TGridFunc.Create(const AState, AEdState: IGenericAccess);
+begin
+  inherited Create(AState);
+  fEdState := AEdState;
+end;
+
+{ TGridEdKeyDownFunc }
+
+function TGridEdKeyDownFunc.GetHorizontalCount: integer;
+begin
+  Result := fState.AsInt('HorizontalCount');
+end;
+
+function TGridEdKeyDownFunc.GetPosX: integer;
+begin
+  Result := fState.AsInt('PosX');
+end;
+
+function TGridEdKeyDownFunc.GetPosY: integer;
+begin
+  Result := fState.AsInt('PosY');
+end;
+
+function TGridEdKeyDownFunc.GetVerticalCount: integer;
+begin
+  Result := fState.AsInt('VerticalCount');
+end;
+
+procedure TGridEdKeyDownFunc.SetPosX(AValue: integer);
+begin
+  fState.SetInt('PosX', AValue);
+end;
+
+procedure TGridEdKeyDownFunc.SetPosY(AValue: integer);
+begin
+  fState.SetInt('PosY', AValue);
+end;
+
+procedure TGridEdKeyDownFunc.DoExecute(const AAction: IFluxAction);
+begin
+  if AAction.ID = -42 then begin
+    case AAction.Props.AsInt('CharCode') of
+      VK_ESCAPE:
+        fBrowseMode := True;
+      VK_RETURN:
+        fBrowseMode := False;
+      VK_LEFT:
+        if fBrowseMode then if PosX > 0 then PosX := PosX - 1;
+      VK_RIGHT:
+        if fBrowseMode then if PosX < HorizontalCount - 1 then PosX := PosX + 1;
+      VK_UP:
+        if fBrowseMode then if PosY > 0 then PosY := PosY - 1;
+      VK_DOWN:
+        if fBrowseMode then if PosY < VerticalCount - 1 then PosY := PosY + 1;
+    end;
+  end;
+end;
+
+procedure TGridEdKeyDownFunc.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fBrowseMode := True;
+end;
+
+{ TGridEdTextChangedFunc }
+
+procedure TGridEdTextChangedFunc.DoExecute(const AAction: IFluxAction);
+begin
+  if AAction.ID = -41 then begin
+    // pole posx posy ... tam se bude taky ukladat
+    fEdState.SetStr('Text', AAction.Props.AsStr('Text'));
+  end;
+end;
 
 { TKeyDownFunc }
 
@@ -239,15 +353,24 @@ end;
 function TDesignComponentGrid.MakeRow(ARowNr: integer): TMetaElementArray;
 var
   i: integer;
+  mProps: IProps;
+  mposx,mposy:integer;
 begin
+  mposx := State.AsInt('PosX');
+  mposy := State.AsInt('PosY');
   Result := TMetaElementArray.Create;
   SetLength(Result, HorizontalCount);
   for i := 0 to HorizontalCount - 1 do
-    if (ARowNr = PosX) and (i = PosY) then
-      //Result[i] := ElementFactory.CreateElement(IEditBit, RowProps(i))
-      Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, RowProps(i))
-    else
+    if (ARowNr = State.AsInt('PosY')) and (i = State.AsInt('PosX')) then begin
+      mProps := RowProps(i);
+      mProps
+        .SetIntf('State', fEdState)
+        .SetIntf('TextChangedNotifier', fEdTextChangedNotifier)
+        .SetIntf('KeyDownNotifier', fEdKeyDownNotifier);
+      Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);
+    end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i));
+    end;
 end;
 
 function TDesignComponentGrid.MakeGrid: TMetaElementArray;
@@ -258,6 +381,29 @@ begin
   SetLength(Result, VerticalCount);
   for i := 0 to VerticalCount - 1 do
     Result[i] := ElementFactory.CreateElement(IStripBit, ColProps(i), MakeRow(i));
+end;
+
+procedure TDesignComponentGrid.DoInitValues;
+begin
+  inherited DoInitValues;
+  fEdState := NewState(DataPath + '/Ed');
+  (State as IGenericAccess).SetInt('HorizontalCount', HorizontalCount);
+  (State as IGenericAccess).SetInt('VerticalCount', VerticalCount);
+
+  fEdTextChangedNotifier := State.AsIntf('EdTextChangedNotifier') as IFluxNotifier;
+  if fEdTextChangedNotifier = nil then begin
+    fEdTextChangedNotifier := NewNotifier(-41);
+    FluxFuncReg.RegisterFunc(TGridEdTextChangedFunc.Create(fState as IGenericAccess, fEdState as IGenericAccess));
+    (State as IGenericAccess).SetIntf('EdTextChangedNotifier', fEdTextChangedNotifier);
+  end;
+
+  fEdKeyDownNotifier := State.AsIntf('EdKeyDownNotifier') as IFluxNotifier;
+    if fEdKeyDownNotifier = nil then begin
+    fEdKeyDownNotifier := NewNotifier(-42);
+    FluxFuncReg.RegisterFunc(TGridEdKeyDownFunc.Create(fState as IGenericAccess, fEdState as IGenericAccess));
+    (State as IGenericAccess).SetIntf('EdKeyDownNotifier', fEdKeyDownNotifier);
+  end;
+
 end;
 
 function TDesignComponentGrid.DoCompose(const AProps: IProps): IMetaElement;
