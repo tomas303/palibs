@@ -509,13 +509,17 @@ end;
 procedure TDesignComponentForm.DoInitValues;
 begin
   inherited DoInitValues;
+  fSizeNotifier := State.AsIntf('SizeNotifier') as IFluxNotifier;
   if fSizeNotifier = nil then begin
     fSizeNotifier := NewNotifier(-1);
     FluxFuncReg.RegisterFunc(TSizeFunc.Create(-1, fState as IGenericAccess));
+    (State as IGenericAccess).SetIntf('SizeNotifier', fSizeNotifier);
   end;
+  fMoveNotifier := State.AsIntf('MoveNotifier') as IFluxNotifier;
   if fMoveNotifier = nil then begin
     fMoveNotifier := NewNotifier(-2);
     FluxFuncReg.RegisterFunc(TMoveFunc.Create(-2, fState as IGenericAccess));
+    (State as IGenericAccess).SetIntf('MoveNotifier', fMoveNotifier);
   end;
   if State.AsInt('Width') = 0 then
     (State as IGenericAccess).SetInt('Width', 400);
