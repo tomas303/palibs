@@ -14,8 +14,9 @@ type
   TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher, IFluxFuncReg)
   protected type
     TFuncs = specialize TFPGInterfacedObjectList<IFluxFunc>;
+    TIDFuncs = specialize TFPGMapObject<Integer, TFuncs>;
   protected
-    fFuncs: TFuncs;
+    fIDFuncs: TIDFuncs;
     procedure SetAddFunc(AValue: IFluxFunc);
   protected
     // IFluxDispatcher
@@ -41,28 +42,39 @@ end;
 
 procedure TRdxFuncDispatcher.Dispatch(const AAction: IFluxAction);
 var
+  mFuncs: TFuncs;
   mFunc: IFluxFunc;
 begin
-  for mFunc in fFuncs do begin
+  mFuncs := fIDFuncs[AAction.ID];
+  for mFunc in mFuncs do begin
     mFunc.Execute(AAction);
   end;
 end;
 
 procedure TRdxFuncDispatcher.RegisterFunc(const AFunc: IFluxFunc);
+var
+  mFuncs: TFuncs;
+  mInd: integer;
 begin
-  if fFuncs.IndexOf(AFunc) = -1 then
-    fFuncs.Add(AFunc);
+  mInd := fIDFuncs.IndexOf(AFunc.ID);
+  if mInd = -1 then begin
+    mFuncs := TFuncs.Create;
+    mInd := fIDFuncs.Add(AFunc.ID, mFuncs);
+  end;
+  mFuncs := fIDFuncs.Data[mInd];
+  if mFuncs.IndexOf(AFunc) = -1 then
+    mFuncs.Add(AFunc);
 end;
 
 procedure TRdxFuncDispatcher.AfterConstruction;
 begin
   inherited AfterConstruction;
-  fFuncs := TFuncs.Create;
+  fIDFuncs := TIDFuncs.Create(True);
 end;
 
 procedure TRdxFuncDispatcher.BeforeDestruction;
 begin
-  FreeAndNil(fFuncs);
+  FreeAndNil(fIDFuncs);
   inherited BeforeDestruction;
 end;
 
