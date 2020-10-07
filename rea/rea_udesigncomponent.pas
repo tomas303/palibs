@@ -254,21 +254,19 @@ end;
 
 procedure TGridEdKeyDownFunc.DoExecute(const AAction: IFluxAction);
 begin
-  if AAction.ID = -42 then begin
-    case AAction.Props.AsInt('CharCode') of
-      VK_ESCAPE:
-        fBrowseMode := True;
-      VK_RETURN:
-        fBrowseMode := False;
-      VK_LEFT:
-        if fBrowseMode then if PosX > 0 then PosX := PosX - 1;
-      VK_RIGHT:
-        if fBrowseMode then if PosX < HorizontalCount - 1 then PosX := PosX + 1;
-      VK_UP:
-        if fBrowseMode then if PosY > 0 then PosY := PosY - 1;
-      VK_DOWN:
-        if fBrowseMode then if PosY < VerticalCount - 1 then PosY := PosY + 1;
-    end;
+  case AAction.Props.AsInt('CharCode') of
+    VK_ESCAPE:
+      fBrowseMode := True;
+    VK_RETURN:
+      fBrowseMode := False;
+    VK_LEFT:
+      if fBrowseMode then if PosX > 0 then PosX := PosX - 1;
+    VK_RIGHT:
+      if fBrowseMode then if PosX < HorizontalCount - 1 then PosX := PosX + 1;
+    VK_UP:
+      if fBrowseMode then if PosY > 0 then PosY := PosY - 1;
+    VK_DOWN:
+      if fBrowseMode then if PosY < VerticalCount - 1 then PosY := PosY + 1;
   end;
 end;
 
@@ -282,29 +280,23 @@ end;
 
 procedure TGridEdTextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
-  if AAction.ID = -41 then begin
-    // pole posx posy ... tam se bude taky ukladat
-    fEdState.SetStr('Text', AAction.Props.AsStr('Text'));
-  end;
+  // pole posx posy ... tam se bude taky ukladat
+  fEdState.SetStr('Text', AAction.Props.AsStr('Text'));
 end;
 
 { TKeyDownFunc }
 
 procedure TKeyDownFunc.DoExecute(const AAction: IFluxAction);
 begin
-  if AAction.ID = -12 then begin
-    fState.SetInt('CharCode', AAction.Props.AsInt('CharCode'));
-    fState.SetInt('KeyData', AAction.Props.AsInt('KeyData'));
-  end;
+  fState.SetInt('CharCode', AAction.Props.AsInt('CharCode'));
+  fState.SetInt('KeyData', AAction.Props.AsInt('KeyData'));
 end;
 
 { TTextChangedFunc }
 
 procedure TTextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
-  if AAction.ID = -11 then begin
-    fState.SetStr('Text', AAction.Props.AsStr('Text'));
-  end;
+  fState.SetStr('Text', AAction.Props.AsStr('Text'));
 end;
 
 { TDesignComponentGrid }
@@ -441,20 +433,16 @@ end;
 
 procedure TMoveFunc.DoExecute(const AAction: IFluxAction);
 begin
-  if AAction.ID = -2 then begin
-    fState.SetInt('Left', AAction.Props.AsInt('MMLeft'));
-    fState.SetInt('Top', AAction.Props.AsInt('MMTop'));
-  end;
+  fState.SetInt('Left', AAction.Props.AsInt('MMLeft'));
+  fState.SetInt('Top', AAction.Props.AsInt('MMTop'));
 end;
 
 { TSizeFunc }
 
 procedure TSizeFunc.DoExecute(const AAction: IFluxAction);
 begin
-  if AAction.ID = -1 then begin
-    fState.SetInt('Width', AAction.Props.AsInt('MMWidth'));
-    fState.SetInt('Height', AAction.Props.AsInt('MMHeight'));
-  end;
+  fState.SetInt('Width', AAction.Props.AsInt('MMWidth'));
+  fState.SetInt('Height', AAction.Props.AsInt('MMHeight'));
 end;
 
 { TDesignComponentHeader }
