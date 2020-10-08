@@ -68,14 +68,10 @@ type
     procedure RegisterFunc(const AFunc: IFluxFunc);
   end;
 
-  TFluxStoreEvent = procedure(const AAppState: IFluxState) of object;
-
   { IFluxStore }
 
   IFluxStore = interface
   ['{3E5DDFF7-63FD-4E14-A913-0A5909A55C7C}']
-    procedure Add(const AEvent: TFluxStoreEvent);
-    procedure Remove(const AEvent: TFluxStoreEvent);
   end;
 
   IFluxStoreConnector = interface
