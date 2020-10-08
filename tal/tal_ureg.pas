@@ -52,6 +52,8 @@ begin
   Result.InjectProp('Reconciler', IReconciler);
   Result.InjectProp('AppComponent', IDesignComponentApp);
   Result.InjectProp('Renderer', IRenderer);
+  Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('FluxFuncReg', IFluxDispatcher);
 end;
 
 function TReg.RegisterWindowLog: TDIReg;

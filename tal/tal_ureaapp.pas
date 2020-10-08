@@ -47,6 +47,7 @@ type
     fReconciler: IReconciler;
     fAppComponent: IDesignComponentApp;
     fRenderer: IRenderer;
+    fFluxFuncReg: IFluxFuncReg;
   published
     property Log: ILog read fLog write fLog;
     property Factory: IDIFactory read fFactory write FFactory;
@@ -61,6 +62,8 @@ type
     property Reconciler: IReconciler read fReconciler write fReconciler;
     property AppComponent: IDesignComponentApp read fAppComponent write fAppComponent;
     property Renderer: IRenderer read fRenderer write fRenderer;
+    //
+    property FluxFuncReg: IFluxFuncReg read fFluxFuncReg write fFluxFuncReg;
   end;
 
 implementation
@@ -70,6 +73,7 @@ implementation
 procedure TReactApp.StartUp;
 var
   mAction: IFluxAction;
+  mRenderFunc: IFluxFunc;
 begin
   Application.AddOnIdleHandler(@IdleHandler);
   Application.AddOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
@@ -82,7 +86,10 @@ begin
   //React.Render(RootComponent);
   //fHeadBit := Head.Refresh(HeadProvider.ProvideMetaElement);
   //fHeadBit.Render;
-  Render;
+  //Render;
+  mRenderFunc := IFluxFunc(Factory.Locate(IFluxFunc, 'TRenderFunc'));
+  FluxFuncReg.RegisterFunc(mRenderFunc);
+  mRenderFunc.Execute(nil);
 end;
 
 procedure TReactApp.ShutDown;
@@ -97,7 +104,7 @@ begin
   //React.RenderAsync(RootComponent);
   //fHeadBit := Head.Refresh(HeadProvider.ProvideMetaElement);
   //fHeadBit.Render;
-  Render;
+  //Render;
 end;
 
 procedure TReactApp.IdleHandler(Sender: TObject; var Done: Boolean);
@@ -111,7 +118,7 @@ begin
   if (Key = VK_L) and (Shift = [ssCtrl])
   then begin
     Log.Visible := not Log.Visible;
-    Render;
+    //Render;
   end;
 end;
 

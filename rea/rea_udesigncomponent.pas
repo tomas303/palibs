@@ -77,8 +77,12 @@ type
   { TSizeFunc }
 
   TSizeFunc = class(TDesignComponentFunc)
+  private
+    fRenderNotifier: IFluxNotifier;
   protected
     procedure DoExecute(const AAction: IFluxAction); override;
+  public
+    constructor Create(AID: integer; const AState: IGenericAccess; const ARenderNotifier: IFluxNotifier);
   end;
 
   { TMoveFunc }
@@ -152,9 +156,10 @@ type
 
   TGridFunc = class(TDesignComponentFunc)
   protected
+    fRenderNotifier: IFluxNotifier;
     fEdState: IGenericAccess;
   public
-    constructor Create(AID: integer; const AState, AEdState: IGenericAccess);
+    constructor Create(AID: integer; const AState, AEdState: IGenericAccess; const ARenderNotifier: IFluxNotifier);
   end;
 
   { TGridEdTextChangedFunc }
@@ -214,10 +219,12 @@ implementation
 { TGridFunc }
 
 constructor TGridFunc.Create(AID: integer; const AState,
-  AEdState: IGenericAccess);
+  AEdState: IGenericAccess; const ARenderNotifier: IFluxNotifier);
 begin
   inherited Create(AID, AState);
   fEdState := AEdState;
+  fRenderNotifier := ARenderNotifier;
+  fRenderNotifier.Enabled := True;
 end;
 
 { TGridEdKeyDownFunc }
@@ -260,13 +267,25 @@ begin
     VK_RETURN:
       fBrowseMode := False;
     VK_LEFT:
-      if fBrowseMode then if PosX > 0 then PosX := PosX - 1;
+      if fBrowseMode and (PosX > 0) then begin
+        PosX := PosX - 1;
+        fRenderNotifier.Notify;
+      end;
     VK_RIGHT:
-      if fBrowseMode then if PosX < HorizontalCount - 1 then PosX := PosX + 1;
+      if fBrowseMode and (PosX < HorizontalCount - 1) then begin
+        PosX := PosX + 1;
+        fRenderNotifier.Notify;
+      end;
     VK_UP:
-      if fBrowseMode then if PosY > 0 then PosY := PosY - 1;
+      if fBrowseMode and (PosY > 0) then begin
+        PosY := PosY - 1;
+        fRenderNotifier.Notify;
+      end;
     VK_DOWN:
-      if fBrowseMode then if PosY < VerticalCount - 1 then PosY := PosY + 1;
+      if fBrowseMode and (PosY < VerticalCount - 1) then begin
+        PosY := PosY + 1;
+        fRenderNotifier.Notify;
+      end;
   end;
 end;
 
@@ -390,14 +409,14 @@ begin
   fEdTextChangedNotifier := State.AsIntf('EdTextChangedNotifier') as IFluxNotifier;
   if fEdTextChangedNotifier = nil then begin
     fEdTextChangedNotifier := NewNotifier(-41);
-    FluxFuncReg.RegisterFunc(TGridEdTextChangedFunc.Create(-41, fState as IGenericAccess, fEdState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TGridEdTextChangedFunc.Create(-41, fState as IGenericAccess, fEdState as IGenericAccess, NewNotifier(-9)));
     (State as IGenericAccess).SetIntf('EdTextChangedNotifier', fEdTextChangedNotifier);
   end;
 
   fEdKeyDownNotifier := State.AsIntf('EdKeyDownNotifier') as IFluxNotifier;
     if fEdKeyDownNotifier = nil then begin
     fEdKeyDownNotifier := NewNotifier(-42);
-    FluxFuncReg.RegisterFunc(TGridEdKeyDownFunc.Create(-42, fState as IGenericAccess, fEdState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TGridEdKeyDownFunc.Create(-42, fState as IGenericAccess, fEdState as IGenericAccess, NewNotifier(-9)));
     (State as IGenericAccess).SetIntf('EdKeyDownNotifier', fEdKeyDownNotifier);
   end;
 
@@ -443,6 +462,15 @@ procedure TSizeFunc.DoExecute(const AAction: IFluxAction);
 begin
   fState.SetInt('Width', AAction.Props.AsInt('MMWidth'));
   fState.SetInt('Height', AAction.Props.AsInt('MMHeight'));
+  fRenderNotifier.Notify;
+end;
+
+constructor TSizeFunc.Create(AID: integer; const AState: IGenericAccess;
+  const ARenderNotifier: IFluxNotifier);
+begin
+  inherited Create(AID, AState);
+  fRenderNotifier := ARenderNotifier;
+  fRenderNotifier.Enabled := True;
 end;
 
 { TDesignComponentHeader }
@@ -512,7 +540,7 @@ begin
   fSizeNotifier := State.AsIntf('SizeNotifier') as IFluxNotifier;
   if fSizeNotifier = nil then begin
     fSizeNotifier := NewNotifier(-1);
-    FluxFuncReg.RegisterFunc(TSizeFunc.Create(-1, fState as IGenericAccess));
+    FluxFuncReg.RegisterFunc(TSizeFunc.Create(-1, fState as IGenericAccess, NewNotifier(-9)));
     (State as IGenericAccess).SetIntf('SizeNotifier', fSizeNotifier);
   end;
   fMoveNotifier := State.AsIntf('MoveNotifier') as IFluxNotifier;

@@ -6,9 +6,30 @@ interface
 
 uses
   rea_irenderer, rea_idesigncomponent, trl_ilog, trl_imetaelement, trl_idifactory,
-  trl_itree, trl_iprops;
+  trl_itree, trl_iprops, flu_iflux, rea_ibits, trl_ireconciler;
 
 type
+
+  { TRenderFunc }
+
+  TRenderFunc = class(TInterfacedObject, IFluxFunc)
+  private
+    fHeadBit: IBit;
+    fHeadEl: IMetaElement;
+    fRenderer: IRenderer;
+    procedure Render;
+  protected
+    procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
+  protected
+    fReconciler: IReconciler;
+    fenderer: IRenderer;
+    fAppComponent: IDesignComponentApp;
+  published
+    property Reconciler: IReconciler read fReconciler write fReconciler;
+    property Renderer: IRenderer read fRenderer write fRenderer;
+    property AppComponent: IDesignComponentApp read fAppComponent write fAppComponent;
+  end;
 
   { TRenderer }
 
@@ -28,6 +49,35 @@ type
   end;
 
 implementation
+
+{ TRenderFunc }
+
+procedure TRenderFunc.Render;
+var
+  mNewEl: IMetaElement;
+  mNew: IUnknown;
+  mNewBit: IBit;
+  m: string;
+begin
+  mNewEl := Renderer.Render(AppComponent);
+  //mNewBit := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl) as IBit;
+  mNew := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl);
+  m := (mNew as TObject).ClassName;
+  mNewBit := mNew as IBit;
+  fHeadEl := mNewEl;
+  fHeadBit := mNewBit;
+  fHeadBit.Render;
+end;
+
+procedure TRenderFunc.Execute(const AAction: IFluxAction);
+begin
+  Render;
+end;
+
+function TRenderFunc.GetID: integer;
+begin
+  Result := -9;
+end;
 
 { TRenderer }
 

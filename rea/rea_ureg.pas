@@ -15,7 +15,9 @@ uses
   trl_iExecutor,
   trl_iprops,
   trl_imetaelementfactory,
-  trl_inexus;
+  trl_inexus,
+  trl_ireconciler,
+  rea_idesigncomponent;
 
 type
 
@@ -40,6 +42,7 @@ type
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
+    function RegisterRendererFunc: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -138,6 +141,7 @@ begin
   RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterRenderer;
+  RegisterRendererFunc;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -160,6 +164,14 @@ begin
   Result := DIC.Add(TRenderer, IRenderer);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
+end;
+
+function TReg.RegisterRendererFunc: TDIReg;
+begin
+  Result := DIC.Add(TRenderFunc, IFluxFunc, TRenderFunc.ClassName);
+  Result.InjectProp('Reconciler', IReconciler);
+  Result.InjectProp('AppComponent', IDesignComponentApp);
+  Result.InjectProp('Renderer', IRenderer);
 end;
 
 end.
