@@ -10,11 +10,12 @@ uses
   trl_iExecutor,
   trl_ilog,
   Forms,  // later remove and make Application accessible through interface
-  LMessages, LCLType, LCLIntf,
+  LMessages, LCLType, LCLIntf, InterfaceBase,
   trl_imetaelementfactory,
   rea_ibits, trl_imetaelement, Classes,
   rea_idesigncomponent, rea_irenderer,
-  trl_ireconciler;
+  trl_ireconciler,
+  rea_uApplication;
 
 type
 
@@ -32,10 +33,13 @@ type
     fLog: ILog;
     fFactory: IDIFactory;
     fFluxFuncReg: IFluxFuncReg;
+    fExecutor: IExecutor;
+    fEv: PEventHandler;
   published
     property Log: ILog read fLog write fLog;
     property Factory: IDIFactory read fFactory write FFactory;
     property FluxFuncReg: IFluxFuncReg read fFluxFuncReg write fFluxFuncReg;
+    property Executor: IExecutor read fExecutor write fExecutor;
   end;
 
 implementation
@@ -61,7 +65,7 @@ end;
 
 procedure TReactApp.IdleHandler(Sender: TObject; var Done: Boolean);
 begin
-  //Executor.ExecuteAll;
+  Executor.ExecuteAll;
 end;
 
 procedure TReactApp.KeyDownBeforeHandler(Sender: TObject; var Key: Word;

@@ -5,16 +5,29 @@ unit rdx_ufuncdispatcher;
 interface
 
 uses
-  flu_iflux, fgl, sysutils;
+  flu_iflux, fgl, sysutils, trl_iExecutor;
 
 type
+
+  TFuncs = specialize TFPGInterfacedObjectList<IFluxFunc>;
+  TIDFuncs = specialize TFPGMapObject<Integer, TFuncs>;
+
+  { TAsyncFuncRun }
+
+  TAsyncFuncRun = class(TInterfacedObject, IExecute)
+  private
+    fAction: IFluxAction;
+    fFunc: IFluxFunc;
+  protected
+    procedure Execute;
+  public
+    constructor Create(const AAction: IFluxAction; const AFunc: IFluxFunc);
+  end;
+
 
   { TRdxFuncDispatcher }
 
   TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher, IFluxFuncReg)
-  protected type
-    TFuncs = specialize TFPGInterfacedObjectList<IFluxFunc>;
-    TIDFuncs = specialize TFPGMapObject<Integer, TFuncs>;
   protected
     fIDFuncs: TIDFuncs;
     procedure SetAddFunc(AValue: IFluxFunc);
@@ -27,11 +40,28 @@ type
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
+  protected
+    fExecutor: IExecutor;
   published
     property AddFunc: IFluxFunc write SetAddFunc;
+    property Executor: IExecutor read fExecutor write fExecutor;
   end;
 
 implementation
+
+{ TAsyncFuncRun }
+
+procedure TAsyncFuncRun.Execute;
+begin
+  fFunc.Execute(fAction);
+end;
+
+constructor TAsyncFuncRun.Create(const AAction: IFluxAction; const AFunc: IFluxFunc);
+begin
+  inherited Create;
+  fAction := AAction;
+  fFunc := AFunc;
+end;
 
 { TRdxFuncDispatcher }
 
@@ -46,9 +76,11 @@ var
   mFunc: IFluxFunc;
 begin
   mFuncs := fIDFuncs[AAction.ID];
-  for mFunc in mFuncs do begin
-    mFunc.Execute(AAction);
-  end;
+  for mFunc in mFuncs do
+    if mFunc.RunAsync then
+      Executor.Add(TAsyncFuncRun.Create(AAction, mFunc))
+    else
+      mFunc.Execute(AAction);
 end;
 
 procedure TRdxFuncDispatcher.RegisterFunc(const AFunc: IFluxFunc);

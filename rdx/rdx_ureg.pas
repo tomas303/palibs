@@ -6,7 +6,7 @@ interface
 
 uses
   rdx_ireg, trl_dicontainer, flu_iflux, rdx_ufuncdispatcher, trl_iinjector, trl_idifactory,
-  rdx_ustate, trl_iprops, rdx_ustore, rdx_udata, rdx_ustoreconnector;
+  rdx_ustate, trl_iprops, rdx_ustore, rdx_udata, rdx_ustoreconnector, trl_iExecutor;
 
 type
 
@@ -37,6 +37,7 @@ var
   mFunc: string;
 begin
   Result := DIC.Add(TRdxFuncDispatcher, IFluxDispatcher, '', ckSingle);
+  Result.InjectProp('Executor', IExecutor);
   for mFunc in ASubFuncs do begin
     Result.InjectProp('AddFunc', IFluxFunc, mFunc);
   end;

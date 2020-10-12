@@ -43,6 +43,7 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('FluxFuncReg', IFluxDispatcher);
+  Result.InjectProp('Executor', IExecutor);
 end;
 
 function TReg.RegisterWindowLog: TDIReg;

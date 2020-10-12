@@ -17,6 +17,7 @@ type
   protected
     // IFluxFunc
     procedure Execute(const AAction: IFluxAction);
+    function RunAsync: Boolean;
     function GetID: integer;
   protected
     fID: integer;
@@ -33,6 +34,11 @@ implementation
 procedure TRdxFunc.Execute(const AAction: IFluxAction);
 begin
   DoExecute(AAction);
+end;
+
+function TRdxFunc.RunAsync: Boolean;
+begin
+  Result := False;
 end;
 
 function TRdxFunc.GetID: integer;

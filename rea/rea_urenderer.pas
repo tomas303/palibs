@@ -20,6 +20,7 @@ type
     procedure Render;
   protected
     procedure Execute(const AAction: IFluxAction);
+    function RunAsync: Boolean;
     function GetID: integer;
   protected
     fReconciler: IReconciler;
@@ -72,6 +73,11 @@ end;
 procedure TRenderFunc.Execute(const AAction: IFluxAction);
 begin
   Render;
+end;
+
+function TRenderFunc.RunAsync: Boolean;
+begin
+  Result := True;
 end;
 
 function TRenderFunc.GetID: integer;
