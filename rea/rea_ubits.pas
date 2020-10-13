@@ -207,10 +207,12 @@ type
     fText: string;
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
+    fFocused: Boolean;
   published
     property Text: string read fText write fText;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
     property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write SetKeyDownNotifier;
+    property Focused: Boolean read fFocused write fFocused;
   end;
 
   { TTextBit }
@@ -420,7 +422,10 @@ var
   mMessage: TLMKeyDown;
 begin
   mMessage := TLMKeyDown(fKeyDownMsgBinder.Message);
-  AProps.SetInt('CharCode', mMessage.CharCode).SetInt('KeyData', mMessage.KeyData);
+  AProps
+    .SetInt('CharCode', mMessage.CharCode)
+    .SetInt('KeyData', mMessage.KeyData)
+    .SetBool('Focused', AsEdit.Focused);
 end;
 
 procedure TEditBit.TextChangedNotifierData(const AProps: IProps);
@@ -461,6 +466,10 @@ begin
   inherited;
   AsEdit.Text := Text;
   AsEdit.Show;
+  if Focused then begin
+    Focused := False;
+    AsEdit.SetFocus;
+  end;
   if TextChangedNotifier <> nil then
     TextChangedNotifier.Enabled := True;
   if KeyDownNotifier <> nil then

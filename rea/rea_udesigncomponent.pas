@@ -288,6 +288,7 @@ begin
         fRenderNotifier.Notify;
       end;
   end;
+  fEdState.SetBool('Focused', AAction.Props.AsBool('Focused'));
 end;
 
 procedure TGridEdKeyDownFunc.AfterConstruction;
@@ -521,7 +522,8 @@ begin
   mProps
     .SetStr('Text', State.AsStr('Text'))
     .SetIntf('TextChangedNotifier', TextChangedNotifier)
-    .SetIntf('KeyDownNotifier', KeyDownNotifier);
+    .SetIntf('KeyDownNotifier', KeyDownNotifier)
+    .SetBool('Focused', State.AsBool('Focused'));
   Result := ElementFactory.CreateElement(IEditBit, mProps);
 end;
 
