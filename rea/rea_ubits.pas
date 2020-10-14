@@ -58,6 +58,8 @@ type
     procedure DoRender; virtual;
     procedure DoRenderPaint(const ACanvas: TCanvas); virtual;
     procedure DoHookParent(const AParent: TWinControl); virtual;
+    procedure EnableNotifiers; virtual;
+    procedure DisableNotifiers; virtual;
   public
     destructor Destroy; override;
   protected
@@ -142,6 +144,8 @@ type
     fActivateMsgBinder: IMessageNotifierBinder;
     fCloseQueryMsgBinder: IMessageNotifierBinder;
     procedure DoRender; override;
+    procedure EnableNotifiers; override;
+    procedure DisableNotifiers; override;
   public
     destructor Destroy; override;
   protected
@@ -201,6 +205,8 @@ type
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
+    procedure EnableNotifiers; override;
+    procedure DisableNotifiers; override;
   public
     destructor Destroy; override;
   protected
@@ -236,6 +242,8 @@ type
     procedure OnClick(Sender: TObject);
   protected
     procedure DoRender; override;
+    procedure EnableNotifiers; override;
+    procedure DisableNotifiers; override;
   protected
     fText: string;
     fClickNotifier: IFluxNotifier;
@@ -379,9 +387,21 @@ begin
   inherited DoRender;
   AsButton.Caption := Text;
   AsButton.OnClick := @OnClick;
+  AsButton.Show;
+end;
+
+procedure TButtonBit.EnableNotifiers;
+begin
+  inherited EnableNotifiers;
   if ClickNotifier <> nil then
     ClickNotifier.Enabled := True;
-  AsButton.Show;
+end;
+
+procedure TButtonBit.DisableNotifiers;
+begin
+  if ClickNotifier <> nil then
+    ClickNotifier.Enabled := False;
+  inherited DisableNotifiers;
 end;
 
 { TTextBit }
@@ -459,21 +479,32 @@ end;
 
 procedure TEditBit.DoRender;
 begin
-  if TextChangedNotifier <> nil then
-    TextChangedNotifier.Enabled := False;
-  if KeyDownNotifier <> nil then
-    KeyDownNotifier.Enabled := False;
   inherited;
   AsEdit.Text := Text;
   AsEdit.Show;
   if Focused then begin
     Focused := False;
     AsEdit.SetFocus;
+    AsEdit.SelLength := 0;
   end;
+end;
+
+procedure TEditBit.EnableNotifiers;
+begin
+  inherited EnableNotifiers;
   if TextChangedNotifier <> nil then
     TextChangedNotifier.Enabled := True;
   if KeyDownNotifier <> nil then
     KeyDownNotifier.Enabled := True;
+end;
+
+procedure TEditBit.DisableNotifiers;
+begin
+  if TextChangedNotifier <> nil then
+    TextChangedNotifier.Enabled := False;
+  if KeyDownNotifier <> nil then
+    KeyDownNotifier.Enabled := False;
+  inherited DisableNotifiers;
 end;
 
 destructor TEditBit.Destroy;
@@ -602,6 +633,31 @@ procedure TFormBit.DoRender;
 var
   mChild: INode;
 begin
+  inherited;
+  Tiler.ReplaceChildren(Self);
+  ResetScroll;
+  AsForm.OnPaint := @OnPaint;
+  AsForm.Caption := Title;
+  AsForm.Show;
+  for mChild in Node do
+    (mChild as IBit).HookParent(AsForm);
+end;
+
+procedure TFormBit.EnableNotifiers;
+begin
+  inherited EnableNotifiers;
+  if SizeNotifier <> nil then
+    SizeNotifier.Enabled := True;
+  if MoveNotifier <> nil then
+    MoveNotifier.Enabled := True;
+  if ActivateNotifier <> nil then
+    ActivateNotifier.Enabled := True;
+  if CloseQueryNotifier <> nil then
+    CloseQueryNotifier.Enabled := True;
+end;
+
+procedure TFormBit.DisableNotifiers;
+begin
   // discard during render should be samewhat general(callbacks could result in
   // another render call .... anyway, do not want to allow whatsever call back during
   // render - because of kiss - so need to cement it somewhere - maybe notifief active
@@ -614,22 +670,7 @@ begin
     ActivateNotifier.Enabled := False;
   if CloseQueryNotifier <> nil then
     CloseQueryNotifier.Enabled := False;
-  inherited;
-  Tiler.ReplaceChildren(Self);
-  ResetScroll;
-  AsForm.OnPaint := @OnPaint;
-  AsForm.Caption := Title;
-  AsForm.Show;
-  if SizeNotifier <> nil then
-    SizeNotifier.Enabled := True;
-  if MoveNotifier <> nil then
-    MoveNotifier.Enabled := True;
-  if ActivateNotifier <> nil then
-    ActivateNotifier.Enabled := True;
-  if CloseQueryNotifier <> nil then
-    CloseQueryNotifier.Enabled := True;
-  for mChild in Node do
-    (mChild as IBit).HookParent(AsForm);
+  inherited DisableNotifiers;
 end;
 
 destructor TFormBit.Destroy;
@@ -701,30 +742,33 @@ var
   mChild: INode;
 begin
   //AsControl.Hide;
+  DisableNotifiers;
+  try
+    DoRender;
+    if AsControl <> nil then
+      Log.DebugLn('RENDERED ' + ClassName
+        + ' L:' + IntToStr(AsControl.Left)
+        + ' T:' + IntToStr(AsControl.Top)
+        + ' W:' + IntToStr(AsControl.Width)
+        + ' H:' + IntToStr(AsControl.Height)
+        + ' VIS:' + BoolToStr(AsControl.Visible)
+        )
+    else
+      Log.DebugLn('RENDERED NO CONTROL');
 
-  DoRender;
-  if AsControl <> nil then
-    Log.DebugLn('RENDERED ' + ClassName
-      + ' L:' + IntToStr(AsControl.Left)
-      + ' T:' + IntToStr(AsControl.Top)
-      + ' W:' + IntToStr(AsControl.Width)
-      + ' H:' + IntToStr(AsControl.Height)
-      + ' VIS:' + BoolToStr(AsControl.Visible)
-      )
-  else
-    Log.DebugLn('RENDERED NO CONTROL');
+    Log.DebugLn('BIT SIZE ' + ClassName
+      + ' L:' + IntToStr(Left)
+      + ' T:' + IntToStr(Top)
+      + ' W:' + IntToStr(Width)
+      + ' H:' + IntToStr(Height)
+      );
 
-  Log.DebugLn('BIT SIZE ' + ClassName
-    + ' L:' + IntToStr(Left)
-    + ' T:' + IntToStr(Top)
-    + ' W:' + IntToStr(Width)
-    + ' H:' + IntToStr(Height)
-    );
+    for mChild in Node do
+      (mChild as IBit).Render;
 
-  for mChild in Node do
-    (mChild as IBit).Render;
-
-
+  finally
+    EnableNotifiers;
+  end;
   //AsControl.Show;
 end;
 
@@ -739,7 +783,12 @@ end;
 
 procedure TBit.HookParent(const AParent: TWinControl);
 begin
-  DoHookParent(AParent);
+  DisableNotifiers;
+  try
+    DoHookParent(AParent);
+  finally
+    EnableNotifiers;
+  end;
 end;
 
 function TBit.GetLayout: integer;
@@ -872,6 +921,16 @@ end;
 procedure TBit.DoHookParent(const AParent: TWinControl);
 begin
   AsControl.Parent := AParent;
+end;
+
+procedure TBit.EnableNotifiers;
+begin
+
+end;
+
+procedure TBit.DisableNotifiers;
+begin
+
 end;
 
 destructor TBit.Destroy;

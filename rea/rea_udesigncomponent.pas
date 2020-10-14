@@ -384,7 +384,8 @@ begin
       mProps
         .SetIntf('State', fEdState)
         .SetIntf('TextChangedNotifier', fEdTextChangedNotifier)
-        .SetIntf('KeyDownNotifier', fEdKeyDownNotifier);
+        .SetIntf('KeyDownNotifier', fEdKeyDownNotifier)
+        .SetStr('Text', fEdState.AsStr('Text'));
       Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);
     end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i));
