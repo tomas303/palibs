@@ -7,7 +7,7 @@ interface
 uses
   rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog, trl_igenericaccess,
-  sysutils, rea_ilayout, Graphics, LCLType;
+  sysutils, rea_ilayout, Graphics, LCLType, fgl;
 
 type
 
@@ -152,6 +152,31 @@ type
     function DoCompose(const AProps: IProps): IMetaElement; override;
   end;
 
+  { IGridData }
+
+  IGridData = interface
+  ['{B3B7B1B3-A738-4A44-BB6D-53E09BDAF8A9}']
+    function GetValue(X, Y: integer): string;
+    procedure SetValue(X, Y: integer; AValue: string);
+    procedure CheckDimensions(AHorizontalCount, AVerticalCount: integer);
+    property Value[X, Y: integer]: string read GetValue write SetValue; default;
+  end;
+
+  { TGridData }
+
+  TGridData = class(TInterfacedObject, IGridData)
+  private type
+    TMatrix = array of array of string;
+  private
+    fData: TMatrix;
+    fDataHCount: integer;
+    fDataVCount: integer;
+    function GetValue(X, Y: integer): string;
+    procedure SetValue(X, Y: integer; AValue: string);
+  public
+    procedure CheckDimensions(AHorizontalCount, AVerticalCount: integer);
+    property Value[X, Y: integer]: string read GetValue write SetValue; default;
+  end;
 
   { TGridFunc }
 
@@ -159,6 +184,18 @@ type
   protected
     fRenderNotifier: IFluxNotifier;
     fEdState: IGenericAccess;
+    function GetHorizontalCount: integer;
+    function GetPosX: integer;
+    function GetPosY: integer;
+    function GetVerticalCount: integer;
+    function GetData: IGridData;
+    procedure SetPosX(AValue: integer);
+    procedure SetPosY(AValue: integer);
+    property HorizontalCount: integer read GetHorizontalCount;
+    property VerticalCount: integer read GetVerticalCount;
+    property PosX: integer read GetPosX write SetPosX;
+    property PosY: integer read GetPosY write SetPosY;
+    property Data: IGridData read GetData;
   public
     constructor Create(AID: integer; const AState, AEdState: IGenericAccess; const ARenderNotifier: IFluxNotifier);
   end;
@@ -176,18 +213,9 @@ type
   TGridEdKeyDownFunc = class(TGridFunc)
   private
     fBrowseMode: Boolean;
-    function GetHorizontalCount: integer;
-    function GetPosX: integer;
-    function GetPosY: integer;
-    function GetVerticalCount: integer;
-    procedure SetPosX(AValue: integer);
-    procedure SetPosY(AValue: integer);
+    procedure PositionMove;
   protected
     procedure DoExecute(const AAction: IFluxAction); override;
-    property HorizontalCount: integer read GetHorizontalCount;
-    property VerticalCount: integer read GetVerticalCount;
-    property PosX: integer read GetPosX write SetPosX;
-    property PosY: integer read GetPosY write SetPosY;
   public
     procedure AfterConstruction; override;
   end;
@@ -199,7 +227,7 @@ type
     fEdTextChangedNotifier: IFluxNotifier;
     fEdKeyDownNotifier: IFluxNotifier;
     fEdState: IGenericAccessRO;
-    function RowProps(ANr: integer): IProps;
+    function RowProps(X, Y: integer): IProps;
     function ColProps(ANr: integer): IProps;
     function GridProps: IProps;
     function MakeRow(ARowNr: integer): TMetaElementArray;
@@ -217,7 +245,70 @@ type
 
 implementation
 
+{ TGridData }
+
+function TGridData.GetValue(X, Y: integer): string;
+begin
+  Result := fData[X, Y];
+end;
+
+procedure TGridData.SetValue(X, Y: integer; AValue: string);
+begin
+  fData[X, Y] := AValue;
+end;
+
+procedure TGridData.CheckDimensions(AHorizontalCount,
+  AVerticalCount: integer);
+begin
+  if (fDataHCount <> AHorizontalCount)
+     or (fDataVCount <> AVerticalCount)
+  then begin
+    fDataHCount := AHorizontalCount;
+    fDataVCount := AVerticalCount;
+    SetLength(fData, fDataHCount, fDataVCount);
+  end;
+end;
+
 { TGridFunc }
+
+function TGridFunc.GetData: IGridData;
+begin
+  Result := fState.AsIntf('GridData') as IGridData;
+  if Result = nil then begin
+    Result := TGridData.Create;
+    fState.SetIntf('GridData', Result);
+  end;
+end;
+
+function TGridFunc.GetHorizontalCount: integer;
+begin
+  Result := fState.AsInt('HorizontalCount');
+end;
+
+function TGridFunc.GetPosX: integer;
+begin
+  Result := fState.AsInt('PosX');
+end;
+
+function TGridFunc.GetPosY: integer;
+begin
+  Result := fState.AsInt('PosY');
+end;
+
+function TGridFunc.GetVerticalCount: integer;
+begin
+  Result := fState.AsInt('VerticalCount');
+end;
+
+procedure TGridFunc.SetPosX(AValue: integer);
+begin
+  fState.SetInt('PosX', AValue);
+end;
+
+procedure TGridFunc.SetPosY(AValue: integer);
+begin
+  fState.SetInt('PosY', AValue);
+end;
 
 constructor TGridFunc.Create(AID: integer; const AState,
   AEdState: IGenericAccess; const ARenderNotifier: IFluxNotifier);
@@ -230,34 +321,11 @@ end;
 
 { TGridEdKeyDownFunc }
 
-function TGridEdKeyDownFunc.GetHorizontalCount: integer;
+procedure TGridEdKeyDownFunc.PositionMove;
 begin
-  Result := fState.AsInt('HorizontalCount');
-end;
-
-function TGridEdKeyDownFunc.GetPosX: integer;
-begin
-  Result := fState.AsInt('PosX');
-end;
-
-function TGridEdKeyDownFunc.GetPosY: integer;
-begin
-  Result := fState.AsInt('PosY');
-end;
-
-function TGridEdKeyDownFunc.GetVerticalCount: integer;
-begin
-  Result := fState.AsInt('VerticalCount');
-end;
-
-procedure TGridEdKeyDownFunc.SetPosX(AValue: integer);
-begin
-  fState.SetInt('PosX', AValue);
-end;
-
-procedure TGridEdKeyDownFunc.SetPosY(AValue: integer);
-begin
-  fState.SetInt('PosY', AValue);
+  Data.CheckDimensions(HorizontalCount, VerticalCount);
+  fEdState.SetStr('Text', Data[PosX, PosY]);
+  fRenderNotifier.Notify;
 end;
 
 procedure TGridEdKeyDownFunc.DoExecute(const AAction: IFluxAction);
@@ -270,22 +338,22 @@ begin
     VK_LEFT:
       if fBrowseMode and (PosX > 0) then begin
         PosX := PosX - 1;
-        fRenderNotifier.Notify;
+        PositionMove;
       end;
     VK_RIGHT:
       if fBrowseMode and (PosX < HorizontalCount - 1) then begin
         PosX := PosX + 1;
-        fRenderNotifier.Notify;
+        PositionMove;
       end;
     VK_UP:
       if fBrowseMode and (PosY > 0) then begin
         PosY := PosY - 1;
-        fRenderNotifier.Notify;
+        PositionMove;
       end;
     VK_DOWN:
       if fBrowseMode and (PosY < VerticalCount - 1) then begin
         PosY := PosY + 1;
-        fRenderNotifier.Notify;
+        PositionMove;
       end;
   end;
   fEdState.SetBool('Focused', AAction.Props.AsBool('Focused'));
@@ -302,7 +370,9 @@ end;
 procedure TGridEdTextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
   // pole posx posy ... tam se bude taky ukladat
-  fEdState.SetStr('Text', AAction.Props.AsStr('Text'));
+  //fEdState.SetStr('Text', AAction.Props.AsStr('Text'));
+  Data.CheckDimensions(HorizontalCount, VerticalCount);
+  Data[PosX, PosY] := AAction.Props.AsStr('Text');
 end;
 
 { TKeyDownFunc }
@@ -322,15 +392,20 @@ end;
 
 { TDesignComponentGrid }
 
-function TDesignComponentGrid.RowProps(ANr: integer): IProps;
+function TDesignComponentGrid.RowProps(X, Y: integer): IProps;
 var
   mProp: IProp;
+  mData: IGridData;
+  mText: string;
 begin
+  mData := fState.AsIntf('GridData') as IGridData;
+  if mData <> nil then
+    mText := mData[X, Y];
   Result := NewProps
     .SetInt('Place', cPlace.Elastic)
-    .SetStr('Text', 'test')
+    .SetStr('Text', mText)
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.ColMMWidth));
-  if ANr mod 2 = 1 then
+  if X mod 2 = 1 then
     mProp := SelfProps.PropByName[cProps.ColOddColor]
   else
     mProp := SelfProps.PropByName[cProps.ColEvenColor];
@@ -380,15 +455,15 @@ begin
   SetLength(Result, HorizontalCount);
   for i := 0 to HorizontalCount - 1 do
     if (ARowNr = State.AsInt('PosY')) and (i = State.AsInt('PosX')) then begin
-      mProps := RowProps(i);
+      mProps := RowProps(i, ARowNr);
       mProps
         .SetIntf('State', fEdState)
         .SetIntf('TextChangedNotifier', fEdTextChangedNotifier)
-        .SetIntf('KeyDownNotifier', fEdKeyDownNotifier)
-        .SetStr('Text', fEdState.AsStr('Text'));
+        .SetIntf('KeyDownNotifier', fEdKeyDownNotifier);
+        //.SetStr('Text', fEdState.AsStr('Text'));
       Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);
     end else begin
-      Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i));
+      Result[i] := ElementFactory.CreateElement(ITextBit, RowProps(i, ARowNr));
     end;
 end;
 
