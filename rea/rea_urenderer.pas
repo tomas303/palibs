@@ -82,7 +82,7 @@ end;
 
 function TRenderFunc.GetID: integer;
 begin
-  Result := -9;
+  Result := cFuncRender;
 end;
 
 { TRenderer }

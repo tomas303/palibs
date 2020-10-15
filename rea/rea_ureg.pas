@@ -17,13 +17,16 @@ uses
   trl_imetaelementfactory,
   trl_inexus,
   trl_ireconciler,
-  rea_idesigncomponent;
+  rea_idesigncomponent,
+  trl_ireg, trl_isequence;
 
 type
 
   { TReg }
 
-  TReg = class(TInterfacedObject, IReg)
+  TReg = class(TInterfacedObject, rea_ireg.IReg)
+  private const
+    creafuncseq = 'reafuncseq';
   private
     procedure SetDIC(AValue: TDIContainer);
   protected
@@ -43,6 +46,7 @@ type
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterRendererFunc: TDIReg;
+    function RegisterFuncSequence: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -142,6 +146,7 @@ begin
   RegisterMessageNotifierBinder;
   RegisterRenderer;
   RegisterRendererFunc;
+  RegisterFuncSequence;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -157,6 +162,7 @@ begin
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('StoreConnector', IFluxStoreConnector);
   Result.InjectProp('FluxFuncReg', IFluxDispatcher);
+  Result.InjectProp('FuncSequence', ISequence, creafuncseq);
 end;
 
 function TReg.RegisterRenderer: TDIReg;
@@ -172,6 +178,14 @@ begin
   Result.InjectProp('Reconciler', IReconciler);
   Result.InjectProp('AppComponent', IDesignComponentApp);
   Result.InjectProp('Renderer', IRenderer);
+end;
+
+function TReg.RegisterFuncSequence: TDIReg;
+var
+  mReg: trl_ireg.IReg;
+begin
+  mReg := trl_ireg.IReg(DIC.Locate(trl_ireg.IReg));
+  Result := mReg.RegisterSequence(creafuncseq, ckSingle);
 end;
 
 end.

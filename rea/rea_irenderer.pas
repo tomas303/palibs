@@ -13,6 +13,9 @@ type
     function Render(const AComponent: IDesignComponent): IMetaElement;
   end;
 
+const
+  cFuncRender = -11;
+
 implementation
 
 end.
