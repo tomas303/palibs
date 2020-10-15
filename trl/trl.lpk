@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="trl"/>
     <Type Value="RunTimeOnly"/>
     <CompilerOptions>
@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="40">
+    <Files Count="42">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -170,7 +170,16 @@
         <Filename Value="trl_unexus.pas"/>
         <UnitName Value="trl_unexus"/>
       </Item40>
+      <Item41>
+        <Filename Value="trl_usequence.pas"/>
+        <UnitName Value="trl_usequence"/>
+      </Item41>
+      <Item42>
+        <Filename Value="trl_isequence.pas"/>
+        <UnitName Value="trl_isequence"/>
+      </Item42>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="LazUtils"/>
