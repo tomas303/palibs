@@ -214,11 +214,13 @@ type
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
     fFocused: Boolean;
+    fFlat: Boolean;
   published
     property Text: string read fText write fText;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
     property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write SetKeyDownNotifier;
     property Focused: Boolean read fFocused write fFocused;
+    property Flat: Boolean read fFlat write fFlat;
   end;
 
   { TTextBit }
@@ -480,6 +482,8 @@ end;
 procedure TEditBit.DoRender;
 begin
   inherited;
+  if Flat then
+    AsEdit.BorderStyle := bsNone;
   AsEdit.Text := Text;
   AsEdit.Show;
   if Focused then begin

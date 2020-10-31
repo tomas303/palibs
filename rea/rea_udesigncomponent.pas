@@ -40,10 +40,13 @@ type
   protected
     procedure DoInitValues; virtual;
     function DoCompose(const AProps: IProps): IMetaElement; virtual; abstract;
+    procedure DoStartingValues; virtual;
   protected
     // IDesignComponent = interface
     function Compose(const AProps: IProps): IMetaElement;
     procedure InitValues; override;
+  public
+    procedure AfterConstruction; override;
   protected
     // INode
     procedure AddChild(const ANode: INode);
@@ -234,15 +237,27 @@ type
     function GridProps: IProps;
     function MakeRow(ARowNr: integer): TMetaElementArray;
     function MakeGrid: TMetaElementArray;
+    function LaticeColProps: IProps;
+    function LaticeRowProps: IProps;
+    function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
   protected
+    procedure DoStartingValues; override;
     procedure DoInitValues; override;
     function DoCompose(const AProps: IProps): IMetaElement; override;
   protected
     fHorizontalCount: integer;
     fVerticalCount: integer;
+    fLaticeColColor: integer;
+    fLaticeRowColor: integer;
+    fLaticeColSize: integer;
+    fLaticeRowSize: integer;
   published
     property HorizontalCount: integer read fHorizontalCount write fHorizontalCount;
     property VerticalCount: integer read fVerticalCount write fVerticalCount;
+    property LaticeColColor: integer read fLaticeColColor write fLaticeColColor;
+    property LaticeRowColor: integer read fLaticeRowColor write fLaticeRowColor;
+    property LaticeColSize: integer read fLaticeColSize write fLaticeColSize;
+    property LaticeRowSize: integer read fLaticeRowSize write fLaticeRowSize;
   end;
 
 implementation
@@ -445,6 +460,39 @@ begin
     Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False)
 end;
 
+function TDesignComponentGrid.LaticeColProps: IProps;
+begin
+  Result := NewProps
+    .SetInt('Place', cPlace.FixFront)
+    .SetBool('Transparent', False)
+    .SetInt('Color', LaticeColColor)
+    .SetInt('Width', LaticeColSize);
+end;
+
+function TDesignComponentGrid.LaticeRowProps: IProps;
+begin
+  Result := NewProps
+    .SetInt('Place', cPlace.FixFront)
+    .SetBool('Transparent', False)
+    .SetInt('Color', LaticeRowColor)
+    .SetInt('Height', LaticeRowSize);
+end;
+
+function TDesignComponentGrid.Latice(AElements: TMetaElementArray;
+  ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
+var
+  i: integer;
+begin
+  Result := nil;
+  SetLength(Result, Length(AElements) * 2 + 1);
+  //Result[0] := ElementFactory.CreateElement(IStripBit, LaticeColProps);
+  Result[0] := ElementFactory.CreateElement(ALaticeEl, ALaticeProps);
+  for i := 0 to Length(AElements) - 1 do begin
+    Result[i * 2 + 1] := AElements[i];
+    Result[i * 2 + 2] := ElementFactory.CreateElement(ALaticeEl, ALaticeProps);
+  end;
+end;
+
 function TDesignComponentGrid.MakeRow(ARowNr: integer): TMetaElementArray;
 var
   i: integer;
@@ -459,6 +507,7 @@ begin
     if (ARowNr = State.AsInt('PosY')) and (i = State.AsInt('PosX')) then begin
       mProps := RowProps(i, ARowNr);
       mProps
+        .SetBool('Flat', True)
         .SetIntf('State', fEdState)
         .SetIntf('TextChangedNotifier', fEdTextChangedNotifier)
         .SetIntf('KeyDownNotifier', fEdKeyDownNotifier);
@@ -475,8 +524,19 @@ var
 begin
   Result := TMetaElementArray.Create;
   SetLength(Result, VerticalCount);
-  for i := 0 to VerticalCount - 1 do
-    Result[i] := ElementFactory.CreateElement(IStripBit, ColProps(i), MakeRow(i));
+  for i := 0 to VerticalCount - 1 do begin
+    Result[i] := ElementFactory.CreateElement(IStripBit, ColProps(i), Latice(MakeRow(i), IStripBit, LaticeColProps));
+  end;
+  Result := Latice(Result, IStripBit, LaticeRowProps);
+end;
+
+procedure TDesignComponentGrid.DoStartingValues;
+begin
+  inherited DoStartingValues;
+  LaticeColColor := clBlack;
+  LaticeRowColor := clBlack;
+  LaticeColSize := 1;
+  LaticeRowSize := 1;
 end;
 
 procedure TDesignComponentGrid.DoInitValues;
@@ -487,7 +547,7 @@ begin
   fEdState := NewState(DataPath + '/Ed');
   (State as IGenericAccess).SetInt('HorizontalCount', HorizontalCount);
   (State as IGenericAccess).SetInt('VerticalCount', VerticalCount);
-
+  //
   FuncSequence.Next;
   fEdTextChangedNotifier := State.AsIntf('EdTextChangedNotifier') as IFluxNotifier;
   if fEdTextChangedNotifier = nil then begin
@@ -606,7 +666,8 @@ begin
     .SetStr('Text', State.AsStr('Text'))
     .SetIntf('TextChangedNotifier', TextChangedNotifier)
     .SetIntf('KeyDownNotifier', KeyDownNotifier)
-    .SetBool('Focused', State.AsBool('Focused'));
+    .SetBool('Focused', State.AsBool('Focused'))
+    .SetBool('Flat', SelfProps.AsBool('Flat'));
   Result := ElementFactory.CreateElement(IEditBit, mProps);
 end;
 
@@ -728,6 +789,11 @@ begin
     fState := NewState;
 end;
 
+procedure TDesignComponent.DoStartingValues;
+begin
+
+end;
+
 function TDesignComponent.Compose(const AProps: IProps): IMetaElement;
 begin
   Result := DoCompose(AProps);
@@ -737,6 +803,12 @@ procedure TDesignComponent.InitValues;
 begin
   inherited InitValues;
   DoInitValues;
+end;
+
+procedure TDesignComponent.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  DoStartingValues;
 end;
 
 procedure TDesignComponent.AddChild(const ANode: INode);
