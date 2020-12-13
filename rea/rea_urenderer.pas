@@ -36,6 +36,8 @@ type
 
   TRenderer = class(TInterfacedObject, IRenderer)
   protected
+    function GetChildren(const AElement: IMetaElement): TMetaElementArray;
+    function EmptyChildren: TMetaElementArray;
     function RenderElement(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
     function RenderChain(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
   protected
@@ -87,6 +89,22 @@ end;
 
 { TRenderer }
 
+function TRenderer.GetChildren(const AElement: IMetaElement): TMetaElementArray;
+var
+  i: integer;
+begin
+  Result := nil;
+  SetLength(Result, (AElement as INode).Count);
+  for i := 0 to (AElement as INode).Count - 1 do
+    Result[i] := (AElement as INode).Child[i] as IMetaElement;
+end;
+
+function TRenderer.EmptyChildren: TMetaElementArray;
+begin
+  Result := nil;
+  SetLength(Result, 0);
+end;
+
 function TRenderer.RenderElement(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
 var
   mEl, mEndEl, mNewEl: IMetaElement;
@@ -104,16 +122,15 @@ end;
 function TRenderer.RenderChain(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
 var
   mComponent: IDesignComponent;
-  mNewEl, mEl: IMetaElement;
-  mNode: INode;
+  mNewEl: IMetaElement;
+  mChildren: TMetaElementArray;
 begin
   Result := AElement;
   while Factory.CanLocateAs(Result.Guid, IDesignComponent) do
   begin
     mComponent := IUnknown(Factory.Locate(Result.Guid, Result.TypeID, Result.Props)) as IDesignComponent;
-    mNewEl := mComponent.Compose(AParentProps.Clone);
-    for mEl in Result do
-      (mNewEl as INode).AddChild(mEl as INode);
+    mChildren := GetChildren(Result);
+    mNewEl := mComponent.Compose(AParentProps.Clone, mChildren);
     Result := mNewEl;
   end;
 end;
@@ -123,7 +140,7 @@ var
   mEl: IMetaElement;
   m: string;
 begin
-  mEl := AComponent.Compose(IProps(Factory.Locate(IProps)));
+  mEl := AComponent.Compose(IProps(Factory.Locate(IProps)), EmptyChildren);
   Result := RenderElement(mEl, mEl.Props);
   m := (Result as ILogSupport).LogInfo;
   Log.DebugLn(m);

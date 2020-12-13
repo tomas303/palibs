@@ -39,11 +39,12 @@ type
     function NewState: IGenericAccessRO;
   protected
     procedure DoInitValues; virtual;
-    function DoCompose(const AProps: IProps): IMetaElement; virtual; abstract;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
+    procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
     procedure DoStartingValues; virtual;
   protected
     // IDesignComponent = interface
-    function Compose(const AProps: IProps): IMetaElement;
+    function Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
     procedure InitValues; override;
   public
     procedure AfterConstruction; override;
@@ -104,7 +105,7 @@ type
   TDesignComponentForm = class(TDesignComponent, IDesignComponentForm)
   protected
     procedure DoInitValues; override;
-    function DoCompose(const AProps: IProps): IMetaElement; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fSizeNotifier: IFluxNotifier;
     fMoveNotifier: IFluxNotifier;
@@ -134,7 +135,7 @@ type
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
   protected
     procedure DoInitValues; override;
-    function DoCompose(const AProps: IProps): IMetaElement; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
@@ -147,14 +148,14 @@ type
 
   TDesignComponentButton = class(TDesignComponent, IDesignComponentButton)
   protected
-    function DoCompose(const AProps: IProps): IMetaElement; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
   { TDesignComponentHeader }
 
   TDesignComponentHeader = class(TDesignComponent, IDesignComponentHeader)
   protected
-    function DoCompose(const AProps: IProps): IMetaElement; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
   { IGridData }
@@ -243,7 +244,7 @@ type
   protected
     procedure DoStartingValues; override;
     procedure DoInitValues; override;
-    function DoCompose(const AProps: IProps): IMetaElement; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fHorizontalCount: integer;
     fVerticalCount: integer;
@@ -567,7 +568,7 @@ begin
 
 end;
 
-function TDesignComponentGrid.DoCompose(const AProps: IProps): IMetaElement;
+function TDesignComponentGrid.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 begin
   Result := ElementFactory.CreateElement(
     IStripBit, GridProps, MakeGrid);
@@ -625,7 +626,7 @@ end;
 
 { TDesignComponentHeader }
 
-function TDesignComponentHeader.DoCompose(const AProps: IProps): IMetaElement;
+function TDesignComponentHeader.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mProps: IProps;
 begin
@@ -636,7 +637,7 @@ end;
 
 { TDesignComponentButton }
 
-function TDesignComponentButton.DoCompose(const AProps: IProps): IMetaElement;
+function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mProps: IProps;
 begin
@@ -646,7 +647,7 @@ end;
 
 { TDesignComponentEdit }
 
-function TDesignComponentEdit.DoCompose(const AProps: IProps): IMetaElement;
+function TDesignComponentEdit.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mTitle: IProp;
   mProps: IProps;
@@ -715,7 +716,7 @@ begin
     (State as IGenericAccess).SetInt('Height', 200);
 end;
 
-function TDesignComponentForm.DoCompose(const AProps: IProps): IMetaElement;
+function TDesignComponentForm.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mProps: IProps;
   mw: integer;
@@ -743,6 +744,7 @@ begin
   mProps.SetInt(cProps.MMHeight, State.AsInt('Height'));
 
   Result := ElementFactory.CreateElement(IFormBit, mProps);
+  AddChildren(Result, AChildren);
 end;
 
 { TDesignComponentMainForm }
@@ -789,14 +791,23 @@ begin
     fState := NewState;
 end;
 
+procedure TDesignComponent.AddChildren(const AElement: IMetaElement;
+  const AChildren: TMetaElementArray);
+var
+  mEl: IMetaElement;
+begin
+  for mEl in AChildren do
+    (AElement as INode).AddChild(mEl as INode);
+end;
+
 procedure TDesignComponent.DoStartingValues;
 begin
 
 end;
 
-function TDesignComponent.Compose(const AProps: IProps): IMetaElement;
+function TDesignComponent.Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 begin
-  Result := DoCompose(AProps);
+  Result := DoCompose(AProps, AChildren);
 end;
 
 procedure TDesignComponent.InitValues;
