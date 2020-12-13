@@ -14,8 +14,7 @@ uses
   trl_imetaelementfactory,
   rea_ibits, trl_imetaelement, Classes,
   rea_idesigncomponent, rea_irenderer,
-  trl_ireconciler,
-  rea_uApplication;
+  trl_ireconciler;
 
 type
 
