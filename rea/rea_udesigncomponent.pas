@@ -330,7 +330,6 @@ begin
   inherited Create(AID, AState);
   fSwitchElement := ASwitchElement;
   fRenderNotifier := ARenderNotifier;
-  fRenderNotifier.Enabled := True;
 end;
 
 { TDesignComponentPager }
@@ -502,7 +501,6 @@ begin
   inherited Create(AID, AState);
   fEdState := AEdState;
   fRenderNotifier := ARenderNotifier;
-  fRenderNotifier.Enabled := True;
 end;
 
 { TGridEdKeyDownFunc }
@@ -789,7 +787,6 @@ constructor TSizeFunc.Create(AID: integer; const AState: IGenericAccess;
 begin
   inherited Create(AID, AState);
   fRenderNotifier := ARenderNotifier;
-  fRenderNotifier.Enabled := True;
 end;
 
 { TDesignComponentHeader }

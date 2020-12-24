@@ -155,6 +155,7 @@ procedure TFluxNotifier.AfterConstruction;
 begin
   inherited AfterConstruction;
   fEvents := TEvents.Create;
+  fEnabled := True;
 end;
 
 procedure TFluxNotifier.BeforeDestruction;
