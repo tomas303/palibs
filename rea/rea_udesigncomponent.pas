@@ -34,7 +34,8 @@ type
   protected
     function NewProps: IProps;
     function NewAction(AActionID: integer): IFluxAction;
-    function NewNotifier(const AActionID: integer): IFluxNotifier;
+    function NewNotifier(const AActionID: integer): IFluxNotifier; overload;
+    function NewNotifier(const AFunc: IFluxFunc): IFluxNotifier; overload;
     function NewState(const APath: string): IGenericAccessRO;
     function NewState: IGenericAccessRO;
   protected
@@ -261,7 +262,174 @@ type
     property LaticeRowSize: integer read fLaticeRowSize write fLaticeRowSize;
   end;
 
+  { TDesignComponentPager }
+
+  TDesignComponentPager = class(TDesignComponent, IDesignComponentPager)
+  public type
+
+    { TTabChangedFunc }
+
+    TTabChangedFunc = class(TDesignComponentFunc)
+    private
+      fSwitchElement: IMetaElement;
+      fRenderNotifier: IFluxNotifier;
+      function GetActualElement: IMetaElement;
+      procedure SetActualElement(AValue: IMetaElement);
+    protected
+      procedure DoExecute(const AAction: IFluxAction); override;
+    public
+      constructor Create(AID: integer; const AState: IGenericAccess; const ASwitchElement: IMetaElement;
+        const ARenderNotifier: IFluxNotifier);
+      property ActualElement: IMetaElement read GetActualElement write SetActualElement;
+    end;
+
+  private
+    function RenderPage(const APageElement: IMetaElement): IMetaElement;
+    function MakeSwitch(const AChildren: TMetaElementArray): IMetaElement;
+    function MakeBody(const AChildren: TMetaElementArray): IMetaElement;
+    function MakeProps: IProps;
+  protected
+    procedure DoStartingValues; override;
+    procedure DoInitValues; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function GetActualElement: IMetaElement;
+    property ActualElement: IMetaElement read GetActualElement;
+  protected
+    fSwitchEdge: Integer;
+    fSwitchSize: Integer;
+  published
+    property SwitchEdge: Integer read fSwitchEdge write fSwitchEdge;
+    property SwitchSize: Integer read fSwitchSize write fSwitchSize;
+  end;
+
 implementation
+
+{ TDesignComponentPager.TTabChangedFunc }
+
+procedure TDesignComponentPager.TTabChangedFunc.SetActualElement(
+  AValue: IMetaElement);
+begin
+  fState.SetIntf('SwitchElement', AValue);
+end;
+
+function TDesignComponentPager.TTabChangedFunc.GetActualElement: IMetaElement;
+begin
+  Result := fState.AsIntf('SwitchElement') as IMetaElement;
+end;
+
+procedure TDesignComponentPager.TTabChangedFunc.DoExecute(
+  const AAction: IFluxAction);
+begin
+  ActualElement := fSwitchElement;
+  fRenderNotifier.Notify;
+end;
+
+constructor TDesignComponentPager.TTabChangedFunc.Create(AID: integer;
+  const AState: IGenericAccess; const ASwitchElement: IMetaElement; const ARenderNotifier: IFluxNotifier);
+begin
+  inherited Create(AID, AState);
+  fSwitchElement := ASwitchElement;
+  fRenderNotifier := ARenderNotifier;
+  fRenderNotifier.Enabled := True;
+end;
+
+{ TDesignComponentPager }
+
+function TDesignComponentPager.RenderPage(const APageElement: IMetaElement): IMetaElement;
+begin
+  Result := ElementFactory.CreateElement(IStripBit, [APageElement]);
+end;
+
+function TDesignComponentPager.MakeSwitch(const AChildren: TMetaElementArray): IMetaElement;
+var
+  i: integer;
+  mSwitch: TMetaElementArray;
+  mProps: IProps;
+begin
+  SetLength(mSwitch, Length(AChildren));
+  for i := 0 to High(AChildren) do
+  begin
+    mSwitch[i] := ElementFactory.CreateElement(
+      IDesignComponentButton,
+      NewProps
+        .SetStr(cProps.Text, AChildren[i].Props.AsStr(cProps.Caption))
+        .SetInt(cProps.Place, cPlace.Elastic)
+        .SetIntf(cProps.ClickNotifier,
+          NewNotifier(
+            TTabChangedFunc.Create(
+              FuncSequence.Next,
+              State as IGenericAccess,
+              AChildren[i],
+              NewNotifier(cFuncRender))))
+    );
+  end;
+  mProps := NewProps;
+  case SwitchEdge of
+    cEdge.Left, cEdge.Right:
+      mProps.SetInt(cProps.Layout, cLayout.Vertical).SetInt(cProps.MMWidth, SwitchSize);
+    cEdge.Top, cEdge.Bottom:
+      mProps.SetInt(cProps.Layout, cLayout.Horizontal).SetInt(cProps.MMHeight, SwitchSize);
+  end;
+  mProps.SetInt(cProps.Place, cPlace.FixFront);
+  Result := ElementFactory.CreateElement(IStripBit, mProps, mSwitch);
+end;
+
+function TDesignComponentPager.MakeBody(const AChildren: TMetaElementArray
+  ): IMetaElement;
+var
+  mActual: IMetaElement;
+begin
+  mActual := ActualElement;
+  if (mActual = nil) and (Length(AChildren) > 0) then
+    mActual := AChildren[0];
+
+  Result := ElementFactory.CreateElement(
+    IStripBit,
+    NewProps
+      .SetInt('Layout', cLayout.Overlay),
+    [mActual]);
+end;
+
+function TDesignComponentPager.MakeProps: IProps;
+begin
+  Result := NewProps;
+  case SwitchEdge of
+    cEdge.Left, cEdge.Right:
+      Result.SetInt(cProps.Layout, cLayout.Horizontal);
+    cEdge.Top, cEdge.Bottom:
+      Result.SetInt(cProps.Layout, cLayout.Vertical);
+  end;
+end;
+
+procedure TDesignComponentPager.DoStartingValues;
+begin
+  inherited DoStartingValues;
+  SwitchEdge := IDesignComponentPager.SwitchEdgeTop;
+  SwitchSize := 100;
+end;
+
+procedure TDesignComponentPager.DoInitValues;
+begin
+  inherited DoInitValues;
+end;
+
+function TDesignComponentPager.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+var
+  mChildren: TMetaElementArray;
+begin
+  case SwitchEdge of
+    cEdge.Left, cEdge.Top:
+      mChildren := [MakeSwitch(AChildren), MakeBody(AChildren)];
+    cEdge.Right, cEdge.Bottom:
+      mChildren := [MakeBody(AChildren),MakeSwitch(AChildren)];
+  end;
+  Result := ElementFactory.CreateElement(IStripBit, MakeProps, mChildren);
+end;
+
+function TDesignComponentPager.GetActualElement: IMetaElement;
+begin
+  Result := State.AsIntf('SwitchElement') as IMetaElement;
+end;
 
 { TGridData }
 
@@ -773,6 +941,12 @@ begin
     NewProps
     .SetInt('ActionID', AActionID)
   ));
+end;
+
+function TDesignComponent.NewNotifier(const AFunc: IFluxFunc): IFluxNotifier;
+begin
+  FluxFuncReg.RegisterFunc(AFunc);
+  Result := NewNotifier(AFunc.ID);
 end;
 
 function TDesignComponent.NewState(const APath: string): IGenericAccessRO;
