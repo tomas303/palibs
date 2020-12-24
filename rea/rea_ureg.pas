@@ -17,7 +17,7 @@ uses
   trl_imetaelementfactory,
   trl_inexus,
   trl_ireconciler,
-  rea_idesigncomponent,
+  rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence;
 
 type
@@ -136,6 +136,12 @@ end;
 
 procedure TReg.RegisterCommon;
 begin
+  RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
+  RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
+  RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
+  RegisterDesignComponent(TDesignComponentHeader, IDesignComponentHeader);
+  RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
+  RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
