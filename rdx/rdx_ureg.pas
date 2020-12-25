@@ -15,13 +15,13 @@ type
   TReg = class(TInterfacedObject, IReg)
   protected
     // IReg
-    function RegisterDispatcher(const ASubFuncs: array of string): TDIReg;
+    function RegisterDispatcher: TDIReg;
     function RegisterState: TDIReg;
     function RegisterFunc(const AClass: TClass): TDIReg;
     function RegisterStore: TDIReg;
     function RegisterData: TDIReg;
     function RegisterStoreConnector: TDIReg;
-    procedure RegisterCommon(const ASubFuncs: array of string);
+    procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
   published
@@ -32,15 +32,10 @@ implementation
 
 { TReg }
 
-function TReg.RegisterDispatcher(const ASubFuncs: array of string): TDIReg;
-var
-  mFunc: string;
+function TReg.RegisterDispatcher: TDIReg;
 begin
   Result := DIC.Add(TRdxFuncDispatcher, IFluxDispatcher, '', ckSingle);
   Result.InjectProp('Executor', IExecutor);
-  for mFunc in ASubFuncs do begin
-    Result.InjectProp('AddFunc', IFluxFunc, mFunc);
-  end;
 end;
 
 function TReg.RegisterState: TDIReg;
@@ -74,10 +69,10 @@ begin
   Result.InjectProp('Store', IFluxStore);
 end;
 
-procedure TReg.RegisterCommon(const ASubFuncs: array of string);
+procedure TReg.RegisterCommon;
 begin
   RegisterState;
-  RegisterDispatcher(ASubFuncs);
+  RegisterDispatcher;
   RegisterStore;
   RegisterStoreConnector;
   RegisterData;
