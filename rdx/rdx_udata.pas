@@ -21,6 +21,7 @@ type
     function New(const AKey: string): IGenericAccess;
   protected
     // IFluxData
+    function Exists(const AKey: string): Boolean;
     function GetData(const AKey: string): IGenericAccess;
   public
     procedure AfterConstruction; override;
@@ -39,6 +40,13 @@ function TRdxData.New(const AKey: string): IGenericAccess;
 begin
   Result := IFluxState(Factory.Locate(IFluxState)) as IGenericAccess;
   fData.Add(AKey, Result);
+end;
+
+function TRdxData.Exists(const AKey: string): Boolean;
+var
+  mIndex: integer;
+begin
+  Result := fData.Find(AKey, mIndex);
 end;
 
 function TRdxData.GetData(const AKey: string): IGenericAccess;

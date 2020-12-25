@@ -83,6 +83,7 @@ type
 
   IFluxData = interface
   ['{49ACEFF7-6973-4531-8B97-9D56F1786FA1}']
+    function Exists(const AKey: string): Boolean;
     function GetData(const AKey: string): IGenericAccess;
     property Data[const AKey: string]: IGenericAccess read GetData; default;
   end;

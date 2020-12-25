@@ -18,6 +18,7 @@ type
     // IPropFinder
     function Find(const AID: string): IProp;
     // IFluxData
+    function Exists(const AKey: string): Boolean;
     function GetData(const AKey: string): IGenericAccess;
   protected
     fRdxState: IFluxState;
@@ -46,6 +47,11 @@ begin
   if mProp = nil then
     raise Exception.CreateFmt('Cannot find state with path %s', [AID]);
   Result := mProp;
+end;
+
+function TRdxStore.Exists(const AKey: string): Boolean;
+begin
+  Result := Data.Exists(AKey);
 end;
 
 function TRdxStore.GetData(const AKey: string): IGenericAccess;

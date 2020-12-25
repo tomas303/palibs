@@ -14,9 +14,6 @@ type
   { TDesignComponentFunc }
 
   TDesignComponentFunc = class(TInterfacedObject, IFluxFunc)
-  private
-    fState: IGenericAccess;
-    fID: integer;
   protected
     procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
   protected
@@ -26,6 +23,12 @@ type
     function GetID: integer;
   public
     constructor Create(AID: integer; const AState: IGenericAccess);
+  protected
+    fID: integer;
+    fState: IGenericAccess;
+  published
+    property ID: integer read fID write fID;
+    property State: IGenericAccess read fState write fState;
   end;
 
   { TDesignComponent }
@@ -37,9 +40,10 @@ type
     function NewNotifier(const AActionID: integer): IFluxNotifier; overload;
     function NewNotifier(const AFunc: IFluxFunc): IFluxNotifier; overload;
     function NewState(const APath: string): IGenericAccessRO;
-    function NewState: IGenericAccessRO;
+    procedure AddFuncNotifier(const AState: IGenericAccess; const AFunc: IFluxFunc; const ANotifierName: string);
   protected
     procedure DoInitValues; virtual;
+    procedure DoInitState(const AState: IGenericAccess); virtual;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
     procedure DoStartingValues; virtual;
@@ -47,6 +51,7 @@ type
     // IDesignComponent = interface
     function Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
     procedure InitValues; override;
+    procedure InitState(const AState: IGenericAccess);
   public
     procedure AfterConstruction; override;
   protected
@@ -951,15 +956,28 @@ begin
   Result := StoreConnector.Data[APath] as IGenericAccessRO;
 end;
 
-function TDesignComponent.NewState: IGenericAccessRO;
+procedure TDesignComponent.AddFuncNotifier(const AState: IGenericAccess; const AFunc: IFluxFunc;
+  const ANotifierName: string);
 begin
-  Result := NewState(DataPath);
+  FluxFuncReg.RegisterFunc(AFunc);
+  AState.SetIntf(ANotifierName, NewNotifier(AFunc.ID));
 end;
 
 procedure TDesignComponent.DoInitValues;
+var
+  mInit: Boolean;
 begin
-  if fState = nil then
-    fState := NewState;
+  if fState = nil then begin
+    mInit := not StoreConnector.Exists(DataPath);
+    fState := NewState(DataPath);
+    if mInit then
+       InitState(fState as IGenericAccess);
+  end;
+end;
+
+procedure TDesignComponent.DoInitState(const AState: IGenericAccess);
+begin
+
 end;
 
 procedure TDesignComponent.AddChildren(const AElement: IMetaElement;
@@ -985,6 +1003,11 @@ procedure TDesignComponent.InitValues;
 begin
   inherited InitValues;
   DoInitValues;
+end;
+
+procedure TDesignComponent.InitState(const AState: IGenericAccess);
+begin
+  DoInitState(AState);
 end;
 
 procedure TDesignComponent.AfterConstruction;

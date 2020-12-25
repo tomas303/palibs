@@ -15,6 +15,7 @@ type
   TRdxStoreConnector = class(TInterfacedObject, IFluxStoreConnector, IFluxData)
   protected
     // IFluxData
+    function Exists(const AKey: string): Boolean;
     function GetData(const AKey: string): IGenericAccess;
   protected
     fStore: IFluxData;
@@ -25,6 +26,11 @@ type
 implementation
 
 { TRdxStoreConnector }
+
+function TRdxStoreConnector.Exists(const AKey: string): Boolean;
+begin
+  Result := Store.Exists(AKey);
+end;
 
 function TRdxStoreConnector.GetData(const AKey: string): IGenericAccess;
 begin
