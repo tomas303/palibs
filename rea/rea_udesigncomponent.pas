@@ -93,12 +93,12 @@ type
   { TSizeFunc }
 
   TSizeFunc = class(TDesignComponentFunc)
-  private
-    fRenderNotifier: IFluxNotifier;
   protected
     procedure DoExecute(const AAction: IFluxAction); override;
-  public
-    constructor Create(AID: integer; const AState: IGenericAccess; const ARenderNotifier: IFluxNotifier);
+  protected
+    fRenderNotifier: IFluxNotifier;
+  published
+    property RenderNotifier: IFluxNotifier read fRenderNotifier write fRenderNotifier;
   end;
 
   { TMoveFunc }
@@ -112,8 +112,18 @@ type
   { TDesignComponentForm }
 
   TDesignComponentForm = class(TDesignComponent, IDesignComponentForm)
+  public const
+    cSizeNotifier = 'SizeNotifier';
+    cMoveNotifier = 'MoveNotifier';
+  private
+    function NewSizeNotifierFunc: IFluxFunc;
+    function NewMoveNotifierFunc: IFluxFunc;
+  protected
+    procedure DoInitState(const AState: IGenericAccess); override;
   protected
     procedure DoInitValues; override;
+    function ComposeSizeNotifier: IFluxNotifier;
+    function ComposeMoveNotifier: IFluxNotifier;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fSizeNotifier: IFluxNotifier;
@@ -798,13 +808,6 @@ begin
   fRenderNotifier.Notify;
 end;
 
-constructor TSizeFunc.Create(AID: integer; const AState: IGenericAccess;
-  const ARenderNotifier: IFluxNotifier);
-begin
-  inherited Create(AID, AState);
-  fRenderNotifier := ARenderNotifier;
-end;
-
 { TDesignComponentHeader }
 
 function TDesignComponentHeader.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
@@ -891,29 +894,53 @@ end;
 
 { TDesignComponentForm }
 
+function TDesignComponentForm.NewSizeNotifierFunc: IFluxFunc;
+begin
+  Result := IFluxFunc(Factory.Locate(IFluxFunc, 'TSizeFunc',
+    NewProps
+    .SetInt('ID', FuncSequence.Next)
+    .SetIntf('State', State)
+    .SetIntf('RenderNotifier', NewNotifier(cFuncRender))
+  ));
+end;
+
+function TDesignComponentForm.NewMoveNotifierFunc: IFluxFunc;
+begin
+  Result := IFluxFunc(Factory.Locate(IFluxFunc, 'TMoveFunc',
+    NewProps
+    .SetInt('ID', FuncSequence.Next)
+    .SetIntf('State', State)
+  ));
+end;
+
+procedure TDesignComponentForm.DoInitState(const AState: IGenericAccess);
+begin
+  inherited DoInitState(AState);
+  AddFuncNotifier(AState, NewSizeNotifierFunc, cSizeNotifier);
+  AddFuncNotifier(AState, NewMoveNotifierFunc, cMoveNotifier);
+end;
+
 procedure TDesignComponentForm.DoInitValues;
-var
-  mFunc: IFluxFunc;
 begin
   inherited DoInitValues;
-  fSizeNotifier := State.AsIntf('SizeNotifier') as IFluxNotifier;
-  if fSizeNotifier = nil then begin
-    mFunc := TSizeFunc.Create(FuncSequence.Next, fState as IGenericAccess, NewNotifier(cFuncRender));
-    fSizeNotifier := NewNotifier(mFunc.ID);
-    FluxFuncReg.RegisterFunc(mFunc);
-    (State as IGenericAccess).SetIntf('SizeNotifier', fSizeNotifier);
-  end;
-  fMoveNotifier := State.AsIntf('MoveNotifier') as IFluxNotifier;
-  if fMoveNotifier = nil then begin
-    mFunc := TMoveFunc.Create(FuncSequence.Next, fState as IGenericAccess);
-    fMoveNotifier := NewNotifier(mFunc.ID);
-    FluxFuncReg.RegisterFunc(mFunc);
-    (State as IGenericAccess).SetIntf('MoveNotifier', fMoveNotifier);
-  end;
   if State.AsInt('Width') = 0 then
     (State as IGenericAccess).SetInt('Width', 400);
   if State.AsInt('Height') = 0 then
     (State as IGenericAccess).SetInt('Height', 200);
+end;
+
+function TDesignComponentForm.ComposeSizeNotifier: IFluxNotifier;
+begin
+  Result := SizeNotifier;
+  if Result = nil then
+    Result := IFluxNotifier(State.AsIntf(cSizeNotifier));
+end;
+
+function TDesignComponentForm.ComposeMoveNotifier: IFluxNotifier;
+begin
+  Result := MoveNotifier;
+  if Result = nil then
+    Result := IFluxNotifier(State.AsIntf(cMoveNotifier));
 end;
 
 function TDesignComponentForm.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
@@ -932,8 +959,8 @@ begin
   mProps.SetInt(cProps.MMTop, MMTop);
   }
 
-  mProps.SetIntf(cProps.SizeNotifier, SizeNotifier);
-  mProps.SetIntf(cProps.MoveNotifier, MoveNotifier);
+  mProps.SetIntf(cProps.SizeNotifier, ComposeSizeNotifier);
+  mProps.SetIntf(cProps.MoveNotifier, ComposeMoveNotifier);
   mProps.SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier);
 
 

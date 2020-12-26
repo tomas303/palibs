@@ -209,6 +209,8 @@ end;
 procedure TReg.RegisterFuncs;
 begin
   RegFlux.RegisterFunc(TTextChangedFunc);
+  RegFlux.RegisterFunc(TSizeFunc);
+  RegFlux.RegisterFunc(TMoveFunc);
 end;
 
 end.
