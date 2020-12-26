@@ -142,8 +142,14 @@ type
   { TDesignComponentEdit }
 
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
+  public const
+    cTextChangedNotifier = 'TextChangedNotifier';
+  private
+    function NewTextChangedFunc: IFluxFunc;
   protected
-    procedure DoInitValues; override;
+    procedure DoInitState(const AState: IGenericAccess); override;
+    function ComposeText: string;
+    function ComposeTextChangedNotifier: IFluxNotifier;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fAskNotifier: IFluxNotifier;
@@ -826,6 +832,7 @@ function TDesignComponentEdit.DoCompose(const AProps: IProps; const AChildren: T
 var
   mTitle: IProp;
   mProps: IProps;
+  mtext:string;
 begin
   //mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
   //Result := ElementFactory.CreateElement(IStripBit, mProps);
@@ -840,25 +847,46 @@ begin
   mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
   mProps
     .SetStr('ID', ID)
-    .SetStr('Text', State.AsStr('Text'))
+    .SetStr('Text', ComposeText)
     .SetIntf('AskNotifier', AskNotifier)
-    .SetIntf('TextChangedNotifier', TextChangedNotifier)
+    .SetIntf('TextChangedNotifier', ComposeTextChangedNotifier)
     .SetIntf('KeyDownNotifier', KeyDownNotifier)
     .SetBool('Focused', State.AsBool('Focused'))
     .SetBool('Flat', SelfProps.AsBool('Flat'));
   Result := ElementFactory.CreateElement(IEditBit, mProps);
 end;
 
-procedure TDesignComponentEdit.DoInitValues;
-var
-  mFunc: IFluxFunc;
+function TDesignComponentEdit.NewTextChangedFunc: IFluxFunc;
 begin
-  inherited DoInitValues;
-  if fTextChangedNotifier = nil then begin
-    mFunc := TTextChangedFunc.Create(FuncSequence.Next, fState as IGenericAccess);
-    fTextChangedNotifier := NewNotifier(mFunc.ID);
-    FluxFuncReg.RegisterFunc(mFunc);
-  end;
+  Result := IFluxFunc(Factory.Locate(IFluxFunc, 'TTextChangedFunc',
+    NewProps
+    .SetInt('ID', FuncSequence.Next)
+    .SetIntf('State', State)
+  ));
+end;
+
+procedure TDesignComponentEdit.DoInitState(const AState: IGenericAccess);
+begin
+  inherited DoInitState(AState);
+  AddFuncNotifier(AState, NewTextChangedFunc, cTextChangedNotifier);
+end;
+
+function TDesignComponentEdit.ComposeText: string;
+var
+  mTextProp: IProp;
+begin
+  mTextProp := SelfProps.PropByName[cProps.Text];
+  if mTextProp <> nil then
+    Result := mTextProp.AsString
+  else
+    Result := State.AsStr(cProps.Text);
+end;
+
+function TDesignComponentEdit.ComposeTextChangedNotifier: IFluxNotifier;
+begin
+  Result := TextChangedNotifier;
+  if Result = nil then
+    Result := IFluxNotifier(State.AsIntf(cTextChangedNotifier));
 end;
 
 { TDesignComponentForm }

@@ -18,7 +18,8 @@ uses
   trl_inexus,
   trl_ireconciler,
   rea_idesigncomponent, rea_udesigncomponent,
-  trl_ireg, trl_isequence;
+  trl_ireg, trl_isequence,
+  flu_ireg;
 
 type
 
@@ -28,6 +29,8 @@ type
   private const
     creafuncseq = 'reafuncseq';
   private
+    fRegFlux: flu_ireg.IReg;
+    function RegFlux: flu_ireg.IReg;
     procedure SetDIC(AValue: TDIContainer);
   protected
     // IReg
@@ -47,6 +50,7 @@ type
     function RegisterRenderer: TDIReg;
     function RegisterRendererFunc: TDIReg;
     function RegisterFuncSequence: TDIReg;
+    procedure RegisterFuncs;
   protected
     fDIC: TDIContainer;
   published
@@ -56,6 +60,13 @@ type
 implementation
 
 { TReg }
+
+function TReg.RegFlux: flu_ireg.IReg;
+begin
+  if fRegFlux = nil then
+    fRegFlux := flu_ireg.IReg(DIC.Locate(flu_ireg.IReg));
+  Result := fRegFlux;
+end;
 
 procedure TReg.SetDIC(AValue: TDIContainer);
 begin
@@ -153,6 +164,7 @@ begin
   RegisterRenderer;
   RegisterRendererFunc;
   RegisterFuncSequence;
+  RegisterFuncs;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -192,6 +204,11 @@ var
 begin
   mReg := trl_ireg.IReg(DIC.Locate(trl_ireg.IReg));
   Result := mReg.RegisterSequence(creafuncseq, ckSingle);
+end;
+
+procedure TReg.RegisterFuncs;
+begin
+  RegFlux.RegisterFunc(TTextChangedFunc);
 end;
 
 end.
