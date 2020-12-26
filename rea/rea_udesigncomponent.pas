@@ -66,6 +66,7 @@ type
     function GetNodeEnumerator: INodeEnumerator;
     function INode.GetEnumerator = GetNodeEnumerator;
   protected
+    fID: string;
     fLog: ILog;
     fElementFactory: IMetaElementFactory;
     fFactory: IDIFactory;
@@ -75,12 +76,14 @@ type
     fStoreConnector: IFluxData;
     fFluxFuncReg: IFluxFuncReg;
     fFuncSequence: ISequence;
+    function GetState: IGenericAccessRO;
   published
+    property ID: string read fID write fID;
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Factory: IDIFactory read fFactory write fFactory;
     property Node: INode read fNode write fNode;
-    property State: IGenericAccessRO read fState write fState;
+    property State: IGenericAccessRO read GetState write fState;
     property DataPath: string read fDataPath write fDataPath;
     property StoreConnector: IFluxData read fStoreConnector write fStoreConnector;
     property FluxFuncReg: IFluxFuncReg read fFluxFuncReg write fFluxFuncReg;
@@ -143,9 +146,11 @@ type
     procedure DoInitValues; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
+    fAskNotifier: IFluxNotifier;
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
   published
+    property AskNotifier: IFluxNotifier read fAskNotifier write fAskNotifier;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write fTextChangedNotifier;
     property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write fKeyDownNotifier;
   end;
@@ -576,7 +581,7 @@ end;
 
 procedure TTextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
-  fState.SetStr('Text', AAction.Props.AsStr('Text'));
+  fState.SetStr('Text', AAction.Props.AsStr(0));
 end;
 
 { TDesignComponentGrid }
@@ -834,7 +839,9 @@ begin
   //  ) as INode);
   mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
   mProps
+    .SetStr('ID', ID)
     .SetStr('Text', State.AsStr('Text'))
+    .SetIntf('AskNotifier', AskNotifier)
     .SetIntf('TextChangedNotifier', TextChangedNotifier)
     .SetIntf('KeyDownNotifier', KeyDownNotifier)
     .SetBool('Focused', State.AsBool('Focused'))
@@ -850,11 +857,6 @@ begin
   if fTextChangedNotifier = nil then begin
     mFunc := TTextChangedFunc.Create(FuncSequence.Next, fState as IGenericAccess);
     fTextChangedNotifier := NewNotifier(mFunc.ID);
-    FluxFuncReg.RegisterFunc(mFunc);
-  end;
-  if fKeyDownNotifier = nil then begin
-    mFunc := TKeyDownFunc.Create(FuncSequence.Next, fState as IGenericAccess);
-    fKeyDownNotifier := NewNotifier(FuncSequence.Next);
     FluxFuncReg.RegisterFunc(mFunc);
   end;
 end;
@@ -967,7 +969,7 @@ procedure TDesignComponent.DoInitValues;
 var
   mInit: Boolean;
 begin
-  if fState = nil then begin
+  if (fState = nil) and (DataPath <> '') then begin
     mInit := not StoreConnector.Exists(DataPath);
     fState := NewState(DataPath);
     if mInit then
@@ -1054,6 +1056,13 @@ end;
 function TDesignComponent.GetNodeEnumerator: INodeEnumerator;
 begin
   Result := Node.GetEnumerator;
+end;
+
+function TDesignComponent.GetState: IGenericAccessRO;
+begin
+  if fState = nil then
+     Raise Exception.Create('State is not initialized - maybe DataPath missing');
+  Result := fState;
 end;
 
 end.

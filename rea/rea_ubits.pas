@@ -96,6 +96,7 @@ type
     procedure SetWidth(AValue: integer);
     procedure SetHeight(AValue: integer);
   protected
+    fID: string;
     fLog: ILog;
     fNode: INode;
     fFactory: IDIFactory;
@@ -103,6 +104,7 @@ type
     fVScale: IScale;
     fControl: TControl;
   published
+    property ID: String read fID write fID;
     property Log: ILog read fLog write fLog;
     property Node: INode read fNode write fNode;
     property Factory: IDIFactory read fFactory write fFactory;
@@ -198,6 +200,7 @@ type
   private
     fTextChangedMsgBinder: IMessageNotifierBinder;
     fKeyDownMsgBinder: IMessageNotifierBinder;
+    procedure SetAskNotifier(AValue: IFluxNotifier);
     procedure TextChangedNotifierData(const AProps: IProps);
     procedure SetTextChangedNotifier(AValue: IFluxNotifier);
     procedure KeyDownNotifierData(const AProps: IProps);
@@ -213,12 +216,14 @@ type
     fText: string;
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
+    fAskNotifier: IFluxNotifier;
     fFocused: Boolean;
     fFlat: Boolean;
   published
     property Text: string read fText write fText;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
     property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write SetKeyDownNotifier;
+    property AskNotifier: IFluxNotifier read fAskNotifier write SetAskNotifier;
     property Focused: Boolean read fFocused write fFocused;
     property Flat: Boolean read fFlat write fFlat;
   end;
@@ -453,8 +458,20 @@ end;
 procedure TEditBit.TextChangedNotifierData(const AProps: IProps);
 begin
   if AsEdit <> nil then
-  AProps
-    .SetStr('Text', AsEdit.Text);
+    AProps.SetStr(ID, AsEdit.Text);
+end;
+
+procedure TEditBit.SetAskNotifier(AValue: IFluxNotifier);
+begin
+  if fAskNotifier <> nil then
+  begin
+    fAskNotifier.Remove(@TextChangedNotifierData);
+  end;
+  fAskNotifier := AValue;
+  if fAskNotifier <> nil then
+  begin
+    fAskNotifier.Add(@TextChangedNotifierData);
+  end;
 end;
 
 procedure TEditBit.SetKeyDownNotifier(AValue: IFluxNotifier);
@@ -496,6 +513,8 @@ end;
 procedure TEditBit.EnableNotifiers;
 begin
   inherited EnableNotifiers;
+  if AskNotifier <> nil then
+    AskNotifier.Enabled := True;
   if TextChangedNotifier <> nil then
     TextChangedNotifier.Enabled := True;
   if KeyDownNotifier <> nil then
@@ -504,6 +523,8 @@ end;
 
 procedure TEditBit.DisableNotifiers;
 begin
+  if AskNotifier <> nil then
+    AskNotifier.Enabled := False;
   if TextChangedNotifier <> nil then
     TextChangedNotifier.Enabled := False;
   if KeyDownNotifier <> nil then

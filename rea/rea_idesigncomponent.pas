@@ -36,6 +36,7 @@ type
       CloseQueryNotifier = 'CloseQueryNotifier';
       ClickNotifier = 'ClickNotifier';
       OnTextNotifier = 'OnTextNotifier';
+      AskNotifier = 'AskNotifier';
       RowMMHeight = 'RowMMHeight';
       ColMMWidth = 'ColMMWidth';
       RowEvenColor = 'RowEvenColor';
@@ -45,6 +46,8 @@ type
       Caption = 'Caption';
       SwitchEdge = 'SwitchEdge';
       SwitchSize = 'SwitchSize';
+      ID = 'ID';
+      DataPath = 'DataPath';
     end;
 
   cEdge = class
