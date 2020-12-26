@@ -211,6 +211,7 @@ begin
   RegFlux.RegisterFunc(TTextChangedFunc);
   RegFlux.RegisterFunc(TSizeFunc);
   RegFlux.RegisterFunc(TMoveFunc);
+  RegFlux.RegisterFunc(TCloseQueryFunc);
 end;
 
 end.

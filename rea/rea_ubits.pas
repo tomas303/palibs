@@ -126,6 +126,19 @@ type
     property Height: integer read GetHeight write SetHeight;
   end;
 
+  { TCloseQueryFunc }
+
+  TCloseQueryFunc = class(TInterfacedObject, IFluxFunc)
+  protected
+    procedure Execute(const AAction: IFluxAction);
+    function RunAsync: Boolean;
+    function GetID: integer;
+  protected
+    fID: Integer;
+  published
+    property ID: Integer read GetID write fID;
+  end;
+
   { TFormBit }
 
   TFormBit = class(TBit, IFormBit)
@@ -260,6 +273,23 @@ type
   end;
 
 implementation
+
+{ TCloseQueryFunc }
+
+procedure TCloseQueryFunc.Execute(const AAction: IFluxAction);
+begin
+  Application.Terminate;
+end;
+
+function TCloseQueryFunc.RunAsync: Boolean;
+begin
+  Result := False;
+end;
+
+function TCloseQueryFunc.GetID: integer;
+begin
+  Result := fID;
+end;
 
 { TMessageNotifierBinder }
 
@@ -559,16 +589,16 @@ end;
 procedure TFormBit.SetCloseQueryNotifier(AValue: IFluxNotifier);
 begin
   if fCloseQueryNotifier <> nil then
-    begin
-      fCloseQueryMsgBinder.Unbind;
-      fCloseQueryMsgBinder := nil;
-    end;
-    fCloseQueryNotifier := AValue;
-    if fCloseQueryNotifier <> nil then
-    begin
-      fCloseQueryMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fCloseQueryNotifier).SetInt('Msg', LM_CloseQuery)));
-      fCloseQueryMsgBinder.Bind(AsForm);
-    end;
+  begin
+    fCloseQueryMsgBinder.Unbind;
+    fCloseQueryMsgBinder := nil;
+  end;
+  fCloseQueryNotifier := AValue;
+  if fCloseQueryNotifier <> nil then
+  begin
+    fCloseQueryMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fCloseQueryNotifier).SetInt('Msg', LM_CloseQuery)));
+    fCloseQueryMsgBinder.Bind(AsForm);
+  end;
 end;
 
 procedure TFormBit.SetMoveNotifier(AValue: IFluxNotifier);
