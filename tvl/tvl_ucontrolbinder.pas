@@ -136,15 +136,7 @@ begin
   end
   else
   begin
-    if not (Control is TWinControl)
-       or (TheMessage.msg = $1328)  // donot know but when pagecontrol on this message call IsControlMouseMsg, then result is AV in there
-       or not (Control as TWinControl).H_IsControlMouseMsg(TheMessage) then
-    begin
-      //DbgOut(Control.ClassName + '.' + Control.Name + ' ' + inttostr(TheMessage.msg));
-      DoControlWndProc(TheMessage);
-    end
-    else
-      fOldWndProc(TheMessage);
+    DoControlWndProc(TheMessage);
   end;
 end;
 
