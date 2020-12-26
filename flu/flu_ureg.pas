@@ -16,6 +16,7 @@ type
     // IReg
     function RegisterAction: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
+    function RegisterFunc(const AClass: TClass): TDIReg;
     procedure RegisterCommon(const ADispatcher: TGuid);
   protected
     fDIC: TDIContainer;
@@ -40,6 +41,11 @@ begin
   // asi az pri reactu mozna    mReg.InjectProp('ActionID', cResizeFunc);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('Dispatcher', ADispatcher, AID);
+end;
+
+function TReg.RegisterFunc(const AClass: TClass): TDIReg;
+begin
+  Result := DIC.Add(AClass, IFluxFunc, AClass.ClassName);
 end;
 
 procedure TReg.RegisterCommon(const ADispatcher: TGuid);

@@ -17,7 +17,6 @@ type
     // IReg
     function RegisterDispatcher: TDIReg;
     function RegisterState: TDIReg;
-    function RegisterFunc(const AClass: TClass): TDIReg;
     function RegisterStore: TDIReg;
     function RegisterData: TDIReg;
     function RegisterStoreConnector: TDIReg;
@@ -42,11 +41,6 @@ function TReg.RegisterState: TDIReg;
 begin
   Result := DIC.Add(TRdxState, IFluxState);
   Result.InjectProp('Data', IProps);
-end;
-
-function TReg.RegisterFunc(const AClass: TClass): TDIReg;
-begin
-  Result := DIC.Add(AClass, IFluxFunc, AClass.ClassName);
 end;
 
 function TReg.RegisterStore: TDIReg;
