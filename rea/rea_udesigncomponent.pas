@@ -121,7 +121,6 @@ type
   protected
     procedure DoInitState(const AState: IGenericAccess); override;
   protected
-    procedure DoInitValues; override;
     function ComposeSizeNotifier: IFluxNotifier;
     function ComposeMoveNotifier: IFluxNotifier;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
@@ -795,16 +794,16 @@ end;
 
 procedure TMoveFunc.DoExecute(const AAction: IFluxAction);
 begin
-  fState.SetInt('Left', AAction.Props.AsInt('MMLeft'));
-  fState.SetInt('Top', AAction.Props.AsInt('MMTop'));
+  fState.SetInt(cProps.Left, AAction.Props.AsInt(cProps.MMLeft));
+  fState.SetInt(cProps.Top, AAction.Props.AsInt(cProps.MMTop));
 end;
 
 { TSizeFunc }
 
 procedure TSizeFunc.DoExecute(const AAction: IFluxAction);
 begin
-  fState.SetInt('Width', AAction.Props.AsInt('MMWidth'));
-  fState.SetInt('Height', AAction.Props.AsInt('MMHeight'));
+  fState.SetInt(cProps.Width, AAction.Props.AsInt(cProps.MMWidth));
+  fState.SetInt(cProps.Height, AAction.Props.AsInt(cProps.MMHeight));
   fRenderNotifier.Notify;
 end;
 
@@ -916,17 +915,10 @@ end;
 procedure TDesignComponentForm.DoInitState(const AState: IGenericAccess);
 begin
   inherited DoInitState(AState);
+  (State as IGenericAccess).SetInt(cProps.Width, 400);
+  (State as IGenericAccess).SetInt(cProps.Height, 200);
   AddFuncNotifier(AState, NewSizeNotifierFunc, cSizeNotifier);
   AddFuncNotifier(AState, NewMoveNotifierFunc, cMoveNotifier);
-end;
-
-procedure TDesignComponentForm.DoInitValues;
-begin
-  inherited DoInitValues;
-  if State.AsInt('Width') = 0 then
-    (State as IGenericAccess).SetInt('Width', 400);
-  if State.AsInt('Height') = 0 then
-    (State as IGenericAccess).SetInt('Height', 200);
 end;
 
 function TDesignComponentForm.ComposeSizeNotifier: IFluxNotifier;
@@ -946,30 +938,18 @@ end;
 function TDesignComponentForm.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mProps: IProps;
-  mw: integer;
 begin
-  mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color,
-    {cProps.SizeNotifier, cProps.MoveNotifier,} cProps.ActivateNotifier]);
+  mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color, cProps.ActivateNotifier]);
   if mProps.PropByName[cProps.Color] = nil then
     mProps.SetProp(AProps.PropByName[cProps.Color]);
-  { depend on size notifier above - will take info from storage, not from here
-  mProps.SetInt(cProps.MMWidth, MMWidth);
-  mProps.SetInt(cProps.MMHeight, MMHeight);
-  mProps.SetInt(cProps.MMLeft, MMLeft);
-  mProps.SetInt(cProps.MMTop, MMTop);
-  }
-
-  mProps.SetIntf(cProps.SizeNotifier, ComposeSizeNotifier);
-  mProps.SetIntf(cProps.MoveNotifier, ComposeMoveNotifier);
-  mProps.SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier);
-
-
-  mProps.SetInt(cProps.MMLeft, State.AsInt('Left'));
-  mProps.SetInt(cProps.MMTop, State.AsInt('Top'));
-  mw := State.AsInt('Left');
-  mProps.SetInt(cProps.MMWidth, State.AsInt('Width'));
-  mProps.SetInt(cProps.MMHeight, State.AsInt('Height'));
-
+  mProps
+    .SetIntf(cProps.SizeNotifier, ComposeSizeNotifier)
+    .SetIntf(cProps.MoveNotifier, ComposeMoveNotifier)
+    .SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier)
+    .SetInt(cProps.MMLeft, State.AsInt(cProps.Left))
+    .SetInt(cProps.MMTop, State.AsInt(cProps.Top))
+    .SetInt(cProps.MMWidth, State.AsInt(cProps.Width))
+    .SetInt(cProps.MMHeight, State.AsInt(cProps.Height));
   Result := ElementFactory.CreateElement(IFormBit, mProps);
   AddChildren(Result, AChildren);
 end;

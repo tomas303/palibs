@@ -18,6 +18,8 @@ type
       Place = 'Place';
       Title = 'Title';
       Color = 'Color';
+      Left = 'Left';
+      Top = 'Top';
       Width = 'Width';
       Height = 'Height';
       MMLeft = 'MMLeft';
