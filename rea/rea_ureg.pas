@@ -153,6 +153,7 @@ begin
   RegisterDesignComponent(TDesignComponentHeader, IDesignComponentHeader);
   RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
+  RegisterDesignComponent(TDesignComponentLabelEdit, IDesignComponentLabelEdit);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);

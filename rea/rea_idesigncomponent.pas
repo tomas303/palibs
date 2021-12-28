@@ -46,6 +46,9 @@ type
       ColEvenColor = 'ColEvenColor';
       ColOddColor = 'ColOddColor';
       Caption = 'Caption';
+      CaptionWidth = 'CaptionWidth';
+      PairWidth = 'PairWidth';
+      CaptionEdge = 'CaptionEdge';
       SwitchEdge = 'SwitchEdge';
       SwitchSize = 'SwitchSize';
       ID = 'ID';
@@ -101,7 +104,25 @@ type
     SwitchEdgeRight = cEdge.Right;
     SwitchEdgeBottom = cEdge.Bottom;
     SwitchSize = cProps.SwitchSize;
-end;
+  end;
+
+  IDesignComponentLabelEdit = interface(IDesignComponent)
+  ['{EAA33F6C-C4B8-40A2-B37E-82C7EE013EF7}']
+  end;
+
+  IDesignComponentLabelEditHelper = type helper for IDesignComponentLabelEdit
+  public const
+    CaptionEdge = cProps.CaptionEdge;
+    CaptionEdgeLeft = cEdge.Left;
+    CaptionEdgeTop = cEdge.Top;
+    CaptionEdgeRight = cEdge.Right;
+    CaptionEdgeBottom = cEdge.Bottom;
+    Caption = cProps.Caption;
+  end;
+
+const
+  cEditHeight = 25;
+  cCaptionWidth = 100;
 
 implementation
 
