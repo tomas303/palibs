@@ -8,7 +8,7 @@ uses
   Classes, SysUtils;
 
 type
-  TPropType = (ptUndefined, ptInt, ptStr, ptBool, ptGuid, ptInterface);
+  TPropType = (ptUndefined, ptInt, ptStr, ptBool, ptGuid, ptInterface, ptObject);
 
   IProp = interface
   ['{B36E5E43-AFB2-4A28-8E09-E7BC682BE1F0}']
@@ -72,11 +72,13 @@ type
     function SetBool(const AName: string; const AValue: Boolean): IProps;
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
+    function SetObject(const AName: string; const AValue: TObject): IProps;
     function SetStr(const AIndex: integer; const AValue: string): IProps;
     function SetInt(const AIndex: integer; const AValue: integer): IProps;
     function SetBool(const AIndex: integer; const AValue: Boolean): IProps;
     function SetGuid(const AIndex: integer; const AValue: TGUID): IProps;
     function SetIntf(const AIndex: integer; const AValue: IUnknown): IProps;
+    function SetObject(const AIndex: integer; const AValue: TObject): IProps;
     function SetProp(const AName: string; const AProp: IProp): IProps;
     function SetProp(const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
@@ -84,11 +86,13 @@ type
     function AsBool(const AName: string): Boolean;
     function AsGuid(const AName: string): TGUID;
     function AsIntf(const AName: string): IUnknown;
+    function AsObject(const AName: string): TObject;
     function AsStr(const AIndex: integer): string;
     function AsInt(const AIndex: integer): integer;
     function AsBool(const AIndex: integer): Boolean;
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
+    function AsObject(const AIndex: integer): TObject;
     function Diff(const AProps: IProps): IProps;
     function Info: string;
   end;

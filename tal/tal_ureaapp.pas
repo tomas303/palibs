@@ -30,14 +30,9 @@ type
     procedure KeyDownBeforeHandler(Sender: TObject; var Key: Word; Shift: TShiftState);
   protected
     fLog: ILog;
-    fFactory: IDIFactory;
-    fFluxFuncReg: IFluxFuncReg;
     fExecutor: IExecutor;
-    fEv: PEventHandler;
   published
     property Log: ILog read fLog write fLog;
-    property Factory: IDIFactory read fFactory write FFactory;
-    property FluxFuncReg: IFluxFuncReg read fFluxFuncReg write fFluxFuncReg;
     property Executor: IExecutor read fExecutor write fExecutor;
   end;
 
@@ -46,14 +41,9 @@ implementation
 { TReactApp }
 
 procedure TReactApp.StartUp;
-var
-  mRenderFunc: IFluxFunc;
 begin
   Application.AddOnIdleHandler(@IdleHandler);
   Application.AddOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
-  mRenderFunc := IFluxFunc(Factory.Locate(IFluxFunc, 'TRenderFunc'));
-  FluxFuncReg.RegisterFunc(mRenderFunc);
-  mRenderFunc.Execute(nil);
 end;
 
 procedure TReactApp.ShutDown;

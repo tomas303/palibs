@@ -10,82 +10,32 @@ uses
 
 type
 
-  { TRenderFunc }
-
-  TRenderFunc = class(TInterfacedObject, IFluxFunc)
-  private
-    fHeadBit: IBit;
-    fHeadEl: IMetaElement;
-    fRenderer: IRenderer;
-    procedure Render;
-  protected
-    procedure Execute(const AAction: IFluxAction);
-    function RunAsync: Boolean;
-    function GetID: integer;
-  protected
-    fReconciler: IReconciler;
-    fenderer: IRenderer;
-    fAppComponent: IDesignComponentApp;
-  published
-    property Reconciler: IReconciler read fReconciler write fReconciler;
-    property Renderer: IRenderer read fRenderer write fRenderer;
-    property AppComponent: IDesignComponentApp read fAppComponent write fAppComponent;
-  end;
-
   { TRenderer }
 
   TRenderer = class(TInterfacedObject, IRenderer)
+  private
+    fHeadBit: IBit;
+    fHeadEl: IMetaElement;
   protected
     function GetChildren(const AElement: IMetaElement): TMetaElementArray;
     function EmptyChildren: TMetaElementArray;
     function RenderElement(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
     function RenderChain(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
+    function Expand(const AElement: IMetaElement): IMetaElement;
   protected
     // IRenderer
-    function Render(const AComponent: IDesignComponent): IMetaElement;
+    procedure Render(const AElement: IMetaElement);
   protected
     fLog: ILog;
     fFactory: IDIFactory;
+    fReconciler: IReconciler;
   published
     property Log: ILog read fLog write fLog;
     property Factory: IDIFactory read fFactory write fFactory;
+    property Reconciler: IReconciler read fReconciler write fReconciler;
   end;
 
 implementation
-
-{ TRenderFunc }
-
-procedure TRenderFunc.Render;
-var
-  mNewEl: IMetaElement;
-  mNew: IUnknown;
-  mNewBit: IBit;
-  m: string;
-begin
-  mNewEl := Renderer.Render(AppComponent);
-  //mNewBit := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl) as IBit;
-  mNew := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl);
-  m := (mNew as TObject).ClassName;
-  mNewBit := mNew as IBit;
-  fHeadEl := mNewEl;
-  fHeadBit := mNewBit;
-  fHeadBit.Render;
-end;
-
-procedure TRenderFunc.Execute(const AAction: IFluxAction);
-begin
-  Render;
-end;
-
-function TRenderFunc.RunAsync: Boolean;
-begin
-  Result := True;
-end;
-
-function TRenderFunc.GetID: integer;
-begin
-  Result := cFuncRender;
-end;
 
 { TRenderer }
 
@@ -135,15 +85,29 @@ begin
   end;
 end;
 
-function TRenderer.Render(const AComponent: IDesignComponent): IMetaElement;
+function TRenderer.Expand(const AElement: IMetaElement): IMetaElement;
 var
-  mEl: IMetaElement;
   m: string;
 begin
-  mEl := AComponent.Compose(IProps(Factory.Locate(IProps)), EmptyChildren);
-  Result := RenderElement(mEl, mEl.Props);
+  Result := RenderElement(AElement, AElement.Props);
   m := (Result as ILogSupport).LogInfo;
   Log.DebugLn(m);
+end;
+
+procedure TRenderer.Render(const AElement: IMetaElement);
+var
+  mNewEl: IMetaElement;
+  mNew: IUnknown;
+  mNewBit: IBit;
+  m: string;
+begin
+  mNewEl := Expand(AElement);
+  mNew := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl);
+  m := (mNew as TObject).ClassName;
+  mNewBit := mNew as IBit;
+  fHeadEl := mNewEl;
+  fHeadBit := mNewBit;
+  fHeadBit.Render;
 end;
 
 end.

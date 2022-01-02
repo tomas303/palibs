@@ -346,6 +346,8 @@ begin
         end;
       ptInterface:
         mRBItem.AsInterface := AProps.AsIntf(i);
+      ptObject:
+        mRBItem.AsObject := AProps.AsObject(i);
     end;
   end;
 end;

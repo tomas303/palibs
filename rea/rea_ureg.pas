@@ -48,7 +48,6 @@ type
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
-    function RegisterRendererFunc: TDIReg;
     function RegisterFuncSequence: TDIReg;
     procedure RegisterFuncs;
   protected
@@ -147,7 +146,7 @@ end;
 
 procedure TReg.RegisterCommon;
 begin
-  RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
+  //RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
   RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
   RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
   RegisterDesignComponent(TDesignComponentHeader, IDesignComponentHeader);
@@ -163,7 +162,6 @@ begin
   RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterRenderer;
-  RegisterRendererFunc;
   RegisterFuncSequence;
   RegisterFuncs;
 end;
@@ -189,14 +187,7 @@ begin
   Result := DIC.Add(TRenderer, IRenderer);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
-end;
-
-function TReg.RegisterRendererFunc: TDIReg;
-begin
-  Result := DIC.Add(TRenderFunc, IFluxFunc, TRenderFunc.ClassName);
   Result.InjectProp('Reconciler', IReconciler);
-  Result.InjectProp('AppComponent', IDesignComponentApp);
-  Result.InjectProp('Renderer', IRenderer);
 end;
 
 function TReg.RegisterFuncSequence: TDIReg;

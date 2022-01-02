@@ -133,6 +133,21 @@ type
     constructor Create(const AName: string; const AValue: IUnknown);
   end;
 
+  { TObjectProp }
+
+  TObjectProp = class(TProp)
+  protected
+    fValue: TObject;
+  protected
+    function Equals(const AProp: IProp): Boolean; override;
+    function Clone(const AName: string = ''): IProp; override;
+    function GetPropType: TPropType; override;
+    function GetDebugInfo: string; override;
+    function GetAsObject: TObject; override;
+    procedure SetAsObject(AValue: TObject); override;
+  public
+    constructor Create(const AName: string; const AValue: TObject);
+  end;
 
   { TProps }
 
@@ -174,11 +189,13 @@ type
     function SetBool(const AName: string; const AValue: Boolean): IProps;
     function SetGuid(const AName: string; const AValue: TGUID): IProps;
     function SetIntf(const AName: string; const AValue: IUnknown): IProps;
+    function SetObject(const AName: string; const AValue: TObject): IProps;
     function SetStr(const AIndex: integer; const AValue: string): IProps;
     function SetInt(const AIndex: integer; const AValue: integer): IProps;
     function SetBool(const AIndex: integer; const AValue: Boolean): IProps;
     function SetGuid(const AIndex: integer; const AValue: TGUID): IProps;
     function SetIntf(const AIndex: integer; const AValue: IUnknown): IProps;
+    function SetObject(const AIndex: integer; const AValue: TObject): IProps;
     function SetProp(const AName: string; const AProp: IProp): IProps;
     function SetProp(const AProp: IProp): IProps;
     function AsStr(const AName: string): string;
@@ -186,11 +203,13 @@ type
     function AsBool(const AName: string): Boolean;
     function AsGuid(const AName: string): TGUID;
     function AsIntf(const AName: string): IUnknown;
+    function AsObject(const AName: string): TObject;
     function AsStr(const AIndex: integer): string;
     function AsInt(const AIndex: integer): integer;
     function AsBool(const AIndex: integer): Boolean;
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
+    function AsObject(const AIndex: integer): TObject;
     function Diff(const AProps: IProps): IProps;
     function Info: string;
   protected
@@ -203,6 +222,50 @@ type
   end;
 
 implementation
+
+{ TObjectProp }
+
+function TObjectProp.Equals(const AProp: IProp): Boolean;
+begin
+  Result := inherited Equals(AProp) and (AProp.GetAsObject = GetAsObject);
+end;
+
+function TObjectProp.Clone(const AName: string): IProp;
+begin
+  if AName <> '' then
+    Result := TObjectProp.Create(AName, AsObject)
+  else
+    Result := TObjectProp.Create(Name, AsObject);
+end;
+
+function TObjectProp.GetPropType: TPropType;
+begin
+  Result := ptObject;
+end;
+
+function TObjectProp.GetDebugInfo: string;
+begin
+  if fValue = nil then
+    Result := ''
+  else
+    Result := 'instance of ' + fValue.ClassName;
+end;
+
+function TObjectProp.GetAsObject: TObject;
+begin
+  Result := fValue;
+end;
+
+procedure TObjectProp.SetAsObject(AValue: TObject);
+begin
+  fValue := AValue;
+end;
+
+constructor TObjectProp.Create(const AName: string; const AValue: TObject);
+begin
+  inherited Create(AName);
+  fValue := AValue;
+end;
 
 { TProps.TItems }
 
@@ -696,6 +759,12 @@ begin
   fItems.AddOrSetData(AName, TInterfaceProp.Create(AName, AValue));
 end;
 
+function TProps.SetObject(const AName: string; const AValue: TObject): IProps;
+begin
+  Result := Self;
+  fItems.AddOrSetData(AName, TObjectProp.Create(AName, AValue));
+end;
+
 function TProps.SetStr(const AIndex: integer; const AValue: string): IProps;
 begin
   Result := Self;
@@ -729,6 +798,13 @@ begin
   Result := Self;
   CheckIndexFit(AIndex);
   fItems.Data[AIndex] := TInterfaceProp.Create(fItems.Keys[AIndex], AValue);
+end;
+
+function TProps.SetObject(const AIndex: integer; const AValue: TObject): IProps;
+begin
+  Result := Self;
+  CheckIndexFit(AIndex);
+  fItems.Data[AIndex] := TObjectProp.Create(fItems.Keys[AIndex], AValue);
 end;
 
 function TProps.SetProp(const AName: string; const AProp: IProp): IProps;
@@ -774,6 +850,11 @@ begin
   Result := AsIntf(fItems.IndexOf(AName));
 end;
 
+function TProps.AsObject(const AName: string): TObject;
+begin
+  Result := AsObject(fItems.IndexOf(AName));
+end;
+
 function TProps.AsStr(const AIndex: integer): string;
 begin
   if IndexFit(AIndex) then
@@ -810,6 +891,14 @@ function TProps.AsIntf(const AIndex: integer): IUnknown;
 begin
   if IndexFit(AIndex) then
     Result := fItems.Data[AIndex].AsInterface
+  else
+    Result := nil;
+end;
+
+function TProps.AsObject(const AIndex: integer): TObject;
+begin
+  if IndexFit(AIndex) then
+    Result := fItems.Data[AIndex].AsObject
   else
     Result := nil;
 end;

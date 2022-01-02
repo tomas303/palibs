@@ -161,7 +161,10 @@ begin
         end;
     end;
   end;
-  mAutoSize := Round(AFreeSpace / mAutoSizeCnt);
+  if mAutoSizeCnt > 0 then
+    mAutoSize := Round(AFreeSpace / mAutoSizeCnt)
+  else
+    mAutoSize := 0;
   for mChild in ANode do begin
     mUni := AClass.Create(mChild);
     case mUni.Place of

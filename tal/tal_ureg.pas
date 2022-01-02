@@ -41,8 +41,6 @@ begin
   //
   Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
   Result.InjectProp('Log', ILog);
-  Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('FluxFuncReg', IFluxDispatcher);
   Result.InjectProp('Executor', IExecutor);
 end;
 

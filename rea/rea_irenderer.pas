@@ -10,7 +10,7 @@ uses
 type
   IRenderer = interface
   ['{B6DA13A6-8D9A-4FB6-9A7C-62944E491810}']
-    function Render(const AComponent: IDesignComponent): IMetaElement;
+    procedure Render(const AElement: IMetaElement);
   end;
 
 const
