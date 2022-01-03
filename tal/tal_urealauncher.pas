@@ -5,36 +5,56 @@ unit tal_urealauncher;
 interface
 
 uses
-  trl_ilauncher, forms, rea_iapp;
+  trl_ilauncher, forms, trl_iExecutor, flu_iflux, Classes;
 
 type
 
   { TReactLauncher }
 
   TReactLauncher = class(TInterfacedObject, ILauncher)
+  private
+    procedure KeyDownBeforeHandler(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure StartUp;
+    procedure ShutDown;
   protected
     // ILauncher
     procedure Launch;
   public
     procedure AfterConstruction; override;
   protected
-    fReactApp: IReactApp;
+    fExecutor: IExecutor;
   published
-    // todo: rename IMainForm to IMain and implement this interface instead IReactApp
-    property ReactApp: IReactApp read fReactApp write fReactApp;
+    property Executor: IExecutor read fExecutor write fExecutor;
   end;
 
 implementation
 
 { TReactLauncher }
 
+procedure TReactLauncher.KeyDownBeforeHandler(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  //todo notifier for hotkeys
+end;
+
+procedure TReactLauncher.StartUp;
+begin
+  Application.AddOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
+end;
+
+procedure TReactLauncher.ShutDown;
+begin
+  Application.RemoveOnKeyDownBeforeHandler(@KeyDownBeforeHandler);
+  Application.Terminate;
+end;
+
 procedure TReactLauncher.Launch;
 begin
-  ReactApp.StartUp;
+  StartUp;
   try
-    Application.Run;
+    Executor.ExecuteLoop;
   finally
-    ReactApp.ShutDown;
+    ShutDown;
   end;
 end;
 

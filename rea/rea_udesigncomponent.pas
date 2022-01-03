@@ -19,7 +19,6 @@ type
   protected
     // IFluxFunc
     procedure Execute(const AAction: IFluxAction);
-    function RunAsync: Boolean;
     function GetID: integer;
   public
     constructor Create(AID: integer; const AState: IGenericAccess);
@@ -921,11 +920,6 @@ end;
 procedure TDesignComponentFunc.Execute(const AAction: IFluxAction);
 begin
   DoExecute(AAction);
-end;
-
-function TDesignComponentFunc.RunAsync: Boolean;
-begin
-  Result := False;
 end;
 
 function TDesignComponentFunc.GetID: integer;

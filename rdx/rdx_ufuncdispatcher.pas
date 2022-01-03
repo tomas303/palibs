@@ -77,10 +77,7 @@ var
 begin
   mFuncs := fIDFuncs[AAction.ID];
   for mFunc in mFuncs do
-    if mFunc.RunAsync then
-      Executor.Add(TAsyncFuncRun.Create(AAction, mFunc))
-    else
-      mFunc.Execute(AAction);
+    Executor.Add(TAsyncFuncRun.Create(AAction, mFunc));
 end;
 
 procedure TRdxFuncDispatcher.RegisterFunc(const AFunc: IFluxFunc);

@@ -9,8 +9,8 @@ interface
 
 uses
   tal_uapp, tal_uguilauncher, tal_iedit, tal_SimpleListForm, tal_uwindowlog, 
-  tal_ihistorysettings, tal_uhistorysettings, tal_urealauncher, tal_ureaapp, 
-  tal_ireg, tal_ureg;
+  tal_ihistorysettings, tal_uhistorysettings, tal_urealauncher, tal_ireg, 
+  tal_ureg;
 
 implementation
 

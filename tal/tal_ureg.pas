@@ -6,7 +6,7 @@ interface
 
 uses
   tal_ireg, trl_idifactory, trl_dicontainer,
-  tal_ureaapp, rea_iapp, tal_urealauncher, trl_ilauncher,
+  tal_urealauncher, trl_ilauncher,
   trl_ilog, tal_uwindowlog, flu_iflux,
   trl_iExecutor, trl_imetaelementfactory,
   trl_imetaelement,
@@ -19,7 +19,7 @@ type
   TReg = class(TInterfacedObject, IReg)
   protected
     // IReg
-    function RegisterReactApp: TDIReg;
+    function RegisterReactLauncher: TDIReg;
     function RegisterWindowLog: TDIReg;
   protected
     fDIC: TDIContainer;
@@ -31,16 +31,9 @@ implementation
 
 { TReg }
 
-function TReg.RegisterReactApp: TDIReg;
-var
-  mReg: TDIReg;
+function TReg.RegisterReactLauncher: TDIReg;
 begin
-  // todo: think about move this to rea package ... that means move IFluxStore to flu
-  mReg := DIC.Add(TReactLauncher, ILauncher);
-  mReg.InjectProp('ReactApp', IReactApp);
-  //
-  Result := DIC.Add(TReactApp, IReactApp, '', ckSingle);
-  Result.InjectProp('Log', ILog);
+  Result := DIC.Add(TReactLauncher, ILauncher);
   Result.InjectProp('Executor', IExecutor);
 end;
 

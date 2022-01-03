@@ -11,10 +11,6 @@
     </CompilerOptions>
     <Files>
       <Item>
-        <Filename Value="rea_iapp.pas"/>
-        <UnitName Value="rea_iapp"/>
-      </Item>
-      <Item>
         <Filename Value="rea_ibits.pas"/>
         <UnitName Value="rea_ibits"/>
       </Item>

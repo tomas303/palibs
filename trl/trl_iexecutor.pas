@@ -4,6 +4,8 @@ unit trl_iExecutor;
 
 interface
 
+uses
+  sysutils;
 
 type
 
@@ -20,7 +22,10 @@ type
   ['{53D77BBD-5E38-4E0C-B2A6-3F7AA098A158}']
     procedure Add(const AExecute: IExecute);
     procedure ExecuteAll;
+    procedure ExecuteLoop;
   end;
+
+  EExecutorStop = class(Exception);
 
 implementation
 

@@ -11,7 +11,7 @@ type
 
   { TExecutor }
 
-  TExecutor = class(TInterfacedObject, iExecutor)
+  TExecutor = class(TInterfacedObject, IExecutor)
   protected type
 
     { TItems }
@@ -27,6 +27,7 @@ type
     //IExecutor
     procedure Add(const AExecute: IExecute);
     procedure ExecuteAll;
+    procedure ExecuteLoop;
   public
     procedure AfterConstruction; override;
     destructor Destroy; override;
@@ -51,8 +52,7 @@ end;
 
 procedure TExecutor.Add(const AExecute: IExecute);
 begin
-  if fItems.IndexOf(AExecute) = -1 then
-    fItems.Add(AExecute);
+  fItems.Add(AExecute);
 end;
 
 procedure TExecutor.ExecuteAll;
@@ -80,6 +80,30 @@ begin
     end;
   end;
   //Log.DebugLnExit({$I %CURRENTROUTINE%});
+end;
+
+procedure TExecutor.ExecuteLoop;
+var
+  mExecutable: IExecute;
+  mStop: Boolean;
+begin
+  mStop := False;
+  repeat
+    if fItems.Count > 0 then begin
+      mExecutable := fItems[0];
+      fItems.Delete(0);
+      try
+        mExecutable.Execute;
+      except
+        on E: EExecutorStop do begin
+          mStop := True;
+        end;
+        on E: Exception do begin
+          Log.DebugLn('%s: %s', [E.ClassName, E.Message]);
+        end;
+      end;
+    end;
+  until mStop;
 end;
 
 procedure TExecutor.AfterConstruction;
