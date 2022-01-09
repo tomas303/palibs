@@ -35,7 +35,44 @@ type
     property Reconciler: IReconciler read fReconciler write fReconciler;
   end;
 
+  { TRenderFunc }
+
+  TRenderFunc = class(TInterfacedObject, IFluxFunc)
+  private
+    fID: integer;
+    fComponent: IDesignComponent;
+    fRenderer: IRenderer;
+  protected
+    procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
+  public
+    constructor Create(AID: integer; AComponent: IDesignComponent; ARenderer: IRenderer);
+  end;
+
 implementation
+
+{ TRenderFunc }
+
+procedure TRenderFunc.Execute(const AAction: IFluxAction);
+var
+  mEl: IMetaElement;
+begin
+  mEl := fComponent.Compose(nil, []);
+  fRenderer.Render(mEl);
+end;
+
+function TRenderFunc.GetID: integer;
+begin
+  Result := fID;
+end;
+
+constructor TRenderFunc.Create(AID: integer; AComponent: IDesignComponent; ARenderer: IRenderer);
+begin
+  inherited Create;
+  fID := AID;
+  fComponent := AComponent;
+  fRenderer := ARenderer;
+end;
 
 { TRenderer }
 

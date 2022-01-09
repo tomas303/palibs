@@ -50,6 +50,14 @@
         <Filename Value="rea_urenderer.pas"/>
         <UnitName Value="rea_urenderer"/>
       </Item>
+      <Item>
+        <Filename Value="rea_udesigncomponentdata.pas"/>
+        <UnitName Value="rea_udesigncomponentdata"/>
+      </Item>
+      <Item>
+        <Filename Value="rea_udesigncomponentfunc.pas"/>
+        <UnitName Value="rea_udesigncomponentfunc"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
