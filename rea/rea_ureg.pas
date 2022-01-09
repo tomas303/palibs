@@ -49,7 +49,6 @@ type
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterFuncSequence: TDIReg;
-    procedure RegisterFuncs;
   protected
     fDIC: TDIContainer;
   published
@@ -146,11 +145,11 @@ end;
 
 procedure TReg.RegisterCommon;
 begin
-  //RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
-  //RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
+  RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
+  RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
   RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
   RegisterDesignComponent(TDesignComponentHeader, IDesignComponentHeader);
-  //RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
+  RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterDesignComponent(TDesignComponentLabelEdit, IDesignComponentLabelEdit);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
@@ -163,7 +162,6 @@ begin
   RegisterMessageNotifierBinder;
   RegisterRenderer;
   RegisterFuncSequence;
-  RegisterFuncs;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -196,14 +194,6 @@ var
 begin
   mReg := trl_ireg.IReg(DIC.Locate(trl_ireg.IReg));
   Result := mReg.RegisterSequence(creafuncseq, ckSingle);
-end;
-
-procedure TReg.RegisterFuncs;
-begin
-  RegFlux.RegisterFunc(TTextChangedFunc);
-  RegFlux.RegisterFunc(TSizeFunc);
-  RegFlux.RegisterFunc(TMoveFunc);
-  RegFlux.RegisterFunc(TCloseQueryFunc);
 end;
 
 end.

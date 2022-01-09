@@ -63,6 +63,16 @@ type
        Bottom = 3;
     end;
 
+  IGridDataProvider = interface
+  ['{308CF052-70BC-46D9-8B76-C565B3920261}']
+    function Prev: Boolean;
+    function Next: Boolean;
+    function IsEmpty: Boolean;
+    function GetValue(Ind: integer): string;
+    procedure SetValue(Ind: integer; AValue: string);
+    property Value[Ind: integer]: string read GetValue write SetValue; default;
+  end;
+
   IDesignComponent = interface
   ['{AD83F143-4C0A-4703-A38A-E3F175036FE6}']
     function Compose(const AParentProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
