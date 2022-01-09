@@ -488,7 +488,7 @@ end;
 procedure TEditBit.TextChangedNotifierData(const AProps: IProps);
 begin
   if AsEdit <> nil then
-    AProps.SetStr(ID, AsEdit.Text);
+    AProps.SetStr('Text', AsEdit.Text);
 end;
 
 procedure TEditBit.SetAskNotifier(AValue: IFluxNotifier);

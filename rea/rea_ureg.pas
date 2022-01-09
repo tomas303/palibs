@@ -147,10 +147,10 @@ end;
 procedure TReg.RegisterCommon;
 begin
   //RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
-  RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
+  //RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
   RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
   RegisterDesignComponent(TDesignComponentHeader, IDesignComponentHeader);
-  RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
+  //RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterDesignComponent(TDesignComponentLabelEdit, IDesignComponentLabelEdit);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
