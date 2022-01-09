@@ -6,7 +6,7 @@ unit flu_uflux;
 interface
 
 uses
-  trl_iprops, flu_iflux, fgl, trl_idifactory, sysutils, trl_igenericaccess;
+  trl_iprops, flu_iflux, fgl, trl_idifactory, sysutils;
 
 type
 

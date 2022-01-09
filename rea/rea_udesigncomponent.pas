@@ -6,7 +6,7 @@ interface
 
 uses
   rea_idesigncomponent, rea_udesigncomponentdata, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
-  trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog, trl_igenericaccess,
+  trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog,
   sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer;
 
 type
@@ -17,17 +17,14 @@ type
   protected
     procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
   protected
-    // IFluxFunc
     procedure Execute(const AAction: IFluxAction);
     function GetID: integer;
   public
-    constructor Create(AID: integer; const AState: IGenericAccess);
+    constructor Create(AID: integer);
   protected
     fID: integer;
-    fState: IGenericAccess;
   published
     property ID: integer read fID write fID;
-    property State: IGenericAccess read fState write fState;
   end;
 
   { TDesignComponent }
@@ -36,21 +33,14 @@ type
   protected
     function NewProps: IProps;
     function NewAction(AActionID: integer): IFluxAction;
-    function NewNotifier(const AActionID: integer): IFluxNotifier; overload;
-    function NewNotifier(const AFunc: IFluxFunc): IFluxNotifier; overload;
-    function NewState(const APath: string): IGenericAccessRO;
-    procedure AddFuncNotifier(const AState: IGenericAccess; const AFunc: IFluxFunc; const ANotifierName: string);
+    function NewNotifier(const AActionID: integer): IFluxNotifier;
   protected
-    procedure DoInitValues; virtual;
-    procedure DoInitState(const AState: IGenericAccess); virtual;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
     procedure DoStartingValues; virtual;
   protected
     // IDesignComponent = interface
     function Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
-    procedure InitValues; override;
-    procedure InitState(const AState: IGenericAccess);
   public
     procedure AfterConstruction; override;
   protected
@@ -70,23 +60,12 @@ type
     fElementFactory: IMetaElementFactory;
     fFactory: IDIFactory;
     fNode: INode;
-    fState: IGenericAccessRO;
-    fDataPath: string;
-    fStoreConnector: IFluxData;
-    fFluxFuncReg: IFluxFuncReg;
-    fFuncSequence: ISequence;
-    function GetState: IGenericAccessRO;
   published
     property ID: string read fID write fID;
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Factory: IDIFactory read fFactory write fFactory;
     property Node: INode read fNode write fNode;
-    property State: IGenericAccessRO read GetState write fState;
-    property DataPath: string read fDataPath write fDataPath;
-    property StoreConnector: IFluxData read fStoreConnector write fStoreConnector;
-    property FluxFuncReg: IFluxFuncReg read fFluxFuncReg write fFluxFuncReg;
-    property FuncSequence: ISequence read fFuncSequence write fFuncSequence;
   end;
 
   { TDesignComponentForm }
@@ -137,16 +116,6 @@ type
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
-  { IGridData }
-
-  IGridData = interface
-  ['{B3B7B1B3-A738-4A44-BB6D-53E09BDAF8A9}']
-    function GetValue(X, Y: integer): string;
-    procedure SetValue(X, Y: integer; AValue: string);
-    procedure CheckDimensions(AHorizontalCount, AVerticalCount: integer);
-    property Value[X, Y: integer]: string read GetValue write SetValue; default;
-  end;
-
   { TDesignComponentGrid }
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
@@ -195,7 +164,7 @@ type
     protected
       procedure DoExecute(const AAction: IFluxAction); override;
     public
-      constructor Create(AID: integer; const AState: IGenericAccess; const ASwitchElement: IMetaElement;
+      constructor Create(AID: integer; const ASwitchElement: IMetaElement;
         const ARenderNotifier: IFluxNotifier);
       property ActualElement: IMetaElement read GetActualElement write SetActualElement;
     end;
@@ -207,7 +176,6 @@ type
     function MakeProps: IProps;
   protected
     procedure DoStartingValues; override;
-    procedure DoInitValues; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
     function GetActualElement: IMetaElement;
     property ActualElement: IMetaElement read GetActualElement;
@@ -232,7 +200,6 @@ type
     function TextWidth(const ASource: IMetaElement): Integer;
   protected
     procedure DoStartingValues; override;
-    procedure DoInitValues; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fCaption: String;
@@ -481,7 +448,6 @@ begin
   Result := ElementFactory.CreateElement(
       ATypeID,
       NewProps
-        .SetStr(cProps.DataPath, DataPath)
         .SetInt(cProps.Place, cPlace.Elastic)
         .SetInt(cProps.Height, cEditHeight)
         .SetStr(cProps.Text, 'xxx')
@@ -521,11 +487,6 @@ begin
   CaptionEdge := IDesignComponentLabelEdit.CaptionEdgeLeft;
 end;
 
-procedure TDesignComponentLabelEdit.DoInitValues;
-begin
-  inherited DoInitValues;
-end;
-
 function TDesignComponentLabelEdit.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
 begin
@@ -537,12 +498,12 @@ end;
 procedure TDesignComponentPager.TTabChangedFunc.SetActualElement(
   AValue: IMetaElement);
 begin
-  fState.SetIntf('SwitchElement', AValue);
+  //fState.SetIntf('SwitchElement', AValue);
 end;
 
 function TDesignComponentPager.TTabChangedFunc.GetActualElement: IMetaElement;
 begin
-  Result := fState.AsIntf('SwitchElement') as IMetaElement;
+  //Result := fState.AsIntf('SwitchElement') as IMetaElement;
 end;
 
 procedure TDesignComponentPager.TTabChangedFunc.DoExecute(
@@ -553,9 +514,9 @@ begin
 end;
 
 constructor TDesignComponentPager.TTabChangedFunc.Create(AID: integer;
-  const AState: IGenericAccess; const ASwitchElement: IMetaElement; const ARenderNotifier: IFluxNotifier);
+  const ASwitchElement: IMetaElement; const ARenderNotifier: IFluxNotifier);
 begin
-  inherited Create(AID, AState);
+  inherited Create(AID);
   fSwitchElement := ASwitchElement;
   fRenderNotifier := ARenderNotifier;
 end;
@@ -574,22 +535,23 @@ var
   mProps: IProps;
 begin
   SetLength(mSwitch, Length(AChildren));
-  for i := 0 to High(AChildren) do
-  begin
-    mSwitch[i] := ElementFactory.CreateElement(
-      IDesignComponentButton,
-      NewProps
-        .SetStr(cProps.Text, AChildren[i].Props.AsStr(cProps.Caption))
-        .SetInt(cProps.Place, cPlace.Elastic)
-        .SetIntf(cProps.ClickNotifier,
-          NewNotifier(
-            TTabChangedFunc.Create(
-              FuncSequence.Next,
-              State as IGenericAccess,
-              AChildren[i],
-              NewNotifier(cFuncRender))))
-    );
-  end;
+  //for i := 0 to High(AChildren) do
+  //begin
+  //  mSwitch[i] := ElementFactory.CreateElement(
+  //    IDesignComponentButton,
+  //    NewProps
+  //      .SetStr(cProps.Text, AChildren[i].Props.AsStr(cProps.Caption))
+  //      .SetInt(cProps.Place, cPlace.Elastic)
+  //      .SetIntf(cProps.ClickNotifier,
+  //        NewNotifier(
+  //          TTabChangedFunc.Create(
+  //            11111,//FuncSequence.Next,
+  //            //State as IGenericAccess,
+  //            AChildren[i],
+  //            NewNotifier({cFuncRender}22222)
+  //            )))
+  //  );
+  //end;
   mProps := NewProps;
   case SwitchEdge of
     cEdge.Left, cEdge.Right:
@@ -635,11 +597,6 @@ begin
   SwitchSize := 100;
 end;
 
-procedure TDesignComponentPager.DoInitValues;
-begin
-  inherited DoInitValues;
-end;
-
 function TDesignComponentPager.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mChildren: TMetaElementArray;
@@ -655,7 +612,8 @@ end;
 
 function TDesignComponentPager.GetActualElement: IMetaElement;
 begin
-  Result := State.AsIntf('SwitchElement') as IMetaElement;
+  //Result := State.AsIntf('SwitchElement') as IMetaElement;
+  Result := nil;
 end;
 
 { TDesignComponentFunc }
@@ -670,12 +628,10 @@ begin
   Result := fID;
 end;
 
-constructor TDesignComponentFunc.Create(AID: integer;
-  const AState: IGenericAccess);
+constructor TDesignComponentFunc.Create(AID: integer);
 begin
   inherited Create;
   fID := AID;
-  fState := AState;
 end;
 
 { TDesignComponentHeader }
@@ -712,8 +668,7 @@ var
 begin
   mProps := NewProps;
   mProps
-    .SetInt('ID', AActionID)
-    .SetIntf('State', State);
+    .SetInt('ID', AActionID);
   Result := IFluxAction(Factory.Locate(IFluxAction, '', mProps));
 end;
 
@@ -723,41 +678,6 @@ begin
     NewProps
     .SetInt('ActionID', AActionID)
   ));
-end;
-
-function TDesignComponent.NewNotifier(const AFunc: IFluxFunc): IFluxNotifier;
-begin
-  FluxFuncReg.RegisterFunc(AFunc);
-  Result := NewNotifier(AFunc.ID);
-end;
-
-function TDesignComponent.NewState(const APath: string): IGenericAccessRO;
-begin
-  Result := StoreConnector.Data[APath] as IGenericAccessRO;
-end;
-
-procedure TDesignComponent.AddFuncNotifier(const AState: IGenericAccess; const AFunc: IFluxFunc;
-  const ANotifierName: string);
-begin
-  FluxFuncReg.RegisterFunc(AFunc);
-  AState.SetIntf(ANotifierName, NewNotifier(AFunc.ID));
-end;
-
-procedure TDesignComponent.DoInitValues;
-var
-  mInit: Boolean;
-begin
-  if (fState = nil) and (DataPath <> '') then begin
-    mInit := not StoreConnector.Exists(DataPath);
-    fState := NewState(DataPath);
-    if mInit then
-       InitState(fState as IGenericAccess);
-  end;
-end;
-
-procedure TDesignComponent.DoInitState(const AState: IGenericAccess);
-begin
-
 end;
 
 procedure TDesignComponent.AddChildren(const AElement: IMetaElement;
@@ -777,17 +697,6 @@ end;
 function TDesignComponent.Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 begin
   Result := DoCompose(AProps, AChildren);
-end;
-
-procedure TDesignComponent.InitValues;
-begin
-  inherited InitValues;
-  DoInitValues;
-end;
-
-procedure TDesignComponent.InitState(const AState: IGenericAccess);
-begin
-  DoInitState(AState);
 end;
 
 procedure TDesignComponent.AfterConstruction;
@@ -834,13 +743,6 @@ end;
 function TDesignComponent.GetNodeEnumerator: INodeEnumerator;
 begin
   Result := Node.GetEnumerator;
-end;
-
-function TDesignComponent.GetState: IGenericAccessRO;
-begin
-  if fState = nil then
-     Raise Exception.Create('State is not initialized - maybe DataPath missing');
-  Result := fState;
 end;
 
 end.

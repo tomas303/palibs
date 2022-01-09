@@ -11,18 +11,6 @@
     </CompilerOptions>
     <Files>
       <Item>
-        <Filename Value="rdx_ufunc.pas"/>
-        <UnitName Value="rdx_ufunc"/>
-      </Item>
-      <Item>
-        <Filename Value="rdx_ustore.pas"/>
-        <UnitName Value="rdx_ustore"/>
-      </Item>
-      <Item>
-        <Filename Value="rdx_ustate.pas"/>
-        <UnitName Value="rdx_ustate"/>
-      </Item>
-      <Item>
         <Filename Value="rdx_ureg.pas"/>
         <UnitName Value="rdx_ureg"/>
       </Item>
@@ -31,20 +19,8 @@
         <UnitName Value="rdx_ireg"/>
       </Item>
       <Item>
-        <Filename Value="rdx_urttistate.pas"/>
-        <UnitName Value="rdx_urttistate"/>
-      </Item>
-      <Item>
         <Filename Value="rdx_ufuncdispatcher.pas"/>
         <UnitName Value="rdx_ufuncdispatcher"/>
-      </Item>
-      <Item>
-        <Filename Value="rdx_udata.pas"/>
-        <UnitName Value="rdx_udata"/>
-      </Item>
-      <Item>
-        <Filename Value="rdx_ustoreconnector.pas"/>
-        <UnitName Value="rdx_ustoreconnector"/>
       </Item>
     </Files>
     <RequiredPkgs>

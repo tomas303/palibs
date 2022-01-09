@@ -175,9 +175,6 @@ begin
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
-  Result.InjectProp('StoreConnector', IFluxStoreConnector);
-  Result.InjectProp('FluxFuncReg', IFluxDispatcher);
-  Result.InjectProp('FuncSequence', ISequence, creafuncseq);
 end;
 
 function TReg.RegisterRenderer: TDIReg;

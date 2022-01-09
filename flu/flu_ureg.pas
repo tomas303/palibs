@@ -17,7 +17,7 @@ type
     function RegisterAction: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
     function RegisterFunc(const AClass: TClass): TDIReg;
-    procedure RegisterCommon(const ADispatcher: TGuid);
+    procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
   published
@@ -48,10 +48,10 @@ begin
   Result := DIC.Add(AClass, IFluxFunc, AClass.ClassName);
 end;
 
-procedure TReg.RegisterCommon(const ADispatcher: TGuid);
+procedure TReg.RegisterCommon;
 begin
   RegisterAction;
-  RegisterNotifier(ADispatcher);
+  RegisterNotifier(IFluxDispatcher);
 end;
 
 end.

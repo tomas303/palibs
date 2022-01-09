@@ -13,7 +13,7 @@ type
     function RegisterAction: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
     function RegisterFunc(const AClass: TClass): TDIReg;
-    procedure RegisterCommon(const ADispatcher: TGuid);
+    procedure RegisterCommon;
   end;
 
 implementation

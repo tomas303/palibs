@@ -5,7 +5,7 @@ unit flu_iflux;
 interface
 
 uses
-  trl_iprops, trl_igenericaccess;
+  trl_iprops;
 
 type
   { IFluxAction }
@@ -66,25 +66,6 @@ type
   IFluxFuncReg = interface
   ['{B14EE8AB-2FD3-40AD-904B-8E6C111407F2}']
     procedure RegisterFunc(const AFunc: IFluxFunc);
-  end;
-
-  { IFluxStore }
-
-  IFluxStore = interface
-  ['{3E5DDFF7-63FD-4E14-A913-0A5909A55C7C}']
-  end;
-
-  IFluxStoreConnector = interface
-  ['{FD468584-9133-4543-8B2E-3D8F312C14D1}']
-  end;
-
-  { IFluxData }
-
-  IFluxData = interface
-  ['{49ACEFF7-6973-4531-8B97-9D56F1786FA1}']
-    function Exists(const AKey: string): Boolean;
-    function GetData(const AKey: string): IGenericAccess;
-    property Data[const AKey: string]: IGenericAccess read GetData; default;
   end;
 
 implementation
