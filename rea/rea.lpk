@@ -58,6 +58,10 @@
         <Filename Value="rea_udesigncomponentfunc.pas"/>
         <UnitName Value="rea_udesigncomponentfunc"/>
       </Item>
+      <Item>
+        <Filename Value="rea_udesigncomponentfactory.pas"/>
+        <UnitName Value="rea_udesigncomponentfactory.pas"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

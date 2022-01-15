@@ -19,7 +19,7 @@ uses
   trl_ireconciler,
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
-  flu_ireg;
+  flu_ireg, rea_udesigncomponentfactory;
 
 type
 
@@ -47,6 +47,7 @@ type
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
+    function RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterFuncSequence: TDIReg;
   protected
@@ -152,6 +153,7 @@ begin
   RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterDesignComponent(TDesignComponentLabelEdit, IDesignComponentLabelEdit);
+  RegisterDesignComponentFactory(TDesignComponentPagerSwitchFactory, IDesignComponentPagerSwitchFactory);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
@@ -175,6 +177,14 @@ begin
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
+end;
+
+function TReg.RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
+begin
+  Result := DIC.Add(AClass, AInterface);
+  Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('FluxDispatcher', IFluxDispatcher);
+  Result.InjectProp('ActionIDSequence', ISequence, 'ActionID');
 end;
 
 function TReg.RegisterRenderer: TDIReg;
