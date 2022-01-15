@@ -5,7 +5,8 @@ unit rea_udesigncomponentfunc;
 interface
 
 uses
-  flu_iflux, rea_udesigncomponentdata, LCLType, rea_idesigncomponent, trl_imetaelement;
+  flu_iflux, rea_udesigncomponentdata, LCLType, rea_idesigncomponent,
+  trl_imetaelement, trl_iExecutor;
 
 type
 
@@ -51,6 +52,18 @@ type
     function GetID: integer;
   public
     constructor Create(AID: integer; AData: TFormData);
+  end;
+
+  { TCloseQueryFunc }
+
+  TCloseQueryFunc = class(TInterfacedObject, IFluxFunc)
+  private
+    fID: integer;
+  protected
+    procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
+  public
+    constructor Create(AID: integer);
   end;
 
   { TGridFunc }
@@ -111,6 +124,24 @@ type
   end;
 
 implementation
+
+{ TCloseQueryFunc }
+
+procedure TCloseQueryFunc.Execute(const AAction: IFluxAction);
+begin
+  raise EExecutorStop.Create('');
+end;
+
+function TCloseQueryFunc.GetID: integer;
+begin
+  Result := fID;
+end;
+
+constructor TCloseQueryFunc.Create(AID: integer);
+begin
+  inherited Create;
+  fID := AID;
+end;
 
 { TTabChangedFunc }
 

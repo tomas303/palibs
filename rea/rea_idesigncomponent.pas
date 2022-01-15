@@ -135,6 +135,10 @@ type
     function New(const AProps: IProps): IDesignComponent;
   end;
 
+  IDesignComponentFormFactory = interface(IDesignComponentFactory)
+  ['{24916508-17A0-4577-A1F0-55E6605F5039}']
+  end;
+
   IDesignComponentPagerSwitchFactory = interface(IDesignComponentFactory)
   ['{7117E5CD-78AC-4747-9735-C76A2226424D}']
   end;
