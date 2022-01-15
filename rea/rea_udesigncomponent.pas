@@ -141,7 +141,6 @@ type
     function MakeBody: IMetaElement;
     function MakeProps: IProps;
   protected
-    procedure DoStartingValues; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TPagerData;
@@ -520,13 +519,6 @@ begin
     cEdge.Top, cEdge.Bottom:
       Result.SetInt(cProps.Layout, cLayout.Vertical);
   end;
-end;
-
-procedure TDesignComponentPager.DoStartingValues;
-begin
-  inherited DoStartingValues;
-  SwitchEdge := IDesignComponentPager.SwitchEdgeTop;
-  SwitchSize := 100;
 end;
 
 function TDesignComponentPager.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
