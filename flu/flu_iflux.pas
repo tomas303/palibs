@@ -19,14 +19,6 @@ type
   end;
 
   TFluxDispatchEvent = procedure(const AAppAction: IFluxAction) of object;
-
-  { IFluxDispatcher }
-
-  IFluxDispatcher = interface
-  ['{935D8630-D358-49BA-977B-E4BF88C804ED}']
-    procedure Dispatch(const AAppAction: IFluxAction);
-  end;
-
   TFluxNotifierEvent = procedure(const AProps: IProps) of object;
 
   { IFluxNotifier }
@@ -40,11 +32,6 @@ type
     procedure SetEnabled(AValue: Boolean);
     property Enabled: Boolean read GetEnabled write SetEnabled;
   end;
-
-
-
-  TStatePath = string;
-  TStatePaths = array of TStatePath;
 
   { IFluxState }
 
@@ -63,8 +50,11 @@ type
     property ID: integer read GetID;
   end;
 
-  IFluxFuncReg = interface
-  ['{B14EE8AB-2FD3-40AD-904B-8E6C111407F2}']
+  { IFluxDispatcher }
+
+  IFluxDispatcher = interface
+  ['{935D8630-D358-49BA-977B-E4BF88C804ED}']
+    procedure Dispatch(const AAppAction: IFluxAction);
     procedure RegisterFunc(const AFunc: IFluxFunc);
   end;
 

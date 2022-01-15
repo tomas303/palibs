@@ -11,22 +11,6 @@ uses
 
 type
 
-  { TDesignComponentFunc }
-
-  TDesignComponentFunc = class(TInterfacedObject, IFluxFunc)
-  protected
-    procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
-  protected
-    procedure Execute(const AAction: IFluxAction);
-    function GetID: integer;
-  public
-    constructor Create(AID: integer);
-  protected
-    fID: integer;
-  published
-    property ID: integer read fID write fID;
-  end;
-
   { TDesignComponent }
 
   TDesignComponent = class(TDynaObject, IDesignComponent, INode)
@@ -151,40 +135,24 @@ type
   { TDesignComponentPager }
 
   TDesignComponentPager = class(TDesignComponent, IDesignComponentPager)
-  public type
-
-    { TTabChangedFunc }
-
-    TTabChangedFunc = class(TDesignComponentFunc)
-    private
-      fSwitchElement: IMetaElement;
-      fRenderNotifier: IFluxNotifier;
-      function GetActualElement: IMetaElement;
-      procedure SetActualElement(AValue: IMetaElement);
-    protected
-      procedure DoExecute(const AAction: IFluxAction); override;
-    public
-      constructor Create(AID: integer; const ASwitchElement: IMetaElement;
-        const ARenderNotifier: IFluxNotifier);
-      property ActualElement: IMetaElement read GetActualElement write SetActualElement;
-    end;
-
   private
     function RenderPage(const APageElement: IMetaElement): IMetaElement;
-    function MakeSwitch(const AChildren: TMetaElementArray): IMetaElement;
-    function MakeBody(const AChildren: TMetaElementArray): IMetaElement;
+    function MakeSwitch: IMetaElement;
+    function MakeBody: IMetaElement;
     function MakeProps: IProps;
   protected
     procedure DoStartingValues; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
-    function GetActualElement: IMetaElement;
-    property ActualElement: IMetaElement read GetActualElement;
   protected
+    fData: TPagerData;
     fSwitchEdge: Integer;
     fSwitchSize: Integer;
+    fSwitchFactory: IDesignComponentFactory;
   published
+    property Data: TPagerData read fData write fData;
     property SwitchEdge: Integer read fSwitchEdge write fSwitchEdge;
     property SwitchSize: Integer read fSwitchSize write fSwitchSize;
+    property SwitchFactory: IDesignComponentFactory read fSwitchFactory write fSwitchFactory;
   end;
 
   { TDesignComponentLabelEdit }
@@ -493,34 +461,6 @@ begin
   Result := ElementFactory.CreateElement(IStripBit, MakeProps, MakeLabeledEdits(AChildren));
 end;
 
-{ TDesignComponentPager.TTabChangedFunc }
-
-procedure TDesignComponentPager.TTabChangedFunc.SetActualElement(
-  AValue: IMetaElement);
-begin
-  //fState.SetIntf('SwitchElement', AValue);
-end;
-
-function TDesignComponentPager.TTabChangedFunc.GetActualElement: IMetaElement;
-begin
-  //Result := fState.AsIntf('SwitchElement') as IMetaElement;
-end;
-
-procedure TDesignComponentPager.TTabChangedFunc.DoExecute(
-  const AAction: IFluxAction);
-begin
-  ActualElement := fSwitchElement;
-  fRenderNotifier.Notify;
-end;
-
-constructor TDesignComponentPager.TTabChangedFunc.Create(AID: integer;
-  const ASwitchElement: IMetaElement; const ARenderNotifier: IFluxNotifier);
-begin
-  inherited Create(AID);
-  fSwitchElement := ASwitchElement;
-  fRenderNotifier := ARenderNotifier;
-end;
-
 { TDesignComponentPager }
 
 function TDesignComponentPager.RenderPage(const APageElement: IMetaElement): IMetaElement;
@@ -528,30 +468,26 @@ begin
   Result := ElementFactory.CreateElement(IStripBit, [APageElement]);
 end;
 
-function TDesignComponentPager.MakeSwitch(const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentPager.MakeSwitch: IMetaElement;
 var
   i: integer;
   mSwitch: TMetaElementArray;
   mProps: IProps;
+  mText: String;
+  mSwitchDC: IDesignComponent;
 begin
-  SetLength(mSwitch, Length(AChildren));
-  //for i := 0 to High(AChildren) do
-  //begin
-  //  mSwitch[i] := ElementFactory.CreateElement(
-  //    IDesignComponentButton,
-  //    NewProps
-  //      .SetStr(cProps.Text, AChildren[i].Props.AsStr(cProps.Caption))
-  //      .SetInt(cProps.Place, cPlace.Elastic)
-  //      .SetIntf(cProps.ClickNotifier,
-  //        NewNotifier(
-  //          TTabChangedFunc.Create(
-  //            11111,//FuncSequence.Next,
-  //            //State as IGenericAccess,
-  //            AChildren[i],
-  //            NewNotifier({cFuncRender}22222)
-  //            )))
-  //  );
-  //end;
+  SetLength(mSwitch, Count);
+  for i := 0 to Count - 1 do
+  begin
+    mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
+    mSwitchDC := SwitchFactory.New(
+      NewProps
+        .SetInt('PageIndex', i)
+        .SetStr(cProps.Text, mText)
+        .SetObject('PagerData', Data)
+    );
+    mSwitch[i] := mSwitchDC.Compose(nil, nil);
+  end;
   mProps := NewProps;
   case SwitchEdge of
     cEdge.Left, cEdge.Right:
@@ -563,15 +499,11 @@ begin
   Result := ElementFactory.CreateElement(IStripBit, mProps, mSwitch);
 end;
 
-function TDesignComponentPager.MakeBody(const AChildren: TMetaElementArray
-  ): IMetaElement;
+function TDesignComponentPager.MakeBody: IMetaElement;
 var
   mActual: IMetaElement;
 begin
-  mActual := ActualElement;
-  if (mActual = nil) and (Length(AChildren) > 0) then
-    mActual := AChildren[0];
-
+  mActual := (GetChild(Data.ActiveIndex) as IDesignComponent).Compose(nil, nil);
   Result := ElementFactory.CreateElement(
     IStripBit,
     NewProps
@@ -603,35 +535,11 @@ var
 begin
   case SwitchEdge of
     cEdge.Left, cEdge.Top:
-      mChildren := [MakeSwitch(AChildren), MakeBody(AChildren)];
+      mChildren := [MakeSwitch, MakeBody];
     cEdge.Right, cEdge.Bottom:
-      mChildren := [MakeBody(AChildren),MakeSwitch(AChildren)];
+      mChildren := [MakeBody,MakeSwitch];
   end;
   Result := ElementFactory.CreateElement(IStripBit, MakeProps, mChildren);
-end;
-
-function TDesignComponentPager.GetActualElement: IMetaElement;
-begin
-  //Result := State.AsIntf('SwitchElement') as IMetaElement;
-  Result := nil;
-end;
-
-{ TDesignComponentFunc }
-
-procedure TDesignComponentFunc.Execute(const AAction: IFluxAction);
-begin
-  DoExecute(AAction);
-end;
-
-function TDesignComponentFunc.GetID: integer;
-begin
-  Result := fID;
-end;
-
-constructor TDesignComponentFunc.Create(AID: integer);
-begin
-  inherited Create;
-  fID := AID;
 end;
 
 { TDesignComponentHeader }
@@ -641,8 +549,8 @@ var
   mProps: IProps;
 begin
   mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent]);
-  Result := ElementFactory.CreateElement(IStripBit, mProps);
+    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
+  Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
 end;
 
 { TDesignComponentButton }

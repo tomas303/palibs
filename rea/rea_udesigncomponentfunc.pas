@@ -5,9 +5,26 @@ unit rea_udesigncomponentfunc;
 interface
 
 uses
-  flu_iflux, rea_udesigncomponentdata, LCLType, rea_idesigncomponent;
+  flu_iflux, rea_udesigncomponentdata, LCLType, rea_idesigncomponent, trl_imetaelement;
 
 type
+
+  { TDesignComponentFunc }
+
+  TDesignComponentFunc = class(TInterfacedObject, IFluxFunc)
+  protected
+    procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
+  protected
+    procedure Execute(const AAction: IFluxAction);
+    function GetID: integer;
+  public
+    constructor Create(AID: integer);
+  protected
+    fID: integer;
+  published
+    property ID: integer read fID write fID;
+  end;
+
 
   { TSizeFunc }
 
@@ -59,7 +76,6 @@ type
     procedure DoExecute(const AAction: IFluxAction); override;
   end;
 
-
   { TGridEdKeyDownFunc }
 
   TGridEdKeyDownFunc = class(TGridFunc)
@@ -80,7 +96,57 @@ type
     constructor Create(AID: integer; AData: TEditData);
   end;
 
+  { TTabChangedFunc }
+
+  TTabChangedFunc = class(TDesignComponentFunc)
+  private
+    fPagerData: TPagerData;
+    fIndex: integer;
+    fRenderNotifier: IFluxNotifier;
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  public
+    constructor Create(AID: integer; APagerData: TPagerData;
+      const ARenderNotifier: IFluxNotifier; AIndex: integer);
+  end;
+
 implementation
+
+{ TTabChangedFunc }
+
+procedure TTabChangedFunc.DoExecute(
+  const AAction: IFluxAction);
+begin
+  fPagerData.ActiveIndex := fIndex;
+  fRenderNotifier.Notify;
+end;
+
+constructor TTabChangedFunc.Create(AID: integer; APagerData: TPagerData;
+      const ARenderNotifier: IFluxNotifier; AIndex: integer);
+begin
+  inherited Create(AID);
+  fPagerData := APagerData;
+  fRenderNotifier := ARenderNotifier;
+  fIndex := AIndex;
+end;
+
+{ TDesignComponentFunc }
+
+procedure TDesignComponentFunc.Execute(const AAction: IFluxAction);
+begin
+  DoExecute(AAction);
+end;
+
+function TDesignComponentFunc.GetID: integer;
+begin
+  Result := fID;
+end;
+
+constructor TDesignComponentFunc.Create(AID: integer);
+begin
+  inherited Create;
+  fID := AID;
+end;
 
 { TGridFunc }
 

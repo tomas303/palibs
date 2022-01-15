@@ -78,6 +78,11 @@ type
     function Compose(const AParentProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
   end;
 
+  IDesignComponentFactory = interface
+  ['{C271A13A-4306-4C17-8A21-F1E66B94F570}']
+    function New(const AProps: IProps): IDesignComponent;
+  end;
+
   IDesignComponentApp = interface(IDesignComponent)
   ['{4035F57F-CA74-4D0E-8972-3A2162FAB714}']
   end;

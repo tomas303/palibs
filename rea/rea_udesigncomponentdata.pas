@@ -73,6 +73,15 @@ type
    property EditData: TEditData read fEditData;
   end;
 
+  { TPagerData }
+
+  TPagerData = class
+  private
+    fActiveIndex: Integer;
+  published
+    property ActiveIndex: Integer read fActiveIndex write fActiveIndex;
+  end;
+
 implementation
 
 { TGridData }

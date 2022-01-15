@@ -27,15 +27,12 @@ type
 
   { TRdxFuncDispatcher }
 
-  TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher, IFluxFuncReg)
+  TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher)
   protected
     fIDFuncs: TIDFuncs;
     procedure SetAddFunc(AValue: IFluxFunc);
   protected
-    // IFluxDispatcher
     procedure Dispatch(const AAction: IFluxAction);
-  protected
-    // IFluxFuncReg
     procedure RegisterFunc(const AFunc: IFluxFunc);
   public
     procedure AfterConstruction; override;
