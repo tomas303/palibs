@@ -94,9 +94,9 @@ type
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
-  { TDesignComponentHeader }
+  { TDesignComponentStrip }
 
-  TDesignComponentHeader = class(TDesignComponent, IDesignComponentHeader)
+  TDesignComponentStrip = class(TDesignComponent, IDesignComponentStrip)
   protected
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
@@ -538,9 +538,9 @@ begin
   Result := ElementFactory.CreateElement(IStripBit, MakeProps, mChildren);
 end;
 
-{ TDesignComponentHeader }
+{ TDesignComponentStrip }
 
-function TDesignComponentHeader.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentStrip.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
   mProps: IProps;
 begin

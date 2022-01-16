@@ -149,7 +149,7 @@ begin
   RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
   RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
   RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
-  RegisterDesignComponent(TDesignComponentHeader, IDesignComponentHeader);
+  RegisterDesignComponent(TDesignComponentStrip, IDesignComponentStrip);
   RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterDesignComponent(TDesignComponentLabelEdit, IDesignComponentLabelEdit);
