@@ -336,7 +336,10 @@ begin
     .SetInt(cProps.MMWidth, Data.Width)
     .SetInt(cProps.MMHeight, Data.Height);
   Result := ElementFactory.CreateElement(IFormBit, mProps);
-  AddChildren(Result, AChildren);
+  if AChildren <> nil then
+    AddChildren(Result, AChildren)
+  else
+    ComposeChildren(Result);
 end;
 
 { TDesignComponentLabelEdit }
@@ -544,7 +547,10 @@ begin
   mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
     cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
   Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
-  ComposeChildren(Result);
+  if AChildren <> nil then
+    AddChildren(Result, AChildren)
+  else
+    ComposeChildren(Result);
 end;
 
 { TDesignComponentButton }
