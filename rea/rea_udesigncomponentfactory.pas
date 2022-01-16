@@ -49,6 +49,13 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentStripFactory }
+
+  TDesignComponentStripFactory = class(TDesignComponentFactory, IDesignComponentStripFactory)
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
   { TDesignComponentPagerFactory }
 
   TDesignComponentPagerFactory = class(TDesignComponentFactory, IDesignComponentPagerFactory)
@@ -71,6 +78,14 @@ type
   end;
 
 implementation
+
+{ TDesignComponentStripFactory }
+
+function TDesignComponentStripFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+begin
+  Result := IDesignComponentEdit(Factory.Locate(IDesignComponentStrip, '', AProps.Clone));
+end;
 
 { TDesignComponentEditFactory }
 

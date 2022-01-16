@@ -105,32 +105,32 @@ type
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
   private
-   function ColProps(Row, Col: integer): IProps;
-   function RowProps(Row: integer): IProps;
-   function GridProps: IProps;
-   function MakeRow(Row: integer): TMetaElementArray;
-   function MakeGrid: TMetaElementArray;
-   function LaticeColProps: IProps;
-   function LaticeRowProps: IProps;
-   function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
+    function ColProps(Row, Col: integer): IProps;
+    function RowProps(Row: integer): IProps;
+    function GridProps: IProps;
+    function MakeRow(Row: integer): TMetaElementArray;
+    function MakeGrid: TMetaElementArray;
+    function LaticeColProps: IProps;
+    function LaticeRowProps: IProps;
+    function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
   protected
-   function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
-   fData: TGridData;
-   fEdTextChangedNotifier: IFluxNotifier;
-   fEdKeyDownNotifier: IFluxNotifier;
-   fLaticeColColor: integer;
-   fLaticeRowColor: integer;
-   fLaticeColSize: integer;
-   fLaticeRowSize: integer;
+    fData: TGridData;
+    fEdTextChangedNotifier: IFluxNotifier;
+    fEdKeyDownNotifier: IFluxNotifier;
+    fLaticeColColor: integer;
+    fLaticeRowColor: integer;
+    fLaticeColSize: integer;
+    fLaticeRowSize: integer;
   published
-   property Data: TGridData read fData write fData;
-   property EdTextChangedNotifier: IFluxNotifier read fEdTextChangedNotifier write fEdTextChangedNotifier;
-   property EdKeyDownNotifier: IFluxNotifier read fEdKeyDownNotifier write fEdKeyDownNotifier;
-   property LaticeColColor: integer read fLaticeColColor write fLaticeColColor;
-   property LaticeRowColor: integer read fLaticeRowColor write fLaticeRowColor;
-   property LaticeColSize: integer read fLaticeColSize write fLaticeColSize;
-   property LaticeRowSize: integer read fLaticeRowSize write fLaticeRowSize;
+    property Data: TGridData read fData write fData;
+    property EdTextChangedNotifier: IFluxNotifier read fEdTextChangedNotifier write fEdTextChangedNotifier;
+    property EdKeyDownNotifier: IFluxNotifier read fEdKeyDownNotifier write fEdKeyDownNotifier;
+    property LaticeColColor: integer read fLaticeColColor write fLaticeColColor;
+    property LaticeRowColor: integer read fLaticeRowColor write fLaticeRowColor;
+    property LaticeColSize: integer read fLaticeColSize write fLaticeColSize;
+    property LaticeRowSize: integer read fLaticeRowSize write fLaticeRowSize;
   end;
 
   { TDesignComponentPager }

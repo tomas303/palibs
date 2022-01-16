@@ -152,6 +152,10 @@ type
   ['{E629EF95-EA77-4375-B306-51B5B6F7996D}']
   end;
 
+  IDesignComponentStripFactory = interface(IDesignComponentFactory)
+  ['{986391F8-943C-42F9-BBB8-89AFAA8E5043}']
+  end;
+
   IDesignComponentPagerFactory = interface(IDesignComponentFactory)
   ['{CFFD386A-150F-455A-8CC7-78917625F7B1}']
   end;
