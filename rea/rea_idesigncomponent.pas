@@ -147,6 +147,9 @@ type
   ['{7117E5CD-78AC-4747-9735-C76A2226424D}']
   end;
 
+  IDesignComponentGridFactory = interface(IDesignComponentFactory)
+  ['{79082132-2BCB-4996-9C3D-556D25172557}']
+  end;
 
 const
   cEditHeight = 25;

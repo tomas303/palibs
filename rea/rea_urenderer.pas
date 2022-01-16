@@ -6,7 +6,7 @@ interface
 
 uses
   rea_irenderer, rea_idesigncomponent, trl_ilog, trl_imetaelement, trl_idifactory,
-  trl_itree, trl_iprops, flu_iflux, rea_ibits, trl_ireconciler;
+  trl_itree, trl_iprops, flu_iflux, rea_ibits, trl_ireconciler, sysutils;
 
 type
 
@@ -58,6 +58,9 @@ var
   mEl: IMetaElement;
 begin
   mEl := fComponent.Compose(nil, []);
+  if mEl = nil then begin
+    raise exception.create('render func nil element');
+  end;
   fRenderer.Render(mEl);
 end;
 
@@ -95,6 +98,8 @@ end;
 function TRenderer.RenderElement(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
 var
   mEl, mEndEl, mNewEl: IMetaElement;
+  mo: tobject;
+  mcn: string;
 begin
   Result := RenderChain(AElement, AParentProps);
   for mEl in Result do
@@ -138,6 +143,7 @@ var
   mNewBit: IBit;
   m: string;
 begin
+  m := AElement.GetTypeGuid;
   mNewEl := Expand(AElement);
   mNew := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl);
   m := (mNew as TObject).ClassName;

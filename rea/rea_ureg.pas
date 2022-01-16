@@ -156,6 +156,7 @@ begin
   RegisterDesignComponentFactory(TDesignComponentFormFactory, IDesignComponentFormFactory);
   RegisterDesignComponentFactory(TDesignComponentPagerFactory, IDesignComponentPagerFactory);
   RegisterDesignComponentFactory(TDesignComponentPagerSwitchFactory, IDesignComponentPagerSwitchFactory);
+  RegisterDesignComponentFactory(TDesignComponentGridFactory, IDesignComponentGridFactory);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);

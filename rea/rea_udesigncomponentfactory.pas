@@ -49,7 +49,35 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentGridFactory }
+
+  TDesignComponentGridFactory = class(TDesignComponentFactory, IDesignComponentGridFactory)
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
 implementation
+
+{ TDesignComponentGridFactory }
+
+function TDesignComponentGridFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+var
+  mProps: IProps;
+  mData: TGridData;
+  mActTextChanged, mActKeyDown: Integer;
+begin
+  mData := AProps.AsObject('Data') as TGridData;
+  mActTextChanged := ActionIDSequence.Next;
+  mActKeyDown := ActionIDSequence.Next;
+  mProps := AProps.Clone
+    .SetObject('Data', mData)
+    .SetIntf('EdTextChangedNotifier', NewNotifier(mActTextChanged))
+    .SetIntf('EdKeyDownNotifier', NewNotifier(mActKeyDown));
+  Result := IDesignComponentGrid(Factory.Locate(IDesignComponentGrid, '', mProps));
+  FluxDispatcher.RegisterFunc(TGridEdTextChangedFunc.Create(mActTextChanged, mData, NewNotifier(-400)));
+  FluxDispatcher.RegisterFunc(TGridEdKeyDownFunc.Create(mActKeyDown, mData, NewNotifier(-400)));
+end;
 
 { TDesignComponentPagerFactory }
 
@@ -85,9 +113,9 @@ begin
     .SetIntf('SizeNotifier', NewNotifier(mActSize))
     .SetIntf('MoveNotifier', NewNotifier(mActMove));
   Result := IDesignComponentForm(Factory.Locate(IDesignComponentForm, '', mProps));
-  fFluxDispatcher.RegisterFunc(TCloseQueryFunc.Create(mActClose));
-  fFluxDispatcher.RegisterFunc(TSizeFunc.Create(mActSize, mData, NewNotifier(-400)));
-  fFluxDispatcher.RegisterFunc(TMoveFunc.Create(mActMove, mData));
+  FluxDispatcher.RegisterFunc(TCloseQueryFunc.Create(mActClose));
+  FluxDispatcher.RegisterFunc(TSizeFunc.Create(mActSize, mData, NewNotifier(-400)));
+  FluxDispatcher.RegisterFunc(TMoveFunc.Create(mActMove, mData));
 end;
 
 { TDesignComponentFactory }

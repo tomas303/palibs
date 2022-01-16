@@ -21,6 +21,7 @@ type
   protected
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
+    procedure ComposeChildren(const AParentEl: IMetaElement);
     procedure DoStartingValues; virtual;
   protected
     // IDesignComponent = interface
@@ -543,6 +544,7 @@ begin
   mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
     cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
   Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
+  ComposeChildren(Result);
 end;
 
 { TDesignComponentButton }
@@ -587,6 +589,18 @@ var
 begin
   for mEl in AChildren do
     (AElement as INode).AddChild(mEl as INode);
+end;
+
+procedure TDesignComponent.ComposeChildren(const AParentEl: IMetaElement);
+var
+  i: Integer;
+  mNode: INode;
+  mEl: IMetaElement;
+begin
+  for i := 0 to Count - 1 do begin
+    mEl := (GetChild(i) as IDesignComponent).Compose(nil, nil);
+    (AParentEl as INode).AddChild(mEl as INode);
+  end;
 end;
 
 procedure TDesignComponent.DoStartingValues;
