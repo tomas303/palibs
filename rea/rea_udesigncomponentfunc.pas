@@ -29,53 +29,39 @@ type
 
   { TSizeFunc }
 
-  TSizeFunc = class(TInterfacedObject, IFluxFunc)
+  TSizeFunc = class(TDesignComponentFunc, IFluxFunc)
   private
-    fID: integer;
     fData: TFormData;
     fRenderNotifier: IFluxNotifier;
   protected
-    procedure Execute(const AAction: IFluxAction);
-    function GetID: integer;
+    procedure DoExecute(const AAction: IFluxAction); override;
   public
     constructor Create(AID: integer; AData: TFormData; ARenderNotifier: IFluxNotifier);
   end;
 
   { TMoveFunc }
 
-  TMoveFunc = class(TInterfacedObject, IFluxFunc)
+  TMoveFunc = class(TDesignComponentFunc, IFluxFunc)
   private
-    fID: integer;
     fData: TFormData;
   protected
-    procedure Execute(const AAction: IFluxAction);
-    function GetID: integer;
+    procedure DoExecute(const AAction: IFluxAction); override;
   public
     constructor Create(AID: integer; AData: TFormData);
   end;
 
   { TCloseQueryFunc }
 
-  TCloseQueryFunc = class(TInterfacedObject, IFluxFunc)
-  private
-    fID: integer;
+  TCloseQueryFunc = class(TDesignComponentFunc, IFluxFunc)
   protected
-    procedure Execute(const AAction: IFluxAction);
-    function GetID: integer;
-  public
-    constructor Create(AID: integer);
+    procedure DoExecute(const AAction: IFluxAction); override;
   end;
 
   { TGridFunc }
 
-  TGridFunc = class(TInterfacedObject, IFluxFunc)
+  TGridFunc = class(TDesignComponentFunc, IFluxFunc)
   private
-    fID: integer;
     fRenderNotifier: IFluxNotifier;
-  protected
-    procedure Execute(const AAction: IFluxAction);
-    procedure DoExecute(const AAction: IFluxAction); virtual; abstract;
-    function GetID: integer;
   protected
     fData: TGridData;
   public
@@ -98,13 +84,11 @@ type
 
   { TextChangedFunc }
 
-  TextChangedFunc = class(TInterfacedObject, IFluxFunc)
+  TextChangedFunc = class(TDesignComponentFunc, IFluxFunc)
   private
-    fID: integer;
     fData: TEditData;
   protected
-    procedure Execute(const AAction: IFluxAction);
-    function GetID: integer;
+    procedure DoExecute(const AAction: IFluxAction); override;
   public
     constructor Create(AID: integer; AData: TEditData);
   end;
@@ -127,20 +111,9 @@ implementation
 
 { TCloseQueryFunc }
 
-procedure TCloseQueryFunc.Execute(const AAction: IFluxAction);
+procedure TCloseQueryFunc.DoExecute(const AAction: IFluxAction);
 begin
   raise EExecutorStop.Create('');
-end;
-
-function TCloseQueryFunc.GetID: integer;
-begin
-  Result := fID;
-end;
-
-constructor TCloseQueryFunc.Create(AID: integer);
-begin
-  inherited Create;
-  fID := AID;
 end;
 
 { TTabChangedFunc }
@@ -181,19 +154,9 @@ end;
 
 { TGridFunc }
 
-procedure TGridFunc.Execute(const AAction: IFluxAction);
-begin
-  DoExecute(AAction);
-end;
-
-function TGridFunc.GetID: integer;
-begin
-  Result := fID;
-end;
-
 constructor TGridFunc.Create(AID: integer; const AData: TGridData; const ARenderNotifier: IFluxNotifier);
 begin
-  fID := AID;
+  inherited Create(AID);
   fData := AData;
   fRenderNotifier := ARenderNotifier;
 end;
@@ -240,45 +203,34 @@ end;
 
 { TextChangedFunc }
 
-procedure TextChangedFunc.Execute(const AAction: IFluxAction);
+procedure TextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
   fData.Text := AAction.Props.AsStr('Text');
 end;
 
-function TextChangedFunc.GetID: integer;
-begin
-  Result := fID;
-end;
-
 constructor TextChangedFunc.Create(AID: integer; AData: TEditData);
 begin
-  fID := AID;
+  inherited Create(AID);
   fData := AData;
 end;
 
 { TMoveFunc }
 
-procedure TMoveFunc.Execute(const AAction: IFluxAction);
+procedure TMoveFunc.DoExecute(const AAction: IFluxAction);
 begin
   fData.Left := AAction.Props.AsInt(cProps.MMLeft);
   fData.Top := AAction.Props.AsInt(cProps.MMTop);
 end;
 
-function TMoveFunc.GetID: integer;
-begin
-  Result := fID;
-end;
-
 constructor TMoveFunc.Create(AID: integer; AData: TFormData);
 begin
-  inherited Create;
-  fID := AID;
+  inherited Create(AID);
   fData := AData;
 end;
 
 { TSizeFunc }
 
-procedure TSizeFunc.Execute(const AAction: IFluxAction);
+procedure TSizeFunc.DoExecute(const AAction: IFluxAction);
 var
   mChange: Boolean;
 begin
@@ -295,15 +247,9 @@ begin
      fRenderNotifier.Notify;
 end;
 
-function TSizeFunc.GetID: integer;
-begin
-  Result := fID;
-end;
-
 constructor TSizeFunc.Create(AID: integer; AData: TFormData; ARenderNotifier: IFluxNotifier);
 begin
-  inherited Create;
-  fID := AID;
+  inherited Create(AID);
   fData := AData;
   fRenderNotifier := ARenderNotifier;
 end;
