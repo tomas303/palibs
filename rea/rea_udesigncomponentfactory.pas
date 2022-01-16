@@ -42,6 +42,13 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentEditFactory }
+
+  TDesignComponentEditFactory = class(TDesignComponentFactory, IDesignComponentEditFactory)
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
   { TDesignComponentPagerFactory }
 
   TDesignComponentPagerFactory = class(TDesignComponentFactory, IDesignComponentPagerFactory)
@@ -65,6 +72,40 @@ type
 
 implementation
 
+{ TDesignComponentEditFactory }
+
+function TDesignComponentEditFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+var
+  mProps: IProps;
+  mData: TEditData;
+  mKeyDownFunc: IFluxFunc;
+  mTextChangedFunc, mUserTextChangedFunc: IFluxFunc;
+begin
+  mProps := AProps.Clone;
+  mData := mProps.AsObject('Data') as TEditData;
+  if mData = nil then begin
+    mData := TEditData.Create;
+    mProps.SetObject('Data', mData);
+  end;
+  mUserTextChangedFunc := AProps.AsIntf(cProps.TextChangedFunc) as IFluxFunc;
+  if mUserTextChangedFunc <> nil then begin
+    mTextChangedFunc := TextChangedFunc.Create(mUserTextChangedFunc.ID, mData);
+    FluxDispatcher.RegisterFunc(mTextChangedFunc);
+    FluxDispatcher.RegisterFunc(mUserTextChangedFunc);
+  end else begin
+    mTextChangedFunc := TextChangedFunc.Create(ActionIDSequence.Next, mData);
+    FluxDispatcher.RegisterFunc(mTextChangedFunc);
+  end;
+  mProps.SetIntf(cProps.TextChangedNotifier, NewNotifier(mTextChangedFunc.ID));
+  mKeyDownFunc := AProps.AsIntf(cProps.KeyDownFunc) as IFluxFunc;
+  if mKeyDownFunc <> nil then begin
+    FluxDispatcher.RegisterFunc(mKeyDownFunc);
+    mProps.SetIntf(cProps.KeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
+  end;
+  Result := IDesignComponentEdit(Factory.Locate(IDesignComponentEdit, '', mProps));
+end;
+
 { TDesignComponentButtonFactory }
 
 function TDesignComponentButtonFactory.DoNew(const AProps: IProps
@@ -76,7 +117,7 @@ begin
   mClickFunc := AProps.AsIntf(cProps.ClickFunc) as IFluxFunc;
   mProps := AProps.Clone
     .SetIntf(cProps.ClickNotifier, NewNotifier(mClickFunc.ID));
-  Result := IDesignComponentGrid(Factory.Locate(IDesignComponentButton, '', mProps));
+  Result := IDesignComponentButton(Factory.Locate(IDesignComponentButton, '', mProps));
   FluxDispatcher.RegisterFunc(mClickFunc);
 end;
 

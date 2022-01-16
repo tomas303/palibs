@@ -77,7 +77,7 @@ type
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TEditData;
-    fAskNotifier: IFluxNotifier;
+    fAskNotifier: IFluxNotifier; //todo .... probably remove
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
   published
@@ -190,9 +190,9 @@ begin
   mProps
     .SetStr('ID', ID)
     .SetStr('Text', Data.Text)
-    .SetIntf('AskNotifier', AskNotifier)
-    .SetIntf('TextChangedNotifier', TextChangedNotifier)
-    .SetIntf('KeyDownNotifier', KeyDownNotifier)
+    //.SetIntf('AskNotifier', AskNotifier)
+    .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
+    .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier)
     .SetBool('Focused', Data.Focused)
     .SetBool('Flat', SelfProps.AsBool('Flat'));
   Result := ElementFactory.CreateElement(IEditBit, mProps);
