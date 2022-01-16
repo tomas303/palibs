@@ -35,6 +35,13 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentPagerFactory }
+
+  TDesignComponentPagerFactory = class(TDesignComponentFactory, IDesignComponentPagerFactory)
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
   { TDesignComponentPagerSwitchFactory }
 
   TDesignComponentPagerSwitchFactory = class(TDesignComponentFactory, IDesignComponentPagerSwitchFactory)
@@ -43,6 +50,21 @@ type
   end;
 
 implementation
+
+{ TDesignComponentPagerFactory }
+
+function TDesignComponentPagerFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+var
+  mProps: IProps;
+  mData: TPagerData;
+begin
+  mData := AProps.AsObject('Data') as TPagerData;
+  mProps := AProps.Clone
+    .SetObject('Data', mData)
+    .SetIntf('SwitchFactory', IUnknown(Factory.Locate(IDesignComponentPagerSwitchFactory)));
+  Result := IDesignComponentPager(Factory.Locate(IDesignComponentPager, '', mProps));
+end;
 
 { TDesignComponentFormFactory }
 
@@ -58,6 +80,7 @@ begin
   mActSize := ActionIDSequence.Next;
   mActMove := ActionIDSequence.Next;
   mProps := AProps.Clone
+    .SetObject('Data', mData)
     .SetIntf('CloseQueryNotifier', NewNotifier(mActClose))
     .SetIntf('SizeNotifier', NewNotifier(mActSize))
     .SetIntf('MoveNotifier', NewNotifier(mActMove));

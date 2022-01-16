@@ -139,6 +139,10 @@ type
   ['{24916508-17A0-4577-A1F0-55E6605F5039}']
   end;
 
+  IDesignComponentPagerFactory = interface(IDesignComponentFactory)
+  ['{CFFD386A-150F-455A-8CC7-78917625F7B1}']
+  end;
+
   IDesignComponentPagerSwitchFactory = interface(IDesignComponentFactory)
   ['{7117E5CD-78AC-4747-9735-C76A2226424D}']
   end;
