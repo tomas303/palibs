@@ -35,6 +35,13 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentButtonFactory }
+
+  TDesignComponentButtonFactory = class(TDesignComponentFactory, IDesignComponentButtonFactory)
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
   { TDesignComponentPagerFactory }
 
   TDesignComponentPagerFactory = class(TDesignComponentFactory, IDesignComponentPagerFactory)
@@ -57,6 +64,21 @@ type
   end;
 
 implementation
+
+{ TDesignComponentButtonFactory }
+
+function TDesignComponentButtonFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+var
+  mProps: IProps;
+  mClickFunc: IFluxFunc;
+begin
+  mClickFunc := AProps.AsIntf(cProps.ClickFunc) as IFluxFunc;
+  mProps := AProps.Clone
+    .SetIntf(cProps.ClickNotifier, NewNotifier(mClickFunc.ID));
+  Result := IDesignComponentGrid(Factory.Locate(IDesignComponentButton, '', mProps));
+  FluxDispatcher.RegisterFunc(mClickFunc);
+end;
 
 { TDesignComponentGridFactory }
 

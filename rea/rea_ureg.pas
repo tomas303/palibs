@@ -154,6 +154,7 @@ begin
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterDesignComponent(TDesignComponentLabelEdit, IDesignComponentLabelEdit);
   RegisterDesignComponentFactory(TDesignComponentFormFactory, IDesignComponentFormFactory);
+  RegisterDesignComponentFactory(TDesignComponentButtonFactory, IDesignComponentButtonFactory);
   RegisterDesignComponentFactory(TDesignComponentPagerFactory, IDesignComponentPagerFactory);
   RegisterDesignComponentFactory(TDesignComponentPagerSwitchFactory, IDesignComponentPagerSwitchFactory);
   RegisterDesignComponentFactory(TDesignComponentGridFactory, IDesignComponentGridFactory);

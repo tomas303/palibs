@@ -37,6 +37,7 @@ type
       ActivateNotifier = 'ActivateNotifier';
       CloseQueryNotifier = 'CloseQueryNotifier';
       ClickNotifier = 'ClickNotifier';
+      ClickFunc = 'ClickFunc';
       OnTextNotifier = 'OnTextNotifier';
       AskNotifier = 'AskNotifier';
       RowMMHeight = 'RowMMHeight';
@@ -137,6 +138,10 @@ type
 
   IDesignComponentFormFactory = interface(IDesignComponentFactory)
   ['{24916508-17A0-4577-A1F0-55E6605F5039}']
+  end;
+
+  IDesignComponentButtonFactory = interface(IDesignComponentFactory)
+  ['{F09A5425-2065-45AA-A11B-9A58E4DC7AF2}']
   end;
 
   IDesignComponentPagerFactory = interface(IDesignComponentFactory)
