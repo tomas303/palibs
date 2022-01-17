@@ -6,7 +6,7 @@ interface
 
 uses
   rea_idesigncomponent, trl_iprops, flu_iflux, trl_idifactory, trl_isequence,
-  rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata;
+  rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree;
 
 type
 
@@ -49,6 +49,13 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentTextFactory }
+
+  TDesignComponentTextFactory = class(TDesignComponentFactory, IDesignComponentTextFactory)
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
   { TDesignComponentStripFactory }
 
   TDesignComponentStripFactory = class(TDesignComponentFactory, IDesignComponentStripFactory)
@@ -77,14 +84,114 @@ type
     function DoNew(const AProps: IProps): IDesignComponent; override;
   end;
 
+  { TDesignComponentLabelEditFactory }
+
+  TDesignComponentLabelEditFactory = class(TDesignComponentFactory, IDesignComponentLabelEditFactory)
+  private
+    function TextProps(const AProps: IProps): IProps;
+    function NewText(const AProps: IProps): IDesignComponent;
+    function EditProps(const AProps: IProps): IProps;
+    function NewEdit(const AProps: IProps): IDesignComponent;
+    function ContainerProps(const AProps: IProps): IProps;
+  protected
+    function DoNew(const AProps: IProps): IDesignComponent; override;
+  end;
+
 implementation
+
+{ TDesignComponentTextFactory }
+
+function TDesignComponentTextFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+begin
+  Result := IDesignComponentText(Factory.Locate(IDesignComponentText, '', AProps.Clone));
+end;
+
+{ TDesignComponentLabelEditFactory }
+
+function TDesignComponentLabelEditFactory.NewEdit(const AProps: IProps): IDesignComponent;
+var
+  mF: IDesignComponentEditFactory;
+begin
+  mF := IDesignComponentEditFactory(Factory.Locate(IDesignComponentEditFactory));
+  Result := mF.New(AProps);
+end;
+
+function TDesignComponentLabelEditFactory.TextProps(const AProps: IProps): IProps;
+begin
+  Result := NewProps.SetStr(cProps.Text, AProps.AsStr(cProps.Caption));
+  case AProps.AsInt(cProps.CaptionEdge) of
+    cEdge.Left, cEdge.Top:
+      Result.SetInt(cProps.Place, cPlace.FixFront);
+    cEdge.Right, cEdge.Bottom:
+      Result.SetInt(cProps.Place, cPlace.FixBack);
+  end;
+  case AProps.AsInt(cProps.CaptionEdge) of
+    cEdge.Left, cEdge.Right:
+      Result.SetInt(cProps.MMWidth, AProps.AsInt(cProps.CaptionWidth));
+    cEdge.Top, cEdge.Bottom:
+      Result.SetInt(cProps.MMHeight, AProps.AsInt(cProps.CaptionHeight));
+  end;
+end;
+
+function TDesignComponentLabelEditFactory.ContainerProps(const AProps: IProps
+  ): IProps;
+begin
+  Result := AProps.Clone([cProps.Color, cProps.Transparent, cProps.MMWidth, cProps.MMHeight])
+    .SetInt(cProps.Place, cPlace.FixFront);
+  case AProps.AsInt(cProps.CaptionEdge) of
+    cEdge.Left, cEdge.Right:
+      Result.SetInt(cProps.Layout, cLayout.Horizontal);
+    cEdge.Top, cEdge.Bottom:
+      Result.SetInt(cProps.Layout, cLayout.Vertical);
+  end;
+end;
+
+function TDesignComponentLabelEditFactory.NewText(const AProps: IProps): IDesignComponent;
+var
+  mF: IDesignComponentTextFactory;
+begin
+  mF := IDesignComponentTextFactory(Factory.Locate(IDesignComponentTextFactory));
+  Result := mF.New(AProps);
+end;
+
+function TDesignComponentLabelEditFactory.EditProps(const AProps: IProps
+  ): IProps;
+begin
+  Result := AProps.Clone([cProps.Data])
+    .SetInt(cProps.Place, cPlace.Elastic);
+end;
+
+function TDesignComponentLabelEditFactory.DoNew(const AProps: IProps
+  ): IDesignComponent;
+var
+  mF: IDesignComponentStripFactory;
+  mText, mEdit: IDesignComponent;
+begin
+  mF := IDesignComponentStripFactory(Factory.Locate(IDesignComponentStripFactory));
+  Result := mF.New(ContainerProps(AProps));
+  mEdit := NewEdit(EditProps(AProps));
+  mText := NewText(TextProps(AProps));
+  case AProps.AsInt(cProps.CaptionEdge) of
+    cEdge.Left, cEdge.Top:
+     begin
+       (Result as INode).AddChild(mText as INode);
+       (Result as INode).AddChild(mEdit as INode);
+     end;
+    cEdge.Right, cEdge.Bottom:
+     begin
+       (Result as INode).AddChild(mEdit as INode);
+       (Result as INode).AddChild(mText as INode);
+     end;
+  end;
+end;
 
 { TDesignComponentStripFactory }
 
 function TDesignComponentStripFactory.DoNew(const AProps: IProps
   ): IDesignComponent;
 begin
-  Result := IDesignComponentEdit(Factory.Locate(IDesignComponentStrip, '', AProps.Clone));
+  Result := IDesignComponentStrip(Factory.Locate(IDesignComponentStrip, '', AProps.Clone));
 end;
 
 { TDesignComponentEditFactory }

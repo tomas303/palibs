@@ -52,12 +52,13 @@ type
       ColOddColor = 'ColOddColor';
       Caption = 'Caption';
       CaptionWidth = 'CaptionWidth';
+      CaptionHeight = 'CaptionHeight';
       PairWidth = 'PairWidth';
       CaptionEdge = 'CaptionEdge';
       SwitchEdge = 'SwitchEdge';
       SwitchSize = 'SwitchSize';
       ID = 'ID';
-      DataPath = 'DataPath';
+      Data = 'Data';
     end;
 
   cEdge = class
@@ -93,6 +94,10 @@ type
 
   IDesignComponentEdit = interface(IDesignComponent)
   ['{BBF9AEB9-28A5-4E15-840D-3483885936E1}']
+  end;
+
+  IDesignComponentText = interface(IDesignComponent)
+  ['{E5A64708-B673-4284-96B7-F7ACAE44BE0C}']
   end;
 
   IDesignComponentButton = interface(IDesignComponent)
@@ -152,6 +157,10 @@ type
   ['{E629EF95-EA77-4375-B306-51B5B6F7996D}']
   end;
 
+  IDesignComponentTextFactory = interface(IDesignComponentFactory)
+  ['{2606AFC9-F14D-453D-B65D-82A06794C935}']
+  end;
+
   IDesignComponentStripFactory = interface(IDesignComponentFactory)
   ['{986391F8-943C-42F9-BBB8-89AFAA8E5043}']
   end;
@@ -166,6 +175,10 @@ type
 
   IDesignComponentGridFactory = interface(IDesignComponentFactory)
   ['{79082132-2BCB-4996-9C3D-556D25172557}']
+  end;
+
+  IDesignComponentLabelEditFactory = interface(IDesignComponentFactory)
+  ['{634858EF-A2D1-4574-B887-CB407EFDEC3F}']
   end;
 
 const

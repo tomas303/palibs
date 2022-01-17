@@ -101,6 +101,13 @@ type
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
+  { TDesignComponentText }
+
+  TDesignComponentText = class(TDesignComponent, IDesignComponentText)
+  protected
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+  end;
+
   { TDesignComponentGrid }
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
@@ -155,29 +162,15 @@ type
     property SwitchFactory: IDesignComponentFactory read fSwitchFactory write fSwitchFactory;
   end;
 
-  { TDesignComponentLabelEdit }
-
-  TDesignComponentLabelEdit = class(TDesignComponent, IDesignComponentLabelEdit)
-  private
-    function MakeProps: IProps;
-    function MakeLabeledEdits(AChildren: TMetaElementArray): TMetaElementArray;
-    function NewLabeledEdit(const ASource: IMetaElement): IMetaElement;
-    function NewLabeledProps(const ASource: IMetaElement): IProps;
-    function NewEdit(ATypeID: TGuid): IMetaElement;
-    function NewText(const ACaption: String; APlace: Integer; ATextWidth: Integer): IMetaElement;
-    function TextWidth(const ASource: IMetaElement): Integer;
-  protected
-    procedure DoStartingValues; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
-  protected
-    fCaption: String;
-    fCaptionEdge: Integer;
-  published
-    property Caption: String read fCaption write fCaption;
-    property CaptionEdge: Integer read fCaptionEdge write fCaptionEdge;
-  end;
-
 implementation
+
+{ TDesignComponentText }
+
+function TDesignComponentText.DoCompose(const AProps: IProps;
+  const AChildren: TMetaElementArray): IMetaElement;
+begin
+  Result := ElementFactory.CreateElement(ITextBit, SelfProps.Clone);
+end;
 
 { TDesignComponentEdit }
 
@@ -340,128 +333,6 @@ begin
     AddChildren(Result, AChildren)
   else
     ComposeChildren(Result);
-end;
-
-{ TDesignComponentLabelEdit }
-
-function TDesignComponentLabelEdit.MakeProps: IProps;
-var
-  mProp: IProp;
-begin
-  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Height, cProps.Width,
-    cProps.Color, cProps.Transparent]);
-end;
-
-function TDesignComponentLabelEdit.MakeLabeledEdits(AChildren: TMetaElementArray): TMetaElementArray;
-var
-  i: integer;
-begin
-  Result := nil;
-  SetLength(Result, Length(AChildren));
-  for i := 0 to High(Result) do
-    Result[i] := NewLabeledEdit(AChildren[i]);
-end;
-
-function TDesignComponentLabelEdit.NewLabeledEdit(const ASource: IMetaElement): IMetaElement;
-begin
-  case CaptionEdge of
-    IDesignComponentLabelEditHelper.CaptionEdgeLeft,
-    IDesignComponentLabelEditHelper.CaptionEdgeTop:
-      begin
-        Result := ElementFactory.CreateElement(IStripBit,
-          NewLabeledProps(ASource),
-          [
-            NewText(ASource.Props.AsStr(cProps.Caption), cPlace.FixFront, TextWidth(ASource)),
-            NewEdit(ASource.Guid)
-          ]);
-      end;
-    IDesignComponentLabelEditHelper.CaptionEdgeRight,
-    IDesignComponentLabelEditHelper.CaptionEdgeBottom:
-      begin
-        Result := ElementFactory.CreateElement(IStripBit,
-          NewLabeledProps(ASource),
-          [
-            NewEdit(ASource.Guid),
-            NewText(ASource.Props.AsStr(cProps.Caption), cPlace.FixBack, TextWidth(ASource))
-          ]);
-      end;
-  end;
-end;
-
-function TDesignComponentLabelEdit.NewLabeledProps(const ASource: IMetaElement): IProps;
-var
-  mProp: IProp;
-begin
-  Result := NewProps;
-  mProp := ASource.Props.PropByName[cProps.Color];
-  if mProp <> nil then
-    Result.SetInt(cProps.Color, mProp.AsInteger).SetBool(cProps.Transparent, False);
-  case CaptionEdge of
-    IDesignComponentLabelEditHelper.CaptionEdgeLeft,
-    IDesignComponentLabelEditHelper.CaptionEdgeRight:
-      Result
-        .SetInt(cProps.Layout, cLayout.Horizontal)
-        .SetInt(cProps.Place, cPlace.FixFront)
-        .SetInt(cProps.Width, SelfProps.AsInt(cProps.PairWidth))
-        .SetInt(cProps.Height, cEditHeight);
-    IDesignComponentLabelEditHelper.CaptionEdgeTop,
-    IDesignComponentLabelEditHelper.CaptionEdgeBottom:
-      Result
-        .SetInt(cProps.Layout, cLayout.Vertical)
-        .SetInt(cProps.Place, cPlace.FixFront)
-        .SetInt(cProps.Width, SelfProps.AsInt(cProps.PairWidth))
-        .SetInt(cProps.Height, 2 * cEditHeight);
-  end;
-end;
-
-function TDesignComponentLabelEdit.NewEdit(ATypeID: TGuid): IMetaElement;
-begin
-  Result := ElementFactory.CreateElement(
-      ATypeID,
-      NewProps
-        .SetInt(cProps.Place, cPlace.Elastic)
-        .SetInt(cProps.Height, cEditHeight)
-        .SetStr(cProps.Text, 'xxx')
-    );
-end;
-
-function TDesignComponentLabelEdit.NewText(const ACaption: String;
-  APlace: Integer; ATextWidth: Integer): IMetaElement;
-begin
-  Result := ElementFactory.CreateElement(
-    ITextBit,
-    NewProps
-      .SetStr(cProps.Text, ACaption)
-      .SetInt(cProps.Place, APlace)
-      .SetInt(cProps.Width, ATextWidth)
-      .SetInt(cProps.Height, cEditHeight)
-  );
-end;
-
-function TDesignComponentLabelEdit.TextWidth(const ASource: IMetaElement
-  ): Integer;
-var
-  mProp: IProp;
-begin
-  mProp := ASource.Props.PropByName[cProps.CaptionWidth];
-  if mProp = nil then
-    mProp := SelfProps.PropByName[cProps.CaptionWidth];
-  if mProp <> nil then
-    Result := mProp.AsInteger
-  else
-    Result := cCaptionWidth;
-end;
-
-procedure TDesignComponentLabelEdit.DoStartingValues;
-begin
-  inherited DoStartingValues;
-  CaptionEdge := IDesignComponentLabelEdit.CaptionEdgeLeft;
-end;
-
-function TDesignComponentLabelEdit.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
-begin
-  Result := ElementFactory.CreateElement(IStripBit, MakeProps, MakeLabeledEdits(AChildren));
 end;
 
 { TDesignComponentPager }
