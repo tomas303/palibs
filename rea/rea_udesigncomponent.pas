@@ -154,12 +154,10 @@ type
     fData: TPagerData;
     fSwitchEdge: Integer;
     fSwitchSize: Integer;
-    fSwitchFactory: IDesignComponentFactory;
   published
     property Data: TPagerData read fData write fData;
     property SwitchEdge: Integer read fSwitchEdge write fSwitchEdge;
     property SwitchSize: Integer read fSwitchSize write fSwitchSize;
-    property SwitchFactory: IDesignComponentFactory read fSwitchFactory write fSwitchFactory;
   end;
 
 implementation
@@ -349,12 +347,14 @@ var
   mProps: IProps;
   mText: String;
   mSwitchDC: IDesignComponent;
+  mSwitchFactory: IDesignComponentPagerSwitchFactory;
 begin
   SetLength(mSwitch, Count);
   for i := 0 to Count - 1 do
   begin
     mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
-    mSwitchDC := SwitchFactory.New(
+    mSwitchFactory := IDesignComponentPagerSwitchFactory(Factory.Locate(IDesignComponentPagerSwitchFactory));
+    mSwitchDC := mSwitchFactory.New(
       NewProps
         .SetInt('PageIndex', i)
         .SetStr(cProps.Text, mText)
