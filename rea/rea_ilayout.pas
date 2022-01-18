@@ -62,7 +62,7 @@ type
 
   ITiler = interface
   ['{E658DAE2-51E6-4CC0-86F6-055E5888E5E4}']
-    procedure ReplaceChildren(const AContainer: IBit);
+    procedure ReplaceChildren(const AContainer: IBit; ABorder: Integer = 0);
   end;
 
   { IScale }

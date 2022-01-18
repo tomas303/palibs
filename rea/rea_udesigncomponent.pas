@@ -177,7 +177,8 @@ function TDesignComponentEdit.DoCompose(const AProps: IProps;
 var
   mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
+  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight,
+    cProps.Color]);
   mProps
     .SetStr('ID', ID)
     .SetStr('Text', Data.Text)
@@ -185,7 +186,7 @@ begin
     .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
     .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier)
     .SetBool('Focused', Data.Focused)
-    .SetBool('Flat', SelfProps.AsBool('Flat'));
+    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat));
   Result := ElementFactory.CreateElement(IEditBit, mProps);
 end;
 

@@ -57,6 +57,7 @@ type
       CaptionEdge = 'CaptionEdge';
       SwitchEdge = 'SwitchEdge';
       SwitchSize = 'SwitchSize';
+      Flat = 'Flat';
       ID = 'ID';
       Data = 'Data';
     end;

@@ -82,7 +82,7 @@ type
     procedure Replace(const ANode: INode; const AClass: TUniItemClass; ASize: integer);
   protected
     // ITiler
-    procedure ReplaceChildren(const AContainer: IBit);
+    procedure ReplaceChildren(const AContainer: IBit; ABorder: Integer = 0);
   end;
 
   { TScale }
@@ -255,24 +255,24 @@ begin
   Spread(ANode, AClass, ASize, mFixedSize + mElasticSize);
 end;
 
-procedure TDesktopTiler.ReplaceChildren(const AContainer: IBit);
+procedure TDesktopTiler.ReplaceChildren(const AContainer: IBit; ABorder: Integer = 0);
 begin
   // setup same height and count width of fixed fields
   case (AContainer as IBitPosition).Layout of
     cLayout.Horizontal:
       begin
-        Replace(AContainer as INode, TUniHorizontalItem, (AContainer as IBitPosition).Width);
-        Reposition(AContainer as INode, TUniVerticalItem, 0, (AContainer as IBitPosition).Height);
+        Replace(AContainer as INode, TUniHorizontalItem, (AContainer as IBitPosition).Width - 2*ABorder);
+        Reposition(AContainer as INode, TUniVerticalItem, 0, (AContainer as IBitPosition).Height - 2*ABorder);
       end;
     cLayout.Vertical:
       begin
-        Replace(AContainer as INode, TUniVerticalItem, (AContainer as IBitPosition).Height);
-        Reposition(AContainer as INode, TUniHorizontalItem, 0, (AContainer as IBitPosition).Width);
+        Replace(AContainer as INode, TUniVerticalItem, (AContainer as IBitPosition).Height - 2*ABorder);
+        Reposition(AContainer as INode, TUniHorizontalItem, 0, (AContainer as IBitPosition).Width - 2*ABorder);
       end;
     cLayout.Overlay:
       begin
-        Reposition(AContainer as INode, TUniHorizontalItem, 0, (AContainer as IBitPosition).Width);
-        Reposition(AContainer as INode, TUniVerticalItem, 0, (AContainer as IBitPosition).Height);
+        Reposition(AContainer as INode, TUniHorizontalItem, 0, (AContainer as IBitPosition).Width - 2*ABorder);
+        Reposition(AContainer as INode, TUniVerticalItem, 0, (AContainer as IBitPosition).Height - 2*          ABorder);
       end;
   end;
 end;

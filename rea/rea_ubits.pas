@@ -288,11 +288,11 @@ var
 begin
   // need to shift children relatively to surface this strip is on(because strip
   // has no control to render ... intentionaly)
-  Tiler.ReplaceChildren(Self);
+  Tiler.ReplaceChildren(Self, Border);
   for mChild in (Self as INode) do begin
     mPosition := mChild as IBitPosition;
-    mPosition.Left := Left + mPosition.Left;
-    mPosition.Top := Top + mPosition.Top;
+    mPosition.Left := Left + mPosition.Left + Border;
+    mPosition.Top := Top + mPosition.Top + Border;
   end;
 end;
 
@@ -501,6 +501,7 @@ begin
   inherited;
   if Flat then
     AsEdit.BorderStyle := bsNone;
+  AsEdit.Color := Color;
   AsEdit.Text := Text;
   AsEdit.Show;
   if Focused then begin

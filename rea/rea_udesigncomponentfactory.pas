@@ -119,7 +119,8 @@ end;
 
 function TDesignComponentLabelEditFactory.TextProps(const AProps: IProps): IProps;
 begin
-  Result := NewProps.SetStr(cProps.Text, AProps.AsStr(cProps.Caption));
+  Result := AProps.Clone
+    .SetStr(cProps.Text, AProps.AsStr(cProps.Caption));
   case AProps.AsInt(cProps.CaptionEdge) of
     cEdge.Left, cEdge.Top:
       Result.SetInt(cProps.Place, cPlace.FixFront);
@@ -158,7 +159,7 @@ end;
 function TDesignComponentLabelEditFactory.EditProps(const AProps: IProps
   ): IProps;
 begin
-  Result := AProps.Clone([cProps.Data])
+  Result := AProps.Clone
     .SetInt(cProps.Place, cPlace.Elastic);
 end;
 
@@ -203,6 +204,7 @@ var
   mData: TEditData;
   mKeyDownFunc: IFluxFunc;
   mTextChangedFunc, mUserTextChangedFunc: IFluxFunc;
+  mmm: string;
 begin
   mProps := AProps.Clone;
   mData := mProps.AsObject('Data') as TEditData;
@@ -225,6 +227,7 @@ begin
     FluxDispatcher.RegisterFunc(mKeyDownFunc);
     mProps.SetIntf(cProps.KeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
   end;
+  mmm := mProps.Info;
   Result := IDesignComponentEdit(Factory.Locate(IDesignComponentEdit, '', mProps));
 end;
 
