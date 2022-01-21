@@ -178,7 +178,7 @@ var
   mProps: IProps;
 begin
   mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight,
-    cProps.Color]);
+    cProps.Color, cProps.TextColor]);
   mProps
     .SetStr('ID', ID)
     .SetStr('Text', Data.Text)
@@ -199,6 +199,8 @@ begin
   Result := NewProps
     .SetInt('Place', cPlace.Elastic)
     .SetStr('Text', Data[Row, Col])
+    .SetInt(cProps.Border, 0)
+    .SetInt(cProps.TextColor, SelfProps.AsInt(cProps.TextColor))
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.ColMMWidth));
   if Row mod 2 = 1 then
     mProp := SelfProps.PropByName[cProps.ColOddColor]
@@ -215,6 +217,7 @@ begin
   Result := NewProps
     .SetInt('Place', cPlace.FixFront)
     .SetInt('Layout', cLayout.Horizontal)
+    .SetInt(cProps.Border, 0)
     .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.RowMMHeight));
   if Row mod 2 = 1 then begin
     mProp := SelfProps.PropByName[cProps.RowOddColor];
@@ -251,6 +254,7 @@ begin
       mProps
         .SetObject('Data', Data.EditData)
         .SetBool('Flat', True)
+        .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
         .SetIntf('TextChangedNotifier', EdTextChangedNotifier)
         .SetIntf('KeyDownNotifier', EdKeyDownNotifier);
       Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);

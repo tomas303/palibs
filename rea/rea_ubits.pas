@@ -51,6 +51,7 @@ type
     procedure HookParent(const AParent: TWinControl);
   protected
     fColor: TColor;
+    fTextColor: TColor;
     function AsControl: TControl;
     procedure SetControl(AValue: TControl);
     function NewProps: IProps;
@@ -113,6 +114,7 @@ type
     property Control: TControl read fControl write SetControl;
   published
     property Color: TColor read fColor write fColor;
+    property TextColor: TColor read fTextColor write fTextColor;
   published
     property Layout: integer read GetLayout write SetLayout;
     property Place: integer read GetPlace write SetPlace;
@@ -245,6 +247,7 @@ type
 
   TButtonBit = class(TBit, IButtonBit)
   protected
+    //tcustomlabel, font.orientation, autosize, alignment, layout tlcenter
     function AsButton: TCustomButton;
     procedure OnClick(Sender: TObject);
   protected
@@ -394,6 +397,7 @@ begin
   inherited DoRender;
   AsButton.Caption := Text;
   AsButton.OnClick := @OnClick;
+  //AsButton.Font.Orientation:=2700;
   AsButton.Show;
 end;
 
@@ -422,6 +426,7 @@ procedure TTextBit.DoRender;
 begin
   inherited;
   AsText.Caption := Text;
+  AsText.Font.Color := TextColor;
   AsText.Show;
 end;
 
@@ -502,6 +507,7 @@ begin
   if Flat then
     AsEdit.BorderStyle := bsNone;
   AsEdit.Color := Color;
+  AsEdit.Font.Color := TextColor;
   AsEdit.Text := Text;
   AsEdit.Show;
   if Focused then begin
