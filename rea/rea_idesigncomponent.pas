@@ -56,8 +56,11 @@ type
       CaptionHeight = 'CaptionHeight';
       PairWidth = 'PairWidth';
       CaptionEdge = 'CaptionEdge';
+      CaptionEditBorder = 'CaptionEditBorder';
+      CaptionEditBorderColor = 'CaptionEditBorderColor';
       SwitchEdge = 'SwitchEdge';
       SwitchSize = 'SwitchSize';
+      BoxLaticeSize = 'BoxLaticeSize';
       Flat = 'Flat';
       ID = 'ID';
       Data = 'Data';
@@ -110,6 +113,14 @@ type
   ['{B16AAF18-076F-449D-82B1-BB6AE4962B4B}']
   end;
 
+  IDesignComponentHBox = interface(IDesignComponent)
+  ['{020BB807-2D13-4C66-98A5-CC99AC9ED0C9}']
+  end;
+
+  IDesignComponentVBox = interface(IDesignComponent)
+  ['{FD920A3B-D673-4C70-8FD1-8A65B1D4CB61}']
+  end;
+
   IDesignComponentGrid = interface(IDesignComponent)
   ['{72646A21-0264-4798-A9DE-C0B3E843806B}']
   end;
@@ -140,6 +151,10 @@ type
     CaptionEdgeRight = cEdge.Right;
     CaptionEdgeBottom = cEdge.Bottom;
     Caption = cProps.Caption;
+  end;
+
+  IDesignComponentFrame = interface(IDesignComponent)
+  ['{33417F52-E1E5-46E3-9E4B-7733FD2CA1D0}']
   end;
 
   IDesignComponentFactory = interface

@@ -101,6 +101,30 @@ type
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
+  { TDesignComponentBox }
+
+  TDesignComponentBox = class(TDesignComponent)
+  private
+    procedure MakeChildren(const AParentEl: IMetaElement);
+  protected
+    function BoxLayout: Integer; virtual; abstract;
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+  end;
+
+  { TDesignComponentHBox }
+
+  TDesignComponentHBox = class(TDesignComponentBox, IDesignComponentHBox)
+  protected
+    function BoxLayout: Integer; override;
+  end;
+
+  { TDesignComponentVBox }
+
+  TDesignComponentVBox = class(TDesignComponentBox, IDesignComponentVBox)
+  protected
+    function BoxLayout: Integer; override;
+  end;
+
   { TDesignComponentText }
 
   TDesignComponentText = class(TDesignComponent, IDesignComponentText)
@@ -160,7 +184,86 @@ type
     property SwitchSize: Integer read fSwitchSize write fSwitchSize;
   end;
 
+  { TDesignComponentFrame }
+
+  TDesignComponentFrame = class(TDesignComponent, IDesignComponentFrame)
+  protected
+    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+  end;
+
 implementation
+
+{ TDesignComponentHBox }
+
+function TDesignComponentHBox.BoxLayout: Integer;
+begin
+  Result := cLayout.Horizontal;
+end;
+
+{ TDesignComponentVBox }
+
+function TDesignComponentVBox.BoxLayout: Integer;
+begin
+  Result := cLayout.Vertical;
+end;
+
+{ TDesignComponentBox }
+
+procedure TDesignComponentBox.MakeChildren(const AParentEl: IMetaElement);
+var
+  i: Integer;
+  mNode: INode;
+  mEl: IMetaElement;
+  mStrip: IMetaElement;
+  mStripProps: IProps;
+begin
+  mStripProps := NewProps
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetBool(cProps.Transparent, False)
+    .SetInt(cProps.Color, AParentEl.Props.AsInt(cProps.Color))
+    .SetInt(cProps.Width, SelfProps.AsInt(cProps.BoxLaticeSize))
+    .SetInt(cProps.Height, SelfProps.AsInt(cProps.BoxLaticeSize));
+  mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
+  (AParentEl as INode).AddChild(mStrip as INode);
+  for i := 0 to Count - 1 do begin
+    mEl := (GetChild(i) as IDesignComponent).Compose(nil, nil);
+    (AParentEl as INode).AddChild(mEl as INode);
+    mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
+    (AParentEl as INode).AddChild(mStrip as INode);
+  end;
+end;
+
+function TDesignComponentBox.DoCompose(const AProps: IProps;
+  const AChildren: TMetaElementArray): IMetaElement;
+var
+  mProps: IProps;
+begin
+  mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
+    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
+  mProps.SetInt(cProps.Layout, BoxLayout);
+  Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
+  if AChildren <> nil then
+    AddChildren(Result, AChildren)
+  else
+    MakeChildren(Result);
+end;
+
+{ TDesignComponentFrame }
+
+function TDesignComponentFrame.DoCompose(const AProps: IProps;
+  const AChildren: TMetaElementArray): IMetaElement;
+var
+  mProps: IProps;
+begin
+  mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
+    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
+  mProps.SetInt(cProps.Layout, cLayout.Overlay);
+  Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
+  if AChildren <> nil then
+    AddChildren(Result, AChildren)
+  else
+    ComposeChildren(Result);
+end;
 
 { TDesignComponentText }
 

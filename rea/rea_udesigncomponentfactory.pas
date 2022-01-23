@@ -6,7 +6,8 @@ interface
 
 uses
   rea_idesigncomponent, trl_iprops, flu_iflux, trl_idifactory, trl_isequence,
-  rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree;
+  rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree,
+  graphics;
 
 type
 
@@ -112,9 +113,18 @@ end;
 function TDesignComponentLabelEditFactory.NewEdit(const AProps: IProps): IDesignComponent;
 var
   mF: IDesignComponentEditFactory;
+  mEdit: IDesignComponent;
 begin
   mF := IDesignComponentEditFactory(Factory.Locate(IDesignComponentEditFactory));
-  Result := mF.New(AProps);
+  mEdit := mF.New(AProps.Clone
+    .SetInt(cProps.Place, cPlace.Elastic)
+  );
+  Result := IDesignComponentFrame(Factory.Locate(IDesignComponentFrame, '',
+    NewProps
+      .SetInt(cProps.Border, AProps.AsInt(cProps.CaptionEditBorder))
+      .SetInt(cProps.BorderColor, AProps.AsInt(cProps.CaptionEditBorderColor))
+  ));
+  (Result as INode).AddChild(mEdit as INode);
 end;
 
 function TDesignComponentLabelEditFactory.TextProps(const AProps: IProps): IProps;
@@ -138,7 +148,8 @@ end;
 function TDesignComponentLabelEditFactory.ContainerProps(const AProps: IProps
   ): IProps;
 begin
-  Result := AProps.Clone([cProps.Color, cProps.Transparent, cProps.MMWidth, cProps.MMHeight])
+  Result := AProps.Clone([cProps.Color, cProps.Transparent, cProps.MMWidth, cProps.MMHeight,
+    cProps.Border, cProps.BorderColor])
     .SetInt(cProps.Place, cPlace.FixFront);
   case AProps.AsInt(cProps.CaptionEdge) of
     cEdge.Left, cEdge.Right:

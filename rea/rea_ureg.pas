@@ -151,8 +151,11 @@ begin
   RegisterDesignComponent(TDesignComponentText, IDesignComponentText);
   RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
   RegisterDesignComponent(TDesignComponentStrip, IDesignComponentStrip);
+  RegisterDesignComponent(TDesignComponentHBox, IDesignComponentHBox);
+  RegisterDesignComponent(TDesignComponentVBox, IDesignComponentVBox);
   RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
+  RegisterDesignComponent(TDesignComponentFrame, IDesignComponentFrame);
   RegisterDesignComponentFactory(TDesignComponentFormFactory, IDesignComponentFormFactory);
   RegisterDesignComponentFactory(TDesignComponentButtonFactory, IDesignComponentButtonFactory);
   RegisterDesignComponentFactory(TDesignComponentEditFactory, IDesignComponentEditFactory);
