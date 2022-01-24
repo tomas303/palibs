@@ -146,7 +146,7 @@ function TDesktopTiler.ResizeElastic(const ANode: INode; const AClass: TUniItemC
 var
   mChild: INode;
   mUni: IUniItem;
-  mAutoSize: integer;
+  mAutoSize, mAutoSizeRest: integer;
   mAutoSizeCnt: integer;
 begin
   // when no size is specified for elastic, then all will get same size from FreeSpace
@@ -161,9 +161,10 @@ begin
         end;
     end;
   end;
-  if mAutoSizeCnt > 0 then
-    mAutoSize := Round(AFreeSpace / mAutoSizeCnt)
-  else
+  if mAutoSizeCnt > 0 then begin
+    mAutoSize := Round(AFreeSpace / mAutoSizeCnt);
+    mAutoSizeRest := AFreeSpace - mAutoSize * mAutoSizeCnt;
+  end else
     mAutoSize := 0;
   for mChild in ANode do begin
     mUni := AClass.Create(mChild);
@@ -171,6 +172,15 @@ begin
       cPlace.Elastic:
         begin
           mUni.Size := mAutoSize;
+          // even distribution of rounded error
+          if mAutoSizeRest < 0  then begin
+            mUni.Size := mUni.Size - 1;
+            mAutoSizeRest := mAutoSizeRest + 1;
+          end
+          else if mAutoSizeRest > 0  then begin
+            mUni.Size := mUni.Size + 1;
+            mAutoSizeRest := mAutoSizeRest - 1;
+          end;
           Result := Result + mUni.Size;
         end;
     end;
