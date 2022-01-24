@@ -7,7 +7,7 @@ interface
 uses
   rea_idesigncomponent, trl_iprops, flu_iflux, trl_idifactory, trl_isequence,
   rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree,
-  graphics;
+  graphics, trl_udifactory;
 
 type
 
@@ -21,10 +21,12 @@ type
     function NewProps: IProps;
   protected
     fFactory: IDIFactory;
+    fFactory2: TDIFactory2;
     fFluxDispatcher: IFluxDispatcher;
     fActionIDSequence: ISequence;
   published
     property Factory: IDIFactory read fFactory write fFactory;
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property FluxDispatcher: IFluxDispatcher read fFluxDispatcher write fFluxDispatcher;
     property ActionIDSequence: ISequence read fActionIDSequence write fActionIDSequence;
   end;

@@ -5,7 +5,7 @@ unit trl_udifactory;
 interface
 
 uses
-  Classes, SysUtils, trl_idifactory, trl_dicontainer, trl_iprops;
+  Classes, SysUtils, trl_idifactory, trl_dicontainer, trl_iprops, TypInfo;
 
 type
 
@@ -25,7 +25,51 @@ type
     function CanLocateAs(const AClass: string; const AID: string; const AAsInterface: TGUID): Boolean; overload;
   end;
 
+  { TDIFactory2 }
+
+  TDIFactory2 = class(TCustomDIFactory)
+  //todo ... generic function are not accessible via interface, do some memory management
+  // now each instance will cause memory leak
+  private
+    function GetGuid<I: IUnknown>: TGuid;
+  public
+    function Locate<I: IUnknown>: I; overload;
+    function Locate<I: IUnknown>(const AID: string): I; overload;
+    function Locate<I: IUnknown>(const AProps: IProps): I; overload;
+    function Locate<I: IUnknown>(const AID: string; const AProps: IProps): I; overload;
+  end;
+
 implementation
+
+{ TDIFactory2 }
+
+function TDIFactory2.GetGuid<I>: TGuid;
+var
+  mP: PInterfaceData;
+begin
+  mP := PInterfaceData(GetTypeData(TypeInfo(I)));
+  Result := mP.GUID;
+end;
+
+function TDIFactory2.Locate<I>: I;
+begin
+  Result := I(Container.Locate(GetGuid<I>, '', nil));
+end;
+
+function TDIFactory2.Locate<I>(const AID: string): I;
+begin
+  Result := I(Container.Locate(GetGuid<I>, AID, nil));
+end;
+
+function TDIFactory2.Locate<I>(const AProps: IProps): I;
+begin
+  Result := I(Container.Locate(GetGuid<I>, '', AProps));
+end;
+
+function TDIFactory2.Locate<I>(const AID: string; const AProps: IProps): I;
+begin
+  Result := I(Container.Locate(GetGuid<I>, AID, AProps));
+end;
 
 { TDIFactory }
 

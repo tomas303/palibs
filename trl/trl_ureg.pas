@@ -30,6 +30,7 @@ type
     function RegisterSysUtils: TDIReg;
     function RegisterDIOwner: TDIReg;
     function RegisterDIFactory: TDIReg;
+    function RegisterDIFactory2: TDIReg;
     function RegisterInjector: TDIReg;
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
@@ -59,6 +60,12 @@ end;
 function TReg.RegisterDIFactory: TDIReg;
 begin
   Result := DIC.Add(TDIFactory, IDIFactory);
+  Result.InjectProp('Container', TDIContainer, '', DIC);
+end;
+
+function TReg.RegisterDIFactory2: TDIReg;
+begin
+  Result := DIC.Add(TDIFactory2);
   Result.InjectProp('Container', TDIContainer, '', DIC);
 end;
 
@@ -133,6 +140,7 @@ begin
   RegisterSysUtils;
   RegisterDIOwner;
   RegisterDIFactory;
+  RegisterDIFactory2;
   RegisterInjector;
   RegisterProps;
   RegisterTreeNodes;

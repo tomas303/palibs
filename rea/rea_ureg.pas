@@ -19,7 +19,8 @@ uses
   trl_ireconciler,
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
-  flu_ireg, rea_udesigncomponentfactory;
+  flu_ireg, rea_udesigncomponentfactory,
+  trl_udifactory;
 
 type
 
@@ -186,6 +187,7 @@ begin
   Result := DIC.Add(AComponentClass, AComponentInterface);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
 end;
@@ -194,6 +196,7 @@ function TReg.RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid):
 begin
   Result := DIC.Add(AClass, AInterface);
   Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('FluxDispatcher', IFluxDispatcher);
   Result.InjectProp('ActionIDSequence', ISequence, 'ActionID');
 end;

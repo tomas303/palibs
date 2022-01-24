@@ -7,7 +7,8 @@ interface
 uses
   rea_idesigncomponent, rea_udesigncomponentdata, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog,
-  sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer;
+  sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer,
+  trl_udifactory;
 
 type
 
@@ -44,12 +45,14 @@ type
     fLog: ILog;
     fElementFactory: IMetaElementFactory;
     fFactory: IDIFactory;
+    fFactory2: TDIFactory2;
     fNode: INode;
   published
     property ID: string read fID write fID;
     property Log: ILog read fLog write fLog;
     property ElementFactory: IMetaElementFactory read fElementFactory write fElementFactory;
     property Factory: IDIFactory read fFactory write fFactory;
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property Node: INode read fNode write fNode;
   end;
 

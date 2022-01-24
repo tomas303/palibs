@@ -13,6 +13,7 @@ type
     function RegisterSysUtils: TDIReg;
     function RegisterDIOwner: TDIReg;
     function RegisterDIFactory: TDIReg;
+    function RegisterDIFactory2: TDIReg;
     function RegisterInjector: TDIReg;
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
