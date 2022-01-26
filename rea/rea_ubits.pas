@@ -8,7 +8,7 @@ uses
   SysUtils, rea_ibits, Controls, trl_idifactory, forms, trl_itree,
   StdCtrls, trl_iprops, Graphics, trl_ilog,
   rea_ilayout, flu_iflux, tvl_ucontrolbinder,
-  LMessages;
+  LMessages, Classes;
 
 type
 
@@ -247,8 +247,7 @@ type
 
   TButtonBit = class(TBit, IButtonBit)
   protected
-    //tcustomlabel, font.orientation, autosize, alignment, layout tlcenter
-    function AsButton: TCustomButton;
+    function AsButton: TLabel;
     procedure OnClick(Sender: TObject);
   protected
     procedure DoRender; override;
@@ -257,9 +256,11 @@ type
   protected
     fText: string;
     fClickNotifier: IFluxNotifier;
+    fFontDirection: Integer;
   published
     property Text: string read fText write fText;
     property ClickNotifier: IFluxNotifier read fClickNotifier write fClickNotifier;
+    property FontDirection: integer read fFontDirection write fFontDirection;
   end;
 
 implementation
@@ -381,9 +382,9 @@ end;
 
 { TButtonBit }
 
-function TButtonBit.AsButton: TCustomButton;
+function TButtonBit.AsButton: TLabel;
 begin
-  Result := AsControl as TCustomButton;
+  Result := AsControl as TLabel;
 end;
 
 procedure TButtonBit.OnClick(Sender: TObject);
@@ -397,7 +398,18 @@ begin
   inherited DoRender;
   AsButton.Caption := Text;
   AsButton.OnClick := @OnClick;
-  //AsButton.Font.Orientation:=2700;
+  AsButton.AutoSize := False;
+  AsButton.Alignment := taCenter;
+  AsButton.Layout := tlCenter;
+  AsButton.Font.Quality := fqCleartype;
+  case FontDirection of
+    cFontDirection.VertLeft:
+      AsButton.Font.Orientation := 900;
+    cFontDirection.VertRight:
+      AsButton.Font.Orientation := 2700;
+  else
+    AsButton.Font.Orientation := 0;
+  end;
   AsButton.Show;
 end;
 

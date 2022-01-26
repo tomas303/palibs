@@ -171,7 +171,7 @@ begin
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
-  RegisterBitTerminus(TButtonBit, IButtonBit, TButton, 'uibutton');
+  RegisterBitTerminus(TButtonBit, IButtonBit, TLabel, 'uibutton');
   RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterRenderer;

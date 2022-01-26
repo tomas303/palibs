@@ -459,7 +459,16 @@ var
   mText: String;
   mSwitchDC: IDesignComponent;
   mSwitchFactory: IDesignComponentPagerSwitchFactory;
+  mFontDirection: Integer;
 begin
+  case SwitchEdge of
+    cEdge.Left:
+      mFontDirection := cFontDirection.VertLeft;
+    cEdge.Right:
+      mFontDirection := cFontDirection.VertRight;
+    else
+      mFontDirection := cFontDirection.Horizontal;
+  end;
   SetLength(mSwitch, Count);
   for i := 0 to Count - 1 do
   begin
@@ -467,6 +476,7 @@ begin
     mSwitchFactory := IDesignComponentPagerSwitchFactory(Factory.Locate(IDesignComponentPagerSwitchFactory));
     mSwitchDC := mSwitchFactory.New(
       NewProps
+        .SetInt(cProps.FontDirection, mFontDirection)
         .SetInt('PageIndex', i)
         .SetStr(cProps.Text, mText)
         .SetObject('PagerData', Data)
@@ -539,10 +549,20 @@ end;
 
 function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 var
-  mProps: IProps;
+  mProps, mButtonProps: IProps;
+  mP: IProp;
 begin
-  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight, cProps.Color, cProps.Text, cProps.ClickNotifier]);
-  Result := ElementFactory.CreateElement(IButtonBit, mProps);
+  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
+  mProps.SetInt(cProps.Border, 4).SetInt(cProps.BorderColor, clGray);
+  mButtonProps := SelfProps.Clone;
+  mButtonProps.SetInt(cProps.Place, cPlace.Elastic);
+  if mButtonProps.GetPropByName(cProps.Color) = nil then
+    mButtonProps.SetInt(cProps.Color, clSilver);
+  if mButtonProps.GetPropByName(cProps.FontDirection) = nil then
+    mButtonProps.SetInt(cProps.FontDirection, cFontDirection.Horizontal);
+  Result := ElementFactory.CreateElement(IDesignComponentFrame,
+    mProps,
+    [ElementFactory.CreateElement(IButtonBit, mButtonProps)]);
 end;
 
 { TDesignComponent }

@@ -36,6 +36,13 @@ type
     Overlay = 2;  // all same size as container(suppose app. will make visible one of them)
   end;
 
+  cFontDirection = class
+  public const
+    Horizontal = 0;
+    VertLeft = 1;
+    VertRight = 2;
+  end;
+
   { IBitPosition }
 
   IBitPosition = interface

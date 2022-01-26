@@ -61,18 +61,19 @@ type
       SwitchEdge = 'SwitchEdge';
       SwitchSize = 'SwitchSize';
       BoxLaticeSize = 'BoxLaticeSize';
+      FontDirection = 'FontDirection';
       Flat = 'Flat';
       ID = 'ID';
       Data = 'Data';
     end;
 
   cEdge = class
-    public const
-       Left = 0;
-       Top = 1;
-       Right = 2;
-       Bottom = 3;
-    end;
+  public const
+    Left = 0;
+    Top = 1;
+    Right = 2;
+    Bottom = 3;
+  end;
 
   IGridDataProvider = interface
   ['{308CF052-70BC-46D9-8B76-C565B3920261}']
