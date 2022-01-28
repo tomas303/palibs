@@ -257,10 +257,12 @@ type
     fText: string;
     fClickNotifier: IFluxNotifier;
     fFontDirection: Integer;
+    fFontColor: TColor;
   published
     property Text: string read fText write fText;
     property ClickNotifier: IFluxNotifier read fClickNotifier write fClickNotifier;
     property FontDirection: integer read fFontDirection write fFontDirection;
+    property FontColor: TColor read fFontColor write fFontColor;
   end;
 
 implementation
@@ -402,6 +404,7 @@ begin
   AsButton.Alignment := taCenter;
   AsButton.Layout := tlCenter;
   AsButton.Font.Quality := fqCleartype;
+  AsButton.Font.Color := FontColor;
   case FontDirection of
     cFontDirection.VertLeft:
       AsButton.Font.Orientation := 900;

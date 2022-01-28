@@ -20,7 +20,8 @@ uses
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
   flu_ireg, rea_udesigncomponentfactory,
-  trl_udifactory;
+  trl_udifactory,
+  rea_istyles, rea_ustyles;
 
 type
 
@@ -51,6 +52,7 @@ type
     function RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterFuncSequence: TDIReg;
+    function RegisterStyle: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -176,6 +178,7 @@ begin
   RegisterMessageNotifierBinder;
   RegisterRenderer;
   RegisterFuncSequence;
+  RegisterStyle;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -190,6 +193,7 @@ begin
   Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
+  Result.InjectProp('Style', IStyle);
 end;
 
 function TReg.RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
@@ -215,6 +219,11 @@ var
 begin
   mReg := trl_ireg.IReg(DIC.Locate(trl_ireg.IReg));
   Result := mReg.RegisterSequence(creafuncseq, ckSingle);
+end;
+
+function TReg.RegisterStyle: TDIReg;
+begin
+  Result := DIC.Add(TStyle, IStyle);
 end;
 
 end.

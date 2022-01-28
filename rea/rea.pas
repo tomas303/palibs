@@ -11,7 +11,7 @@ uses
   rea_ibits, rea_ilayout, rea_ubits, rea_ulayout, rea_ireg, rea_ureg, 
   rea_idesigncomponent, rea_udesigncomponent, rea_irenderer, rea_urenderer, 
   rea_udesigncomponentdata, rea_udesigncomponentfunc, 
-  rea_udesigncomponentfactory;
+  rea_udesigncomponentfactory, rea_istyles, rea_ustyles;
 
 implementation
 

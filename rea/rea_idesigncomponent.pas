@@ -62,6 +62,7 @@ type
       SwitchSize = 'SwitchSize';
       BoxLaticeSize = 'BoxLaticeSize';
       FontDirection = 'FontDirection';
+      StyleKind = 'StyleKind';
       Flat = 'Flat';
       ID = 'ID';
       Data = 'Data';

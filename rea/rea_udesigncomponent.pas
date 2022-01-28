@@ -8,7 +8,7 @@ uses
   rea_idesigncomponent, rea_udesigncomponentdata, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog,
   sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer,
-  trl_udifactory;
+  trl_udifactory, rea_istyles;
 
 type
 
@@ -24,6 +24,9 @@ type
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
     procedure ComposeChildren(const AParentEl: IMetaElement);
     procedure DoStartingValues; virtual;
+    function StyleForeColor(const APropName: String): TColor;
+    function StyleBackColor(const APropName: String): TColor;
+    function StyleSuppleColor(const APropName: String): TColor;
   protected
     // IDesignComponent = interface
     function Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
@@ -47,6 +50,8 @@ type
     fFactory: IDIFactory;
     fFactory2: TDIFactory2;
     fNode: INode;
+    fStyle: IStyle;
+    fStyleKind: Integer;
   published
     property ID: string read fID write fID;
     property Log: ILog read fLog write fLog;
@@ -54,6 +59,8 @@ type
     property Factory: IDIFactory read fFactory write fFactory;
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property Node: INode read fNode write fNode;
+    property Style: IStyle read fStyle write fStyle;
+    property StyleKind: Integer read fStyleKind write fStyleKind;
   end;
 
   { TDesignComponentForm }
@@ -224,6 +231,9 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetBool(cProps.Transparent, False)
     .SetInt(cProps.Color, AParentEl.Props.AsInt(cProps.Color))
+    .SetInt(cProps.FontColor, AParentEl.Props.AsInt(cProps.FontColor))
+    .SetInt(cProps.BorderColor, AParentEl.Props.AsInt(cProps.BorderColor))
+    .SetInt(cProps.Border, 0)
     .SetInt(cProps.Width, SelfProps.AsInt(cProps.BoxLaticeSize))
     .SetInt(cProps.Height, SelfProps.AsInt(cProps.BoxLaticeSize));
   mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
@@ -242,8 +252,14 @@ var
   mProps: IProps;
 begin
   mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
-  mProps.SetInt(cProps.Layout, BoxLayout);
+    cProps.Border{, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color}]);
+  mProps.SetInt(cProps.Layout, BoxLayout)
+    .SetBool(cProps.Transparent, False)
+    //.SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Border, 5)
+    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
+    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
+    .SetInt(cProps.BorderColor, clMaroon {StyleSuppleColor(cProps.BorderColor)});
   Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
@@ -259,9 +275,15 @@ var
   mProps: IProps;
 begin
   mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
-  mProps.SetInt(cProps.Layout, cLayout.Overlay);
-  Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
+    cProps.Border{, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color}]);
+  mProps
+    //.SetInt(cProps.Layout, cLayout.Horizontal)
+    .SetBool(cProps.Transparent, False)
+    .SetInt(cProps.Border, 3)
+    .SetInt(cProps.Color, {StyleBackColor(cProps.Color)} clBlue)
+    //.SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
+    .SetInt(cProps.BorderColor, clYellow {  StyleSuppleColor(cProps.BorderColor)});
+  Result := ElementFactory.CreateElement(IStripBit, mProps);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
   else
@@ -283,9 +305,11 @@ function TDesignComponentEdit.DoCompose(const AProps: IProps;
 var
   mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight,
-    cProps.Color, cProps.TextColor]);
+  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight{,
+    cProps.Color, cProps.TextColor}]);
   mProps
+    .SetInt(cProps.TextColor, StyleForeColor(cProps.TextColor))
+    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
     .SetStr('ID', ID)
     .SetStr('Text', Data.Text)
     //.SetIntf('AskNotifier', AskNotifier)
@@ -537,7 +561,11 @@ var
   mProps: IProps;
 begin
   mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color]);
+    cProps.Border{, cProps.BorderColor, cProps.FontColor, cProps.Color, cProps.Transparent}])
+    .SetBool(cProps.Transparent, False)
+    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
+    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
+    .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
   Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
@@ -552,6 +580,7 @@ var
   mProps, mButtonProps: IProps;
   mP: IProp;
 begin
+  {
   mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
   mProps.SetInt(cProps.Border, 4).SetInt(cProps.BorderColor, clGray);
   mButtonProps := SelfProps.Clone;
@@ -563,6 +592,22 @@ begin
   Result := ElementFactory.CreateElement(IDesignComponentFrame,
     mProps,
     [ElementFactory.CreateElement(IButtonBit, mButtonProps)]);
+    }
+  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
+  //mProps.SetInt(cProps.Border, 4).SetInt(cProps.BorderColor, clGray);
+  mButtonProps := SelfProps.Clone;
+  mButtonProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
+    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
+    .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
+
+  if mButtonProps.GetPropByName(cProps.FontDirection) = nil then
+    mButtonProps.SetInt(cProps.FontDirection, cFontDirection.Horizontal);
+  Result := ElementFactory.CreateElement(IDesignComponentFrame,
+    mProps,
+    [ElementFactory.CreateElement(IButtonBit, mButtonProps)]);
+//    Result := ElementFactory.CreateElement(IButtonBit, mButtonProps);
 end;
 
 { TDesignComponent }
@@ -613,7 +658,39 @@ end;
 
 procedure TDesignComponent.DoStartingValues;
 begin
+  SelfProps
+  .SetInt(cProps.Layout, cLayout.Horizontal)
+  .SetInt(cProps.Place, cPlace.Elastic)
+  .SetInt(cProps.Border, 0)
+  .SetStr(cProps.Text, '')
+  .SetBool(cProps.Transparent, False)
+  .SetInt(cProps.Color, clFuchsia)
+  .SetInt(cProps.FontColor, clOlive)
+  .SetInt(cProps.BorderColor, clAqua);
+end;
 
+function TDesignComponent.StyleForeColor(const APropName: String): TColor;
+begin
+  if StyleKind = cStyleKind.None then
+    Result := SelfProps.AsInt(APropName)
+  else
+    Result := Style.Get(StyleKind).ForeColor;
+end;
+
+function TDesignComponent.StyleBackColor(const APropName: String): TColor;
+begin
+  if StyleKind = cStyleKind.None then
+    Result := SelfProps.AsInt(APropName)
+  else
+    Result := Style.Get(StyleKind).BackColor;
+end;
+
+function TDesignComponent.StyleSuppleColor(const APropName: String): TColor;
+begin
+  if StyleKind = cStyleKind.None then
+    Result := SelfProps.AsInt(APropName)
+  else
+    Result := Style.Get(StyleKind).SuppleColor;
 end;
 
 function TDesignComponent.Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;

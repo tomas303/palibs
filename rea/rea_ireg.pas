@@ -30,6 +30,7 @@ type
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
+    function RegisterStyle: TDIReg;
   end;
 
 
