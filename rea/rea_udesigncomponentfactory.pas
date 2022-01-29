@@ -220,10 +220,10 @@ var
   mmm: string;
 begin
   mProps := AProps.Clone;
-  mData := mProps.AsObject('Data') as TEditData;
+  mData := mProps.AsObject(cProps.Data) as TEditData;
   if mData = nil then begin
     mData := TEditData.Create;
-    mProps.SetObject('Data', mData);
+    mProps.SetObject(cProps.Data, mData);
   end;
   mUserTextChangedFunc := AProps.AsIntf(cProps.TextChangedFunc) as IFluxFunc;
   if mUserTextChangedFunc <> nil then begin
@@ -270,15 +270,15 @@ var
   mData: TGridData;
   mTextChangedFunc, mKeyDownFunc: IFluxFunc;
 begin
-  mData := AProps.AsObject('Data') as TGridData;
+  mData := AProps.AsObject(cProps.Data) as TGridData;
   mTextChangedFunc := TGridEdTextChangedFunc.Create(ActionIDSequence.Next, mData, NewNotifier(-400));
   FluxDispatcher.RegisterFunc(mTextChangedFunc);
   mKeyDownFunc := TGridEdKeyDownFunc.Create(ActionIDSequence.Next, mData, NewNotifier(-400));
   FluxDispatcher.RegisterFunc(mKeyDownFunc);
   mProps := AProps.Clone
-    .SetObject('Data', mData)
-    .SetIntf('EdTextChangedNotifier', NewNotifier(mTextChangedFunc.ID))
-    .SetIntf('EdKeyDownNotifier', NewNotifier(mKeyDownFunc.ID));
+    .SetObject(cProps.Data, mData)
+    .SetIntf(cEdit.EdTextChangedNotifier, NewNotifier(mTextChangedFunc.ID))
+    .SetIntf(cEdit.EdKeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
   Result := IDesignComponentGrid(Factory.Locate(IDesignComponentGrid, '', mProps));
 end;
 
@@ -290,12 +290,12 @@ var
   mProps: IProps;
   mData: TPagerData;
 begin
-  mData := AProps.AsObject('Data') as TPagerData;
+  mData := AProps.AsObject(cProps.Data) as TPagerData;
   if mData = nil then begin
     mData := TPagerData.Create;
   end;
   mProps := AProps.Clone
-    .SetObject('Data', mData);
+    .SetObject(cProps.Data, mData);
   Result := IDesignComponentPager(Factory.Locate(IDesignComponentPager, '', mProps));
 end;
 
@@ -308,7 +308,7 @@ var
   mData: TFormData;
   mCloseFunc, mSizeFunc, mMoveFunc: IFluxFunc;
 begin
-  mData := AProps.AsObject('Data') as TFormData;
+  mData := AProps.AsObject(cProps.Data) as TFormData;
   if mData = nil then begin
     mData := TFormData.Create;
   end;
@@ -316,10 +316,10 @@ begin
   mSizeFunc := TSizeFunc.Create(ActionIDSequence.Next, mData, NewNotifier(-400));
   mMoveFunc := TMoveFunc.Create(ActionIDSequence.Next, mData);
   mProps := AProps.Clone
-    .SetObject('Data', mData)
-    .SetIntf('CloseQueryNotifier', NewNotifier(mCloseFunc.ID))
-    .SetIntf('SizeNotifier', NewNotifier(mSizeFunc.ID))
-    .SetIntf('MoveNotifier', NewNotifier(mMoveFunc.ID));
+    .SetObject(cProps.Data, mData)
+    .SetIntf(cForm.CloseQueryNotifier, NewNotifier(mCloseFunc.ID))
+    .SetIntf(cForm.SizeNotifier, NewNotifier(mSizeFunc.ID))
+    .SetIntf(cForm.MoveNotifier, NewNotifier(mMoveFunc.ID));
   FluxDispatcher.RegisterFunc(mCloseFunc);
   FluxDispatcher.RegisterFunc(mSizeFunc);
   FluxDispatcher.RegisterFunc(mMoveFunc);
@@ -338,8 +338,8 @@ function TDesignComponentFactory.NewNotifier(const AActionID: integer
 begin
   Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '',
     NewProps
-    .SetInt('ActionID', AActionID)
-    .SetIntf('Dispatcher', FluxDispatcher)
+    .SetInt(cAction.ActionID, AActionID)
+    .SetIntf(cAction.Dispatcher, FluxDispatcher)
   ));
 end;
 
@@ -357,9 +357,9 @@ var
 begin
   mTabChangedFunc := TTabChangedFunc.Create(
     ActionIDSequence.Next,
-    AProps.AsObject('PagerData') as TPagerData,
+    AProps.AsObject(cPager.PagerData) as TPagerData,
     NewNotifier(-400),
-    AProps.AsInt('PageIndex'));
+    AProps.AsInt(cPager.PageIndex));
   FluxDispatcher.RegisterFunc(mTabChangedFunc);
   mProps := AProps.Clone
     .SetInt(cProps.Place, cPlace.Elastic)

@@ -33,10 +33,6 @@ type
       BorderColor = 'BorderColor';
       FontColor = 'FontColor';
       Transparent = 'Transparent';
-      SizeNotifier = 'SizeNotifier';
-      MoveNotifier = 'MoveNotifier';
-      ActivateNotifier = 'ActivateNotifier';
-      CloseQueryNotifier = 'CloseQueryNotifier';
       ClickNotifier = 'ClickNotifier';
       ClickFunc = 'ClickFunc';
       TextChangedNotifier = 'TextChangedNotifier';
@@ -63,10 +59,37 @@ type
       BoxLaticeSize = 'BoxLaticeSize';
       FontDirection = 'FontDirection';
       StyleKind = 'StyleKind';
+      Focused = 'Focused';
       Flat = 'Flat';
       ID = 'ID';
       Data = 'Data';
     end;
+
+  cPager = class(cProps)
+  public const
+    PageIndex = 'PageIndex';
+    PagerData = 'PagerData';
+  end;
+
+  cEdit = class(cProps)
+  public const
+    EdTextChangedNotifier = 'EdTextChangedNotifier';
+    EdKeyDownNotifier = 'EdKeyDownNotifier';
+  end;
+
+  cForm = class(cProps)
+  public const
+    SizeNotifier = 'SizeNotifier';
+    MoveNotifier = 'MoveNotifier';
+    ActivateNotifier = 'ActivateNotifier';
+    CloseQueryNotifier = 'CloseQueryNotifier';
+  end;
+
+  cAction = class(cProps)
+  public const
+    ActionID = 'ActionID';
+    Dispatcher = 'Dispatcher';
+  end;
 
   cEdge = class
   public const

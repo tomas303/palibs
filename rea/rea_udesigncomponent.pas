@@ -18,8 +18,6 @@ type
   protected
     function NewProps: IProps;
     function NewComposeProps: IProps; virtual;
-    function NewAction(AActionID: integer): IFluxAction;
-    function NewNotifier(const AActionID: integer): IFluxNotifier;
   protected
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
@@ -311,8 +309,8 @@ function TDesignComponentEdit.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
   Result
-    .SetStr('Text', Data.Text)
-    .SetBool('Focused', Data.Focused)
+    .SetStr(cProps.Text, Data.Text)
+    .SetBool(cProps.Focused, Data.Focused)
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
     .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
     .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier);
@@ -331,8 +329,8 @@ var
   mProp: IProp;
 begin
   Result := NewProps
-    .SetInt('Place', cPlace.Elastic)
-    .SetStr('Text', Data[Row, Col])
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetStr(cProps.Text, Data[Row, Col])
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.TextColor, SelfProps.AsInt(cProps.TextColor))
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.ColMMWidth));
@@ -349,8 +347,8 @@ var
   mProp: IProp;
 begin
   Result := NewProps
-    .SetInt('Place', cPlace.FixFront)
-    .SetInt('Layout', cLayout.Horizontal)
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.Layout, cLayout.Horizontal)
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.RowMMHeight));
   if Row mod 2 = 1 then begin
@@ -359,7 +357,7 @@ begin
     mProp := SelfProps.PropByName[cProps.RowEvenColor];
   end;
   if mProp <> nil then
-    Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False);
+    Result.SetInt(cProps.Color, mProp.AsInteger).SetBool(cProps.Transparent, False);
 end;
 
 function TDesignComponentGrid.MakeRow(Row: integer): TMetaElementArray;
@@ -373,11 +371,11 @@ begin
     if (Row = Data.CurrentRow) and (i = Data.CurrentCol) then begin
       mProps := ColProps(Row, i);
       mProps
-        .SetObject('Data', Data.EditData)
-        .SetBool('Flat', True)
+        .SetObject(cProps.Data, Data.EditData)
+        .SetBool(cProps.Flat, True)
         .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-        .SetIntf('TextChangedNotifier', EdTextChangedNotifier)
-        .SetIntf('KeyDownNotifier', EdKeyDownNotifier);
+        .SetIntf(cProps.TextChangedNotifier, EdTextChangedNotifier)
+        .SetIntf(cProps.KeyDownNotifier, EdKeyDownNotifier);
       Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);
     end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, ColProps(Row, i));
@@ -399,19 +397,19 @@ end;
 function TDesignComponentGrid.LaticeColProps: IProps;
 begin
   Result := NewProps
-    .SetInt('Place', cPlace.FixFront)
-    .SetBool('Transparent', False)
-    .SetInt('Color', LaticeColColor)
-    .SetInt('Width', LaticeColSize);
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetBool(cProps.Transparent, False)
+    .SetInt(cProps.Color, LaticeColColor)
+    .SetInt(cProps.Width, LaticeColSize);
 end;
 
 function TDesignComponentGrid.LaticeRowProps: IProps;
 begin
   Result := NewProps
-    .SetInt('Place', cPlace.FixFront)
-    .SetBool('Transparent', False)
-    .SetInt('Color', LaticeRowColor)
-    .SetInt('Height', LaticeRowSize);
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetBool(cProps.Transparent, False)
+    .SetInt(cProps.Color, LaticeRowColor)
+    .SetInt(cProps.Height, LaticeRowSize);
 end;
 
 function TDesignComponentGrid.Latice(AElements: TMetaElementArray;
@@ -454,10 +452,10 @@ begin
   .SetInt(cProps.MMTop, Data.Top)
   .SetInt(cProps.MMWidth, Data.Width)
   .SetInt(cProps.MMHeight, Data.Height)
-  .SetIntf(cProps.ActivateNotifier, SelfProps.AsIntf(cProps.ActivateNotifier))
-  .SetIntf(cProps.SizeNotifier, SizeNotifier)
-  .SetIntf(cProps.MoveNotifier, MoveNotifier)
-  .SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier);
+  .SetIntf(cForm.ActivateNotifier, SelfProps.AsIntf(cForm.ActivateNotifier))
+  .SetIntf(cForm.SizeNotifier, SizeNotifier)
+  .SetIntf(cForm.MoveNotifier, MoveNotifier)
+  .SetIntf(cForm.CloseQueryNotifier, CloseQueryNotifier);
 end;
 
 function TDesignComponentForm.DoCompose(const AProps: IProps;
@@ -502,10 +500,10 @@ begin
     mSwitchFactory := IDesignComponentPagerSwitchFactory(Factory.Locate(IDesignComponentPagerSwitchFactory));
     mSwitchDC := mSwitchFactory.New(
       NewProps
+        .SetObject(cPager.PagerData, Data)
+        .SetInt(cPager.PageIndex, i)
         .SetInt(cProps.FontDirection, mFontDirection)
-        .SetInt('PageIndex', i)
         .SetStr(cProps.Text, mText)
-        .SetObject('PagerData', Data)
     );
     mSwitch[i] := mSwitchDC.Compose(nil, nil);
   end;
@@ -528,7 +526,7 @@ begin
   Result := ElementFactory.CreateElement(
     IStripBit,
     NewProps
-      .SetInt('Layout', cLayout.Overlay),
+      .SetInt(cProps.Layout, cLayout.Overlay),
     [mActual]);
 end;
 
@@ -614,24 +612,6 @@ begin
     .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
     .SetInt(cProps.TextColor, StyleForeColor(cProps.TextColor))
     .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
-end;
-
-function TDesignComponent.NewAction(AActionID: integer): IFluxAction;
-var
-  mProps: IProps;
-begin
-  mProps := NewProps;
-  mProps
-    .SetInt('ID', AActionID);
-  Result := IFluxAction(Factory.Locate(IFluxAction, '', mProps));
-end;
-
-function TDesignComponent.NewNotifier(const AActionID: integer): IFluxNotifier;
-begin
-  Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '',
-    NewProps
-    .SetInt('ActionID', AActionID)
-  ));
 end;
 
 procedure TDesignComponent.AddChildren(const AElement: IMetaElement;
