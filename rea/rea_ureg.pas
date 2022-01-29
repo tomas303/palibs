@@ -210,6 +210,7 @@ begin
   Result := DIC.Add(TRenderer, IRenderer);
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Reconciler', IReconciler);
 end;
 

@@ -17,6 +17,7 @@ type
   TDesignComponent = class(TDynaObject, IDesignComponent, INode)
   protected
     function NewProps: IProps;
+    function NewComposeProps: IProps; virtual;
     function NewAction(AActionID: integer): IFluxAction;
     function NewNotifier(const AActionID: integer): IFluxNotifier;
   protected
@@ -67,6 +68,7 @@ type
 
   TDesignComponentForm = class(TDesignComponent, IDesignComponentForm)
   protected
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TFormData;
@@ -84,6 +86,7 @@ type
 
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
   protected
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TEditData;
@@ -100,7 +103,11 @@ type
   { TDesignComponentButton }
 
   TDesignComponentButton = class(TDesignComponent, IDesignComponentButton)
+  private
+    function NewOuterProps: IProps;
   protected
+    procedure DoStartingValues; override;
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
@@ -118,6 +125,7 @@ type
     procedure MakeChildren(const AParentEl: IMetaElement);
   protected
     function BoxLayout: Integer; virtual; abstract;
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
@@ -126,6 +134,8 @@ type
   TDesignComponentHBox = class(TDesignComponentBox, IDesignComponentHBox)
   protected
     function BoxLayout: Integer; override;
+  public
+    procedure AfterConstruction; override;
   end;
 
   { TDesignComponentVBox }
@@ -139,6 +149,7 @@ type
 
   TDesignComponentText = class(TDesignComponent, IDesignComponentText)
   protected
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   end;
 
@@ -148,13 +159,13 @@ type
   private
     function ColProps(Row, Col: integer): IProps;
     function RowProps(Row: integer): IProps;
-    function GridProps: IProps;
     function MakeRow(Row: integer): TMetaElementArray;
     function MakeGrid: TMetaElementArray;
     function LaticeColProps: IProps;
     function LaticeRowProps: IProps;
     function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
   protected
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TGridData;
@@ -181,8 +192,8 @@ type
     function RenderPage(const APageElement: IMetaElement): IMetaElement;
     function MakeSwitch: IMetaElement;
     function MakeBody: IMetaElement;
-    function MakeProps: IProps;
   protected
+    function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TPagerData;
@@ -208,6 +219,11 @@ implementation
 function TDesignComponentHBox.BoxLayout: Integer;
 begin
   Result := cLayout.Horizontal;
+end;
+
+procedure TDesignComponentHBox.AfterConstruction;
+begin
+  inherited AfterConstruction;
 end;
 
 { TDesignComponentVBox }
@@ -246,21 +262,17 @@ begin
   end;
 end;
 
+function TDesignComponentBox.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result
+    .SetInt(cProps.Layout, BoxLayout);
+end;
+
 function TDesignComponentBox.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
-var
-  mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border{, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color}]);
-  mProps.SetInt(cProps.Layout, BoxLayout)
-    .SetBool(cProps.Transparent, False)
-    //.SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.Border, 5)
-    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
-    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
-    .SetInt(cProps.BorderColor, clMaroon {StyleSuppleColor(cProps.BorderColor)});
-  Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
+  Result := ElementFactory.CreateElement(IStripBit, NewComposeProps);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
   else
@@ -271,19 +283,8 @@ end;
 
 function TDesignComponentFrame.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
-var
-  mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border{, cProps.BorderColor, cProps.FontColor, cProps.Transparent, cProps.Color}]);
-  mProps
-    //.SetInt(cProps.Layout, cLayout.Horizontal)
-    .SetBool(cProps.Transparent, False)
-    .SetInt(cProps.Border, 3)
-    .SetInt(cProps.Color, {StyleBackColor(cProps.Color)} clBlue)
-    //.SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
-    .SetInt(cProps.BorderColor, clYellow {  StyleSuppleColor(cProps.BorderColor)});
-  Result := ElementFactory.CreateElement(IStripBit, mProps);
+  Result := ElementFactory.CreateElement(IStripBit, NewComposeProps);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
   else
@@ -292,32 +293,35 @@ end;
 
 { TDesignComponentText }
 
+function TDesignComponentText.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result.SetStr(cProps.Text, self.SelfProps.AsStr(cProps.Text));
+end;
+
 function TDesignComponentText.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
 begin
-  Result := ElementFactory.CreateElement(ITextBit, SelfProps.Clone);
+  Result := ElementFactory.CreateElement(ITextBit, NewComposeProps);
 end;
 
 { TDesignComponentEdit }
 
+function TDesignComponentEdit.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result
+    .SetStr('Text', Data.Text)
+    .SetBool('Focused', Data.Focused)
+    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
+    .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
+    .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier);
+end;
+
 function TDesignComponentEdit.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
-var
-  mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight{,
-    cProps.Color, cProps.TextColor}]);
-  mProps
-    .SetInt(cProps.TextColor, StyleForeColor(cProps.TextColor))
-    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
-    .SetStr('ID', ID)
-    .SetStr('Text', Data.Text)
-    //.SetIntf('AskNotifier', AskNotifier)
-    .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
-    .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier)
-    .SetBool('Focused', Data.Focused)
-    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat));
-  Result := ElementFactory.CreateElement(IEditBit, mProps);
+  Result := ElementFactory.CreateElement(IEditBit, NewComposeProps);
 end;
 
 { TDesignComponentGrid }
@@ -356,19 +360,6 @@ begin
   end;
   if mProp <> nil then
     Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False);
-end;
-
-function TDesignComponentGrid.GridProps: IProps;
-var
-  mProp: IProp;
-begin
-  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.MMWidth, cProps.MMHeight]);
-  Result
-   .SetInt('Place', cPlace.Elastic)
-   .SetInt('Layout', cLayout.Vertical);
-  mProp := SelfProps.PropByName[cProps.Color];
-  if mProp <> nil then
-    Result.SetInt(cProps.Color, mProp.AsInteger).SetBool('Transparent', False)
 end;
 
 function TDesignComponentGrid.MakeRow(Row: integer): TMetaElementArray;
@@ -438,30 +429,41 @@ begin
   end;
 end;
 
+function TDesignComponentGrid.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result
+   .SetInt(cProps.Place, cPlace.Elastic)
+   .SetInt(cProps.Layout, cLayout.Vertical);
+end;
+
 function TDesignComponentGrid.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
 begin
   Result := ElementFactory.CreateElement(
-    IStripBit, GridProps, MakeGrid);
+    IStripBit, NewComposeProps, MakeGrid);
 end;
 
 { TDesignComponentForm }
 
+function TDesignComponentForm.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result
+  .SetInt(cProps.MMLeft, Data.Left)
+  .SetInt(cProps.MMTop, Data.Top)
+  .SetInt(cProps.MMWidth, Data.Width)
+  .SetInt(cProps.MMHeight, Data.Height)
+  .SetIntf(cProps.ActivateNotifier, SelfProps.AsIntf(cProps.ActivateNotifier))
+  .SetIntf(cProps.SizeNotifier, SizeNotifier)
+  .SetIntf(cProps.MoveNotifier, MoveNotifier)
+  .SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier);
+end;
+
 function TDesignComponentForm.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
-var
-  mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Title, cProps.Layout, cProps.Color, cProps.ActivateNotifier]);
-  mProps
-    .SetIntf(cProps.SizeNotifier, SizeNotifier)
-    .SetIntf(cProps.MoveNotifier, MoveNotifier)
-    .SetIntf(cProps.CloseQueryNotifier, CloseQueryNotifier)
-    .SetInt(cProps.MMLeft, Data.Left)
-    .SetInt(cProps.MMTop, Data.Top)
-    .SetInt(cProps.MMWidth, Data.Width)
-    .SetInt(cProps.MMHeight, Data.Height);
-  Result := ElementFactory.CreateElement(IFormBit, mProps);
+  Result := ElementFactory.CreateElement(IFormBit, NewComposeProps);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
   else
@@ -530,9 +532,9 @@ begin
     [mActual]);
 end;
 
-function TDesignComponentPager.MakeProps: IProps;
+function TDesignComponentPager.NewComposeProps: IProps;
 begin
-  Result := NewProps;
+  Result := inherited NewComposeProps;
   case SwitchEdge of
     cEdge.Left, cEdge.Right:
       Result.SetInt(cProps.Layout, cLayout.Horizontal);
@@ -551,22 +553,14 @@ begin
     cEdge.Right, cEdge.Bottom:
       mChildren := [MakeBody,MakeSwitch];
   end;
-  Result := ElementFactory.CreateElement(IStripBit, MakeProps, mChildren);
+  Result := ElementFactory.CreateElement(IStripBit, NewComposeProps, mChildren);
 end;
 
 { TDesignComponentStrip }
 
 function TDesignComponentStrip.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
-var
-  mProps: IProps;
 begin
-  mProps := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border{, cProps.BorderColor, cProps.FontColor, cProps.Color, cProps.Transparent}])
-    .SetBool(cProps.Transparent, False)
-    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
-    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
-    .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
-  Result := ElementFactory.CreateElement(IStripBit, mProps, AChildren);
+  Result := ElementFactory.CreateElement(IStripBit, NewComposeProps, AChildren);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
   else
@@ -575,39 +569,34 @@ end;
 
 { TDesignComponentButton }
 
-function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
-var
-  mProps, mButtonProps: IProps;
-  mP: IProp;
+function TDesignComponentButton.NewOuterProps: IProps;
 begin
-  {
-  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
-  mProps.SetInt(cProps.Border, 4).SetInt(cProps.BorderColor, clGray);
-  mButtonProps := SelfProps.Clone;
-  mButtonProps.SetInt(cProps.Place, cPlace.Elastic);
-  if mButtonProps.GetPropByName(cProps.Color) = nil then
-    mButtonProps.SetInt(cProps.Color, clSilver);
-  if mButtonProps.GetPropByName(cProps.FontDirection) = nil then
-    mButtonProps.SetInt(cProps.FontDirection, cFontDirection.Horizontal);
-  Result := ElementFactory.CreateElement(IDesignComponentFrame,
-    mProps,
-    [ElementFactory.CreateElement(IButtonBit, mButtonProps)]);
-    }
-  mProps := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight]);
-  //mProps.SetInt(cProps.Border, 4).SetInt(cProps.BorderColor, clGray);
-  mButtonProps := SelfProps.Clone;
-  mButtonProps
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
-    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
-    .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
+  Result := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight])
+    .SetInt(cProps.Border, 4)
+    .SetInt(cProps.BorderColor, clGray);
+end;
 
-  if mButtonProps.GetPropByName(cProps.FontDirection) = nil then
-    mButtonProps.SetInt(cProps.FontDirection, cFontDirection.Horizontal);
+procedure TDesignComponentButton.DoStartingValues;
+begin
+  inherited DoStartingValues;
+  SelfProps.SetInt(cProps.FontDirection, cFontDirection.Horizontal);
+end;
+
+function TDesignComponentButton.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.FontDirection, SelfProps.AsInt(cProps.FontDirection))
+    .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
+    .SetIntf(cProps.ClickNotifier, SelfProps.AsIntf(cProps.ClickNotifier));
+end;
+
+function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+begin
   Result := ElementFactory.CreateElement(IDesignComponentFrame,
-    mProps,
-    [ElementFactory.CreateElement(IButtonBit, mButtonProps)]);
-//    Result := ElementFactory.CreateElement(IButtonBit, mButtonProps);
+    NewOuterProps,
+    [ElementFactory.CreateElement(IButtonBit, NewComposeProps)]);
 end;
 
 { TDesignComponent }
@@ -615,6 +604,16 @@ end;
 function TDesignComponent.NewProps: IProps;
 begin
   Result := IProps(Factory.Locate(IProps));
+end;
+
+function TDesignComponent.NewComposeProps: IProps;
+begin
+  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
+    cProps.MMWidth, cProps.MMHeight, cProps.Border])
+    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
+    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
+    .SetInt(cProps.TextColor, StyleForeColor(cProps.TextColor))
+    .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
 end;
 
 function TDesignComponent.NewAction(AActionID: integer): IFluxAction;
