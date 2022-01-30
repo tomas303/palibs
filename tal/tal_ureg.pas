@@ -10,7 +10,7 @@ uses
   trl_ilog, tal_uwindowlog, flu_iflux,
   trl_iExecutor, trl_imetaelementfactory,
   trl_imetaelement,
-  trl_ireconciler, rea_idesigncomponent, rea_irenderer;
+  trl_ireconciler, rea_idesigncomponent, rea_irenderer, trl_udifactory;
 
 type
 
@@ -34,7 +34,11 @@ implementation
 function TReg.RegisterReactLauncher: TDIReg;
 begin
   Result := DIC.Add(TReactLauncher, ILauncher);
+  Result.InjectProp('Dispatcher', IFluxDispatcher);
   Result.InjectProp('Executor', IExecutor);
+  Result.InjectProp('Renderer', IRenderer);
+  Result.InjectProp('GUI', IDesignComponentApp);
+  Result.InjectProp('Factory2', TDIFactory2);
 end;
 
 function TReg.RegisterWindowLog: TDIReg;
