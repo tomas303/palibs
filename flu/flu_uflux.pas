@@ -120,7 +120,7 @@ begin
     mEvent.Event(mAction.Props);
   end;
   m := (Dispatcher as TObject).ClassName;
-  Dispatcher.Dispatch(mAction);
+  Dispatcher.FluxDispatch(mAction);
 end;
 
 procedure TFluxNotifier.Add(const AEvent: TFluxNotifierEvent);

@@ -54,7 +54,7 @@ type
 
   IFluxDispatcher = interface
   ['{935D8630-D358-49BA-977B-E4BF88C804ED}']
-    procedure Dispatch(const AAppAction: IFluxAction);
+    procedure FluxDispatch(const AAppAction: IFluxAction);
     procedure RegisterFunc(const AFunc: IFluxFunc);
   end;
 

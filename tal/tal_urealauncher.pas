@@ -28,13 +28,13 @@ type
   public
     procedure AfterConstruction; override;
   protected
-    fDispatcher: IFluxDispatcher;
+    fFluxDispatcher: IFluxDispatcher;
     fExecutor: IExecutor;
     fRenderer: IRenderer;
     fGUI: IDesignComponentApp;
     fFactory2: TDIFactory2;
   published
-    property Dispatcher: IFluxDispatcher read fDispatcher write fDispatcher;
+    property FluxDispatcher: IFluxDispatcher read fFluxDispatcher write fFluxDispatcher;
     property Executor: IExecutor read fExecutor write fExecutor;
     property Renderer: IRenderer read fRenderer write fRenderer;
     property GUI: IDesignComponentApp read fGUI write fGUI;
@@ -55,7 +55,7 @@ begin
   Result := Factory2.Locate<IFluxNotifier>(
     NewProps
     .SetInt(cAction.ActionID, AActionID)
-    .SetIntf(cAction.Dispatcher, Dispatcher)
+    .SetIntf(cAction.Dispatcher, FluxDispatcher)
   );
 end;
 
@@ -68,9 +68,9 @@ end;
 procedure TReactLauncher.StartUp;
 begin
   Application.AddOnKeyDownBeforeHandler(KeyDownBeforeHandler);
-  Dispatcher.RegisterFunc(TRenderFunc.Create(-400, GUI, Renderer));
+  FluxDispatcher.RegisterFunc(TRenderFunc.Create(-400, GUI, Renderer));
   NewNotifier(-400).Notify;
-  Dispatcher.RegisterFunc(TProcessMessagesFunc.Create(-401, NewNotifier(-401)));
+  FluxDispatcher.RegisterFunc(TProcessMessagesFunc.Create(-401, NewNotifier(-401)));
   NewNotifier(-401).Notify;
 end;
 

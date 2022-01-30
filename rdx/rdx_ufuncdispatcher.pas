@@ -30,9 +30,8 @@ type
   TRdxFuncDispatcher = class(TInterfacedObject, IFluxDispatcher)
   protected
     fIDFuncs: TIDFuncs;
-    procedure SetAddFunc(AValue: IFluxFunc);
   protected
-    procedure Dispatch(const AAction: IFluxAction);
+    procedure FluxDispatch(const AAction: IFluxAction);
     procedure RegisterFunc(const AFunc: IFluxFunc);
   public
     procedure AfterConstruction; override;
@@ -40,7 +39,6 @@ type
   protected
     fExecutor: IExecutor;
   published
-    property AddFunc: IFluxFunc write SetAddFunc;
     property Executor: IExecutor read fExecutor write fExecutor;
   end;
 
@@ -62,12 +60,7 @@ end;
 
 { TRdxFuncDispatcher }
 
-procedure TRdxFuncDispatcher.SetAddFunc(AValue: IFluxFunc);
-begin
-  RegisterFunc(AValue);
-end;
-
-procedure TRdxFuncDispatcher.Dispatch(const AAction: IFluxAction);
+procedure TRdxFuncDispatcher.FluxDispatch(const AAction: IFluxAction);
 var
   mFuncs: TFuncs;
   mFunc: IFluxFunc;

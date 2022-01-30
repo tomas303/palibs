@@ -34,7 +34,7 @@ implementation
 function TReg.RegisterReactLauncher: TDIReg;
 begin
   Result := DIC.Add(TReactLauncher, ILauncher);
-  Result.InjectProp('Dispatcher', IFluxDispatcher);
+  Result.InjectProp('FluxDispatcher', IFluxDispatcher);
   Result.InjectProp('Executor', IExecutor);
   Result.InjectProp('Renderer', IRenderer);
   Result.InjectProp('GUI', IDesignComponentApp);
