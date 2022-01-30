@@ -22,6 +22,9 @@ type
     constructor Create(AID: integer; AProcessMessages: IFluxNotifier);
   end;
 
+const
+  cNotifyProcessMessages = -500;
+
 implementation
 
 { TProcessMessagesFunc }

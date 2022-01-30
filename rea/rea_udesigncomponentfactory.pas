@@ -7,7 +7,7 @@ interface
 uses
   rea_idesigncomponent, trl_iprops, flu_iflux, trl_idifactory, trl_isequence,
   rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree,
-  graphics, trl_udifactory;
+  graphics, trl_udifactory, rea_irenderer;
 
 type
 
@@ -271,9 +271,9 @@ var
   mTextChangedFunc, mKeyDownFunc: IFluxFunc;
 begin
   mData := AProps.AsObject(cProps.Data) as TGridData;
-  mTextChangedFunc := TGridEdTextChangedFunc.Create(ActionIDSequence.Next, mData, NewNotifier(-400));
+  mTextChangedFunc := TGridEdTextChangedFunc.Create(ActionIDSequence.Next, mData, NewNotifier(cNotifyRender));
   FluxDispatcher.RegisterFunc(mTextChangedFunc);
-  mKeyDownFunc := TGridEdKeyDownFunc.Create(ActionIDSequence.Next, mData, NewNotifier(-400));
+  mKeyDownFunc := TGridEdKeyDownFunc.Create(ActionIDSequence.Next, mData, NewNotifier(cNotifyRender));
   FluxDispatcher.RegisterFunc(mKeyDownFunc);
   mProps := AProps.Clone
     .SetObject(cProps.Data, mData)
@@ -313,7 +313,7 @@ begin
     mData := TFormData.Create;
   end;
   mCloseFunc := TCloseQueryFunc.Create(ActionIDSequence.Next);
-  mSizeFunc := TSizeFunc.Create(ActionIDSequence.Next, mData, NewNotifier(-400));
+  mSizeFunc := TSizeFunc.Create(ActionIDSequence.Next, mData, NewNotifier(cNotifyRender));
   mMoveFunc := TMoveFunc.Create(ActionIDSequence.Next, mData);
   mProps := AProps.Clone
     .SetObject(cProps.Data, mData)
@@ -358,7 +358,7 @@ begin
   mTabChangedFunc := TTabChangedFunc.Create(
     ActionIDSequence.Next,
     AProps.AsObject(cPager.PagerData) as TPagerData,
-    NewNotifier(-400),
+    NewNotifier(cNotifyRender),
     AProps.AsInt(cPager.PageIndex));
   FluxDispatcher.RegisterFunc(mTabChangedFunc);
   mProps := AProps.Clone

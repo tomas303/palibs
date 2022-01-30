@@ -68,10 +68,10 @@ end;
 procedure TReactLauncher.StartUp;
 begin
   Application.AddOnKeyDownBeforeHandler(KeyDownBeforeHandler);
-  FluxDispatcher.RegisterFunc(TRenderFunc.Create(-400, GUI, Renderer));
-  NewNotifier(-400).Notify;
-  FluxDispatcher.RegisterFunc(TProcessMessagesFunc.Create(-401, NewNotifier(-401)));
-  NewNotifier(-401).Notify;
+  FluxDispatcher.RegisterFunc(TRenderFunc.Create(cNotifyRender, GUI, Renderer));
+  NewNotifier(cNotifyRender).Notify;
+  FluxDispatcher.RegisterFunc(TProcessMessagesFunc.Create(cNotifyProcessMessages, NewNotifier(cNotifyProcessMessages)));
+  NewNotifier(cNotifyProcessMessages).Notify;
 end;
 
 procedure TReactLauncher.ShutDown;

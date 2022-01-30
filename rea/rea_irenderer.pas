@@ -14,7 +14,7 @@ type
   end;
 
 const
-  cFuncRender = -11;
+  cNotifyRender = -400;
 
 implementation
 
