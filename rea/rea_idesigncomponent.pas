@@ -40,7 +40,6 @@ type
       KeyDownNotifier = 'KeyDownNotifier';
       KeyDownFunc = 'KeyDownFunc';
       OnTextNotifier = 'OnTextNotifier';
-      AskNotifier = 'AskNotifier';
       RowMMHeight = 'RowMMHeight';
       ColMMWidth = 'ColMMWidth';
       RowEvenColor = 'RowEvenColor';

@@ -88,12 +88,10 @@ type
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
     fData: TEditData;
-    fAskNotifier: IFluxNotifier; //todo .... probably remove
     fTextChangedNotifier: IFluxNotifier;
     fKeyDownNotifier: IFluxNotifier;
   published
     property Data: TEditData read fData write fData;
-    property AskNotifier: IFluxNotifier read fAskNotifier write fAskNotifier;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write fTextChangedNotifier;
     property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write fKeyDownNotifier;
   end;
