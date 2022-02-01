@@ -15,7 +15,7 @@ type
   TReg = class(TInterfacedObject, IReg)
   protected
     // IReg
-    function RegisterTimer(AInterval: integer): TDIReg;
+    //function RegisterTimer(AInterval: integer): TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -27,15 +27,15 @@ implementation
 
 { TReg }
 
-function TReg.RegisterTimer(AInterval: integer): TDIReg;
-begin
-  Result := DIC.Add(TTimer, ITimer);
-  Result.InjectProp('Interval', AInterval);
-end;
+//function TReg.RegisterTimer(AInterval: integer): TDIReg;
+//begin
+//  Result := DIC.Add(TTimer, ITimer);
+//  Result.InjectProp('Interval', AInterval);
+//end;
 
 procedure TReg.RegisterCommon;
 begin
-  RegisterTimer(1000);
+  //RegisterTimer(1000);
 end;
 
 end.

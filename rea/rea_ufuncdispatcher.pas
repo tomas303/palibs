@@ -1,11 +1,11 @@
-unit rdx_ufuncdispatcher;
+unit rea_ufuncdispatcher;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  flu_iflux, fgl, sysutils, trl_iExecutor;
+  rea_iflux, fgl, sysutils, trl_iExecutor;
 
 type
 

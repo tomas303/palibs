@@ -5,7 +5,7 @@ unit rea_udesigncomponentfunc;
 interface
 
 uses
-  flu_iflux, rea_udesigncomponentdata, LCLType, rea_idesigncomponent,
+  rea_iflux, rea_udesigncomponentdata, LCLType, rea_idesigncomponent,
   trl_imetaelement, trl_iExecutor;
 
 type

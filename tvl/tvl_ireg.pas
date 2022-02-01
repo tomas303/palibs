@@ -10,7 +10,7 @@ uses
 type
   IReg = interface
   ['{E74195AF-21DD-4BE8-AAAA-2445A350CE43}']
-    function RegisterTimer(AInterval: integer): TDIReg;
+    //function RegisterTimer(AInterval: integer): TDIReg;
     procedure RegisterCommon;
   end;
 

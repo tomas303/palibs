@@ -56,22 +56,19 @@
       </Item11>
     </Files>
     <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="5">
+    <RequiredPkgs Count="4">
       <Item1>
-        <PackageName Value="rdx"/>
+        <PackageName Value="rea"/>
       </Item1>
       <Item2>
-        <PackageName Value="rea"/>
+        <PackageName Value="tvl"/>
       </Item2>
       <Item3>
-        <PackageName Value="tvl"/>
+        <PackageName Value="trl"/>
       </Item3>
       <Item4>
-        <PackageName Value="trl"/>
-      </Item4>
-      <Item5>
         <PackageName Value="FCL"/>
-      </Item5>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

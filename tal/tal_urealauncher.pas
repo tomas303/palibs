@@ -5,7 +5,7 @@ unit tal_urealauncher;
 interface
 
 uses
-  trl_ilauncher, forms, trl_iExecutor, flu_iflux, Classes,
+  trl_ilauncher, forms, trl_iExecutor, rea_iflux, Classes,
   rea_irenderer, rea_urenderer,
   tal_uwinfunc,
   rea_idesigncomponent,

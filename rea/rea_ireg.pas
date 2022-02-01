@@ -31,6 +31,9 @@ type
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterStyle: TDIReg;
+    function RegisterDispatcher: TDIReg;
+    function RegisterAction: TDIReg;
+    function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
   end;
 
 

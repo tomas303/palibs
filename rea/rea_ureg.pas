@@ -10,7 +10,7 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_irenderer, rea_urenderer,
-  flu_iflux,
+  rea_iflux,
   Forms, StdCtrls,
   trl_iExecutor,
   trl_iprops,
@@ -19,9 +19,10 @@ uses
   trl_ireconciler,
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
-  flu_ireg, rea_udesigncomponentfactory,
+  rea_udesigncomponentfactory,
   trl_udifactory,
-  rea_istyles, rea_ustyles;
+  rea_istyles, rea_ustyles,
+  rea_ufuncdispatcher, rea_uflux;
 
 type
 
@@ -31,8 +32,6 @@ type
   private const
     creafuncseq = 'reafuncseq';
   private
-    fRegFlux: flu_ireg.IReg;
-    function RegFlux: flu_ireg.IReg;
     procedure SetDIC(AValue: TDIContainer);
   protected
     // IReg
@@ -53,6 +52,9 @@ type
     function RegisterRenderer: TDIReg;
     function RegisterFuncSequence: TDIReg;
     function RegisterStyle: TDIReg;
+    function RegisterDispatcher: TDIReg;
+    function RegisterAction: TDIReg;
+    function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -62,13 +64,6 @@ type
 implementation
 
 { TReg }
-
-function TReg.RegFlux: flu_ireg.IReg;
-begin
-  if fRegFlux = nil then
-    fRegFlux := flu_ireg.IReg(DIC.Locate(flu_ireg.IReg));
-  Result := fRegFlux;
-end;
 
 procedure TReg.SetDIC(AValue: TDIContainer);
 begin
@@ -179,6 +174,9 @@ begin
   RegisterRenderer;
   RegisterFuncSequence;
   RegisterStyle;
+  RegisterDispatcher;
+  RegisterAction;
+  RegisterNotifier(IFluxDispatcher);
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -225,6 +223,27 @@ end;
 function TReg.RegisterStyle: TDIReg;
 begin
   Result := DIC.Add(TStyle, IStyle);
+end;
+
+function TReg.RegisterDispatcher: TDIReg;
+begin
+  Result := DIC.Add(TRdxFuncDispatcher, IFluxDispatcher, '', ckSingle);
+  Result.InjectProp('Executor', IExecutor);
+end;
+
+function TReg.RegisterAction: TDIReg;
+begin
+  Result := DIC.Add(TFluxAction, IFluxAction);
+  Result.InjectProp('Props', IProps);
+end;
+
+function TReg.RegisterNotifier(const ADispatcher: TGuid; const AID: string
+  ): TDIReg;
+begin
+  Result := DIC.Add(TFluxNotifier, IFluxNotifier);
+  // asi az pri reactu mozna    mReg.InjectProp('ActionID', cResizeFunc);
+  Result.InjectProp('Factory', IDIFactory);
+  Result.InjectProp('Dispatcher', ADispatcher, AID);
 end;
 
 end.

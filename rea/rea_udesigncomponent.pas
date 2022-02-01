@@ -6,7 +6,7 @@ interface
 
 uses
   rea_idesigncomponent, rea_udesigncomponentdata, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
-  trl_iprops, rea_ibits, trl_itree, trl_idifactory, flu_iflux, trl_ilog,
+  trl_iprops, rea_ibits, trl_itree, trl_idifactory, rea_iflux, trl_ilog,
   sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer,
   trl_udifactory, rea_istyles;
 

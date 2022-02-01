@@ -1,4 +1,4 @@
-unit flu_uflux;
+unit rea_uflux;
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
@@ -6,7 +6,7 @@ unit flu_uflux;
 interface
 
 uses
-  trl_iprops, flu_iflux, fgl, trl_idifactory, sysutils;
+  trl_iprops, rea_iflux, fgl, trl_idifactory, sysutils;
 
 type
 

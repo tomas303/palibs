@@ -12,8 +12,6 @@ uses
   trl_upersiststore,
   tal_uhistorysettings, tal_ihistorysettings,
   rea_ireg, rea_ureg,
-  rdx_ireg, rdx_ureg,
-  flu_ireg, flu_ureg,
   tal_ireg, tal_ureg,
   trl_ireg, trl_ureg,
   tvl_ireg, tvl_ureg;
@@ -50,20 +48,14 @@ type
     procedure Launch;
   protected
     fRegReact: rea_ireg.IReg;
-    fRegRedux: rdx_ireg.IReg;
-    fRegFlux: flu_ireg.IReg;
     fRegApps: tal_ireg.IReg;
     fRegRuntime: trl_ireg.IReg;
     fRegVL: tvl_ireg.IReg;
     function GetRegReact: rea_ireg.IReg;
-    function GetRegRedux: rdx_ireg.IReg;
-    function GetRegFlux: flu_ireg.IReg;
     function GetRegApps: tal_ireg.IReg;
     function GetRegRuntime: trl_ireg.IReg;
     function GetRegVL: tvl_ireg.IReg;
     property RegReact: rea_ireg.IReg read GetRegReact;
-    property RegRedux: rdx_ireg.IReg read GetRegRedux;
-    property RegFlux: flu_ireg.IReg read GetRegFlux;
     property RegApps: tal_ireg.IReg read GetRegApps;
     property RegRuntime: trl_ireg.IReg read GetRegRuntime;
     property RegVL: tvl_ireg.IReg read GetRegVL;
@@ -184,12 +176,6 @@ begin
   mReg := DIC.Add(rea_ureg.TReg, rea_ireg.IReg);
   mReg.InjectProp('DIC', TDIContainer, '', DIC);
   //
-  mReg := DIC.Add(rdx_ureg.TReg, rdx_ireg.IReg);
-  mReg.InjectProp('DIC', TDIContainer, '', DIC);
-  //
-  mReg := DIC.Add(flu_ureg.TReg, flu_ireg.IReg);
-  mReg.InjectProp('DIC', TDIContainer, '', DIC);
-  //
   mReg := DIC.Add(tal_ureg.TReg, tal_ireg.IReg);
   mReg.InjectProp('DIC', TDIContainer, '', DIC);
   //
@@ -226,20 +212,6 @@ begin
   if fRegReact = nil then
     fRegReact := rea_ireg.IReg(DIC.Locate(rea_ireg.IReg));
   Result := fRegReact;
-end;
-
-function TALApp.GetRegRedux: rdx_ireg.IReg;
-begin
-  if fRegRedux = nil then
-    fRegRedux := rdx_ireg.IReg(DIC.Locate(rdx_ireg.IReg));
-  Result := fRegRedux;
-end;
-
-function TALApp.GetRegFlux: flu_ireg.IReg;
-begin
-  if fRegFlux = nil then
-    fRegFlux := flu_ireg.IReg(DIC.Locate(flu_ireg.IReg));
-  Result := fRegFlux;
 end;
 
 function TALApp.GetRegApps: tal_ireg.IReg;

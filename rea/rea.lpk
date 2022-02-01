@@ -70,13 +70,22 @@
         <Filename Value="rea_ustyles.pas"/>
         <UnitName Value="rea_ustyles"/>
       </Item>
+      <Item>
+        <Filename Value="rea_iflux.pas"/>
+        <UnitName Value="rea_iflux"/>
+      </Item>
+      <Item>
+        <Filename Value="rea_uflux.pas"/>
+        <UnitName Value="rea_uflux"/>
+      </Item>
+      <Item>
+        <Filename Value="rea_ufuncdispatcher.pas"/>
+        <UnitName Value="rea_ufuncdispatcher"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
         <PackageName Value="tvl"/>
-      </Item>
-      <Item>
-        <PackageName Value="flu"/>
       </Item>
       <Item>
         <PackageName Value="trl"/>

@@ -5,7 +5,7 @@ unit rea_udesigncomponentfactory;
 interface
 
 uses
-  rea_idesigncomponent, trl_iprops, flu_iflux, trl_idifactory, trl_isequence,
+  rea_idesigncomponent, trl_iprops, rea_iflux, trl_idifactory, trl_isequence,
   rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree,
   graphics, trl_udifactory, rea_irenderer;
 

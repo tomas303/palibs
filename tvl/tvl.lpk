@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="tvl"/>
     <Type Value="RunTimeOnly"/>
     <CompilerOptions>
@@ -95,22 +95,20 @@
         <UnitName Value="tvl_ireg"/>
       </Item21>
     </Files>
-    <RequiredPkgs Count="5">
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="4">
       <Item1>
-        <PackageName Value="flu"/>
+        <PackageName Value="SynEdit"/>
       </Item1>
       <Item2>
-        <PackageName Value="SynEdit"/>
+        <PackageName Value="trl"/>
       </Item2>
       <Item3>
-        <PackageName Value="trl"/>
+        <PackageName Value="LCL"/>
       </Item3>
       <Item4>
-        <PackageName Value="LCL"/>
-      </Item4>
-      <Item5>
         <PackageName Value="FCL"/>
-      </Item5>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
