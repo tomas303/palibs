@@ -98,6 +98,8 @@ type
     Bottom = 3;
   end;
 
+  { IGridDataProvider }
+
   IGridDataProvider = interface
   ['{308CF052-70BC-46D9-8B76-C565B3920261}']
     function Prev: Boolean;
@@ -105,7 +107,12 @@ type
     function IsEmpty: Boolean;
     function GetValue(Ind: integer): string;
     procedure SetValue(Ind: integer; AValue: string);
+    function NewBookmark: IInterface;
+    procedure GotoBookmark(ABookmark: IInterface);
+    function GetSilent: Boolean;
+    procedure SetSilent(AValue: Boolean);
     property Value[Ind: integer]: string read GetValue write SetValue; default;
+    property Silent: Boolean read GetSilent write SetSilent;
   end;
 
   IDesignComponent = interface

@@ -33,6 +33,8 @@ type
     So add data means add notifier which add to AProps of notify event
   }
   TFluxNotifier = class(TInterfacedObject, IFluxNotifier)
+  private
+    function GetActionID: Integer;
   protected type
 
     { TFluxNotifierEventRec }
@@ -57,12 +59,12 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   protected
-    fActionID: integer;
+    fActionID: Integer;
     fFactory: IDIFactory;
     fDispatcher: IFluxDispatcher;
     fEnabled: Boolean;
   published
-    property ActionID: integer read fActionID write fActionID;
+    property ActionID: Integer read GetActionID write fActionID;
     property Factory: IDIFactory read fFactory write fFactory;
     property Dispatcher: IFluxDispatcher read fDispatcher write fDispatcher;
     property Enabled: Boolean read GetEnabled write SetEnabled;
@@ -103,6 +105,11 @@ begin
 end;
 
 { TFluxNotifier }
+
+function TFluxNotifier.GetActionID: Integer;
+begin
+  Result := fActionID;
+end;
 
 procedure TFluxNotifier.Notify;
 var

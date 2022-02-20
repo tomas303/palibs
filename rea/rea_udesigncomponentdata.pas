@@ -43,27 +43,23 @@ type
   private
    fData: TMatrix;
    fEditData: TEditData;
-   fDataRow: integer;
-   fProvider: IGridDataProvider;
    fColCount: Integer;
    fRowCount: Integer;
    fCurrentRow: Integer;
    fCurrentCol: Integer;
    fBrowseMode: Boolean;
+   fDataRow: integer;
+   fLastDataRow: integer;
    function GetValue(Row, Col: Integer): string;
    procedure SetColCount(AValue: Integer);
    procedure SetCurrentCol(AValue: Integer);
    procedure SetCurrentRow(AValue: Integer);
    procedure SetRowCount(AValue: Integer);
    procedure SetValue(Row, Col: Integer; AValue: string);
-   procedure Move(ADelta: Integer);
-   procedure ReadDataRow(ARow: Integer);
-   procedure ClearDataRow(ARow: Integer);
    procedure SynchronizeEditText;
   public
-   constructor Create(const AProvider: IGridDataProvider);
+   constructor Create;
    procedure BeforeDestruction; override;
-   procedure ReadData;
    property ColCount: Integer read fColCount write SetColCount;
    property RowCount: Integer read fRowCount write SetRowCount;
    property CurrentRow: Integer read fCurrentRow write SetCurrentRow;
@@ -71,6 +67,8 @@ type
    property BrowseMode: Boolean read fBrowseMode write fBrowseMode;
    property Value[Row, Col: Integer]: string read GetValue write SetValue; default;
    property EditData: TEditData read fEditData;
+   property DataRow: integer read fDataRow write fDataRow;
+   property LastDataRow: integer read fLastDataRow write fLastDataRow;
   end;
 
   { TPagerData }
@@ -95,6 +93,7 @@ procedure TGridData.SetColCount(AValue: Integer);
 begin
   if fColCount = AValue then Exit;
   fColCount := AValue;
+  SetLength(fData, RowCount, ColCount);
 end;
 
 procedure TGridData.SetCurrentCol(AValue: Integer);
@@ -117,87 +116,30 @@ end;
 
 procedure TGridData.SetRowCount(AValue: Integer);
 begin
-  if fRowCount=AValue then Exit;
-  fRowCount:=AValue;
+  if fRowCount = AValue then Exit;
+  fRowCount := AValue;
+  SetLength(fData, RowCount, ColCount);
 end;
 
 procedure TGridData.SetValue(Row, Col: Integer; AValue: string);
 begin
   fData[Row, Col] := AValue;
-  Move(Row - fDataRow);
-  fProvider[Col] := AValue;
-end;
-
-procedure TGridData.Move(ADelta: Integer);
-var
-  i: integer;
-begin
-  if ADelta > 0 then begin
-    for i := 1 to ADelta do begin
-      fProvider.Next;
-      Inc(fDataRow);
-    end;
-  end else if ADelta < 0 then begin
-    for i := ADelta to -1 do begin
-      fProvider.Prev;
-      Dec(fDataRow);
-    end;
-  end;
-end;
-
-procedure TGridData.ReadData;
-var
-  i: integer;
-  mMoved: Boolean;
-begin
-  SetLength(fData, RowCount, ColCount);
-  Move(-fDataRow);
-  if fProvider.IsEmpty then begin
-    for i := 0 to RowCount - 1 do begin
-      ClearDataRow(i);
-    end;
-  end else begin
-    for i := 0 to RowCount - 1 do begin
-      if mMoved then begin
-        ReadDataRow(fDataRow);
-        mMoved := fProvider.Next;
-        if mMoved then
-          Inc(fDataRow);
-      end else begin
-        ClearDataRow(i);
-      end;
-    end;
-  end;
+  if (Row = CurrentRow) and (Col = CurrentCol) then
   SynchronizeEditText;
-end;
-
-procedure TGridData.ReadDataRow(ARow: Integer);
-var
-  i: integer;
-begin
-  for i := 0 to ColCount - 1 do
-    Value[ARow, i] := fProvider[i];
-end;
-
-procedure TGridData.ClearDataRow(ARow: Integer);
-var
-  i: integer;
-begin
-  for i := 0 to ColCount - 1 do
-    Value[ARow, i] := '';
 end;
 
 procedure TGridData.SynchronizeEditText;
 begin
-  EditData.Text := Value[CurrentRow, CurrentCol];
-  EditData.Focused := True;
+  fEditData.Text := Value[CurrentRow, CurrentCol];
+  fEditData.Focused := True;
 end;
 
-constructor TGridData.Create(const AProvider: IGridDataProvider);
+constructor TGridData.Create;
 begin
-  fProvider := AProvider;
   fBrowseMode := True;
   fEditData := TEditData.Create;
+  fDataRow := -1;
+  fLastDataRow := -1;
 end;
 
 procedure TGridData.BeforeDestruction;

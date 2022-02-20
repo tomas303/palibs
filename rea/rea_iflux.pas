@@ -31,6 +31,8 @@ type
     function GetEnabled: Boolean;
     procedure SetEnabled(AValue: Boolean);
     property Enabled: Boolean read GetEnabled write SetEnabled;
+    function GetActionID: Integer;
+    property ActionID: Integer read GetActionID;
   end;
 
   { IFluxState }
