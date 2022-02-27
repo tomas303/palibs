@@ -22,7 +22,8 @@ uses
   rea_udesigncomponentfactory,
   trl_udifactory,
   rea_istyles, rea_ustyles,
-  rea_ufuncdispatcher, rea_uflux;
+  rea_ufuncdispatcher, rea_uflux,
+  rea_idataconnector, rea_udataconnector;
 
 type
 
@@ -55,6 +56,7 @@ type
     function RegisterDispatcher: TDIReg;
     function RegisterAction: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
+    function RegisterDataConnector: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -177,6 +179,7 @@ begin
   RegisterDispatcher;
   RegisterAction;
   RegisterNotifier(IFluxDispatcher);
+  RegisterDataConnector;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -244,6 +247,12 @@ begin
   // asi az pri reactu mozna    mReg.InjectProp('ActionID', cResizeFunc);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('Dispatcher', ADispatcher, AID);
+end;
+
+function TReg.RegisterDataConnector: TDIReg;
+begin
+  Result := DIC.Add(TDataConnector, IDataConnector);
+  Result.InjectProp('FluxDispatcher', IFluxDispatcher);
 end;
 
 end.

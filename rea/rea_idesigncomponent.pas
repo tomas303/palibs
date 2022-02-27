@@ -111,8 +111,10 @@ type
     procedure GotoBookmark(ABookmark: IInterface);
     function GetSilent: Boolean;
     procedure SetSilent(AValue: Boolean);
+    function GetMoveActionID: Integer;
     property Value[Ind: integer]: string read GetValue write SetValue; default;
     property Silent: Boolean read GetSilent write SetSilent;
+    property MoveActionID: Integer read GetMoveActionID;
   end;
 
   IDesignComponent = interface

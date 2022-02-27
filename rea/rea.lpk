@@ -82,6 +82,14 @@
         <Filename Value="rea_ufuncdispatcher.pas"/>
         <UnitName Value="rea_ufuncdispatcher"/>
       </Item>
+      <Item>
+        <Filename Value="rea_idataconnector.pas"/>
+        <UnitName Value="rea_idataconnector"/>
+      </Item>
+      <Item>
+        <Filename Value="rea_udataconnector.pas"/>
+        <UnitName Value="rea_udataconnector"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
