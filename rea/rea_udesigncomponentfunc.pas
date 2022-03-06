@@ -167,6 +167,8 @@ procedure TGridEdTextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
   fData.EditData.Text := AAction.Props.AsStr('Text');
   fData[fData.CurrentRow, fData.CurrentCol] := AAction.Props.AsStr('Text');
+  if fData.EditData.ChangedNotifier <> nil then
+    fData.EditData.ChangedNotifier.Notify;
 end;
 
 { TGridEdKeyDownFunc }

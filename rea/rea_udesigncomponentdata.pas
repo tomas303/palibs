@@ -41,36 +41,36 @@ type
 
   TGridData = class
   private type
-   TMatrix = array of array of string;
+    TMatrix = array of array of string;
   private
-   fData: TMatrix;
-   fEditData: TEditData;
-   fColCount: Integer;
-   fRowCount: Integer;
-   fCurrentRow: Integer;
-   fCurrentCol: Integer;
-   fBrowseMode: Boolean;
-   fDataRow: integer;
-   fLastDataRow: integer;
-   function GetValue(Row, Col: Integer): string;
-   procedure SetColCount(AValue: Integer);
-   procedure SetCurrentCol(AValue: Integer);
-   procedure SetCurrentRow(AValue: Integer);
-   procedure SetRowCount(AValue: Integer);
-   procedure SetValue(Row, Col: Integer; AValue: string);
-   procedure SynchronizeEditText;
+    fData: TMatrix;
+    fEditData: TEditData;
+    fColCount: Integer;
+    fRowCount: Integer;
+    fCurrentRow: Integer;
+    fCurrentCol: Integer;
+    fBrowseMode: Boolean;
+    fDataRow: integer;
+    fLastDataRow: integer;
+    function GetValue(Row, Col: Integer): string;
+    procedure SetColCount(AValue: Integer);
+    procedure SetCurrentCol(AValue: Integer);
+    procedure SetCurrentRow(AValue: Integer);
+    procedure SetRowCount(AValue: Integer);
+    procedure SetValue(Row, Col: Integer; AValue: string);
+    procedure SynchronizeEditText;
   public
-   constructor Create;
-   procedure BeforeDestruction; override;
-   property ColCount: Integer read fColCount write SetColCount;
-   property RowCount: Integer read fRowCount write SetRowCount;
-   property CurrentRow: Integer read fCurrentRow write SetCurrentRow;
-   property CurrentCol: Integer read fCurrentCol write SetCurrentCol;
-   property BrowseMode: Boolean read fBrowseMode write fBrowseMode;
-   property Value[Row, Col: Integer]: string read GetValue write SetValue; default;
-   property EditData: TEditData read fEditData;
-   property DataRow: integer read fDataRow write fDataRow;
-   property LastDataRow: integer read fLastDataRow write fLastDataRow;
+    constructor Create;
+    procedure BeforeDestruction; override;
+    property ColCount: Integer read fColCount write SetColCount;
+    property RowCount: Integer read fRowCount write SetRowCount;
+    property CurrentRow: Integer read fCurrentRow write SetCurrentRow;
+    property CurrentCol: Integer read fCurrentCol write SetCurrentCol;
+    property BrowseMode: Boolean read fBrowseMode write fBrowseMode;
+    property Value[Row, Col: Integer]: string read GetValue write SetValue; default;
+    property EditData: TEditData read fEditData;
+    property DataRow: integer read fDataRow write fDataRow;
+    property LastDataRow: integer read fLastDataRow write fLastDataRow;
   end;
 
   { TPagerData }

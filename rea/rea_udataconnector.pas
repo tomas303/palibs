@@ -71,7 +71,36 @@ type
     constructor Create(const AProvider: IGridDataProvider; AData: TGridData; AIndexes: array of Integer);
   end;
 
+  { TGUIToGridDataFunc }
+
+  TGUIToGridDataFunc = class(TDesignComponentFunc)
+  private
+    fProvider: IGridDataProvider;
+    fIndexes: array of Integer;
+    fData: TGridData;
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  public
+    constructor Create(const AProvider: IGridDataProvider; AData: TGridData; AIndexes: array of Integer);
+  end;
+
 implementation
+
+{ TGUIToGridDataFunc }
+
+procedure TGUIToGridDataFunc.DoExecute(const AAction: IFluxAction);
+begin
+  fProvider.Value[fIndexes[fData.CurrentCol]] := fData.EditData.Text;
+end;
+
+constructor TGUIToGridDataFunc.Create(const AProvider: IGridDataProvider;
+  AData: TGridData; AIndexes: array of Integer);
+begin
+  inherited Create(AData.EditData.ChangedNotifier.ActionID);
+  fData := AData;
+  fProvider := AProvider;
+  fIndexes := Copy(AIndexes);
+end;
 
 { TGUIToDataFunc }
 
@@ -222,6 +251,9 @@ var
   mFunc: IFluxFunc;
 begin
   mFunc := TGridDataToGUIFunc.Create(AProvider, AData, [0,1]);
+  FluxDispatcher.RegisterFunc(mFunc);
+  AData.EditData.ChangedNotifier := ReaFactory.NewNotifier(Sequence.Next);
+  mFunc := TGUIToGridDataFunc.Create(AProvider, AData, [0,1]);
   FluxDispatcher.RegisterFunc(mFunc);
 end;
 
