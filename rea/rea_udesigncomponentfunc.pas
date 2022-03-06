@@ -206,6 +206,8 @@ end;
 procedure TextChangedFunc.DoExecute(const AAction: IFluxAction);
 begin
   fData.Text := AAction.Props.AsStr('Text');
+  if fData.ChangedNotifier <> nil then
+    fData.ChangedNotifier.Notify;
 end;
 
 constructor TextChangedFunc.Create(AID: integer; AData: TEditData);

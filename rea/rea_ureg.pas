@@ -23,15 +23,14 @@ uses
   trl_udifactory,
   rea_istyles, rea_ustyles,
   rea_ufuncdispatcher, rea_uflux,
-  rea_idataconnector, rea_udataconnector;
+  rea_idataconnector, rea_udataconnector,
+  rea_ireafactory, rea_ureafactory;
 
 type
 
   { TReg }
 
   TReg = class(TInterfacedObject, rea_ireg.IReg)
-  private const
-    creafuncseq = 'reafuncseq';
   private
     procedure SetDIC(AValue: TDIContainer);
   protected
@@ -51,12 +50,12 @@ type
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
-    function RegisterFuncSequence: TDIReg;
     function RegisterStyle: TDIReg;
     function RegisterDispatcher: TDIReg;
     function RegisterAction: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
     function RegisterDataConnector: TDIReg;
+    function RegisterReaFactory: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -174,12 +173,12 @@ begin
   RegisterScales;
   RegisterMessageNotifierBinder;
   RegisterRenderer;
-  RegisterFuncSequence;
   RegisterStyle;
   RegisterDispatcher;
   RegisterAction;
   RegisterNotifier(IFluxDispatcher);
   RegisterDataConnector;
+  RegisterReaFactory;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -203,7 +202,7 @@ begin
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('FluxDispatcher', IFluxDispatcher);
-  Result.InjectProp('ActionIDSequence', ISequence, 'ActionID');
+  Result.InjectProp('Sequence', ISequence);
 end;
 
 function TReg.RegisterRenderer: TDIReg;
@@ -213,14 +212,6 @@ begin
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Reconciler', IReconciler);
-end;
-
-function TReg.RegisterFuncSequence: TDIReg;
-var
-  mReg: trl_ireg.IReg;
-begin
-  mReg := trl_ireg.IReg(DIC.Locate(trl_ireg.IReg));
-  Result := mReg.RegisterSequence(creafuncseq, ckSingle);
 end;
 
 function TReg.RegisterStyle: TDIReg;
@@ -253,6 +244,14 @@ function TReg.RegisterDataConnector: TDIReg;
 begin
   Result := DIC.Add(TDataConnector, IDataConnector);
   Result.InjectProp('FluxDispatcher', IFluxDispatcher);
+  Result.InjectProp('ReaFactory', IReaFactory);
+  Result.InjectProp('Sequence', ISequence);
+end;
+
+function TReg.RegisterReaFactory: TDIReg;
+begin
+  Result := DIC.Add(TReaFactory, IReaFactory);
+  Result.InjectProp('Factory2', TDIFactory2);
 end;
 
 end.

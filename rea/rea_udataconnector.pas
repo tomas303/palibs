@@ -6,7 +6,7 @@ interface
 
 uses
   rea_idataconnector, rea_idesigncomponent, rea_udesigncomponentdata,
-  rea_udesigncomponentfunc, rea_iflux;
+  rea_udesigncomponentfunc, rea_iflux, rea_ireafactory, trl_isequence;
 
 type
 
@@ -18,13 +18,30 @@ type
     procedure Connect(const AProvider: IGridDataProvider; AData: TEditData; AIndex: Integer);
   protected
     fFluxDispatcher: IFluxDispatcher;
+    fReaFactory: IReaFactory;
+    fSequence: ISequence;
   published
     property FluxDispatcher: IFluxDispatcher read fFluxDispatcher write fFluxDispatcher;
+    property ReaFactory: IReaFactory read fReaFactory write fReaFactory;
+    property Sequence: ISequence read fSequence write fSequence;
   end;
 
   { TDataToGUIFunc }
 
   TDataToGUIFunc = class(TDesignComponentFunc)
+  private
+    fProvider: IGridDataProvider;
+    fProviderIndex: Integer;
+    fData: TEditData;
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  public
+    constructor Create(const AProvider: IGridDataProvider; AData: TEditData; AIndex: Integer);
+  end;
+
+  { TGUIToDataFunc }
+
+  TGUIToDataFunc = class(TDesignComponentFunc)
   private
     fProvider: IGridDataProvider;
     fProviderIndex: Integer;
@@ -55,6 +72,22 @@ type
   end;
 
 implementation
+
+{ TGUIToDataFunc }
+
+procedure TGUIToDataFunc.DoExecute(const AAction: IFluxAction);
+begin
+  fProvider.Value[fProviderIndex] := fData.Text;
+end;
+
+constructor TGUIToDataFunc.Create(const AProvider: IGridDataProvider;
+  AData: TEditData; AIndex: Integer);
+begin
+  inherited Create(AData.ChangedNotifier.ActionID);
+  fData := AData;
+  fProvider := AProvider;
+  fProviderIndex := AIndex;
+end;
 
 { TGridDataToGUIFunc }
 
@@ -198,6 +231,9 @@ var
   mFunc: IFluxFunc;
 begin
   mFunc := TDataToGUIFunc.Create(AProvider, AData, AIndex);
+  FluxDispatcher.RegisterFunc(mFunc);
+  AData.ChangedNotifier := ReaFactory.NewNotifier(Sequence.Next);
+  mFunc := TGUIToDataFunc.Create(AProvider, AData, AIndex);
   FluxDispatcher.RegisterFunc(mFunc);
 end;
 

@@ -90,6 +90,14 @@
         <Filename Value="rea_udataconnector.pas"/>
         <UnitName Value="rea_udataconnector"/>
       </Item>
+      <Item>
+        <Filename Value="rea_ireafactory.pas"/>
+        <UnitName Value="rea_ireafactory"/>
+      </Item>
+      <Item>
+        <Filename Value="rea_ureafactory.pas"/>
+        <UnitName Value="rea_ureafactory"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

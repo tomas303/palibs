@@ -150,6 +150,7 @@ begin
   RegisterElementFactory;
   RegisterReconciler;
   RegisterNexus;
+  RegisterSequence('', ckSingle);
 end;
 
 end.

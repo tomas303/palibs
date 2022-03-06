@@ -5,7 +5,7 @@ unit rea_udesigncomponentdata;
 interface
 
 uses
-  rea_idesigncomponent, sysutils;
+  rea_idesigncomponent, sysutils, rea_iflux;
 
 type
 
@@ -30,9 +30,11 @@ type
   private
     fText: String;
     fFocused: Boolean;
+    fChangedNotifier: IFluxNotifier;
   published
     property Text: String read fText write fText;
     property Focused: Boolean read fFocused write fFocused;
+    property ChangedNotifier: IFluxNotifier read fChangedNotifier write fChangedNotifier;
   end;
 
   { TGridData }

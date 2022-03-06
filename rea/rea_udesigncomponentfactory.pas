@@ -23,12 +23,12 @@ type
     fFactory: IDIFactory;
     fFactory2: TDIFactory2;
     fFluxDispatcher: IFluxDispatcher;
-    fActionIDSequence: ISequence;
+    fSequence: ISequence;
   published
     property Factory: IDIFactory read fFactory write fFactory;
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property FluxDispatcher: IFluxDispatcher read fFluxDispatcher write fFluxDispatcher;
-    property ActionIDSequence: ISequence read fActionIDSequence write fActionIDSequence;
+    property Sequence: ISequence read fSequence write fSequence;
   end;
 
   { TDesignComponentFormFactory }
@@ -231,7 +231,7 @@ begin
     FluxDispatcher.RegisterFunc(mTextChangedFunc);
     FluxDispatcher.RegisterFunc(mUserTextChangedFunc);
   end else begin
-    mTextChangedFunc := TextChangedFunc.Create(ActionIDSequence.Next, mData);
+    mTextChangedFunc := TextChangedFunc.Create(Sequence.Next, mData);
     FluxDispatcher.RegisterFunc(mTextChangedFunc);
   end;
   mProps.SetIntf(cProps.TextChangedNotifier, NewNotifier(mTextChangedFunc.ID));
@@ -271,9 +271,9 @@ var
   mTextChangedFunc, mKeyDownFunc: IFluxFunc;
 begin
   mData := AProps.AsObject(cProps.Data) as TGridData;
-  mTextChangedFunc := TGridEdTextChangedFunc.Create(ActionIDSequence.Next, mData, NewNotifier(cNotifyRender));
+  mTextChangedFunc := TGridEdTextChangedFunc.Create(Sequence.Next, mData, NewNotifier(cNotifyRender));
   FluxDispatcher.RegisterFunc(mTextChangedFunc);
-  mKeyDownFunc := TGridEdKeyDownFunc.Create(ActionIDSequence.Next, mData, NewNotifier(cNotifyRender));
+  mKeyDownFunc := TGridEdKeyDownFunc.Create(Sequence.Next, mData, NewNotifier(cNotifyRender));
   FluxDispatcher.RegisterFunc(mKeyDownFunc);
   mProps := AProps.Clone
     .SetObject(cProps.Data, mData)
@@ -312,9 +312,9 @@ begin
   if mData = nil then begin
     mData := TFormData.Create;
   end;
-  mCloseFunc := TCloseQueryFunc.Create(ActionIDSequence.Next);
-  mSizeFunc := TSizeFunc.Create(ActionIDSequence.Next, mData, NewNotifier(cNotifyRender));
-  mMoveFunc := TMoveFunc.Create(ActionIDSequence.Next, mData);
+  mCloseFunc := TCloseQueryFunc.Create(Sequence.Next);
+  mSizeFunc := TSizeFunc.Create(Sequence.Next, mData, NewNotifier(cNotifyRender));
+  mMoveFunc := TMoveFunc.Create(Sequence.Next, mData);
   mProps := AProps.Clone
     .SetObject(cProps.Data, mData)
     .SetIntf(cForm.CloseQueryNotifier, NewNotifier(mCloseFunc.ID))
@@ -356,7 +356,7 @@ var
   mTabChangedFunc: IFluxFunc;
 begin
   mTabChangedFunc := TTabChangedFunc.Create(
-    ActionIDSequence.Next,
+    Sequence.Next,
     AProps.AsObject(cPager.PagerData) as TPagerData,
     NewNotifier(cNotifyRender),
     AProps.AsInt(cPager.PageIndex));
