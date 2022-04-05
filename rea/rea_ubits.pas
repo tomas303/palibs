@@ -410,6 +410,8 @@ begin
   else
     AsButton.Font.Orientation := 0;
   end;
+  if AsButton.Height > 6 then
+    AsButton.Font.Height := (AsButton.Height div 4) * 3;
   AsButton.Show;
 end;
 
@@ -514,6 +516,8 @@ begin
     AsEdit.SetFocus;
     AsEdit.SelLength := 0;
   end;
+  if AsEdit.Height > 6 then
+    AsEdit.Font.Height := (AsEdit.Height div 4) * 3;
 end;
 
 procedure TEditBit.EnableNotifiers;

@@ -17,6 +17,7 @@ type
   TDesignComponent = class(TDynaObject, IDesignComponent, INode)
   protected
     function NewProps: IProps;
+    function NewNotifier(const AActionID: integer): IFluxNotifier;
     function NewComposeProps: IProps; virtual;
   protected
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
@@ -600,6 +601,11 @@ end;
 function TDesignComponent.NewProps: IProps;
 begin
   Result := IProps(Factory.Locate(IProps));
+end;
+
+function TDesignComponent.NewNotifier(const AActionID: integer): IFluxNotifier;
+begin
+  Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '', NewProps.SetInt(cAction.ActionID, AActionID)));
 end;
 
 function TDesignComponent.NewComposeProps: IProps;

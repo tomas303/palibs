@@ -7,7 +7,7 @@ unit rea_idesigncomponent;
 interface
 
 uses
-  trl_imetaelement, trl_iprops;
+  trl_imetaelement, trl_iprops, rea_iprops;
 
 type
 
@@ -201,6 +201,7 @@ type
 
   IDesignComponentButtonFactory = interface(IDesignComponentFactory)
   ['{F09A5425-2065-45AA-A11B-9A58E4DC7AF2}']
+    function NewDCProps: IDCButtonProps;
   end;
 
   IDesignComponentEditFactory = interface(IDesignComponentFactory)
@@ -229,6 +230,7 @@ type
 
   IDesignComponentLabelEditFactory = interface(IDesignComponentFactory)
   ['{634858EF-A2D1-4574-B887-CB407EFDEC3F}']
+    function NewDCProps: IDCLabelEditProps;
   end;
 
 const

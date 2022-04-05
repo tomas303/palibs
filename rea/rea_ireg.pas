@@ -25,7 +25,7 @@ type
 
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
-
+    function RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;

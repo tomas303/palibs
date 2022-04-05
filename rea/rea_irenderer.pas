@@ -15,6 +15,7 @@ type
 
 const
   cNotifyRender = -400;
+  cNotifyCloseGUI = -401;
 
 implementation
 

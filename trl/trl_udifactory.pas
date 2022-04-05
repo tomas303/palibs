@@ -35,8 +35,10 @@ type
   public
     function Locate<I: IUnknown>: I; overload;
     function Locate<I: IUnknown>(const AID: string): I; overload;
+    function Locate<I: IUnknown>(const AClass: TClass): I; overload;
     function Locate<I: IUnknown>(const AProps: IProps): I; overload;
     function Locate<I: IUnknown>(const AID: string; const AProps: IProps): I; overload;
+    function Locate<I: IUnknown>(const AClass: TClass; const AProps: IProps): I; overload;
   end;
 
 implementation
@@ -61,6 +63,11 @@ begin
   Result := I(Container.Locate(GetGuid<I>, AID, nil));
 end;
 
+function TDIFactory2.Locate<I>(const AClass: TClass): I;
+begin
+  Result := Locate<I>(AClass.ClassName);
+end;
+
 function TDIFactory2.Locate<I>(const AProps: IProps): I;
 begin
   Result := I(Container.Locate(GetGuid<I>, '', AProps));
@@ -69,6 +76,11 @@ end;
 function TDIFactory2.Locate<I>(const AID: string; const AProps: IProps): I;
 begin
   Result := I(Container.Locate(GetGuid<I>, AID, AProps));
+end;
+
+function TDIFactory2.Locate<I>(const AClass: TClass; const AProps: IProps): I;
+begin
+  Result := Locate<I>(AClass.ClassName, AProps);
 end;
 
 { TDIFactory }

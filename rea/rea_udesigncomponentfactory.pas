@@ -7,7 +7,7 @@ interface
 uses
   rea_idesigncomponent, trl_iprops, rea_iflux, trl_idifactory, trl_isequence,
   rea_ilayout, rea_udesigncomponentfunc, rea_udesigncomponentdata, trl_itree,
-  graphics, trl_udifactory, rea_irenderer;
+  graphics, trl_udifactory, rea_irenderer, rea_iprops, rea_uprops;
 
 type
 
@@ -43,6 +43,7 @@ type
   TDesignComponentButtonFactory = class(TDesignComponentFactory, IDesignComponentButtonFactory)
   protected
     function DoNew(const AProps: IProps): IDesignComponent; override;
+    function NewDCProps: IDCButtonProps;
   end;
 
   { TDesignComponentEditFactory }
@@ -98,6 +99,7 @@ type
     function ContainerProps(const AProps: IProps): IProps;
   protected
     function DoNew(const AProps: IProps): IDesignComponent; override;
+    function NewDCProps: IDCLabelEditProps;
   end;
 
 implementation
@@ -151,8 +153,7 @@ function TDesignComponentLabelEditFactory.ContainerProps(const AProps: IProps
   ): IProps;
 begin
   Result := AProps.Clone([cProps.Color, cProps.Transparent, cProps.MMWidth, cProps.MMHeight,
-    cProps.Border, cProps.BorderColor])
-    .SetInt(cProps.Place, cPlace.FixFront);
+    cProps.Border, cProps.BorderColor, cProps.Place]);
   case AProps.AsInt(cProps.CaptionEdge) of
     cEdge.Left, cEdge.Right:
       Result.SetInt(cProps.Layout, cLayout.Horizontal);
@@ -198,6 +199,19 @@ begin
        (Result as INode).AddChild(mText as INode);
      end;
   end;
+end;
+
+function TDesignComponentLabelEditFactory.NewDCProps: IDCLabelEditProps;
+begin
+  Result := TDCLabelEditProps.Create;
+  Result
+    .SetCaption('???')
+    .SetCaptionEdge(cEdge.Top)
+    .SetCaptionHeight(25)
+    .SetPlace(cPlace.Elastic)
+    .SetMMWidth(250)
+    .SetMMHeight(50)
+    .SetColor(clPurple);
 end;
 
 { TDesignComponentStripFactory }
@@ -261,6 +275,20 @@ begin
   Result := IDesignComponentButton(Factory.Locate(IDesignComponentButton, '', mProps));
 end;
 
+function TDesignComponentButtonFactory.NewDCProps: IDCButtonProps;
+begin
+  Result := TDCButtonProps.Create;
+  Result
+    .SetText('???')
+    .SetBorder(4)
+    .SetBorderColor(clBlack)
+    .SetFontDirection(cFontDirection.Horizontal)
+    .SetPlace(cPlace.Elastic)
+    .SetMMWidth(250)
+    .SetMMHeight(25)
+    .SetColor(clPurple);
+end;
+
 { TDesignComponentGridFactory }
 
 function TDesignComponentGridFactory.DoNew(const AProps: IProps
@@ -312,7 +340,7 @@ begin
   if mData = nil then begin
     mData := TFormData.Create;
   end;
-  mCloseFunc := TCloseQueryFunc.Create(Sequence.Next);
+  mCloseFunc := TCloseQueryFunc.Create(Sequence.Next, NewNotifier(cNotifyCloseGUI));
   mSizeFunc := TSizeFunc.Create(Sequence.Next, mData, NewNotifier(cNotifyRender));
   mMoveFunc := TMoveFunc.Create(Sequence.Next, mData);
   mProps := AProps.Clone

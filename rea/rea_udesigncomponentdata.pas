@@ -5,7 +5,7 @@ unit rea_udesigncomponentdata;
 interface
 
 uses
-  rea_idesigncomponent, sysutils, rea_iflux;
+  sysutils, rea_iflux;
 
 type
 

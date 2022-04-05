@@ -98,6 +98,14 @@
         <Filename Value="rea_ureafactory.pas"/>
         <UnitName Value="rea_ureafactory"/>
       </Item>
+      <Item>
+        <Filename Value="rea_iprops.pas"/>
+        <UnitName Value="rea_iprops"/>
+      </Item>
+      <Item>
+        <Filename Value="rea_uprops.pas"/>
+        <UnitName Value="rea_uprops"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

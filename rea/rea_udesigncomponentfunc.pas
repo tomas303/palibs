@@ -53,6 +53,17 @@ type
   { TCloseQueryFunc }
 
   TCloseQueryFunc = class(TDesignComponentFunc, IFluxFunc)
+  private
+    fCloseGUINotifier: IFluxNotifier;
+  protected
+    procedure DoExecute(const AAction: IFluxAction); override;
+  public
+    constructor Create(AID: integer; ACloseGUINotifier: IFluxNotifier);
+  end;
+
+  { TStopExecutorFunc }
+
+  TStopExecutorFunc = class(TDesignComponentFunc, IFluxFunc)
   protected
     procedure DoExecute(const AAction: IFluxAction); override;
   end;
@@ -109,11 +120,25 @@ type
 
 implementation
 
+{ TStopExecutorFunc }
+
+procedure TStopExecutorFunc.DoExecute(const AAction: IFluxAction);
+begin
+  raise EExecutorStop.Create('');
+end;
+
 { TCloseQueryFunc }
 
 procedure TCloseQueryFunc.DoExecute(const AAction: IFluxAction);
 begin
-  raise EExecutorStop.Create('');
+  if fCloseGUINotifier <> nil then
+    fCloseGUINotifier.Notify;
+end;
+
+constructor TCloseQueryFunc.Create(AID: integer; ACloseGUINotifier: IFluxNotifier);
+begin
+  inherited Create(AID);
+  fCloseGUINotifier := ACloseGUINotifier;
 end;
 
 { TTabChangedFunc }
