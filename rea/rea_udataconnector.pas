@@ -194,17 +194,19 @@ begin
       if not fProvider.IsEmpty then begin
         fData.LastDataRow := ReadRows;
         fData.DataRow := 0;
+        fData.CurrentRow := fData.DataRow;
       end;
     end
     else if Between(fData.DataRow + ADeltaMove, 0, fData.RowCount - 1) then begin
       fData.DataRow := fData.DataRow + ADeltaMove;
+      fData.CurrentRow := fData.DataRow;
     end
     else begin
       mMovedRows := MoveProvider(-fData.DataRow);
       fData.DataRow := mMovedRows;
       fData.LastDataRow := ReadRows;
+      fData.CurrentRow := fData.DataRow;
     end;
-    fData.CurrentRow := fData.DataRow;
   finally
     fProvider.GotoBookmark(mBookmark);
   end;
