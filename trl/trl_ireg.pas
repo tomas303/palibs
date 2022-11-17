@@ -24,6 +24,7 @@ type
     function RegisterReconciler: TDIReg;
     function RegisterNexus: TDIReg;
     function RegisterSequence(const AID: string; ACreateKind: TDIRegCreateKind = ckSingle): TDIReg;
+    function RegisterPubSub: TDIReg;
     procedure RegisterCommon;
   end;
 

@@ -18,6 +18,7 @@ uses
   trl_ilog,
   trl_ireconciler, trl_ureconciler,
   trl_inexus, trl_unexus,
+  trl_ipubsub,  trl_upubsub,
   trl_isequence, trl_usequence;
 
 type
@@ -41,6 +42,7 @@ type
     function RegisterReconciler: TDIReg;
     function RegisterNexus: TDIReg;
     function RegisterSequence(const AID: string; ACreateKind: TDIRegCreateKind = ckSingle): TDIReg;
+    function RegisterPubSub: TDIReg;
     procedure RegisterCommon;
   protected
     fDIC: TDIContainer;
@@ -133,6 +135,12 @@ end;
 function TReg.RegisterSequence(const AID: string; ACreateKind: TDIRegCreateKind = ckSingle): TDIReg;
 begin
   Result := DIC.Add(TSequence, ISequence, AID, ACreateKind);
+end;
+
+function TReg.RegisterPubSub: TDIReg;
+begin
+  Result := DIC.Add(TPubSub, IPubSub);
+  Result.InjectProp('Log', ILog);
 end;
 
 procedure TReg.RegisterCommon;

@@ -8,8 +8,19 @@
       <SearchPaths>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <CodeGeneration>
+        <SmartLinkUnit Value="True"/>
+        <Optimizations>
+          <OptimizationLevel Value="4"/>
+        </Optimizations>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf3"/>
+        </Debugging>
+      </Linking>
     </CompilerOptions>
-    <Files Count="41">
+    <Files Count="43">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -174,6 +185,14 @@
         <Filename Value="trl_isequence.pas"/>
         <UnitName Value="trl_isequence"/>
       </Item41>
+      <Item42>
+        <Filename Value="trl_ipubsub.pas"/>
+        <UnitName Value="trl_ipubsub"/>
+      </Item42>
+      <Item43>
+        <Filename Value="trl_upubsub.pas"/>
+        <UnitName Value="trl_upubsub"/>
+      </Item43>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
