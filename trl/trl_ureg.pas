@@ -18,7 +18,7 @@ uses
   trl_ilog,
   trl_ireconciler, trl_ureconciler,
   trl_inexus, trl_unexus,
-  trl_ipubsub,  trl_upubsub,
+  trl_pubsub,
   trl_isequence, trl_usequence;
 
 type
@@ -159,6 +159,7 @@ begin
   RegisterReconciler;
   RegisterNexus;
   RegisterSequence('', ckSingle);
+  RegisterPubSub;
 end;
 
 end.

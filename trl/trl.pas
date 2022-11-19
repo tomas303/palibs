@@ -17,7 +17,7 @@ uses
   trl_umetaelement, trl_imetaelementfactory, trl_umetaelementfactory, 
   trl_uinterfacedownedobject, trl_ilink, trl_ulink, trl_ireconciler, 
   trl_ureconciler, trl_inexus, trl_unexus, trl_usequence, trl_isequence, 
-  trl_ipubsub, trl_upubsub;
+  trl_pubsub;
 
 implementation
 
