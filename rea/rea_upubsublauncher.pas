@@ -57,7 +57,7 @@ begin
   mStop := False;
   repeat
     try
-    PubSub.ExecEvent;
+      PubSub.ExecEvent;
     except
       on E: ELaunchStop do begin
         mStop := True;

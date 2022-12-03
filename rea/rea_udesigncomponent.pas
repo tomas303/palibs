@@ -474,7 +474,10 @@ begin
   .SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
   .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
   .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
-  .SetIntf('PSCloseChannel', SelfProps.AsIntf('PSCloseChannel'));
+  .SetIntf('PSCloseChannel', SelfProps.AsIntf('PSCloseChannel'))
+  .SetIntf('PSSizeChannel', SelfProps.AsIntf('PSSizeChannel'))
+  .SetIntf('PSPositionChannel', SelfProps.AsIntf('PSPositionChannel'))
+
 end;
 
 function TDesignComponentForm.DoCompose(const AProps: IProps;

@@ -1,7 +1,7 @@
 unit rea_ibits;
 
 {$mode delphi}{$H+}
-{$modeswitch functionreferences}
+{$modeswitch advancedrecords}
 
 interface
 
@@ -32,12 +32,22 @@ type
 
   IPSTextChannel = IPubSubDataChannel<String>;
 
+  { TSizeData }
+
   TSizeData = record
     Width, Height: Integer;
+    constructor Create(Width, Height: Integer);
+    class operator equal(a,b: TSizeData): Boolean;
+    class operator notequal(a,b: TSizeData): Boolean;
   end;
+
+  { TPositionData }
 
   TPositionData = record
     Top, Left: Integer;
+    constructor Create(Top, Left: Integer);
+    class operator equal(a,b: TPositionData): Boolean;
+    class operator notequal(a,b: TPositionData): Boolean;
   end;
 
   IPSSizeChannel = IPubSubDataChannel<TSizeData>;
@@ -73,6 +83,42 @@ type
   end;
 
 implementation
+
+{ TPositionData }
+
+constructor TPositionData.Create(Top, Left: Integer);
+begin
+  Self.Top := Top;
+  Self.Left := Left;
+end;
+
+class operator TPositionData.equal(a, b: TPositionData): Boolean;
+begin
+  Result := (a.Left = b.Left) and (a.Top = b.Top);
+end;
+
+class operator TPositionData.notequal(a, b: TPositionData): Boolean;
+begin
+  Result := not(a = b);
+end;
+
+{ TSizeData }
+
+constructor TSizeData.Create(Width, Height: Integer);
+begin
+  Self.Width := Width;
+  Self.Height := Height;
+end;
+
+class operator TSizeData.equal(a, b: TSizeData): Boolean;
+begin
+  Result := (a.Width = b.Width) and (a.Height = b.Height);
+end;
+
+class operator TSizeData.notequal(a, b: TSizeData): Boolean;
+begin
+  Result := not(a = b);
+end;
 
 end.
 

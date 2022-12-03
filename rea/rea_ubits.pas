@@ -167,6 +167,16 @@ type
     procedure LMCloseQueryObserver(AMessage: TLMessage);
     procedure PSCloseChannelObserver;
     procedure SetPSCloseChannel(AValue: IPSCloseChannel);
+  private
+    fLMSize: IMessageObservable;
+    procedure LMSizeObserver(AMessage: TLMessage);
+    procedure PSSizeChannelObserver(const AData: TSizeData);
+    procedure SetPSSizeChannel(AValue: IPSSizeChannel);
+  private
+    fLMMove: IMessageObservable;
+    procedure LMMoveObserver(AMessage: TLMessage);
+    procedure PSPositionChannelObserver(const AData: TPositionData);
+    procedure SetPSPositionChannel(AValue: IPSPositionChannel);
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -191,6 +201,8 @@ type
     fActivateNotifier: IFluxNotifier;
     fCloseQueryNotifier: IFluxNotifier;
     fPSCloseChannel: IPSCloseChannel;
+    fPSSizeChannel: IPSSizeChannel;
+    fPSPositionChannel: IPSPositionChannel;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
@@ -199,6 +211,8 @@ type
     property ActivateNotifier: IFluxNotifier read fActivateNotifier write SetActivateNotifier;
     property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write SetCloseQueryNotifier;
     property PSCloseChannel: IPSCloseChannel read fPSCloseChannel write SetPSCloseChannel;
+    property PSSizeChannel: IPSSizeChannel read fPSSizeChannel write SetPSSizeChannel;
+    property PSPositionChannel: IPSPositionChannel read fPSPositionChannel write SetPSPositionChannel;
   end;
 
   { TStripBit }
@@ -763,6 +777,84 @@ begin
     fLMCloseQuery.Bind(AsForm);
     fLMCloseQuery.Subscribe(LMCloseQueryObserver);
     fPSCloseChannel.Subscribe(PSCloseChannelObserver);
+  end;
+end;
+
+procedure TFormBit.LMSizeObserver(AMessage: TLMessage);
+begin
+  PSSizeChannel.Publish(TSizeData.Create(AsForm.Width, AsForm.Height));
+end;
+
+procedure TFormBit.PSSizeChannelObserver(const AData: TSizeData);
+begin
+  fLMSize.Enabled := False;
+  AsForm.Width := AData.Width;
+  AsForm.Height := AData.Height;
+  fLMSize.Enabled := True;
+end;
+
+procedure TFormBit.SetPSSizeChannel(AValue: IPSSizeChannel);
+begin
+  if fPSSizeChannel <> nil then
+  begin
+    fLMSize.Unbind;
+    fLMSize.Unsubscribe(LMSizeObserver);
+    fLMSize := nil;
+    fPSSizeChannel.Unsubscribe(PSSizeChannelObserver);
+  end;
+  fPSSizeChannel := AValue;
+  if fPSSizeChannel <> nil then
+  begin
+    fLMSize := IMessageObservable(
+      Factory.Locate(
+        IMessageObservable,
+        '',
+        NewProps
+        .SetInt('Msg', LM_SIZE)
+      )
+    );
+    fLMSize.Bind(AsForm);
+    fLMSize.Subscribe(LMSizeObserver);
+    fPSSizeChannel.Subscribe(PSSizeChannelObserver);
+  end;
+end;
+
+procedure TFormBit.LMMoveObserver(AMessage: TLMessage);
+begin
+  PSPositionChannel.Publish(TPositionData.Create(AsForm.Top, AsForm.Left));
+end;
+
+procedure TFormBit.PSPositionChannelObserver(const AData: TPositionData);
+begin
+  fLMMove.Enabled := False;
+  AsForm.Left := AData.Left;
+  AsForm.Top := AData.Top;
+  fLMMove.Enabled := True;
+end;
+
+procedure TFormBit.SetPSPositionChannel(AValue: IPSPositionChannel);
+begin
+  if fPSPositionChannel <> nil then
+  begin
+    fLMMove.Unbind;
+    fLMMove.Unsubscribe(LMMoveObserver);
+    fLMMove := nil;
+    fPSPositionChannel.Unsubscribe(PSPositionChannelObserver);
+  end;
+  fPSPositionChannel := AValue;
+  if fPSPositionChannel <> nil then
+  begin
+    fLMMove := IMessageObservable(
+      Factory.Locate(
+        IMessageObservable,
+        '',
+        NewProps
+        .SetInt('Msg', LM_MOVE)
+      )
+    );
+    fLMMove.Bind(AsForm);
+    fLMMove.Subscribe(LMMoveObserver);
+    fPSPositionChannel.Subscribe(PSPositionChannelObserver);
   end;
 end;
 
