@@ -202,7 +202,8 @@ var
   mNew: IUnknown;
   mNewBit: IBit;
 begin
-  mNewEl := Expand(AElement);
+  //mNewEl := Expand(AElement);
+  mNewEl := AElement;
   mNew := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl);
   mNewBit := mNew as IBit;
   fHeadEl := mNewEl;

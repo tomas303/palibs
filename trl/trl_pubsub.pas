@@ -6,23 +6,27 @@ unit trl_pubsub;
 interface
 
 uses
-  fgl, trl_ilog, sysutils;
+  fgl, trl_ilog, sysutils, Generics.Collections;
 
 type
 
-  TPubSubChannelCallback = reference to procedure;
-  TPubSubChannelDataCallback<T> = reference to procedure(const AData: T);
+  EPubSubUnhandled = class(Exception);
+
+  TPubSubChannelCallback = procedure of object;
+  TPubSubChannelDataCallback<T> = procedure(const AData: T) of object;
 
   IPubSubChannel = interface
   ['{F5B8029B-095E-4E87-A621-C6C96D8177DE}']
     procedure Publish;
     procedure Subscribe(const ACallback: TPubSubChannelCallback);
+    procedure Unsubscribe(const ACallback: TPubSubChannelCallback);
   end;
 
   IPubSubDataChannel<T> = interface
   ['{6C3DDC7D-A867-4DAE-8B92-D74C8F878E3F}']
     procedure Publish(const AData: T);
     procedure Subscribe(const ACallback: TPubSubChannelDataCallback<T>);
+    procedure Unsubscribe(const ACallback: TPubSubChannelDataCallback<T>);
   end;
 
   IPubSubChannelExec = interface
@@ -35,7 +39,7 @@ type
   IPubSub = interface
   ['{61F589A6-B483-47BB-8221-3A92B5EDD2C2}']
     function Factory: TPubSub;
-    procedure ExecEvents;
+    procedure ExecEvent;
   end;
 
   { TPubSub }
@@ -45,7 +49,7 @@ type
     fEvents: TFPGInterfacedObjectList<IPubSubChannelExec>;
     fChannels: TFPGInterfacedObjectList<IPubSubChannelExec>;
     procedure EventPublished(const AChannel: IPubSubChannelExec);
-    procedure ExecEvents;
+    procedure ExecEvent;
     function Factory: TPubSub;
   public
     procedure AfterConstruction; override;
@@ -67,9 +71,10 @@ type
     fPublishedCallback: TPubSubEventPublishedCallback;
     procedure ExecEvent;
   strict private
-    fObservers: TFPGList<TPubSubChannelCallback>;
+    fObservers: TList<TPubSubChannelCallback>;
     procedure Publish;
     procedure Subscribe(const ACallback: TPubSubChannelCallback);
+    procedure Unsubscribe(const ACallback: TPubSubChannelCallback);
   public
     constructor Create(const APublishedCallback: TPubSubEventPublishedCallback);
     procedure AfterConstruction; override;
@@ -86,9 +91,10 @@ type
     fPublishedCallback: TPubSubEventPublishedCallback;
     procedure ExecEvent;
   strict private
-    fObservers: TFPGList<TCallback>;
+    fObservers: TList<TCallback>;
     procedure Publish(const AData: T);
     procedure Subscribe(const ACallback: TCallback);
+    procedure Unsubscribe(const ACallback: TPubSubChannelDataCallback<T>);
   public
     constructor Create(const APublishedCallback: TPubSubEventPublishedCallback);
     procedure AfterConstruction; override;
@@ -103,8 +109,11 @@ procedure TPubSubDataChannel<T>.ExecEvent;
 var
   cb: TCallback;
 begin
-  for cb in fObservers do cb(fEvents[0]);
-  fEvents.Delete(0);
+  try
+    for cb in fObservers do cb(fEvents[0]);
+  finally
+    fEvents.Delete(0);
+  end;
 end;
 
 procedure TPubSubDataChannel<T>.Publish(const AData: T);
@@ -116,7 +125,15 @@ end;
 procedure TPubSubDataChannel<T>.Subscribe(
   const ACallback: TCallback);
 begin
-  fObservers.Add(ACallback);
+  if fObservers.IndexOf(ACallback) = -1 then
+    fObservers.Add(ACallback);
+end;
+
+procedure TPubSubDataChannel<T>.Unsubscribe(
+  const ACallback: TPubSubChannelDataCallback<T>);
+begin
+  if fObservers.IndexOf(ACallback) <> -1 then
+    fObservers.Remove(ACallback);
 end;
 
 constructor TPubSubDataChannel<T>.Create(
@@ -130,7 +147,7 @@ procedure TPubSubDataChannel<T>.AfterConstruction;
 begin
   inherited AfterConstruction;
   fEvents := TFPGList<T>.Create;
-  fObservers := TFPGList<TCallback>.Create;
+  fObservers := TList<TCallback>.Create;
 end;
 
 procedure TPubSubDataChannel<T>.BeforeDestruction;
@@ -156,7 +173,14 @@ end;
 
 procedure TPubSubChannel.Subscribe(const ACallback: TPubSubChannelCallback);
 begin
-  fObservers.Add(ACallback);
+  if fObservers.IndexOf(ACallback) = -1 then
+    fObservers.Add(ACallback);
+end;
+
+procedure TPubSubChannel.Unsubscribe(const ACallback: TPubSubChannelCallback);
+begin
+  if fObservers.IndexOf(ACallback) <> -1 then
+    fObservers.Remove(ACallback);
 end;
 
 constructor TPubSubChannel.Create(
@@ -169,7 +193,7 @@ end;
 procedure TPubSubChannel.AfterConstruction;
 begin
   inherited AfterConstruction;
-  fObservers := TFPGList<TPubSubChannelCallback>.Create;
+  fObservers := TList<TPubSubChannelCallback>.Create;
 end;
 
 procedure TPubSubChannel.BeforeDestruction;
@@ -197,22 +221,23 @@ begin
   fChannels.Add(Result as IPubSubChannelExec);
 end;
 
-procedure TPubSub.ExecEvents;
+procedure TPubSub.ExecEvent;
 var
-  ChannelExec: IPubSubChannelExec;
+  chExec: IPubSubChannelExec;
 begin
-  try
-    for ChannelExec in fEvents do begin
-      try
-        ChannelExec.ExecEvent;
-      except
-        on E: Exception do begin
-          Log.DebugLn('pubsub error when executing event - %s: %s', [E.ClassName, E.Message]);
-        end;
+  if fEvents.Count > 0 then begin
+    chExec := fEvents[0];
+    fEvents.Delete(0);
+    try
+      chExec.ExecEvent;
+    except
+      on E: EPubSubUnhandled do begin
+        raise;
+      end;
+      on E: Exception do begin
+        Log.DebugLn('pubsub error when executing event - %s: %s', [E.ClassName, E.Message]);
       end;
     end;
-  finally
-    fEvents.Clear;
   end;
 end;
 

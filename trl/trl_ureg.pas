@@ -139,7 +139,7 @@ end;
 
 function TReg.RegisterPubSub: TDIReg;
 begin
-  Result := DIC.Add(TPubSub, IPubSub);
+  Result := DIC.Add(TPubSub, IPubSub, '', ckSingle);
   Result.InjectProp('Log', ILog);
 end;
 

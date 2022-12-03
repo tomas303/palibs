@@ -8,7 +8,7 @@ uses
   rea_idesigncomponent, rea_udesigncomponentdata, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, rea_iflux, trl_ilog,
   sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer,
-  trl_udifactory, rea_istyles;
+  trl_udifactory, rea_istyles, trl_pubsub;
 
 type
 
@@ -52,6 +52,7 @@ type
     fNode: INode;
     fStyle: IStyle;
     fStyleKind: Integer;
+    fPubSub: IPubSub;
   published
     property ID: string read fID write fID;
     property Log: ILog read fLog write fLog;
@@ -61,6 +62,7 @@ type
     property Node: INode read fNode write fNode;
     property Style: IStyle read fStyle write fStyle;
     property StyleKind: Integer read fStyleKind write fStyleKind;
+    property PubSub: IPubSub read fPubSub write fPubSub;
   end;
 
   { TDesignComponentForm }
@@ -307,12 +309,20 @@ end;
 function TDesignComponentEdit.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
+  {
   Result
     .SetStr(cProps.Text, Data.Text)
     .SetBool(cProps.Focused, Data.Focused)
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
     .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
     .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier);
+}
+Result
+  .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
+  .SetBool(cProps.Focused, SelfProps.AsBool(cProps.Focused))
+  .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
+  .SetIntf('PSTextChannel', SelfProps.AsIntf('PSTextChannel'));
+;
 end;
 
 function TDesignComponentEdit.DoCompose(const AProps: IProps;
@@ -446,8 +456,10 @@ end;
 function TDesignComponentForm.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
+  {
   Result
   .SetInt(cProps.MMLeft, Data.Left)
+  .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
   .SetInt(cProps.MMTop, Data.Top)
   .SetInt(cProps.MMWidth, Data.Width)
   .SetInt(cProps.MMHeight, Data.Height)
@@ -455,6 +467,14 @@ begin
   .SetIntf(cForm.SizeNotifier, SizeNotifier)
   .SetIntf(cForm.MoveNotifier, MoveNotifier)
   .SetIntf(cForm.CloseQueryNotifier, CloseQueryNotifier);
+  }
+  Result
+  .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+  .SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
+  .SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
+  .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
+  .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
+  .SetIntf('PSCloseChannel', SelfProps.AsIntf('PSCloseChannel'));
 end;
 
 function TDesignComponentForm.DoCompose(const AProps: IProps;
@@ -610,12 +630,17 @@ end;
 
 function TDesignComponent.NewComposeProps: IProps;
 begin
+  {
   Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
     cProps.MMWidth, cProps.MMHeight, cProps.Border])
     .SetInt(cProps.Color, StyleBackColor(cProps.Color))
     .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
     .SetInt(cProps.TextColor, StyleForeColor(cProps.TextColor))
     .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
+}
+  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
+    cProps.MMWidth, cProps.MMHeight, cProps.Border,
+    cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
 end;
 
 procedure TDesignComponent.AddChildren(const AElement: IMetaElement;

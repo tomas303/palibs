@@ -335,6 +335,7 @@ var
   mProps: IProps;
   mData: TFormData;
   mCloseFunc, mSizeFunc, mMoveFunc: IFluxFunc;
+  minfo:string;
 begin
   mData := AProps.AsObject(cProps.Data) as TFormData;
   if mData = nil then begin
@@ -348,6 +349,7 @@ begin
     .SetIntf(cForm.CloseQueryNotifier, NewNotifier(mCloseFunc.ID))
     .SetIntf(cForm.SizeNotifier, NewNotifier(mSizeFunc.ID))
     .SetIntf(cForm.MoveNotifier, NewNotifier(mMoveFunc.ID));
+  minfo := mProps.Info;
   FluxDispatcher.RegisterFunc(mCloseFunc);
   FluxDispatcher.RegisterFunc(mSizeFunc);
   FluxDispatcher.RegisterFunc(mMoveFunc);

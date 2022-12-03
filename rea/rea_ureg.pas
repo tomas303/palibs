@@ -24,7 +24,8 @@ uses
   rea_istyles, rea_ustyles,
   rea_ufuncdispatcher, rea_uflux,
   rea_idataconnector, rea_udataconnector,
-  rea_ireafactory, rea_ureafactory;
+  rea_ireafactory, rea_ureafactory,
+  trl_ilauncher, trl_pubsub, rea_upubsublauncher;
 
 type
 
@@ -43,6 +44,7 @@ type
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
     function RegisterMessageNotifierBinder: TDIReg;
+    function RegisterMessageObservable: TDIReg;
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
     procedure RegisterScales;
@@ -55,6 +57,7 @@ type
     function RegisterAction: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
     function RegisterDataConnector: TDIReg;
+    function RegisterPubSubLauncher: TDIReg;
     function RegisterReaFactory: TDIReg;
   protected
     fDIC: TDIContainer;
@@ -118,6 +121,11 @@ begin
   Result := DIC.Add(TMessageNotifierBinder, IMessageNotifierBinder);
 end;
 
+function TReg.RegisterMessageObservable: TDIReg;
+begin
+  Result := DIC.Add(TMessageObservable, IMessageObservable);
+end;
+
 function TReg.RegisterReactComponent(ACompositeClass: TClass;
   ACompositeInterface: TGuid; const APaths: array of string): TDIReg;
 var
@@ -172,6 +180,7 @@ begin
   RegisterBitTerminus(TButtonBit, IButtonBit, TLabel, 'uibutton');
   RegisterScales;
   RegisterMessageNotifierBinder;
+  RegisterMessageObservable;
   RegisterRenderer;
   RegisterStyle;
   RegisterDispatcher;
@@ -194,6 +203,7 @@ begin
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('Style', IStyle);
+  Result.InjectProp('PubSub', IPubSub);
 end;
 
 function TReg.RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
@@ -246,6 +256,14 @@ begin
   Result.InjectProp('FluxDispatcher', IFluxDispatcher);
   Result.InjectProp('ReaFactory', IReaFactory);
   Result.InjectProp('Sequence', ISequence);
+end;
+
+function TReg.RegisterPubSubLauncher: TDIReg;
+begin
+  Result := DIC.Add(TPubSubLauncher, ILauncher);
+  Result.InjectProp('PubSub', IPubSub);
+  Result.InjectProp('Renderer', IRenderer);
+  Result.InjectProp('GUI', IDesignComponentApp);
 end;
 
 function TReg.RegisterReaFactory: TDIReg;

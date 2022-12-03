@@ -106,6 +106,10 @@
         <Filename Value="rea_uprops.pas"/>
         <UnitName Value="rea_uprops"/>
       </Item>
+      <Item>
+        <Filename Value="rea_upubsublauncher.pas"/>
+        <UnitName Value="rea_upubsublauncher"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

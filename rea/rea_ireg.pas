@@ -22,6 +22,7 @@ type
       AScaleClass: TClass): TDIReg;
 
     function RegisterMessageNotifierBinder: TDIReg;
+    function RegisterMessageObservable: TDIReg;
 
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
@@ -33,6 +34,7 @@ type
     function RegisterStyle: TDIReg;
     function RegisterDispatcher: TDIReg;
     function RegisterAction: TDIReg;
+    function RegisterPubSubLauncher: TDIReg;
     function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
   end;
 

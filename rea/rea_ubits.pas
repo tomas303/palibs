@@ -1,6 +1,7 @@
 unit rea_ubits;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
+{$modeswitch functionreferences}
 
 interface
 
@@ -8,7 +9,7 @@ uses
   SysUtils, rea_ibits, Controls, trl_idifactory, forms, trl_itree,
   StdCtrls, trl_iprops, Graphics, trl_ilog,
   rea_ilayout, rea_iflux, tvl_ucontrolbinder,
-  LMessages, Classes;
+  LMessages, Classes, fgl;
 
 type
 
@@ -30,9 +31,34 @@ type
     property Msg: Cardinal read fMsg write fMsg;
   end;
 
+  { TMessageObservable }
+
+  TMessageObservable = class(TControlBinder, IMessageObservable)
+  private
+    fObservers: TFPGList<TMessageObserverCallback>;
+    fEnabled: Boolean;
+  protected
+    procedure DoControlWndProc(var TheMessage: TLMessage); override;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    procedure Subscribe(ACallback: TMessageObserverCallback);
+    procedure Unsubscribe(ACallback: TMessageObserverCallback);
+    function GetEnabled: Boolean;
+    procedure SetEnabled(Enabled: Boolean);
+    property Enabled: Boolean read GetEnabled write SetEnabled;
+  protected
+    fMsg: Cardinal;
+  published
+    property Msg: Cardinal read fMsg write fMsg;
+  end;
+
+
   { TBit }
 
   TBit = class(TInterfacedObject, IBit, INode, IBitPosition)
+  private
+    procedure SetColor(AValue: TColor);
   protected
     // INode
     procedure AddChild(const ANode: INode);
@@ -113,7 +139,7 @@ type
     property VScale: IScale read fVScale write fVScale;
     property Control: TControl read fControl write SetControl;
   published
-    property Color: TColor read fColor write fColor;
+    property Color: TColor read fColor write SetColor;
     property TextColor: TColor read fTextColor write fTextColor;
   published
     property Layout: integer read GetLayout write SetLayout;
@@ -136,6 +162,11 @@ type
     procedure SetMoveNotifier(AValue: IFluxNotifier);
     procedure SetSizeNotifier(AValue: IFluxNotifier);
     procedure SetCloseQueryNotifier(AValue: IFluxNotifier);
+  private
+    fLMCloseQuery: IMessageObservable;
+    procedure LMCloseQueryObserver(AMessage: TLMessage);
+    procedure PSCloseChannelObserver;
+    procedure SetPSCloseChannel(AValue: IPSCloseChannel);
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -159,6 +190,7 @@ type
     fMoveNotifier: IFluxNotifier;
     fActivateNotifier: IFluxNotifier;
     fCloseQueryNotifier: IFluxNotifier;
+    fPSCloseChannel: IPSCloseChannel;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
@@ -166,6 +198,7 @@ type
     property MoveNotifier: IFluxNotifier read fMoveNotifier write SetMoveNotifier;
     property ActivateNotifier: IFluxNotifier read fActivateNotifier write SetActivateNotifier;
     property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write SetCloseQueryNotifier;
+    property PSCloseChannel: IPSCloseChannel read fPSCloseChannel write SetPSCloseChannel;
   end;
 
   { TStripBit }
@@ -206,12 +239,18 @@ type
     procedure SetTextChangedNotifier(AValue: IFluxNotifier);
     procedure KeyDownNotifierData(const AProps: IProps);
     procedure SetKeyDownNotifier(AValue: IFluxNotifier);
+  private
+    fCMTextChanged: IMessageObservable;
+    procedure CMTextChangedObserver(AMessage: TLMessage);
+    procedure PSTextChannelObserver(const AValue: String);
+    procedure SetPSTextChannel(AValue: IPSTextChannel);
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
     procedure EnableNotifiers; override;
     procedure DisableNotifiers; override;
   public
+    procedure AfterConstruction; override;
     destructor Destroy; override;
   protected
     fText: string;
@@ -219,12 +258,14 @@ type
     fKeyDownNotifier: IFluxNotifier;
     fFocused: Boolean;
     fFlat: Boolean;
+    fPSTextChannel: IPSTextChannel;
   published
     property Text: string read fText write fText;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
     property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write SetKeyDownNotifier;
     property Focused: Boolean read fFocused write fFocused;
     property Flat: Boolean read fFlat write fFlat;
+    property PSTextChannel: IPSTextChannel read fPSTextChannel write SetPSTextChannel;
   end;
 
   { TTextBit }
@@ -263,6 +304,56 @@ type
   end;
 
 implementation
+
+{ TMessageObservable }
+
+procedure TMessageObservable.DoControlWndProc(var TheMessage: TLMessage);
+var
+  cb: TMessageObserverCallback;
+begin
+  inherited DoControlWndProc(TheMessage);
+  if not Enabled then
+    Exit;
+  if TheMessage.Msg = Msg then begin
+    for cb in fObservers do
+      cb(TheMessage);
+  end;
+end;
+
+procedure TMessageObservable.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fObservers := TFPGList<TMessageObserverCallback>.Create;
+  fEnabled := True;
+end;
+
+procedure TMessageObservable.BeforeDestruction;
+begin
+  FreeAndNil(fObservers);
+  inherited BeforeDestruction;
+end;
+
+procedure TMessageObservable.Subscribe(ACallback: TMessageObserverCallback);
+begin
+  if fObservers.IndexOf(ACallback) = -1 then
+    fObservers.Add(ACallback);
+end;
+
+procedure TMessageObservable.Unsubscribe(ACallback: TMessageObserverCallback);
+begin
+  if fObservers.IndexOf(ACallback) <> -1 then
+    fObservers.Remove(ACallback);
+end;
+
+function TMessageObservable.GetEnabled: Boolean;
+begin
+  Result := fEnabled;
+end;
+
+procedure TMessageObservable.SetEnabled(Enabled: Boolean);
+begin
+  fEnabled := Enabled;
+end;
 
 { TMessageNotifierBinder }
 
@@ -396,7 +487,7 @@ procedure TButtonBit.DoRender;
 begin
   inherited DoRender;
   AsButton.Caption := Text;
-  AsButton.OnClick := @OnClick;
+  AsButton.OnClick := OnClick;
   AsButton.AutoSize := False;
   AsButton.Alignment := taCenter;
   AsButton.Layout := tlCenter;
@@ -452,14 +543,14 @@ begin
   begin
     fTextChangedMsgBinder.Unbind;
     fTextChangedMsgBinder := nil;
-    fTextChangedNotifier.Remove(@TextChangedNotifierData);
+    fTextChangedNotifier.Remove(TextChangedNotifierData);
   end;
   fTextChangedNotifier := AValue;
   if fTextChangedNotifier <> nil then
   begin
     fTextChangedMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fTextChangedNotifier).SetInt('Msg', CM_TEXTCHANGED)));
     fTextChangedMsgBinder.Bind(AsEdit);
-    fTextChangedNotifier.Add(@TextChangedNotifierData);
+    fTextChangedNotifier.Add(TextChangedNotifierData);
   end;
 end;
 
@@ -486,15 +577,55 @@ begin
   begin
     fKeyDownMsgBinder.Unbind;
     fKeyDownMsgBinder := nil;
-    fKeyDownNotifier.Remove(@KeyDownNotifierData);
+    fKeyDownNotifier.Remove(KeyDownNotifierData);
   end;
   fKeyDownNotifier := AValue;
   if fKeyDownNotifier <> nil then
   begin
     fKeyDownMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fKeyDownNotifier).SetInt('Msg', CN_KEYDOWN)));
     fKeyDownMsgBinder.Bind(AsEdit);
-    fKeyDownNotifier.Add(@KeyDownNotifierData);
+    fKeyDownNotifier.Add(KeyDownNotifierData);
   end;
+end;
+
+procedure TEditBit.CMTextChangedObserver(AMessage: TLMessage);
+begin
+  fPSTextChannel.Publish(AsEdit.Text);
+end;
+
+procedure TEditBit.SetPSTextChannel(AValue: IPSTextChannel);
+begin
+  if fPSTextChannel <> nil then
+  begin
+    fCMTextChanged.Unbind;
+    fCMTextChanged.Unsubscribe(CMTextChangedObserver);
+    fCMTextChanged := nil;
+    fPSTextChannel.Unsubscribe(PSTextChannelObserver);
+  end;
+  fPSTextChannel := AValue;
+  if fPSTextChannel <> nil then
+  begin
+    fCMTextChanged := IMessageObservable(
+      Factory.Locate(
+        IMessageObservable,
+        '',
+        NewProps
+        .SetInt('Msg', CM_TEXTCHANGED)
+      )
+    );
+    fCMTextChanged.Bind(AsEdit);
+    fCMTextChanged.Subscribe(CMTextChangedObserver);
+    fPSTextChannel.Subscribe(PSTextChannelObserver);
+  end;
+end;
+
+procedure TEditBit.PSTextChannelObserver(const AValue: String);
+begin
+  if AsEdit.Text = AValue then
+    Exit;
+  fCMTextChanged.Enabled := False;
+  AsEdit.Text := AValue;
+  fCMTextChanged.Enabled := True;
 end;
 
 function TEditBit.AsEdit: TCustomEdit;
@@ -538,6 +669,11 @@ begin
   inherited DisableNotifiers;
 end;
 
+procedure TEditBit.AfterConstruction;
+begin
+  inherited AfterConstruction;
+end;
+
 destructor TEditBit.Destroy;
 begin
   TextChangedNotifier := nil;
@@ -577,20 +713,56 @@ begin
   end;
 end;
 
+procedure TFormBit.LMCloseQueryObserver(AMessage: TLMessage);
+begin
+  PSCloseChannel.Publish;
+end;
+
+procedure TFormBit.PSCloseChannelObserver;
+begin
+  AsForm.Close;
+end;
+
 procedure TFormBit.SetMoveNotifier(AValue: IFluxNotifier);
 begin
   if fMoveNotifier <> nil then
   begin
     fMoveMsgBinder.Unbind;
     fMoveMsgBinder := nil;
-    fMoveNotifier.Remove(@MoveNotifierData);
+    fMoveNotifier.Remove(MoveNotifierData);
   end;
   fMoveNotifier := AValue;
   if fMoveNotifier <> nil then
   begin
     fMoveMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fMoveNotifier).SetInt('Msg', LM_MOVE)));
     fMoveMsgBinder.Bind(AsForm);
-    fMoveNotifier.Add(@MoveNotifierData);
+    fMoveNotifier.Add(MoveNotifierData);
+  end;
+end;
+
+procedure TFormBit.SetPSCloseChannel(AValue: IPSCloseChannel);
+begin
+  if fPSCloseChannel <> nil then
+  begin
+    fLMCloseQuery.Unbind;
+    fLMCloseQuery.Unsubscribe(LMCloseQueryObserver);
+    fLMCloseQuery := nil;
+    fPSCloseChannel.Unsubscribe(PSCloseChannelObserver);
+  end;
+  fPSCloseChannel := AValue;
+  if fPSCloseChannel <> nil then
+  begin
+    fLMCloseQuery := IMessageObservable(
+      Factory.Locate(
+        IMessageObservable,
+        '',
+        NewProps
+        .SetInt('Msg', LM_CLOSEQUERY)
+      )
+    );
+    fLMCloseQuery.Bind(AsForm);
+    fLMCloseQuery.Subscribe(LMCloseQueryObserver);
+    fPSCloseChannel.Subscribe(PSCloseChannelObserver);
   end;
 end;
 
@@ -600,14 +772,14 @@ begin
   begin
     fSizeMsgBinder.Unbind;
     fSizeMsgBinder := nil;
-    fSizeNotifier.Remove(@SizeNotifierData);
+    fSizeNotifier.Remove(SizeNotifierData);
   end;
   fSizeNotifier := AValue;
   if fSizeNotifier <> nil then
   begin
     fSizeMsgBinder := IMessageNotifierBinder(Factory.Locate(IMessageNotifierBinder, '', NewProps.SetIntf('Notifier', fSizeNotifier).SetInt('Msg', LM_SIZE)));
     fSizeMsgBinder.Bind(AsForm);
-    fSizeNotifier.Add(@SizeNotifierData);
+    fSizeNotifier.Add(SizeNotifierData);
   end;
 end;
 
@@ -667,7 +839,7 @@ begin
   inherited;
   Tiler.ReplaceChildren(Self);
   ResetScroll;
-  AsForm.OnPaint := @OnPaint;
+  AsForm.OnPaint := OnPaint;
   AsForm.Caption := Title;
   AsForm.Show;
   for mChild in Node do
@@ -726,6 +898,13 @@ end;
 function TBit.NewProps: IProps;
 begin
   Result := IProps(Factory.Locate(IProps));
+end;
+
+procedure TBit.SetColor(AValue: TColor);
+begin
+  if avalue=0 then exit;
+  if fColor=AValue then Exit;
+  fColor:=AValue;
 end;
 
 procedure TBit.AddChild(const ANode: INode);

@@ -1,11 +1,12 @@
 unit rea_ibits;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
+{$modeswitch functionreferences}
 
 interface
 
 uses
-  Controls, Graphics, LMessages;
+  Controls, Graphics, LMessages, trl_pubsub;
 
 type
   IMessageNotifierBinder = interface
@@ -14,6 +15,34 @@ type
     procedure Unbind;
     function Message: TLMessage;
   end;
+
+  //TMessageObserverCallback = reference to procedure(AMessage: TLMessage);
+  TMessageObserverCallback = procedure(AMessage: TLMessage) of object;
+
+  IMessageObservable = interface
+  ['{C3A8F182-7E03-4FA5-891B-0F41743EC400}']
+    procedure Subscribe(ACallback: TMessageObserverCallback);
+    procedure Unsubscribe(ACallback: TMessageObserverCallback);
+    procedure Bind(AControl: TControl);
+    procedure Unbind;
+    function GetEnabled: Boolean;
+    procedure SetEnabled(Enabled: Boolean);
+    property Enabled: Boolean read GetEnabled write SetEnabled;
+  end;
+
+  IPSTextChannel = IPubSubDataChannel<String>;
+
+  TSizeData = record
+    Width, Height: Integer;
+  end;
+
+  TPositionData = record
+    Top, Left: Integer;
+  end;
+
+  IPSSizeChannel = IPubSubDataChannel<TSizeData>;
+  IPSPositionChannel = IPubSubDataChannel<TPositionData>;
+  IPSCloseChannel = IPubSubChannel;
 
   // wrapper for real control and its binder
   IBit = interface

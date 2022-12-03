@@ -13,7 +13,7 @@ uses
   rea_udesigncomponentdata, rea_udesigncomponentfunc, 
   rea_udesigncomponentfactory, rea_istyles, rea_ustyles, rea_iflux, rea_uflux, 
   rea_ufuncdispatcher, rea_idataconnector, rea_udataconnector, 
-  rea_ireafactory, rea_ureafactory, rea_iprops, rea_uprops;
+  rea_ireafactory, rea_ureafactory, rea_iprops, rea_uprops, rea_upubsublauncher;
 
 implementation
 
