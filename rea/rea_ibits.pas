@@ -35,8 +35,9 @@ type
   { TSizeData }
 
   TSizeData = record
+    Source: TObject;
     Width, Height: Integer;
-    constructor Create(Width, Height: Integer);
+    constructor Create(Source: TObject; Width, Height: Integer);
     class operator equal(a,b: TSizeData): Boolean;
     class operator notequal(a,b: TSizeData): Boolean;
   end;
@@ -44,8 +45,9 @@ type
   { TPositionData }
 
   TPositionData = record
+    Source: TObject;
     Top, Left: Integer;
-    constructor Create(Top, Left: Integer);
+    constructor Create(Source: TObject; Top, Left: Integer);
     class operator equal(a,b: TPositionData): Boolean;
     class operator notequal(a,b: TPositionData): Boolean;
   end;
@@ -86,8 +88,9 @@ implementation
 
 { TPositionData }
 
-constructor TPositionData.Create(Top, Left: Integer);
+constructor TPositionData.Create(Source: TObject; Top, Left: Integer);
 begin
+  Self.Source := Source;
   Self.Top := Top;
   Self.Left := Left;
 end;
@@ -104,8 +107,9 @@ end;
 
 { TSizeData }
 
-constructor TSizeData.Create(Width, Height: Integer);
+constructor TSizeData.Create(Source: TObject; Width, Height: Integer);
 begin
+  Self.Source := Source;
   Self.Width := Width;
   Self.Height := Height;
 end;

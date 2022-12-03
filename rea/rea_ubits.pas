@@ -782,11 +782,13 @@ end;
 
 procedure TFormBit.LMSizeObserver(AMessage: TLMessage);
 begin
-  PSSizeChannel.Publish(TSizeData.Create(AsForm.Width, AsForm.Height));
+  PSSizeChannel.Publish(TSizeData.Create(Self, AsForm.Width, AsForm.Height));
 end;
 
 procedure TFormBit.PSSizeChannelObserver(const AData: TSizeData);
 begin
+  if AData.Source = Self then
+    Exit;
   fLMSize.Enabled := False;
   AsForm.Width := AData.Width;
   AsForm.Height := AData.Height;
@@ -821,11 +823,13 @@ end;
 
 procedure TFormBit.LMMoveObserver(AMessage: TLMessage);
 begin
-  PSPositionChannel.Publish(TPositionData.Create(AsForm.Top, AsForm.Left));
+  PSPositionChannel.Publish(TPositionData.Create(Self, AsForm.Top, AsForm.Left));
 end;
 
 procedure TFormBit.PSPositionChannelObserver(const AData: TPositionData);
 begin
+  if AData.Source = Self then
+    Exit;
   fLMMove.Enabled := False;
   AsForm.Left := AData.Left;
   AsForm.Top := AData.Top;

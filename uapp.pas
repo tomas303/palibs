@@ -168,7 +168,7 @@ begin
   fPSPositionChannel.Subscribe(PSPositionObserver);
 
 
-  Store.Open('~/demosettings.xml');
+  Store.Open('/root/demosettings.xml');
   mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
   if mList.Count = 0 then
   begin
@@ -186,8 +186,8 @@ begin
   end;
   fNameChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
   fSurenameChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
-  fPSSizeChannel.Publish(TSizeData.Create(fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
-  fPSPositionChannel.Publish(TPositionData.Create(fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
+  fPSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
+  fPSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
  end;
 
 { TApp }

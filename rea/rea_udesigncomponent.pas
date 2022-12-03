@@ -470,10 +470,10 @@ begin
   }
   Result
   .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-  .SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
-  .SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
-  .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
-  .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
+  //.SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
+  //.SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
+  //.SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
+  //.SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
   .SetIntf('PSCloseChannel', SelfProps.AsIntf('PSCloseChannel'))
   .SetIntf('PSSizeChannel', SelfProps.AsIntf('PSSizeChannel'))
   .SetIntf('PSPositionChannel', SelfProps.AsIntf('PSPositionChannel'))
