@@ -6,7 +6,7 @@ unit rea_ibits;
 interface
 
 uses
-  Controls, Graphics, LMessages, trl_pubsub;
+  Controls, Graphics, LMessages, LCLType, trl_pubsub;
 
 type
   IMessageNotifierBinder = interface
@@ -30,8 +30,6 @@ type
     property Enabled: Boolean read GetEnabled write SetEnabled;
   end;
 
-  IPSTextChannel = IPubSubDataChannel<String>;
-
   { TSizeData }
 
   TSizeData = record
@@ -52,9 +50,25 @@ type
     class operator notequal(a,b: TPositionData): Boolean;
   end;
 
+
+  TControlKey = (ckUnknown, ckEnter, ckLeft, ckRight, ckUp, ckDown, ckTab, ckEsc, ckPgUp, ckPgDown);
+
+  { TKeyData }
+
+  TKeyData = record
+    ControlKey: TControlKey;
+    constructor Create(ControlKey: TControlKey); overload;
+    constructor Create(AMsg: TLMKey); overload;
+    class operator equal(a,b: TKeyData): Boolean;
+    class operator notequal(a,b: TKeyData): Boolean;
+  end;
+
+  IPSTextChannel = IPubSubDataChannel<String>;
   IPSSizeChannel = IPubSubDataChannel<TSizeData>;
   IPSPositionChannel = IPubSubDataChannel<TPositionData>;
+  IPSKeyChannel = IPubSubDataChannel<TKeyData>;
   IPSCloseChannel = IPubSubChannel;
+  IPSActivateChannel = IPubSubChannel;
 
   // wrapper for real control and its binder
   IBit = interface
@@ -85,6 +99,40 @@ type
   end;
 
 implementation
+
+{ TKeyData }
+
+constructor TKeyData.Create(ControlKey: TControlKey);
+begin
+  Self.ControlKey := ControlKey;
+end;
+
+constructor TKeyData.Create(AMsg: TLMKey);
+begin
+  case AMsg.CharCode of
+    VK_RETURN: ControlKey := ckEnter;
+    VK_LEFT: ControlKey := ckLeft;
+    VK_RIGHT: ControlKey := ckRight;
+    VK_UP: ControlKey := ckUp;
+    VK_DOWN: ControlKey := ckDown;
+    VK_TAB: ControlKey := ckTab;
+    VK_ESCAPE: ControlKey := ckEsc;
+    VK_PRIOR: ControlKey := ckPgUp;
+    VK_NEXT: ControlKey := ckPgDown;
+  else
+    ControlKey := ckUnknown;
+  end;
+end;
+
+class operator TKeyData.equal(a, b: TKeyData): Boolean;
+begin
+  Result := Ord(a.ControlKey) = Ord(b.ControlKey);
+end;
+
+class operator TKeyData.notequal(a, b: TKeyData): Boolean;
+begin
+  Result := not(a = b);
+end;
 
 { TPositionData }
 

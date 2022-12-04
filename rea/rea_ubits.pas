@@ -178,6 +178,11 @@ type
     procedure LMMoveObserver(AMessage: TLMessage);
     procedure PSPositionChannelObserver(const AData: TPositionData);
     procedure SetPSPositionChannel(AValue: IPSPositionChannel);
+  private
+    fLMActivate: IMessageObservable;
+    procedure LMActivateObserver(AMessage: TLMessage);
+    procedure PSActivateChannelObserver;
+    procedure SetPSActivateChannel(AValue: IPSActivateChannel);
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -204,6 +209,7 @@ type
     fPSCloseChannel: IPSCloseChannel;
     fPSSizeChannel: IPSSizeChannel;
     fPSPositionChannel: IPSPositionChannel;
+    fPSActivateChannel: IPSActivateChannel;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
@@ -214,6 +220,7 @@ type
     property PSCloseChannel: IPSCloseChannel read fPSCloseChannel write SetPSCloseChannel;
     property PSSizeChannel: IPSSizeChannel read fPSSizeChannel write SetPSSizeChannel;
     property PSPositionChannel: IPSPositionChannel read fPSPositionChannel write SetPSPositionChannel;
+    property PSActivateChannel: IPSActivateChannel read fPSActivateChannel write SetPSActivateChannel;
   end;
 
   { TStripBit }
@@ -259,6 +266,11 @@ type
     procedure CMTextChangedObserver(AMessage: TLMessage);
     procedure PSTextChannelObserver(const AValue: String);
     procedure SetPSTextChannel(AValue: IPSTextChannel);
+  private
+    fCNKeyDown: IMessageObservable;
+    procedure CNKeyDownObserver(AMessage: TLMessage);
+    procedure PSKeyDownChannelObserver(const AValue: TKeyData);
+    procedure SetPSKeyDownChannel(AValue: IPSKeyChannel);
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
@@ -274,6 +286,7 @@ type
     fFocused: Boolean;
     fFlat: Boolean;
     fPSTextChannel: IPSTextChannel;
+    fPSKeyDownChannel: IPSKeyChannel;
   published
     property Text: string read fText write fText;
     property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write SetTextChangedNotifier;
@@ -281,6 +294,7 @@ type
     property Focused: Boolean read fFocused write fFocused;
     property Flat: Boolean read fFlat write fFlat;
     property PSTextChannel: IPSTextChannel read fPSTextChannel write SetPSTextChannel;
+    property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
   end;
 
   { TTextBit }
@@ -627,6 +641,35 @@ begin
   end;
 end;
 
+procedure TEditBit.CNKeyDownObserver(AMessage: TLMessage);
+begin
+  PSKeyDownChannel.Publish(TKeyData.Create(TLMKeyDown(AMessage)));
+end;
+
+procedure TEditBit.PSKeyDownChannelObserver(const AValue: TKeyData);
+begin
+
+end;
+
+procedure TEditBit.SetPSKeyDownChannel(AValue: IPSKeyChannel);
+begin
+  if fPSKeyDownChannel <> nil then
+  begin
+    fCNKeyDown.Unbind;
+    fCNKeyDown.Unsubscribe(CNKeyDownObserver);
+    fCNKeyDown := nil;
+    fPSKeyDownChannel.Unsubscribe(PSKeyDownChannelObserver);
+  end;
+  fPSKeyDownChannel := AValue;
+  if fPSKeyDownChannel <> nil then
+  begin
+    fCNKeyDown := NewMessageObservable(CN_KeyDown);
+    fCNKeyDown.Bind(AsEdit);
+    fCNKeyDown.Subscribe(CNKeyDownObserver);
+    fPSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
+  end;
+end;
+
 procedure TEditBit.PSTextChannelObserver(const AValue: String);
 begin
   if AsEdit.Text = AValue then
@@ -832,6 +875,35 @@ begin
     fLMMove.Bind(AsForm);
     fLMMove.Subscribe(LMMoveObserver);
     fPSPositionChannel.Subscribe(PSPositionChannelObserver);
+  end;
+end;
+
+procedure TFormBit.LMActivateObserver(AMessage: TLMessage);
+begin
+  PSActivateChannel.Publish;
+end;
+
+procedure TFormBit.PSActivateChannelObserver;
+begin
+
+end;
+
+procedure TFormBit.SetPSActivateChannel(AValue: IPSActivateChannel);
+begin
+  if fPSActivateChannel <> nil then
+  begin
+    fLMActivate.Unbind;
+    fLMActivate.Unsubscribe(LMActivateObserver);
+    fLMActivate := nil;
+    fPSActivateChannel.Unsubscribe(PSActivateChannelObserver);
+  end;
+  fPSActivateChannel := AValue;
+  if fPSActivateChannel <> nil then
+  begin
+    fLMActivate := NewMessageObservable(LM_ACTIVATE);
+    fLMActivate.Bind(AsForm);
+    fLMActivate.Subscribe(LMActivateObserver);
+    fPSActivateChannel.Subscribe(PSActivateChannelObserver);
   end;
 end;
 
