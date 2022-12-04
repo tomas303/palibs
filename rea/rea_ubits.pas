@@ -59,6 +59,7 @@ type
   TBit = class(TInterfacedObject, IBit, INode, IBitPosition)
   private
     procedure SetColor(AValue: TColor);
+    function NewMessageObservable(AMsg: Integer): IMessageObservable;
   protected
     // INode
     procedure AddChild(const ANode: INode);
@@ -619,14 +620,7 @@ begin
   fPSTextChannel := AValue;
   if fPSTextChannel <> nil then
   begin
-    fCMTextChanged := IMessageObservable(
-      Factory.Locate(
-        IMessageObservable,
-        '',
-        NewProps
-        .SetInt('Msg', CM_TEXTCHANGED)
-      )
-    );
+    fCMTextChanged := NewMessageObservable(CM_TEXTCHANGED);
     fCMTextChanged.Bind(AsEdit);
     fCMTextChanged.Subscribe(CMTextChangedObserver);
     fPSTextChannel.Subscribe(PSTextChannelObserver);
@@ -766,14 +760,7 @@ begin
   fPSCloseChannel := AValue;
   if fPSCloseChannel <> nil then
   begin
-    fLMCloseQuery := IMessageObservable(
-      Factory.Locate(
-        IMessageObservable,
-        '',
-        NewProps
-        .SetInt('Msg', LM_CLOSEQUERY)
-      )
-    );
+    fLMCloseQuery := NewMessageObservable(LM_CLOSEQUERY);
     fLMCloseQuery.Bind(AsForm);
     fLMCloseQuery.Subscribe(LMCloseQueryObserver);
     fPSCloseChannel.Subscribe(PSCloseChannelObserver);
@@ -807,14 +794,7 @@ begin
   fPSSizeChannel := AValue;
   if fPSSizeChannel <> nil then
   begin
-    fLMSize := IMessageObservable(
-      Factory.Locate(
-        IMessageObservable,
-        '',
-        NewProps
-        .SetInt('Msg', LM_SIZE)
-      )
-    );
+    fLMSize := NewMessageObservable(LM_SIZE);
     fLMSize.Bind(AsForm);
     fLMSize.Subscribe(LMSizeObserver);
     fPSSizeChannel.Subscribe(PSSizeChannelObserver);
@@ -848,14 +828,7 @@ begin
   fPSPositionChannel := AValue;
   if fPSPositionChannel <> nil then
   begin
-    fLMMove := IMessageObservable(
-      Factory.Locate(
-        IMessageObservable,
-        '',
-        NewProps
-        .SetInt('Msg', LM_MOVE)
-      )
-    );
+    fLMMove := NewMessageObservable(LM_MOVE);
     fLMMove.Bind(AsForm);
     fLMMove.Subscribe(LMMoveObserver);
     fPSPositionChannel.Subscribe(PSPositionChannelObserver);
@@ -1001,6 +974,18 @@ begin
   if avalue=0 then exit;
   if fColor=AValue then Exit;
   fColor:=AValue;
+end;
+
+function TBit.NewMessageObservable(AMsg: Integer): IMessageObservable;
+begin
+  Result := IMessageObservable(
+    Factory.Locate(
+      IMessageObservable,
+      '',
+      NewProps
+      .SetInt('Msg', AMsg)
+    )
+  );
 end;
 
 procedure TBit.AddChild(const ANode: INode);
