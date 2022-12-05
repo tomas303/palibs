@@ -1,13 +1,13 @@
 unit rea_idesigncomponent;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 {$modeswitch typehelpers}
 {$modeswitch multihelpers}
 
 interface
 
 uses
-  trl_imetaelement, trl_iprops, rea_iprops;
+  trl_imetaelement, trl_iprops, rea_iprops, trl_pubsub;
 
 type
 
@@ -95,6 +95,17 @@ type
     Bottom = 3;
   end;
 
+  { TGUIData }
+
+  TGUIData = record
+    Render: Boolean;
+    constructor Create(Render: Boolean);
+    class operator equal(a,b: TGUIData): Boolean;
+    class operator notequal(a,b: TGUIData): Boolean;
+  end;
+
+  IPSGUIChannel = IPubSubDataChannel<TGUIData>;
+
   { IGridDataProvider }
 
   IGridDataProvider = interface
@@ -121,6 +132,7 @@ type
 
   IDesignComponentApp = interface(IDesignComponent)
   ['{4035F57F-CA74-4D0E-8972-3A2162FAB714}']
+    function PSGUIChannel: IPSGUIChannel;
   end;
 
   IDesignComponentForm = interface(IDesignComponent)
@@ -235,6 +247,23 @@ const
   cCaptionWidth = 100;
 
 implementation
+
+{ TGUIData }
+
+constructor TGUIData.Create(Render: Boolean);
+begin
+  Self.Render := Render;
+end;
+
+class operator TGUIData.equal(a, b: TGUIData): Boolean;
+begin
+  Result := a.Render = b.Render;
+end;
+
+class operator TGUIData.notequal(a, b: TGUIData): Boolean;
+begin
+  Result := not(a = b);
+end;
 
 end.
 

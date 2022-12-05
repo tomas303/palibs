@@ -463,10 +463,10 @@ begin
   }
   Result
   .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-  //.SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
-  //.SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
-  //.SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
-  //.SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
+  .SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
+  .SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
+  .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
+  .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
   .SetIntf(cForm.PSCloseChannel, SelfProps.AsIntf(cForm.PSCloseChannel))
   .SetIntf(cForm.PSSizeChannel, SelfProps.AsIntf(cForm.PSSizeChannel))
   .SetIntf(cForm.PSPositionChannel, SelfProps.AsIntf(cForm.PSPositionChannel))

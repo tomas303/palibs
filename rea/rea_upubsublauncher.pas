@@ -21,6 +21,7 @@ type
     procedure ShutDown;
     procedure Loop;
     procedure Render;
+    procedure PSGUIChannelObserver(const AData: TGUIData);
   protected
     // ILauncher
     procedure Launch;
@@ -43,10 +44,12 @@ implementation
 procedure TPubSubLauncher.StartUp;
 begin
   Render;
+  GUI.PSGUIChannel.Subscribe(PSGUIChannelObserver);
 end;
 
 procedure TPubSubLauncher.ShutDown;
 begin
+  GUI.PSGUIChannel.Unsubscribe(PSGUIChannelObserver);
   Application.Terminate;
 end;
 
@@ -76,6 +79,12 @@ begin
     raise exception.create('nil element');
   end;
   Renderer.Render(mEl);
+end;
+
+procedure TPubSubLauncher.PSGUIChannelObserver(const AData: TGUIData);
+begin
+  if AData.Render then
+    Render;
 end;
 
 procedure TPubSubLauncher.Launch;

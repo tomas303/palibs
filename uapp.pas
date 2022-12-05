@@ -34,6 +34,7 @@ type
     fCloseChannel: IPSCloseChannel;
     fPSSizeChannel: IPSSizeChannel;
     fPSPositionChannel: IPSPositionChannel;
+    fPSGUIChannel: IPSGUIChannel;
     procedure PSNameObserver(const AValue: String);
     procedure PSSurenameObserver(const AValue: String);
     procedure PSSizeObserver(const AValue: TSizeData);
@@ -42,6 +43,7 @@ type
     procedure BeforeClose;
     procedure CloseProgram;
   protected
+    function PSGUIChannel: IPSGUIChannel;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
     procedure InitValues; override;
   protected
@@ -87,6 +89,7 @@ procedure TGUI.PSSizeObserver(const AValue: TSizeData);
 begin
   fAppSettings.ItemByName['Width'].AsInteger := AValue.Width;
   fAppSettings.ItemByName['Height'].AsInteger := AValue.Height;
+  fPSGUIChannel.Publish(TGUIData.Create(True));
 end;
 
 procedure TGUI.PSPositionObserver(const AValue: TPositionData);
@@ -107,6 +110,11 @@ begin
   raise ELaunchStop.Create('');
 end;
 
+function TGUI.PSGUIChannel: IPSGUIChannel;
+begin
+  Result := fPSGUIChannel;
+end;
+
 function TGUI.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray
   ): IMetaElement;
 var
@@ -117,8 +125,14 @@ begin
   mF := Factory2.Locate<IDesignComponentForm>(NewProps
     .SetStr(cProps.Caption, 'Demo app')
     .SetInt(cProps.Color, clGreen)
-    .SetInt(cProps.MMWidth, 500)
-    .SetInt(cProps.MMHeight, 50)
+    //.SetInt(cProps.MMWidth, 500)
+    //.SetInt(cProps.MMHeight, 50)
+
+    .SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
+    .SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
+    .SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
+    .SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
+
     .SetIntf(cForm.PSCloseChannel, fCloseChannel)
     .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
     .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
@@ -167,6 +181,7 @@ begin
   fPSPositionChannel := PubSub.Factory.NewDataChannel<TPositionData>;
   fPSPositionChannel.Subscribe(PSPositionObserver);
 
+  fPSGUIChannel := PubSub.Factory.NewDataChannel<TGUIData>;
 
   Store.Open('/root/demosettings.xml');
   mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
