@@ -6,7 +6,7 @@ unit rea_ibits;
 interface
 
 uses
-  Controls, Graphics, LMessages, LCLType, trl_pubsub;
+  Classes, Controls, Graphics, LMessages, LCLType, LCLIntf, trl_pubsub;
 
 type
   IMessageNotifierBinder = interface
@@ -57,7 +57,9 @@ type
 
   TKeyData = record
     ControlKey: TControlKey;
+    ShiftState: TShiftState;
     constructor Create(ControlKey: TControlKey); overload;
+    constructor Create(ControlKey: TControlKey; ShiftState: TShiftState); overload;
     constructor Create(AMsg: TLMKey); overload;
     class operator equal(a,b: TKeyData): Boolean;
     class operator notequal(a,b: TKeyData): Boolean;
@@ -104,7 +106,13 @@ implementation
 
 constructor TKeyData.Create(ControlKey: TControlKey);
 begin
+  Create(ControlKey, []);
+end;
+
+constructor TKeyData.Create(ControlKey: TControlKey; ShiftState: TShiftState);
+begin
   Self.ControlKey := ControlKey;
+  Self.ShiftState := ShiftState;
 end;
 
 constructor TKeyData.Create(AMsg: TLMKey);
@@ -122,6 +130,7 @@ begin
   else
     ControlKey := ckUnknown;
   end;
+  ShiftState := MsgKeyDataToShiftState(AMsg.KeyData);
 end;
 
 class operator TKeyData.equal(a, b: TKeyData): Boolean;
