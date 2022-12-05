@@ -19,10 +19,6 @@ type
       Title = 'Title';
       Color = 'Color';
       TextColor = 'TextColor';
-      Left = 'Left';
-      Top = 'Top';
-      Width = 'Width';
-      Height = 'Height';
       MMLeft = 'MMLeft';
       MMTop = 'MMTop';
       MMWidth = 'MMWidth';

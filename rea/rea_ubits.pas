@@ -105,6 +105,10 @@ type
     procedure SetTop(AValue: integer);
     procedure SetWidth(AValue: integer);
     procedure SetHeight(AValue: integer);
+    property Left: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
   protected
     fID: string;
     fLog: ILog;
@@ -131,10 +135,6 @@ type
     property MMTop: integer read GetMMTop write SetMMTop;
     property MMWidth: integer read GetMMWidth write SetMMWidth;
     property MMHeight: integer read GetMMHeight write SetMMHeight;
-    property Left: integer read GetLeft write SetLeft;
-    property Top: integer read GetTop write SetTop;
-    property Width: integer read GetWidth write SetWidth;
-    property Height: integer read GetHeight write SetHeight;
   end;
 
   { TFormBit }
@@ -1044,10 +1044,7 @@ begin
 end;
 
 procedure TBit.SetLeft(AValue: integer);
-var
-  m:string;
 begin
-  m:=classname;
   fLeft := AValue;
 end;
 

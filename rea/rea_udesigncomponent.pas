@@ -249,8 +249,8 @@ begin
     .SetInt(cProps.FontColor, AParentEl.Props.AsInt(cProps.FontColor))
     .SetInt(cProps.BorderColor, AParentEl.Props.AsInt(cProps.BorderColor))
     .SetInt(cProps.Border, 0)
-    .SetInt(cProps.Width, SelfProps.AsInt(cProps.BoxLaticeSize))
-    .SetInt(cProps.Height, SelfProps.AsInt(cProps.BoxLaticeSize));
+    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.BoxLaticeSize))
+    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.BoxLaticeSize));
   mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
   (AParentEl as INode).AddChild(mStrip as INode);
   for i := 0 to Count - 1 do begin
@@ -402,7 +402,7 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetBool(cProps.Transparent, False)
     .SetInt(cProps.Color, LaticeColColor)
-    .SetInt(cProps.Width, LaticeColSize);
+    .SetInt(cProps.MMWidth, LaticeColSize);
 end;
 
 function TDesignComponentGrid.LaticeRowProps: IProps;
@@ -411,7 +411,7 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetBool(cProps.Transparent, False)
     .SetInt(cProps.Color, LaticeRowColor)
-    .SetInt(cProps.Height, LaticeRowSize);
+    .SetInt(cProps.MMHeight, LaticeRowSize);
 end;
 
 function TDesignComponentGrid.Latice(AElements: TMetaElementArray;
