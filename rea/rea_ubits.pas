@@ -262,23 +262,27 @@ type
   { TButtonBit }
 
   TButtonBit = class(TBit, IButtonBit)
+  private
+    fClickEnabled: Boolean;
+    procedure OnClick(Sender: TObject);
+    procedure PSClickChannelObserver;
+    procedure SetPSClickChannel(AValue: IPSClickChannel);
   protected
     function AsButton: TLabel;
-    procedure OnClick(Sender: TObject);
   protected
     procedure DoRender; override;
     procedure EnableNotifiers; override;
     procedure DisableNotifiers; override;
   protected
     fText: string;
-    fClickNotifier: IFluxNotifier;
     fFontDirection: Integer;
     fFontColor: TColor;
+    fPSClickChannel: IPSClickChannel;
   published
     property Text: string read fText write fText;
-    property ClickNotifier: IFluxNotifier read fClickNotifier write fClickNotifier;
     property FontDirection: integer read fFontDirection write fFontDirection;
     property FontColor: TColor read fFontColor write fFontColor;
+    property PSClickChannel: IPSClickChannel read fPSClickChannel write SetPSClickChannel;
   end;
 
 implementation
@@ -432,6 +436,23 @@ end;
 
 { TButtonBit }
 
+procedure TButtonBit.SetPSClickChannel(AValue: IPSClickChannel);
+begin
+  if fPSClickChannel <> nil then
+  begin
+    AsButton.OnClick := nil;
+    fPSClickChannel.Unsubscribe(PSClickChannelObserver);
+    fClickEnabled := False;
+  end;
+  fPSClickChannel := AValue;
+  if fPSClickChannel <> nil then
+  begin
+    AsButton.OnClick := OnClick;
+    fPSClickChannel.Subscribe(PSClickChannelObserver);
+    fClickEnabled := True;
+  end;
+end;
+
 function TButtonBit.AsButton: TLabel;
 begin
   Result := AsControl as TLabel;
@@ -439,15 +460,19 @@ end;
 
 procedure TButtonBit.OnClick(Sender: TObject);
 begin
-  if ClickNotifier <> nil then
-    ClickNotifier.Notify;
+  if fClickEnabled then
+    PSClickChannel.Publish;
+end;
+
+procedure TButtonBit.PSClickChannelObserver;
+begin
+
 end;
 
 procedure TButtonBit.DoRender;
 begin
   inherited DoRender;
   AsButton.Caption := Text;
-  AsButton.OnClick := OnClick;
   AsButton.AutoSize := False;
   AsButton.Alignment := taCenter;
   AsButton.Layout := tlCenter;
@@ -469,14 +494,12 @@ end;
 procedure TButtonBit.EnableNotifiers;
 begin
   inherited EnableNotifiers;
-  if ClickNotifier <> nil then
-    ClickNotifier.Enabled := True;
+  fClickEnabled := True;
 end;
 
 procedure TButtonBit.DisableNotifiers;
 begin
-  if ClickNotifier <> nil then
-    ClickNotifier.Enabled := False;
+  fClickEnabled := False;
   inherited DisableNotifiers;
 end;
 

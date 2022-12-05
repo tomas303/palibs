@@ -50,8 +50,6 @@ type
     function SetBorder(const AValue: Integer): IDCButtonProps;
     function BorderColor: Integer;
     function SetBorderColor(const AValue: Integer): IDCButtonProps;
-    function ClickNotifier: IFluxNotifier;
-    function SetClickNotifier(const AValue: IFluxNotifier): IDCButtonProps;
   end;
 
 implementation

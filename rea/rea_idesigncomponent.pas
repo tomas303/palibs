@@ -33,13 +33,9 @@ type
       BorderColor = 'BorderColor';
       FontColor = 'FontColor';
       Transparent = 'Transparent';
-      ClickNotifier = 'ClickNotifier';
       ClickFunc = 'ClickFunc';
-      TextChangedNotifier = 'TextChangedNotifier';
       TextChangedFunc = 'TextChangedFunc';
-      KeyDownNotifier = 'KeyDownNotifier';
       KeyDownFunc = 'KeyDownFunc';
-      OnTextNotifier = 'OnTextNotifier';
       RowMMHeight = 'RowMMHeight';
       ColMMWidth = 'ColMMWidth';
       RowEvenColor = 'RowEvenColor';
@@ -72,16 +68,21 @@ type
 
   cEdit = class(cProps)
   public const
-    EdTextChangedNotifier = 'EdTextChangedNotifier';
-    EdKeyDownNotifier = 'EdKeyDownNotifier';
+    PSTextChannel = 'PSTextChannel';
+    PSKeyDownChannel = 'PSKeyDownChannel';
   end;
 
   cForm = class(cProps)
   public const
-    SizeNotifier = 'SizeNotifier';
-    MoveNotifier = 'MoveNotifier';
-    ActivateNotifier = 'ActivateNotifier';
-    CloseQueryNotifier = 'CloseQueryNotifier';
+    PSCloseChannel = 'PSCloseChannel';
+    PSSizeChannel = 'PSSizeChannel';
+    PSPositionChannel = 'PSPositionChannel';
+    PSActivateChannel = 'PSPositionChannel';
+  end;
+
+  cButton = class(cProps)
+  public const
+    PSClickChannel = 'PSClickChannel';
   end;
 
   cAction = class(cProps)

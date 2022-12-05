@@ -51,8 +51,6 @@ type
     function SetBorder(const AValue: Integer): IDCButtonProps;
     function BorderColor: Integer;
     function SetBorderColor(const AValue: Integer): IDCButtonProps;
-    function ClickNotifier: IFluxNotifier;
-    function SetClickNotifier(const AValue: IFluxNotifier): IDCButtonProps;
   end;
 
 implementation
@@ -97,17 +95,6 @@ end;
 function TDCButtonProps.SetBorderColor(const AValue: Integer): IDCButtonProps;
 begin
   Result := SetInt(cProps.BorderColor, AValue) as IDCButtonProps;
-end;
-
-function TDCButtonProps.ClickNotifier: IFluxNotifier;
-begin
-  Result := AsIntf(cProps.ClickNotifier) as IFluxNotifier;
-end;
-
-function TDCButtonProps.SetClickNotifier(const AValue: IFluxNotifier
-  ): IDCButtonProps;
-begin
-  Result := SetIntf(cProps.ClickNotifier, AValue) as IDCButtonProps;
 end;
 
 { TDCLabelEditProps }

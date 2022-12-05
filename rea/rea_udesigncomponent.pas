@@ -309,20 +309,12 @@ end;
 function TDesignComponentEdit.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
-  {
   Result
-    .SetStr(cProps.Text, Data.Text)
-    .SetBool(cProps.Focused, Data.Focused)
+    .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
+    .SetBool(cProps.Focused, SelfProps.AsBool(cProps.Focused))
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
-    .SetIntf(cProps.TextChangedNotifier, TextChangedNotifier)
-    .SetIntf(cProps.KeyDownNotifier, KeyDownNotifier);
-}
-Result
-  .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
-  .SetBool(cProps.Focused, SelfProps.AsBool(cProps.Focused))
-  .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
-  .SetIntf('PSTextChannel', SelfProps.AsIntf('PSTextChannel'));
-;
+    .SetIntf(cEdit.PSTextChannel, SelfProps.AsIntf(cEdit.PSTextChannel))
+    .SetIntf(cEdit.PSKeyDownChannel, SelfProps.AsIntf(cEdit.PSKeyDownChannel));
 end;
 
 function TDesignComponentEdit.DoCompose(const AProps: IProps;
@@ -383,8 +375,9 @@ begin
         .SetObject(cProps.Data, Data.EditData)
         .SetBool(cProps.Flat, True)
         .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-        .SetIntf(cProps.TextChangedNotifier, EdTextChangedNotifier)
-        .SetIntf(cProps.KeyDownNotifier, EdKeyDownNotifier);
+        //.SetIntf(cProps.TextChangedNotifier, EdTextChangedNotifier)
+        //.SetIntf(cProps.KeyDownNotifier, EdKeyDownNotifier)
+        ;
       Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);
     end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, ColProps(Row, i));
@@ -474,9 +467,10 @@ begin
   //.SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
   //.SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
   //.SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
-  .SetIntf('PSCloseChannel', SelfProps.AsIntf('PSCloseChannel'))
-  .SetIntf('PSSizeChannel', SelfProps.AsIntf('PSSizeChannel'))
-  .SetIntf('PSPositionChannel', SelfProps.AsIntf('PSPositionChannel'))
+  .SetIntf(cForm.PSCloseChannel, SelfProps.AsIntf(cForm.PSCloseChannel))
+  .SetIntf(cForm.PSSizeChannel, SelfProps.AsIntf(cForm.PSSizeChannel))
+  .SetIntf(cForm.PSPositionChannel, SelfProps.AsIntf(cForm.PSPositionChannel))
+  .SetIntf(cForm.PSActivateChannel, SelfProps.AsIntf(cForm.PSActivateChannel))
 
 end;
 
@@ -609,7 +603,7 @@ begin
     .SetInt(cProps.Place, cPlace.Elastic)
     .SetInt(cProps.FontDirection, SelfProps.AsInt(cProps.FontDirection))
     .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
-    .SetIntf(cProps.ClickNotifier, SelfProps.AsIntf(cProps.ClickNotifier));
+    .SetIntf(cButton.PSClickChannel, SelfProps.AsIntf(cButton.PSClickChannel));
 end;
 
 function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;

@@ -248,12 +248,12 @@ begin
     mTextChangedFunc := TextChangedFunc.Create(Sequence.Next, mData);
     FluxDispatcher.RegisterFunc(mTextChangedFunc);
   end;
-  mProps.SetIntf(cProps.TextChangedNotifier, NewNotifier(mTextChangedFunc.ID));
-  mKeyDownFunc := AProps.AsIntf(cProps.KeyDownFunc) as IFluxFunc;
-  if mKeyDownFunc <> nil then begin
-    FluxDispatcher.RegisterFunc(mKeyDownFunc);
-    mProps.SetIntf(cProps.KeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
-  end;
+  //mProps.SetIntf(cProps.TextChangedNotifier, NewNotifier(mTextChangedFunc.ID));
+  //mKeyDownFunc := AProps.AsIntf(cProps.KeyDownFunc) as IFluxFunc;
+  //if mKeyDownFunc <> nil then begin
+  //  FluxDispatcher.RegisterFunc(mKeyDownFunc);
+  //  mProps.SetIntf(cProps.KeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
+  //end;
   mmm := mProps.Info;
   Result := IDesignComponentEdit(Factory.Locate(IDesignComponentEdit, '', mProps));
 end;
@@ -268,10 +268,10 @@ var
 begin
   mProps := AProps.Clone;
   mClickFunc := AProps.AsIntf(cProps.ClickFunc) as IFluxFunc;
-  if mClickFunc <> nil then begin
-    mProps.SetIntf(cProps.ClickNotifier, NewNotifier(mClickFunc.ID));
-    FluxDispatcher.RegisterFunc(mClickFunc);
-  end;
+  //if mClickFunc <> nil then begin
+  //  mProps.SetIntf(cProps.ClickNotifier, NewNotifier(mClickFunc.ID));
+  //  FluxDispatcher.RegisterFunc(mClickFunc);
+  //end;
   Result := IDesignComponentButton(Factory.Locate(IDesignComponentButton, '', mProps));
 end;
 
@@ -303,10 +303,10 @@ begin
   FluxDispatcher.RegisterFunc(mTextChangedFunc);
   mKeyDownFunc := TGridEdKeyDownFunc.Create(Sequence.Next, mData, NewNotifier(cNotifyRender));
   FluxDispatcher.RegisterFunc(mKeyDownFunc);
-  mProps := AProps.Clone
-    .SetObject(cProps.Data, mData)
-    .SetIntf(cEdit.EdTextChangedNotifier, NewNotifier(mTextChangedFunc.ID))
-    .SetIntf(cEdit.EdKeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
+  //mProps := AProps.Clone
+  //  .SetObject(cProps.Data, mData)
+  //  .SetIntf(cEdit.EdTextChangedNotifier, NewNotifier(mTextChangedFunc.ID))
+  //  .SetIntf(cEdit.EdKeyDownNotifier, NewNotifier(mKeyDownFunc.ID));
   Result := IDesignComponentGrid(Factory.Locate(IDesignComponentGrid, '', mProps));
 end;
 
@@ -344,11 +344,11 @@ begin
   mCloseFunc := TCloseQueryFunc.Create(Sequence.Next, NewNotifier(cNotifyCloseGUI));
   mSizeFunc := TSizeFunc.Create(Sequence.Next, mData, NewNotifier(cNotifyRender));
   mMoveFunc := TMoveFunc.Create(Sequence.Next, mData);
-  mProps := AProps.Clone
-    .SetObject(cProps.Data, mData)
-    .SetIntf(cForm.CloseQueryNotifier, NewNotifier(mCloseFunc.ID))
-    .SetIntf(cForm.SizeNotifier, NewNotifier(mSizeFunc.ID))
-    .SetIntf(cForm.MoveNotifier, NewNotifier(mMoveFunc.ID));
+  //mProps := AProps.Clone
+  //  .SetObject(cProps.Data, mData)
+  //  .SetIntf(cForm.CloseQueryNotifier, NewNotifier(mCloseFunc.ID))
+  //  .SetIntf(cForm.SizeNotifier, NewNotifier(mSizeFunc.ID))
+  //  .SetIntf(cForm.MoveNotifier, NewNotifier(mMoveFunc.ID));
   minfo := mProps.Info;
   FluxDispatcher.RegisterFunc(mCloseFunc);
   FluxDispatcher.RegisterFunc(mSizeFunc);
@@ -391,9 +391,9 @@ begin
     NewNotifier(cNotifyRender),
     AProps.AsInt(cPager.PageIndex));
   FluxDispatcher.RegisterFunc(mTabChangedFunc);
-  mProps := AProps.Clone
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetIntf(cProps.ClickNotifier, NewNotifier(mTabChangedFunc.ID));
+  //mProps := AProps.Clone
+  //  .SetInt(cProps.Place, cPlace.Elastic)
+  //  .SetIntf(cProps.ClickNotifier, NewNotifier(mTabChangedFunc.ID));
   Result := IDesignComponentButton(Factory.Locate(IDesignComponentButton, '', mProps));
 end;
 

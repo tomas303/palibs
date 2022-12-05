@@ -119,9 +119,9 @@ begin
     .SetInt(cProps.Color, clGreen)
     .SetInt(cProps.MMWidth, 500)
     .SetInt(cProps.MMHeight, 50)
-    .SetIntf('PSCloseChannel', fCloseChannel)
-    .SetIntf('PSSizeChannel', fPSSizeChannel)
-    .SetIntf('PSPositionChannel', fPSPositionChannel)
+    .SetIntf(cForm.PSCloseChannel, fCloseChannel)
+    .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
+    .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
     );
 
   mEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
@@ -130,7 +130,7 @@ begin
     .SetStr(cProps.Text, 'first')
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
-    .SetIntf('PSTextChannel', fNameChannel)
+    .SetIntf(cEdit.PSTextChannel, fNameChannel)
     );
   mEditSurename := Factory2.Locate<IDesignComponentEdit>(NewProps
     .SetInt(cProps.Color, clBlue)
@@ -138,7 +138,7 @@ begin
     .SetStr(cProps.Text, 'second')
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
-    .SetIntf('PSTextChannel', fSurenameChannel)
+    .SetIntf(cEdit.PSTextChannel, fSurenameChannel)
     );
 
 

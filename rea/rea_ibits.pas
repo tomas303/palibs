@@ -63,6 +63,7 @@ type
   IPSKeyChannel = IPubSubDataChannel<TKeyData>;
   IPSCloseChannel = IPubSubChannel;
   IPSActivateChannel = IPubSubChannel;
+  IPSClickChannel = IPubSubChannel;
 
   // wrapper for real control and its binder
   IBit = interface
