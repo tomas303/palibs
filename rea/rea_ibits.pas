@@ -9,14 +9,6 @@ uses
   Classes, Controls, Graphics, LMessages, LCLType, LCLIntf, trl_pubsub;
 
 type
-  IMessageNotifierBinder = interface
-  ['{639A647A-916B-4906-A4F8-89CD4C0E129D}']
-    procedure Bind(AControl: TControl);
-    procedure Unbind;
-    function Message: TLMessage;
-  end;
-
-  //TMessageObserverCallback = reference to procedure(AMessage: TLMessage);
   TMessageObserverCallback = procedure(AMessage: TLMessage) of object;
 
   IMessageObservable = interface

@@ -20,10 +20,7 @@ type
     function RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid; const ATilerID: string): TDIReg;
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
-
-    function RegisterMessageNotifierBinder: TDIReg;
     function RegisterMessageObservable: TDIReg;
-
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
     function RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;

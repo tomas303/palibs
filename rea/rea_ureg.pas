@@ -43,7 +43,6 @@ type
     function RegisterBitContainer(ABitClass: TClass; ABitInterface: TGuid; const ATilerID: string): TDIReg;
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
-    function RegisterMessageNotifierBinder: TDIReg;
     function RegisterMessageObservable: TDIReg;
     function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
       const APaths: array of string): TDIReg;
@@ -116,11 +115,6 @@ begin
   Result := DIC.Add(ATilerClass, ATilerInterface, ATilerID);
 end;
 
-function TReg.RegisterMessageNotifierBinder: TDIReg;
-begin
-  Result := DIC.Add(TMessageNotifierBinder, IMessageNotifierBinder);
-end;
-
 function TReg.RegisterMessageObservable: TDIReg;
 begin
   Result := DIC.Add(TMessageObservable, IMessageObservable);
@@ -179,7 +173,6 @@ begin
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
   RegisterBitTerminus(TButtonBit, IButtonBit, TLabel, 'uibutton');
   RegisterScales;
-  RegisterMessageNotifierBinder;
   RegisterMessageObservable;
   RegisterRenderer;
   RegisterStyle;
