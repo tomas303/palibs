@@ -89,7 +89,7 @@ procedure TGUI.PSSizeObserver(const AValue: TSizeData);
 begin
   fAppSettings.ItemByName['Width'].AsInteger := AValue.Width;
   fAppSettings.ItemByName['Height'].AsInteger := AValue.Height;
-  fPSGUIChannel.Publish(TGUIData.Create(True));
+  fPSGUIChannel.Publish(TGUIData.Create(gaRender));
 end;
 
 procedure TGUI.PSPositionObserver(const AValue: TPositionData);
@@ -125,19 +125,14 @@ begin
   mF := Factory2.Locate<IDesignComponentForm>(NewProps
     .SetStr(cProps.Caption, 'Demo app')
     .SetInt(cProps.Color, clGreen)
-    //.SetInt(cProps.MMWidth, 500)
-    //.SetInt(cProps.MMHeight, 50)
-
     .SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
     .SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
     .SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
     .SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
-
     .SetIntf(cForm.PSCloseChannel, fCloseChannel)
     .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
     .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
     );
-
   mEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
     .SetInt(cProps.Color, clRed)
     .SetInt(cProps.MMWidth, 50)
@@ -154,8 +149,6 @@ begin
     .SetInt(cProps.TextColor,  clYellow)
     .SetIntf(cEdit.PSTextChannel, fSurenameChannel)
     );
-
-
   (mF as INode).AddChild(mEditName as INode);
   (mF as INode).AddChild(mEditSurename as INode);
   Result := mF.Compose(nil, []);

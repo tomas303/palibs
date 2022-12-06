@@ -31,6 +31,7 @@ type
     fPubSub: IPubSub;
     fRenderer: IRenderer;
     fGUI: IDesignComponentApp;
+    fIsRendering: Boolean;
   published
     property PubSub: IPubSub read fPubSub write fPubSub;
     property Renderer: IRenderer read fRenderer write fRenderer;
@@ -43,8 +44,8 @@ implementation
 
 procedure TPubSubLauncher.StartUp;
 begin
-  Render;
   GUI.PSGUIChannel.Subscribe(PSGUIChannelObserver);
+  GUI.PSGUIChannel.Publish(TGUIData.Create(gaRender));
 end;
 
 procedure TPubSubLauncher.ShutDown;
@@ -60,13 +61,15 @@ begin
   mStop := False;
   repeat
     try
-      PubSub.ExecEvent;
+      if PubSub.IsEmpty then
+        Application.ProcessMessages
+      else
+        PubSub.ExecEvent;
     except
       on E: ELaunchStop do begin
         mStop := True;
       end;
     end;
-    Application.ProcessMessages;
   until mStop;
 end;
 
@@ -74,16 +77,23 @@ procedure TPubSubLauncher.Render;
 var
   mEl: IMetaElement;
 begin
-  mEl := Gui.Compose(nil, []);
-  if mEl = nil then begin
-    raise exception.create('nil element');
+  if fIsRendering then
+    Exit;
+  fIsRendering := True;
+  try
+    mEl := Gui.Compose(nil, []);
+    if mEl = nil then begin
+      raise exception.create('nil element');
+    end;
+    Renderer.Render(mEl);
+  finally
+    fIsRendering := False;
   end;
-  Renderer.Render(mEl);
 end;
 
 procedure TPubSubLauncher.PSGUIChannelObserver(const AData: TGUIData);
 begin
-  if AData.Render then
+  if AData.Action = gaRender then
     Render;
 end;
 

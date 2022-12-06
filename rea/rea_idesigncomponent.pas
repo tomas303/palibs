@@ -98,8 +98,11 @@ type
   { TGUIData }
 
   TGUIData = record
-    Render: Boolean;
-    constructor Create(Render: Boolean);
+    public type
+      TGUIAction = (gaRender);
+    public
+    Action: TGUIAction;
+    constructor Create(Action: TGUIAction);
     class operator equal(a,b: TGUIData): Boolean;
     class operator notequal(a,b: TGUIData): Boolean;
   end;
@@ -250,14 +253,14 @@ implementation
 
 { TGUIData }
 
-constructor TGUIData.Create(Render: Boolean);
+constructor TGUIData.Create(Action: TGUIAction);
 begin
-  Self.Render := Render;
+  Self.Action := Action;
 end;
 
 class operator TGUIData.equal(a, b: TGUIData): Boolean;
 begin
-  Result := a.Render = b.Render;
+  Result := Ord(a.Action) = Ord(b.Action);
 end;
 
 class operator TGUIData.notequal(a, b: TGUIData): Boolean;

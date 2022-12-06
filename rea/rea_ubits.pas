@@ -695,7 +695,7 @@ end;
 
 procedure TFormBit.LMMoveObserver(AMessage: TLMessage);
 begin
-  PSPositionChannel.Publish(TPositionData.Create(Self, AsForm.Top, AsForm.Left));
+  PSPositionChannel.Publish(TPositionData.Create(Self, AsForm.Left, AsForm.Top));
 end;
 
 procedure TFormBit.PSPositionChannelObserver(const AData: TPositionData);

@@ -37,7 +37,7 @@ type
   TPositionData = record
     Source: TObject;
     Top, Left: Integer;
-    constructor Create(Source: TObject; Top, Left: Integer);
+    constructor Create(Source: TObject; Left, Top: Integer);
     class operator equal(a,b: TPositionData): Boolean;
     class operator notequal(a,b: TPositionData): Boolean;
   end;
@@ -138,11 +138,11 @@ end;
 
 { TPositionData }
 
-constructor TPositionData.Create(Source: TObject; Top, Left: Integer);
+constructor TPositionData.Create(Source: TObject; Left, Top: Integer);
 begin
   Self.Source := Source;
-  Self.Top := Top;
   Self.Left := Left;
+  Self.Top := Top;
 end;
 
 class operator TPositionData.equal(a, b: TPositionData): Boolean;

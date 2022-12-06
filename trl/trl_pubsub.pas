@@ -40,6 +40,7 @@ type
   ['{61F589A6-B483-47BB-8221-3A92B5EDD2C2}']
     function Factory: TPubSub;
     procedure ExecEvent;
+    function IsEmpty: Boolean;
   end;
 
   { TPubSub }
@@ -51,6 +52,7 @@ type
     procedure EventPublished(const AChannel: IPubSubChannelExec);
     procedure ExecEvent;
     function Factory: TPubSub;
+    function IsEmpty: Boolean;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -244,6 +246,11 @@ end;
 function TPubSub.Factory: TPubSub;
 begin
   Result := Self;
+end;
+
+function TPubSub.IsEmpty: Boolean;
+begin
+  Result := fEvents.Count = 0;
 end;
 
 procedure TPubSub.AfterConstruction;
