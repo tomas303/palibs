@@ -661,7 +661,9 @@ end;
 
 procedure TFormBit.LMSizeObserver(AMessage: TLMessage);
 begin
-  PSSizeChannel.Publish(TSizeData.Create(Self, AsForm.Width, AsForm.Height));
+  Width := AsForm.Width;
+  Height := AsForm.Height;
+  PSSizeChannel.Publish(TSizeData.Create(Self, HScale.Unscale(AsForm.Width), VScale.Unscale(AsForm.Height)));
 end;
 
 procedure TFormBit.PSSizeChannelObserver(const AData: TSizeData);
@@ -669,8 +671,10 @@ begin
   if AData.Source = Self then
     Exit;
   fLMSize.Enabled := False;
-  AsForm.Width := AData.Width;
-  AsForm.Height := AData.Height;
+  Width := HScale.Scale(AData.Width);
+  Height := VScale.Scale(AData.Height);
+  AsForm.Width := Width;
+  AsForm.Height := Height;
   fLMSize.Enabled := True;
 end;
 
@@ -695,7 +699,9 @@ end;
 
 procedure TFormBit.LMMoveObserver(AMessage: TLMessage);
 begin
-  PSPositionChannel.Publish(TPositionData.Create(Self, AsForm.Left, AsForm.Top));
+  Left := AsForm.Left;
+  Top := AsForm.Top;
+  PSPositionChannel.Publish(TPositionData.Create(Self, HScale.Unscale(AsForm.Left), VScale.Unscale(AsForm.Top)));
 end;
 
 procedure TFormBit.PSPositionChannelObserver(const AData: TPositionData);
@@ -703,8 +709,10 @@ begin
   if AData.Source = Self then
     Exit;
   fLMMove.Enabled := False;
-  AsForm.Left := AData.Left;
-  AsForm.Top := AData.Top;
+  Left := HScale.Scale(AData.Left);
+  Top := HScale.Scale(AData.Top);
+  AsForm.Left := Left;
+  AsForm.Top := Top;
   fLMMove.Enabled := True;
 end;
 

@@ -310,6 +310,8 @@ function TDesignComponentEdit.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
   Result
+    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
+    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
     .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
     .SetBool(cProps.Focused, SelfProps.AsBool(cProps.Focused))
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
@@ -463,10 +465,10 @@ begin
   }
   Result
   .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-  .SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
-  .SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
-  .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
-  .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
+  //.SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
+  //.SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
+  //.SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
+  //.SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
   .SetIntf(cForm.PSCloseChannel, SelfProps.AsIntf(cForm.PSCloseChannel))
   .SetIntf(cForm.PSSizeChannel, SelfProps.AsIntf(cForm.PSSizeChannel))
   .SetIntf(cForm.PSPositionChannel, SelfProps.AsIntf(cForm.PSPositionChannel))
@@ -636,7 +638,7 @@ begin
     .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
 }
   Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
-    cProps.MMWidth, cProps.MMHeight, cProps.Border,
+    {cProps.MMWidth, cProps.MMHeight,} cProps.Border,
     cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
 end;
 

@@ -18,6 +18,7 @@ type
   IPubSubChannel = interface
   ['{F5B8029B-095E-4E87-A621-C6C96D8177DE}']
     procedure Publish;
+    procedure Debounce;
     procedure Subscribe(const ACallback: TPubSubChannelCallback);
     procedure Unsubscribe(const ACallback: TPubSubChannelCallback);
   end;
@@ -25,6 +26,7 @@ type
   IPubSubDataChannel<T> = interface
   ['{6C3DDC7D-A867-4DAE-8B92-D74C8F878E3F}']
     procedure Publish(const AData: T);
+    procedure Debounce(const AData: T; const Group: String = '');
     procedure Subscribe(const ACallback: TPubSubChannelDataCallback<T>);
     procedure Unsubscribe(const ACallback: TPubSubChannelDataCallback<T>);
   end;
@@ -32,6 +34,7 @@ type
   IPubSubChannelExec = interface
   ['{AA91767B-554F-4678-8250-9FF1570F237B}']
     procedure ExecEvent;
+    procedure PublishDebounced;
   end;
 
   TPubSub = class;
@@ -40,6 +43,7 @@ type
   ['{61F589A6-B483-47BB-8221-3A92B5EDD2C2}']
     function Factory: TPubSub;
     procedure ExecEvent;
+    procedure PublishDebounced;
     function IsEmpty: Boolean;
   end;
 
@@ -51,6 +55,7 @@ type
     fChannels: TFPGInterfacedObjectList<IPubSubChannelExec>;
     procedure EventPublished(const AChannel: IPubSubChannelExec);
     procedure ExecEvent;
+    procedure PublishDebounced;
     function Factory: TPubSub;
     function IsEmpty: Boolean;
   public
@@ -71,10 +76,13 @@ type
   TPubSubChannel = class(TInterfacedObject, IPubSubChannel, IPubSubChannelExec)
   strict private
     fPublishedCallback: TPubSubEventPublishedCallback;
+    fDebouncer: Boolean;
     procedure ExecEvent;
   strict private
     fObservers: TList<TPubSubChannelCallback>;
     procedure Publish;
+    procedure Debounce;
+    procedure PublishDebounced;
     procedure Subscribe(const ACallback: TPubSubChannelCallback);
     procedure Unsubscribe(const ACallback: TPubSubChannelCallback);
   public
@@ -90,11 +98,14 @@ type
     TCallback = TPubSubChannelDataCallback<T>;
   strict private
     fEvents: TFPGList<T>;
+    fDebouncer: TFPGMap<String, T>;
     fPublishedCallback: TPubSubEventPublishedCallback;
     procedure ExecEvent;
+    procedure PublishDebounced;
   strict private
     fObservers: TList<TCallback>;
     procedure Publish(const AData: T);
+    procedure Debounce(const AData: T; const Group: String = '');
     procedure Subscribe(const ACallback: TCallback);
     procedure Unsubscribe(const ACallback: TPubSubChannelDataCallback<T>);
   public
@@ -118,10 +129,24 @@ begin
   end;
 end;
 
+procedure TPubSubDataChannel<T>.PublishDebounced;
+var
+  i: integer;
+begin
+  for i := 0 to fDebouncer.Count - 1 do
+    Publish(fDebouncer.Data[i]);
+  fDebouncer.Clear;
+end;
+
 procedure TPubSubDataChannel<T>.Publish(const AData: T);
 begin
   fEvents.Add(AData);
   fPublishedCallback(Self);
+end;
+
+procedure TPubSubDataChannel<T>.Debounce(const AData: T; const Group: String);
+begin
+  fDebouncer.AddOrSetData(Group, AData);
 end;
 
 procedure TPubSubDataChannel<T>.Subscribe(
@@ -150,12 +175,14 @@ begin
   inherited AfterConstruction;
   fEvents := TFPGList<T>.Create;
   fObservers := TList<TCallback>.Create;
+  fDebouncer := TFPGMap<String, T>.Create;
 end;
 
 procedure TPubSubDataChannel<T>.BeforeDestruction;
 begin
   FreeAndNil(fEvents);
   FreeAndNil(fObservers);
+  FreeAndNil(fDebouncer);
   inherited BeforeDestruction;
 end;
 
@@ -171,6 +198,19 @@ end;
 procedure TPubSubChannel.Publish;
 begin
   fPublishedCallback(Self);
+end;
+
+procedure TPubSubChannel.Debounce;
+begin
+  fDebouncer := True;
+end;
+
+procedure TPubSubChannel.PublishDebounced;
+begin
+  if fDebouncer then begin
+    Publish;
+    fDebouncer := False;
+  end;
 end;
 
 procedure TPubSubChannel.Subscribe(const ACallback: TPubSubChannelCallback);
@@ -241,6 +281,14 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TPubSub.PublishDebounced;
+var
+  chExec: IPubSubChannelExec;
+begin
+  for chExec in fChannels do
+   chExec.PublishDebounced;
 end;
 
 function TPubSub.Factory: TPubSub;

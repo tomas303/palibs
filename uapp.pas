@@ -89,7 +89,7 @@ procedure TGUI.PSSizeObserver(const AValue: TSizeData);
 begin
   fAppSettings.ItemByName['Width'].AsInteger := AValue.Width;
   fAppSettings.ItemByName['Height'].AsInteger := AValue.Height;
-  fPSGUIChannel.Publish(TGUIData.Create(gaRender));
+  fPSGUIChannel.Debounce(TGUIData.Create(gaRender));
 end;
 
 procedure TGUI.PSPositionObserver(const AValue: TPositionData);
@@ -125,10 +125,10 @@ begin
   mF := Factory2.Locate<IDesignComponentForm>(NewProps
     .SetStr(cProps.Caption, 'Demo app')
     .SetInt(cProps.Color, clGreen)
-    .SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
-    .SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
-    .SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
-    .SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
+    //.SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
+    //.SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
+    //.SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
+    //.SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
     .SetIntf(cForm.PSCloseChannel, fCloseChannel)
     .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
     .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
