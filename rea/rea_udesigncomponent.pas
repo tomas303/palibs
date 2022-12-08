@@ -195,6 +195,8 @@ type
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
+    //ActiveIndex is needed to access through channel
+    //whateever other control can throug channel acess and change index ... switch it
     fData: TPagerData;
     fSwitchEdge: Integer;
     fSwitchSize: Integer;
@@ -500,7 +502,7 @@ var
   mProps: IProps;
   mText: String;
   mSwitchDC: IDesignComponent;
-  mSwitchFactory: IDesignComponentPagerSwitchFactory;
+  //mSwitchFactory: IDesignComponentPagerSwitchFactory;
   mFontDirection: Integer;
 begin
   case SwitchEdge of
@@ -515,14 +517,14 @@ begin
   for i := 0 to Count - 1 do
   begin
     mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
-    mSwitchFactory := IDesignComponentPagerSwitchFactory(Factory.Locate(IDesignComponentPagerSwitchFactory));
-    mSwitchDC := mSwitchFactory.New(
-      NewProps
-        .SetObject(cPager.PagerData, Data)
-        .SetInt(cPager.PageIndex, i)
-        .SetInt(cProps.FontDirection, mFontDirection)
-        .SetStr(cProps.Text, mText)
-    );
+    //mSwitchFactory := IDesignComponentPagerSwitchFactory(Factory.Locate(IDesignComponentPagerSwitchFactory));
+    //mSwitchDC := mSwitchFactory.New(
+    //  NewProps
+    //    .SetObject(cPager.PagerData, Data)
+    //    .SetInt(cPager.PageIndex, i)
+    //    .SetInt(cProps.FontDirection, mFontDirection)
+    //    .SetStr(cProps.Text, mText)
+    //);
     mSwitch[i] := mSwitchDC.Compose(nil, nil);
   end;
   mProps := NewProps;

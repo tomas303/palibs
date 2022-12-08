@@ -202,49 +202,6 @@ type
   ['{33417F52-E1E5-46E3-9E4B-7733FD2CA1D0}']
   end;
 
-  IDesignComponentFactory = interface
-  ['{C271A13A-4306-4C17-8A21-F1E66B94F570}']
-    function New(const AProps: IProps): IDesignComponent;
-  end;
-
-  IDesignComponentFormFactory = interface(IDesignComponentFactory)
-  ['{24916508-17A0-4577-A1F0-55E6605F5039}']
-  end;
-
-  IDesignComponentButtonFactory = interface(IDesignComponentFactory)
-  ['{F09A5425-2065-45AA-A11B-9A58E4DC7AF2}']
-    function NewDCProps: IDCButtonProps;
-  end;
-
-  IDesignComponentEditFactory = interface(IDesignComponentFactory)
-  ['{E629EF95-EA77-4375-B306-51B5B6F7996D}']
-  end;
-
-  IDesignComponentTextFactory = interface(IDesignComponentFactory)
-  ['{2606AFC9-F14D-453D-B65D-82A06794C935}']
-  end;
-
-  IDesignComponentStripFactory = interface(IDesignComponentFactory)
-  ['{986391F8-943C-42F9-BBB8-89AFAA8E5043}']
-  end;
-
-  IDesignComponentPagerFactory = interface(IDesignComponentFactory)
-  ['{CFFD386A-150F-455A-8CC7-78917625F7B1}']
-  end;
-
-  IDesignComponentPagerSwitchFactory = interface(IDesignComponentFactory)
-  ['{7117E5CD-78AC-4747-9735-C76A2226424D}']
-  end;
-
-  IDesignComponentGridFactory = interface(IDesignComponentFactory)
-  ['{79082132-2BCB-4996-9C3D-556D25172557}']
-  end;
-
-  IDesignComponentLabelEditFactory = interface(IDesignComponentFactory)
-  ['{634858EF-A2D1-4574-B887-CB407EFDEC3F}']
-    function NewDCProps: IDCLabelEditProps;
-  end;
-
 const
   cEditHeight = 25;
   cCaptionWidth = 100;

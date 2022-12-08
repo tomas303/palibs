@@ -118,8 +118,6 @@ end;
 function TGUI.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray
   ): IMetaElement;
 var
-  mFF: IDesignComponentFormFactory;
-  mFE: IDesignComponentEditFactory;
   mF, mEditName, mEditSurename: IDesignComponent;
 begin
   mF := Factory2.Locate<IDesignComponentForm>(NewProps

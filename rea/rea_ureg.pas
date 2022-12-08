@@ -19,7 +19,6 @@ uses
   trl_ireconciler,
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
-  rea_udesigncomponentfactory,
   trl_udifactory,
   rea_istyles, rea_ustyles,
   rea_ufuncdispatcher, rea_uflux,
@@ -49,7 +48,6 @@ type
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
-    function RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterStyle: TDIReg;
     function RegisterDispatcher: TDIReg;
@@ -157,15 +155,6 @@ begin
   RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
   RegisterDesignComponent(TDesignComponentFrame, IDesignComponentFrame);
-  RegisterDesignComponentFactory(TDesignComponentFormFactory, IDesignComponentFormFactory);
-  RegisterDesignComponentFactory(TDesignComponentButtonFactory, IDesignComponentButtonFactory);
-  RegisterDesignComponentFactory(TDesignComponentEditFactory, IDesignComponentEditFactory);
-  RegisterDesignComponentFactory(TDesignComponentTextFactory, IDesignComponentTextFactory);
-  RegisterDesignComponentFactory(TDesignComponentStripFactory, IDesignComponentStripFactory);
-  RegisterDesignComponentFactory(TDesignComponentPagerFactory, IDesignComponentPagerFactory);
-  RegisterDesignComponentFactory(TDesignComponentPagerSwitchFactory, IDesignComponentPagerSwitchFactory);
-  RegisterDesignComponentFactory(TDesignComponentGridFactory, IDesignComponentGridFactory);
-  RegisterDesignComponentFactory(TDesignComponentLabelEditFactory, IDesignComponentLabelEditFactory);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
@@ -197,15 +186,6 @@ begin
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('Style', IStyle);
   Result.InjectProp('PubSub', IPubSub);
-end;
-
-function TReg.RegisterDesignComponentFactory(AClass: TClass; AInterface: TGuid): TDIReg;
-begin
-  Result := DIC.Add(AClass, AInterface);
-  Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('Factory2', TDIFactory2);
-  Result.InjectProp('FluxDispatcher', IFluxDispatcher);
-  Result.InjectProp('Sequence', ISequence);
 end;
 
 function TReg.RegisterRenderer: TDIReg;

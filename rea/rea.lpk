@@ -59,10 +59,6 @@
         <UnitName Value="rea_udesigncomponentfunc"/>
       </Item>
       <Item>
-        <Filename Value="rea_udesigncomponentfactory.pas"/>
-        <UnitName Value="rea_udesigncomponentfactory"/>
-      </Item>
-      <Item>
         <Filename Value="rea_istyles.pas"/>
         <UnitName Value="rea_istyles"/>
       </Item>
