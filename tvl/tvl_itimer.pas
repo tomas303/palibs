@@ -1,6 +1,6 @@
 unit tvl_itimer;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 
 interface
 
@@ -18,6 +18,9 @@ type
     function GetEnabled: Boolean;
     procedure SetEnabled(AValue: Boolean);
     property Enabled: Boolean read GetEnabled write SetEnabled;
+    procedure Subscribe(ACallback: TTimerEvent);
+    procedure Unsubscribe(ACallback: TTimerEvent);
+    procedure Restart;
   end;
 
 implementation
