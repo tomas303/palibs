@@ -1,6 +1,6 @@
 unit rea_udesigncomponent;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 
 interface
 
@@ -187,23 +187,46 @@ type
   { TDesignComponentPager }
 
   TDesignComponentPager = class(TDesignComponent, IDesignComponentPager)
+  private type
+
+    { TClickLink }
+
+    TClickLink = class
+    strict private
+      fIndex: Integer;
+      fPSClickChannel: IPSClickChannel;
+      fPSPagerChannel: IPSPagerChannel;
+      procedure PSClickChannelObserver;
+    public
+      constructor Create(AIndex: Integer; const APSPagerChannel: IPSPagerChannel;
+        const APSClickChannel: IPSClickChannel);
+      property PSClickChannel: IPSClickChannel read fPSClickChannel;
+    end;
+
+  private
+    fIndex: Integer;
+    fPSPagerChannel: IPSPagerChannel;
+    fClickLinks: TFPGObjectList<TClickLink>;
+    procedure PSPagerChannelObserver(const AIndex: Integer);
   private
     function RenderPage(const APageElement: IMetaElement): IMetaElement;
     function MakeSwitch: IMetaElement;
     function MakeBody: IMetaElement;
   protected
+    procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   protected
-    //ActiveIndex is needed to access through channel
-    //whateever other control can throug channel acess and change index ... switch it
-    fData: TPagerData;
     fSwitchEdge: Integer;
     fSwitchSize: Integer;
+    fPSGUIChannel: IPSGUIChannel;
   published
-    property Data: TPagerData read fData write fData;
     property SwitchEdge: Integer read fSwitchEdge write fSwitchEdge;
     property SwitchSize: Integer read fSwitchSize write fSwitchSize;
+    property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
   end;
 
   { TDesignComponentFrame }
@@ -214,6 +237,22 @@ type
   end;
 
 implementation
+
+{ TDesignComponentPager.TClickLink }
+
+procedure TDesignComponentPager.TClickLink.PSClickChannelObserver;
+begin
+  fPSPagerChannel.Publish(fIndex);
+end;
+
+constructor TDesignComponentPager.TClickLink.Create(AIndex: Integer;
+  const APSPagerChannel: IPSPagerChannel; const APSClickChannel: IPSClickChannel);
+begin
+  fIndex := AIndex;
+  fPSPagerChannel := APSPagerChannel;
+  fPSClickChannel := APSClickChannel;
+  fPSClickChannel.Subscribe(PSClickChannelObserver);
+end;
 
 { TDesignComponentHBox }
 
@@ -490,6 +529,14 @@ end;
 
 { TDesignComponentPager }
 
+procedure TDesignComponentPager.PSPagerChannelObserver(const AIndex: Integer);
+begin
+  if fIndex <> AIndex then begin
+    fIndex := AIndex;
+    PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+  end;
+end;
+
 function TDesignComponentPager.RenderPage(const APageElement: IMetaElement): IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IStripBit, [APageElement]);
@@ -502,29 +549,19 @@ var
   mProps: IProps;
   mText: String;
   mSwitchDC: IDesignComponent;
-  //mSwitchFactory: IDesignComponentPagerSwitchFactory;
-  mFontDirection: Integer;
+  mClickLink: TClickLink;
 begin
-  case SwitchEdge of
-    cEdge.Left:
-      mFontDirection := cFontDirection.VertLeft;
-    cEdge.Right:
-      mFontDirection := cFontDirection.VertRight;
-    else
-      mFontDirection := cFontDirection.Horizontal;
-  end;
+  fClickLinks.Clear;
   SetLength(mSwitch, Count);
   for i := 0 to Count - 1 do
   begin
+    mClickLink := TClickLink.Create(i, fPSPagerChannel, PubSub.Factory.NewChannel);
     mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
-    //mSwitchFactory := IDesignComponentPagerSwitchFactory(Factory.Locate(IDesignComponentPagerSwitchFactory));
-    //mSwitchDC := mSwitchFactory.New(
-    //  NewProps
-    //    .SetObject(cPager.PagerData, Data)
-    //    .SetInt(cPager.PageIndex, i)
-    //    .SetInt(cProps.FontDirection, mFontDirection)
-    //    .SetStr(cProps.Text, mText)
-    //);
+    mSwitchDC :=  Factory2.Locate<IDesignComponentButton>(NewProps
+      .SetStr(cButton.Text, mText)
+      .SetIntf(cButton.PSClickChannel, mClickLink.PSClickChannel)
+    );
+    fClickLinks.Add(mClickLink);
     mSwitch[i] := mSwitchDC.Compose(nil, nil);
   end;
   mProps := NewProps;
@@ -542,12 +579,19 @@ function TDesignComponentPager.MakeBody: IMetaElement;
 var
   mActual: IMetaElement;
 begin
-  mActual := (GetChild(Data.ActiveIndex) as IDesignComponent).Compose(nil, nil);
+  mActual := (GetChild(fIndex) as IDesignComponent).Compose(nil, nil);
   Result := ElementFactory.CreateElement(
     IStripBit,
     NewProps
       .SetInt(cProps.Layout, cLayout.Overlay),
     [mActual]);
+end;
+
+procedure TDesignComponentPager.InitValues;
+begin
+  inherited InitValues;
+  fPSPagerChannel :=  PubSub.Factory.NewDataChannel<Integer>;
+  fPSPagerChannel.Subscribe(PSPagerChannelObserver);
 end;
 
 function TDesignComponentPager.NewComposeProps: IProps;
@@ -569,16 +613,37 @@ begin
     cEdge.Left, cEdge.Top:
       mChildren := [MakeSwitch, MakeBody];
     cEdge.Right, cEdge.Bottom:
-      mChildren := [MakeBody,MakeSwitch];
+      mChildren := [MakeBody, MakeSwitch];
   end;
   Result := ElementFactory.CreateElement(IStripBit, NewComposeProps, mChildren);
+end;
+
+procedure TDesignComponentPager.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fClickLinks := TFPGObjectList<TClickLink>.Create(True);
+end;
+
+procedure TDesignComponentPager.BeforeDestruction;
+begin
+  fPSPagerChannel.Unsubscribe(PSPagerChannelObserver);
+  FreeAndNil(fClickLinks);
+  inherited BeforeDestruction;
 end;
 
 { TDesignComponentStrip }
 
 function TDesignComponentStrip.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+var
+  mc:integer;
 begin
-  Result := ElementFactory.CreateElement(IStripBit, NewComposeProps, AChildren);
+  mc := SelfProps.AsInt(cProps.Color);
+  Result := ElementFactory.CreateElement(IStripBit,
+    NewProps
+      .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
+      .SetStr(cProps.Caption, SelfProps.AsStr(cProps.Caption))
+      .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color)),
+    AChildren);
   if AChildren <> nil then
     AddChildren(Result, AChildren)
   else
@@ -612,9 +677,12 @@ end;
 
 function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
 begin
+  {
   Result := ElementFactory.CreateElement(IDesignComponentFrame,
     NewOuterProps,
     [ElementFactory.CreateElement(IButtonBit, NewComposeProps)]);
+  }
+  Result := ElementFactory.CreateElement(IButtonBit, NewComposeProps);
 end;
 
 { TDesignComponent }

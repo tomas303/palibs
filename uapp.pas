@@ -28,6 +28,11 @@ type
 
   TGUI = class(TDesignComponent, IDesignComponentApp)
   private
+    fForm, fEditName, fEditSurename: IDesignComponent;
+    fS1, fS2, fS3: IDesignComponent;
+    fPager: IDesignComponent;
+    procedure CreateComponents;
+  private
     fAppSettings: IRBData;
     fNameChannel: IPSTextChannel;
     fSurenameChannel: IPSTextChannel;
@@ -75,6 +80,59 @@ implementation
 
 { TGUI }
 
+procedure TGUI.CreateComponents;
+begin
+  fForm := Factory2.Locate<IDesignComponentForm>(NewProps
+    .SetStr(cProps.Caption, 'Demo app')
+    .SetInt(cProps.Color, clGreen)
+    //.SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
+    //.SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
+    //.SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
+    //.SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
+    .SetIntf(cForm.PSCloseChannel, fCloseChannel)
+    .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
+    .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
+    );
+
+   fPager := Factory2.Locate<IDesignComponentPager>(NewProps
+    .SetInt(cPager.SwitchEdge, cEdge.Top)
+    .SetInt(cPager.SwitchSize, 25)
+    .SetIntf('PSGUIChannel', fPSGUIChannel)
+   );
+
+  fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
+    .SetInt(cProps.Color, clRed)
+    .SetInt(cProps.MMWidth, 50)
+    .SetStr(cProps.Text, 'first')
+    .SetInt(cProps.FontColor, clBlack)
+    .SetInt(cProps.TextColor,  clYellow)
+    .SetIntf(cEdit.PSTextChannel, fNameChannel)
+    );
+  fEditSurename := Factory2.Locate<IDesignComponentEdit>(NewProps
+    .SetInt(cProps.Color, clBlue)
+    .SetInt(cProps.MMWidth, 50)
+    .SetStr(cProps.Text, 'second')
+    .SetInt(cProps.FontColor, clBlack)
+    .SetInt(cProps.TextColor,  clYellow)
+    .SetIntf(cEdit.PSTextChannel, fSurenameChannel)
+    );
+  //(fForm as INode).AddChild(fEditName as INode);
+  //(fForm as INode).AddChild(fEditSurename as INode);
+
+  fS1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
+  fS2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
+ // (fS2 as INode).AddChild(fEditName as INode);
+  fS3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
+ // (fS3 as INode).AddChild(fEditSurename as INode);
+
+  (fPager as INode).AddChild(fS1 as INode);
+  (fPager as INode).AddChild(fS2 as INode);
+  (fPager as INode).AddChild(fS3 as INode);
+
+  (fForm as INode).AddChild(fPager as INode);
+
+end;
+
 procedure TGUI.PSNameObserver(const AValue: String);
 begin
   fAppSettings.ItemByName['Name'].AsString := AValue;
@@ -117,39 +175,8 @@ end;
 
 function TGUI.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray
   ): IMetaElement;
-var
-  mF, mEditName, mEditSurename: IDesignComponent;
 begin
-  mF := Factory2.Locate<IDesignComponentForm>(NewProps
-    .SetStr(cProps.Caption, 'Demo app')
-    .SetInt(cProps.Color, clGreen)
-    //.SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
-    //.SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
-    //.SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
-    //.SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
-    .SetIntf(cForm.PSCloseChannel, fCloseChannel)
-    .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
-    .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
-    );
-  mEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
-    .SetInt(cProps.Color, clRed)
-    .SetInt(cProps.MMWidth, 50)
-    .SetStr(cProps.Text, 'first')
-    .SetInt(cProps.FontColor, clBlack)
-    .SetInt(cProps.TextColor,  clYellow)
-    .SetIntf(cEdit.PSTextChannel, fNameChannel)
-    );
-  mEditSurename := Factory2.Locate<IDesignComponentEdit>(NewProps
-    .SetInt(cProps.Color, clBlue)
-    .SetInt(cProps.MMWidth, 50)
-    .SetStr(cProps.Text, 'second')
-    .SetInt(cProps.FontColor, clBlack)
-    .SetInt(cProps.TextColor,  clYellow)
-    .SetIntf(cEdit.PSTextChannel, fSurenameChannel)
-    );
-  (mF as INode).AddChild(mEditName as INode);
-  (mF as INode).AddChild(mEditSurename as INode);
-  Result := mF.Compose(nil, []);
+  Result := fForm.Compose(nil, []);
 end;
 
 procedure TGUI.InitValues;
@@ -194,6 +221,8 @@ begin
   fSurenameChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
   fPSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
   fPSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
+
+  CreateComponents;
  end;
 
 { TApp }

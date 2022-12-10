@@ -170,6 +170,8 @@ type
   ['{72646A21-0264-4798-A9DE-C0B3E843806B}']
   end;
 
+  IPSPagerChannel = IPubSubDataChannel<Integer>;
+
   IDesignComponentPager = interface(IDesignComponent)
   ['{D3ED4153-75BB-493B-90FD-3DC074149FD6}']
   end;

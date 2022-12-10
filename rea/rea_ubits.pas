@@ -365,8 +365,10 @@ end;
 procedure TStripBit.DoHookParent(const AParent: TWinControl);
 var
   mChild: INode;
+  mclass: string;
 begin
   for mChild in (Self as INode) do begin
+    mclass := (mChild as tobject).ClassName;
     (mChild as IBit).HookParent(AParent);
   end;
 end;
