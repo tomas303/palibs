@@ -73,7 +73,7 @@ type
     PSCloseChannel = 'PSCloseChannel';
     PSSizeChannel = 'PSSizeChannel';
     PSPositionChannel = 'PSPositionChannel';
-    PSActivateChannel = 'PSPositionChannel';
+    PSActivateChannel = 'PSActivateChannel';
   end;
 
   cButton = class(cProps)
@@ -140,6 +140,10 @@ type
 
   IDesignComponentForm = interface(IDesignComponent)
   ['{AE80667B-FA5E-432F-9667-402165481946}']
+    function PSCloseChannel: IPSCloseChannel;
+    function PSSizeChannel: IPSSizeChannel;
+    function PSPositionChannel: IPSPositionChannel;
+    function PSActivateChannel: IPSActivateChannel;
   end;
 
   IDesignComponentEdit = interface(IDesignComponent)

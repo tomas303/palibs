@@ -28,16 +28,13 @@ type
 
   TGUI = class(TDesignComponent, IDesignComponentApp)
   private
-    fForm: IDesignComponent;
+    fForm: IDesignComponentForm;
     fEditName, fEditSurename: IDesignComponentEdit;
     fS1, fS2, fS3: IDesignComponent;
     fPager: IDesignComponent;
     procedure CreateComponents;
   private
     fAppSettings: IRBData;
-    fCloseChannel: IPSCloseChannel;
-    fPSSizeChannel: IPSSizeChannel;
-    fPSPositionChannel: IPSPositionChannel;
     fPSGUIChannel: IPSGUIChannel;
     procedure PSNameObserver(const AValue: String);
     procedure PSSurenameObserver(const AValue: String);
@@ -82,21 +79,15 @@ implementation
 procedure TGUI.CreateComponents;
 begin
   fForm := Factory2.Locate<IDesignComponentForm>(NewProps
+    .SetIntf('PSGUIChannel', fPSGUIChannel)
     .SetStr(cProps.Caption, 'Demo app')
     .SetInt(cProps.Color, clGreen)
-    //.SetInt(cProps.MMLeft, fAppSettings.ItemByName['Left'].AsInteger)
-    //.SetInt(cProps.MMTop, fAppSettings.ItemByName['Top'].AsInteger)
-    //.SetInt(cProps.MMWidth, fAppSettings.ItemByName['Width'].AsInteger)
-    //.SetInt(cProps.MMHeight, fAppSettings.ItemByName['Height'].AsInteger)
-    .SetIntf(cForm.PSCloseChannel, fCloseChannel)
-    .SetIntf(cForm.PSSizeChannel, fPSSizeChannel)
-    .SetIntf(cForm.PSPositionChannel, fPSPositionChannel)
     );
 
    fPager := Factory2.Locate<IDesignComponentPager>(NewProps
+    .SetIntf('PSGUIChannel', fPSGUIChannel)
     .SetInt(cPager.SwitchEdge, cEdge.Top)
     .SetInt(cPager.SwitchSize, 25)
-    .SetIntf('PSGUIChannel', fPSGUIChannel)
    );
 
   fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
@@ -142,7 +133,6 @@ procedure TGUI.PSSizeObserver(const AValue: TSizeData);
 begin
   fAppSettings.ItemByName['Width'].AsInteger := AValue.Width;
   fAppSettings.ItemByName['Height'].AsInteger := AValue.Height;
-  fPSGUIChannel.Debounce(TGUIData.Create(gaRender));
 end;
 
 procedure TGUI.PSPositionObserver(const AValue: TPositionData);
@@ -180,15 +170,6 @@ var
 begin
   inherited InitValues;
 
-  fCloseChannel := PubSub.Factory.NewChannel;
-  fCloseChannel.Subscribe(CloseProgram);
-
-  fPSSizeChannel := PubSub.Factory.NewDataChannel<TSizeData>;
-  fPSSizeChannel.Subscribe(PSSizeObserver);
-
-  fPSPositionChannel := PubSub.Factory.NewDataChannel<TPositionData>;
-  fPSPositionChannel.Subscribe(PSPositionObserver);
-
   fPSGUIChannel := PubSub.Factory.NewDataChannel<TGUIData>;
 
   Store.Open('/root/demosettings.xml');
@@ -207,17 +188,20 @@ begin
   begin
     fAppSettings := mList.Data[0];
   end;
-  fPSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
-  fPSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
 
   CreateComponents;
+
+  fForm.PSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
+  fForm.PSSizeChannel.Subscribe(PSSizeObserver);
+  fForm.PSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
+  fForm.PSPositionChannel.Subscribe(PSPositionObserver);
+  fForm.PSCloseChannel.Subscribe(CloseProgram);
 
   fEditName.PSTextChannel.Subscribe(PSNameObserver);
   fEditSurename.PSTextChannel.Subscribe(PSSurenameObserver);
 
   fEditName.PSTextChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
   fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
-
  end;
 
 { TApp }

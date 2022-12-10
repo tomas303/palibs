@@ -68,19 +68,36 @@ type
   { TDesignComponentForm }
 
   TDesignComponentForm = class(TDesignComponent, IDesignComponentForm)
+  private
+    fPSSizeChannel: IPSSizeChannel;
+    procedure PSSizeChannelObserver(const AData: TSizeData);
+    function PSSizeChannel: IPSSizeChannel;
+  private
+    fPSPositionChannel: IPSPositionChannel;
+    procedure PSPositionChannelObserver(const AData: TPositionData);
+    function PSPositionChannel: IPSPositionChannel;
+  private
+    fPSCloseChannel: IPSCloseChannel;
+    function PSCloseChannel: IPSCloseChannel;
+  private
+    fPSActivateChannel: IPSActivateChannel;
+    function PSActivateChannel: IPSActivateChannel;
   protected
+    procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
-    fData: TFormData;
-    fSizeNotifier: IFluxNotifier;
-    fMoveNotifier: IFluxNotifier;
-    fCloseQueryNotifier: IFluxNotifier;
+    fPSGUIChannel: IPSGUIChannel;
+    fMMLeft: Integer;
+    fMMTop: Integer;
+    fMMWidth: Integer;
+    fMMHeight: Integer;
   published
-    property Data: TFormData read fData write fData;
-    property SizeNotifier: IFluxNotifier read fSizeNotifier write fSizeNotifier;
-    property MoveNotifier: IFluxNotifier read fMoveNotifier write fMoveNotifier;
-    property CloseQueryNotifier: IFluxNotifier read fCloseQueryNotifier write fCloseQueryNotifier;
+    property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
+    property MMLeft: Integer read fMMLeft write fMMLeft;
+    property MMTop: Integer read fMMTop write fMMTop;
+    property MMWidth: Integer read fMMWidth write fMMWidth;
+    property MMHeight: Integer read fMMHeight write fMMHeight;
   end;
 
   { TDesignComponentEdit }
@@ -526,32 +543,65 @@ end;
 
 { TDesignComponentForm }
 
+function TDesignComponentForm.PSCloseChannel: IPSCloseChannel;
+begin
+  Result := fPSCloseChannel;
+end;
+
+procedure TDesignComponentForm.PSSizeChannelObserver(const AData: TSizeData);
+begin
+  fMMWidth := AData.Width;
+  fMMHeight := AData.Height;
+  if PSGUIChannel <> nil then
+    fPSGUIChannel.Debounce(TGUIData.Create(gaRender));
+end;
+
+function TDesignComponentForm.PSSizeChannel: IPSSizeChannel;
+begin
+  Result := fPSSizeChannel;
+end;
+
+procedure TDesignComponentForm.PSPositionChannelObserver(
+  const AData: TPositionData);
+begin
+  fMMLeft := AData.Left;
+  fMMTop := AData.Top;
+end;
+
+function TDesignComponentForm.PSPositionChannel: IPSPositionChannel;
+begin
+  Result := fPSPositionChannel;
+end;
+
+function TDesignComponentForm.PSActivateChannel: IPSActivateChannel;
+begin
+  Result := fPSActivateChannel;
+end;
+
+procedure TDesignComponentForm.InitValues;
+begin
+  inherited InitValues;
+  fPSSizeChannel := PubSub.Factory.NewDataChannel<TSizeData>;
+  fPSSizeChannel.Subscribe(PSSizeChannelObserver);
+  fPSPositionChannel := PubSub.Factory.NewDataChannel<TPositionData>;
+  fPSPositionChannel.Subscribe(PSPositionChannelObserver);
+  fPSCloseChannel := PubSub.Factory.NewChannel;
+  fPSActivateChannel := PubSub.Factory.NewChannel;
+end;
+
 function TDesignComponentForm.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
-  {
-  Result
-  .SetInt(cProps.MMLeft, Data.Left)
-  .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-  .SetInt(cProps.MMTop, Data.Top)
-  .SetInt(cProps.MMWidth, Data.Width)
-  .SetInt(cProps.MMHeight, Data.Height)
-  .SetIntf(cForm.ActivateNotifier, SelfProps.AsIntf(cForm.ActivateNotifier))
-  .SetIntf(cForm.SizeNotifier, SizeNotifier)
-  .SetIntf(cForm.MoveNotifier, MoveNotifier)
-  .SetIntf(cForm.CloseQueryNotifier, CloseQueryNotifier);
-  }
   Result
   .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-  //.SetInt(cProps.MMLeft, SelfProps.AsInt(cProps.MMLeft))
-  //.SetInt(cProps.MMTop, SelfProps.AsInt(cProps.MMTop))
-  //.SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
-  //.SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
-  .SetIntf(cForm.PSCloseChannel, SelfProps.AsIntf(cForm.PSCloseChannel))
-  .SetIntf(cForm.PSSizeChannel, SelfProps.AsIntf(cForm.PSSizeChannel))
-  .SetIntf(cForm.PSPositionChannel, SelfProps.AsIntf(cForm.PSPositionChannel))
-  .SetIntf(cForm.PSActivateChannel, SelfProps.AsIntf(cForm.PSActivateChannel))
-
+  .SetInt(cProps.MMLeft, MMLeft)
+  .SetInt(cProps.MMTop, MMTop)
+  .SetInt(cProps.MMWidth, MMWidth)
+  .SetInt(cProps.MMHeight, MMHeight)
+  .SetIntf(cForm.PSCloseChannel, PSCloseChannel)
+  .SetIntf(cForm.PSSizeChannel, PSSizeChannel)
+  .SetIntf(cForm.PSPositionChannel, PSPositionChannel)
+  .SetIntf(cForm.PSActivateChannel, PSActivateChannel)
 end;
 
 function TDesignComponentForm.DoCompose(const AProps: IProps;
