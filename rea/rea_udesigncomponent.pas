@@ -126,8 +126,12 @@ type
 
   TDesignComponentButton = class(TDesignComponent, IDesignComponentButton)
   private
+    fPSClickChannel: IPSClickChannel;
+    function PSClickChannel: IPSClickChannel;
+  private
     function NewOuterProps: IProps;
   protected
+    procedure InitValues; override;
     procedure DoStartingValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
@@ -223,7 +227,6 @@ type
     public
       constructor Create(AIndex: Integer; const APSPagerChannel: IPSPagerChannel;
         const APSClickChannel: IPSClickChannel);
-      property PSClickChannel: IPSClickChannel read fPSClickChannel;
     end;
 
   private
@@ -635,19 +638,18 @@ var
   mSwitch: TMetaElementArray;
   mProps: IProps;
   mText: String;
-  mSwitchDC: IDesignComponent;
+  mSwitchDC: IDesignComponentButton;
   mClickLink: TClickLink;
 begin
   fClickLinks.Clear;
   SetLength(mSwitch, Count);
   for i := 0 to Count - 1 do
   begin
-    mClickLink := TClickLink.Create(i, fPSPagerChannel, PubSub.Factory.NewChannel);
     mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
     mSwitchDC :=  Factory2.Locate<IDesignComponentButton>(NewProps
       .SetStr(cButton.Text, mText)
-      .SetIntf(cButton.PSClickChannel, mClickLink.PSClickChannel)
     );
+    mClickLink := TClickLink.Create(i, fPSPagerChannel, mSwitchDC.PSClickChannel);
     fClickLinks.Add(mClickLink);
     mSwitch[i] := mSwitchDC.Compose(nil, nil);
   end;
@@ -739,11 +741,22 @@ end;
 
 { TDesignComponentButton }
 
+function TDesignComponentButton.PSClickChannel: IPSClickChannel;
+begin
+  Result := fPSClickChannel;
+end;
+
 function TDesignComponentButton.NewOuterProps: IProps;
 begin
   Result := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight])
     .SetInt(cProps.Border, 4)
     .SetInt(cProps.BorderColor, clGray);
+end;
+
+procedure TDesignComponentButton.InitValues;
+begin
+  inherited InitValues;
+  fPSClickChannel := PubSub.Factory.NewChannel;
 end;
 
 procedure TDesignComponentButton.DoStartingValues;
@@ -759,7 +772,7 @@ begin
     .SetInt(cProps.Place, cPlace.Elastic)
     .SetInt(cProps.FontDirection, SelfProps.AsInt(cProps.FontDirection))
     .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
-    .SetIntf(cButton.PSClickChannel, SelfProps.AsIntf(cButton.PSClickChannel));
+    .SetIntf(cButton.PSClickChannel, PSClickChannel);
 end;
 
 function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;

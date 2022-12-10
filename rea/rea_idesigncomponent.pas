@@ -158,6 +158,7 @@ type
 
   IDesignComponentButton = interface(IDesignComponent)
   ['{9EFB4F6C-F20C-4234-BE3C-C6F1F89A9314}']
+    function PSClickChannel: IPSClickChannel;
   end;
 
   IDesignComponentStrip = interface(IDesignComponent)
