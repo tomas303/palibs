@@ -7,7 +7,7 @@ unit rea_idesigncomponent;
 interface
 
 uses
-  trl_imetaelement, trl_iprops, rea_iprops, trl_pubsub;
+  trl_imetaelement, trl_iprops, rea_iprops, trl_pubsub, rea_ibits;
 
 type
 
@@ -144,6 +144,8 @@ type
 
   IDesignComponentEdit = interface(IDesignComponent)
   ['{BBF9AEB9-28A5-4E15-840D-3483885936E1}']
+    function PSTextChannel: IPSTextChannel;
+    function PSKeyDownChannel: IPSKeyChannel;
   end;
 
   IDesignComponentText = interface(IDesignComponent)

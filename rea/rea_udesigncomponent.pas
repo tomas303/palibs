@@ -86,17 +86,23 @@ type
   { TDesignComponentEdit }
 
   TDesignComponentEdit = class(TDesignComponent, IDesignComponentEdit)
+  private
+    fPSTextChannel: IPSTextChannel;
+    procedure PSTextChannelObserver(const AValue: String);
+  private
+    fPSKeyDownChannel: IPSKeyChannel;
   protected
+    function PSTextChannel: IPSTextChannel;
+    function PSKeyDownChannel: IPSKeyChannel;
+  protected
+    procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
-    fData: TEditData;
-    fTextChangedNotifier: IFluxNotifier;
-    fKeyDownNotifier: IFluxNotifier;
+    fText: String;
+    procedure SetText(AText: String);
   published
-    property Data: TEditData read fData write fData;
-    property TextChangedNotifier: IFluxNotifier read fTextChangedNotifier write fTextChangedNotifier;
-    property KeyDownNotifier: IFluxNotifier read fKeyDownNotifier write fKeyDownNotifier;
+    property Text: String read fText write SetText;
   end;
 
   { TDesignComponentButton }
@@ -347,23 +353,54 @@ end;
 
 { TDesignComponentEdit }
 
+procedure TDesignComponentEdit.PSTextChannelObserver(const AValue: String);
+begin
+  Text := AValue;
+end;
+
+function TDesignComponentEdit.PSTextChannel: IPSTextChannel;
+begin
+  Result := fPSTextChannel;
+end;
+
+function TDesignComponentEdit.PSKeyDownChannel: IPSKeyChannel;
+begin
+  Result := fPSKeyDownChannel;
+end;
+
+procedure TDesignComponentEdit.InitValues;
+begin
+  inherited InitValues;
+  fPSTextChannel := PubSub.Factory.NewDataChannel<String>;
+  fPSTextChannel.Subscribe(PSTextChannelObserver);
+  fPSKeyDownChannel := PubSub.Factory.NewDataChannel<TKeyData>;
+end;
+
 function TDesignComponentEdit.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
   Result
+    .SetStr(cProps.Text, Text)
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
     .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
-    .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
     .SetBool(cProps.Focused, SelfProps.AsBool(cProps.Focused))
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
-    .SetIntf(cEdit.PSTextChannel, SelfProps.AsIntf(cEdit.PSTextChannel))
-    .SetIntf(cEdit.PSKeyDownChannel, SelfProps.AsIntf(cEdit.PSKeyDownChannel));
+    .SetIntf(cEdit.PSTextChannel, PSTextChannel)
+    .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel);
 end;
 
 function TDesignComponentEdit.DoCompose(const AProps: IProps;
   const AChildren: TMetaElementArray): IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IEditBit, NewComposeProps);
+end;
+
+procedure TDesignComponentEdit.SetText(AText: String);
+begin
+  if AText <> fText then begin
+    fText := AText;
+    fPSTextChannel.Publish(fText);
+  end;
 end;
 
 { TDesignComponentGrid }

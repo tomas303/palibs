@@ -294,6 +294,9 @@ var
   cb: TMessageObserverCallback;
 begin
   inherited DoControlWndProc(TheMessage);
+  if TheMessage.Msg = CM_TEXTCHANGED then begin
+    Enabled := Enabled;
+  end;
   if not Enabled then
     Exit;
   if TheMessage.Msg = Msg then begin
@@ -524,6 +527,7 @@ end;
 
 procedure TEditBit.CMTextChangedObserver(AMessage: TLMessage);
 begin
+  fText := AsEdit.Text;
   fPSTextChannel.Publish(AsEdit.Text);
 end;
 
@@ -577,9 +581,10 @@ end;
 
 procedure TEditBit.PSTextChannelObserver(const AValue: String);
 begin
-  if AsEdit.Text = AValue then
+  if fText = AValue then
     Exit;
   fCMTextChanged.Enabled := False;
+  fText := AValue;
   AsEdit.Text := AValue;
   fCMTextChanged.Enabled := True;
 end;
@@ -611,17 +616,17 @@ procedure TEditBit.EnableNotifiers;
 begin
   inherited EnableNotifiers;
   if fCMTextChanged <> nil then
-    fCMTextChanged.Enabled := False;
+    fCMTextChanged.Enabled := True;
   if fCNKeyDown <> nil then
-    fCNKeyDown.Enabled := False;
+    fCNKeyDown.Enabled := True;
 end;
 
 procedure TEditBit.DisableNotifiers;
 begin
   if fCMTextChanged <> nil then
-    fCMTextChanged.Enabled := True;
+    fCMTextChanged.Enabled := False;
   if fCNKeyDown <> nil then
-    fCNKeyDown.Enabled := True;
+    fCNKeyDown.Enabled := False;
   inherited DisableNotifiers;
 end;
 

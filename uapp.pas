@@ -28,14 +28,13 @@ type
 
   TGUI = class(TDesignComponent, IDesignComponentApp)
   private
-    fForm, fEditName, fEditSurename: IDesignComponent;
+    fForm: IDesignComponent;
+    fEditName, fEditSurename: IDesignComponentEdit;
     fS1, fS2, fS3: IDesignComponent;
     fPager: IDesignComponent;
     procedure CreateComponents;
   private
     fAppSettings: IRBData;
-    fNameChannel: IPSTextChannel;
-    fSurenameChannel: IPSTextChannel;
     fCloseChannel: IPSCloseChannel;
     fPSSizeChannel: IPSSizeChannel;
     fPSPositionChannel: IPSPositionChannel;
@@ -101,29 +100,25 @@ begin
    );
 
   fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
-    .SetInt(cProps.Color, clRed)
+    .SetInt(cProps.Color, clAqua)
     .SetInt(cProps.MMWidth, 50)
-    .SetStr(cProps.Text, 'first')
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
-    .SetIntf(cEdit.PSTextChannel, fNameChannel)
     );
   fEditSurename := Factory2.Locate<IDesignComponentEdit>(NewProps
-    .SetInt(cProps.Color, clBlue)
+    .SetInt(cProps.Color, clSkyBlue)
     .SetInt(cProps.MMWidth, 50)
-    .SetStr(cProps.Text, 'second')
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
-    .SetIntf(cEdit.PSTextChannel, fSurenameChannel)
     );
   //(fForm as INode).AddChild(fEditName as INode);
   //(fForm as INode).AddChild(fEditSurename as INode);
 
   fS1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
   fS2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
- // (fS2 as INode).AddChild(fEditName as INode);
+  (fS2 as INode).AddChild(fEditName as INode);
   fS3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
- // (fS3 as INode).AddChild(fEditSurename as INode);
+  (fS3 as INode).AddChild(fEditSurename as INode);
 
   (fPager as INode).AddChild(fS1 as INode);
   (fPager as INode).AddChild(fS2 as INode);
@@ -184,11 +179,6 @@ var
   mList: IPersistRefList;
 begin
   inherited InitValues;
-  fNameChannel := PubSub.Factory.NewDataChannel<String>;
-  fNameChannel.Subscribe(PSNameObserver);
-
-  fSurenameChannel := PubSub.Factory.NewDataChannel<String>;
-  fSurenameChannel.Subscribe(PSSurenameObserver);
 
   fCloseChannel := PubSub.Factory.NewChannel;
   fCloseChannel.Subscribe(CloseProgram);
@@ -217,12 +207,17 @@ begin
   begin
     fAppSettings := mList.Data[0];
   end;
-  fNameChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
-  fSurenameChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
   fPSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
   fPSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
 
   CreateComponents;
+
+  fEditName.PSTextChannel.Subscribe(PSNameObserver);
+  fEditSurename.PSTextChannel.Subscribe(PSSurenameObserver);
+
+  fEditName.PSTextChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
+  fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
+
  end;
 
 { TApp }
