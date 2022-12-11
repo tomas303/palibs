@@ -8,8 +8,8 @@ unit tal;
 interface
 
 uses
-  tal_uapp, tal_uguilauncher, tal_iedit, tal_SimpleListForm, tal_uwindowlog, 
-  tal_ihistorysettings, tal_uhistorysettings, tal_ireg, tal_ureg;
+  tal_uapp, tal_uguilauncher, tal_iedit, tal_uwindowlog, tal_ihistorysettings, 
+  tal_uhistorysettings, tal_ireg, tal_ureg;
 
 implementation
 

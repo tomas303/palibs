@@ -9,91 +9,63 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="21">
+    <Files Count="14">
       <Item1>
-        <Filename Value="tvl_udatabinder.pas"/>
-        <UnitName Value="tvl_udatabinder"/>
-      </Item1>
-      <Item2>
-        <Filename Value="tvl_udatabinders.pas"/>
-        <UnitName Value="tvl_udatabinders"/>
-      </Item2>
-      <Item3>
-        <Filename Value="tvl_ibindings.pas"/>
-        <UnitName Value="tvl_ibindings"/>
-      </Item3>
-      <Item4>
-        <Filename Value="tvl_ubehavebinder.pas"/>
-        <UnitName Value="tvl_ubehavebinder"/>
-      </Item4>
-      <Item5>
-        <Filename Value="tvl_ubehavebinders.pas"/>
-        <UnitName Value="tvl_ubehavebinders"/>
-      </Item5>
-      <Item6>
-        <Filename Value="tvl_ugridbinders.pas"/>
-        <UnitName Value="tvl_ugridbinders"/>
-      </Item6>
-      <Item7>
-        <Filename Value="tvl_utallybinders.pas"/>
-        <UnitName Value="tvl_utallybinders"/>
-      </Item7>
-      <Item8>
         <Filename Value="tvl_messages.pas"/>
         <UnitName Value="tvl_messages"/>
-      </Item8>
-      <Item9>
+      </Item1>
+      <Item2>
         <Filename Value="tvl_ucontrolbinder.pas"/>
         <UnitName Value="tvl_ucontrolbinder"/>
-      </Item9>
-      <Item10>
+      </Item2>
+      <Item3>
         <Filename Value="tvl_iiconutils.pas"/>
         <UnitName Value="tvl_iiconutils"/>
-      </Item10>
-      <Item11>
+      </Item3>
+      <Item4>
         <Filename Value="tvl_uiconutils.pas"/>
         <UnitName Value="tvl_uiconutils"/>
-      </Item11>
-      <Item12>
+      </Item4>
+      <Item5>
         <Filename Value="tvl_uiconutils_windows.pas"/>
         <UnitName Value="tvl_uiconutils_windows"/>
-      </Item12>
-      <Item13>
+      </Item5>
+      <Item6>
         <Filename Value="tvl_uiconutils_unix.pas"/>
         <UnitName Value="tvl_uiconutils_unix"/>
-      </Item13>
-      <Item14>
+      </Item6>
+      <Item7>
         <Filename Value="tvl_uiconutils_common.pas"/>
         <UnitName Value="tvl_uiconutils_common"/>
-      </Item14>
-      <Item15>
+      </Item7>
+      <Item8>
         <Filename Value="tvl_igui.pas"/>
         <UnitName Value="tvl_igui"/>
-      </Item15>
-      <Item16>
+      </Item8>
+      <Item9>
         <Filename Value="tvl_ugui.pas"/>
         <UnitName Value="tvl_ugui"/>
-      </Item16>
-      <Item17>
+      </Item9>
+      <Item10>
         <Filename Value="tvl_imainform.pas"/>
         <UnitName Value="tvl_imainform"/>
-      </Item17>
-      <Item18>
+      </Item10>
+      <Item11>
         <Filename Value="tvl_itimer.pas"/>
         <UnitName Value="tvl_itimer"/>
-      </Item18>
-      <Item19>
+      </Item11>
+      <Item12>
         <Filename Value="tvl_utimer.pas"/>
         <UnitName Value="tvl_utimer"/>
-      </Item19>
-      <Item20>
+      </Item12>
+      <Item13>
         <Filename Value="tvl_ureg.pas"/>
         <UnitName Value="tvl_ureg"/>
-      </Item20>
-      <Item21>
+      </Item13>
+      <Item14>
         <Filename Value="tvl_ireg.pas"/>
         <UnitName Value="tvl_ireg"/>
-      </Item21>
+      </Item14>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="4">
