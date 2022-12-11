@@ -32,6 +32,7 @@ type
     fEditName, fEditSurename: IDesignComponentEdit;
     fS1, fS2, fS3: IDesignComponent;
     fPager: IDesignComponent;
+    fGrid: IDesignComponentGrid;
     procedure CreateComponents;
   private
     fAppSettings: IRBData;
@@ -84,12 +85,6 @@ begin
     .SetInt(cProps.Color, clGreen)
     );
 
-   fPager := Factory2.Locate<IDesignComponentPager>(NewProps
-    .SetIntf('PSGUIChannel', fPSGUIChannel)
-    .SetInt(cPager.SwitchEdge, cEdge.Top)
-    .SetInt(cPager.SwitchSize, 25)
-   );
-
   fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
     .SetInt(cProps.Color, clAqua)
     .SetInt(cProps.MMWidth, 50)
@@ -105,7 +100,29 @@ begin
   //(fForm as INode).AddChild(fEditName as INode);
   //(fForm as INode).AddChild(fEditSurename as INode);
 
+
+  fGrid := Factory2.Locate<IDesignComponentGrid>(NewProps
+    .SetIntf('PSGUIChannel', fPSGUIChannel)
+    .SetInt(cGrid.RowCount, 5)
+    .SetInt(cGrid.ColCount, 2)
+    .SetInt(cGrid.MMWidth, 200)
+    .SetInt(cGrid.MMHeight, 500)
+    .SetInt(cGrid.RowMMHeight, 25)
+    .SetInt(cGrid.ColMMWidth, 25)
+    .SetInt(cGrid.LaticeColColor, clBlack)
+    .SetInt(cGrid.LaticeRowColor, clBlack)
+    .SetInt(cGrid.LaticeColSize, 2)
+    .SetInt(cGrid.LaticeRowSize, 2)
+    );
+
+  fPager := Factory2.Locate<IDesignComponentPager>(NewProps
+   .SetIntf('PSGUIChannel', fPSGUIChannel)
+   .SetInt(cPager.SwitchEdge, cEdge.Top)
+   .SetInt(cPager.SwitchSize, 25)
+  );
+
   fS1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
+  (fS1 as INode).AddChild(fGrid as INode);
   fS2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
   (fS2 as INode).AddChild(fEditName as INode);
   fS3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));

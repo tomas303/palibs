@@ -32,12 +32,6 @@ type
       ClickFunc = 'ClickFunc';
       TextChangedFunc = 'TextChangedFunc';
       KeyDownFunc = 'KeyDownFunc';
-      RowMMHeight = 'RowMMHeight';
-      ColMMWidth = 'ColMMWidth';
-      RowEvenColor = 'RowEvenColor';
-      RowOddColor = 'RowOddColor';
-      ColEvenColor = 'ColEvenColor';
-      ColOddColor = 'ColOddColor';
       Caption = 'Caption';
       CaptionWidth = 'CaptionWidth';
       CaptionHeight = 'CaptionHeight';
@@ -79,6 +73,22 @@ type
   cButton = class(cProps)
   public const
     PSClickChannel = 'PSClickChannel';
+  end;
+
+  cGrid = class(cProps)
+  public const
+    RowCount = 'RowCount';
+    ColCount = 'ColCount';
+    RowMMHeight = 'RowMMHeight';
+    ColMMWidth = 'ColMMWidth';
+    LaticeColColor = 'LaticeColColor';
+    LaticeRowColor = 'LaticeRowColor';
+    LaticeColSize = 'LaticeColSize';
+    LaticeRowSize = 'LaticeRowSize';
+    RowEvenColor = 'RowEvenColor';
+    RowOddColor = 'RowOddColor';
+    ColEvenColor = 'ColEvenColor';
+    ColOddColor = 'ColOddColor';
   end;
 
   cAction = class(cProps)

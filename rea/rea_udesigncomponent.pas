@@ -182,6 +182,16 @@ type
   { TDesignComponentGrid }
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
+  private type
+    TMatrix = array of array of string;
+  private
+    fData: TMatrix;
+    fCurrentRow: Integer;
+    fCurrentCol: Integer;
+    fEdit: IDesignComponentEdit;
+    procedure PSTextChannelObserver(const AValue: String);
+    procedure PSKeyDownChannelObserver(const AValue: TKeyData);
+    procedure Move(AXDelta, AYDelta: Integer);
   private
     function ColProps(Row, Col: integer): IProps;
     function RowProps(Row: integer): IProps;
@@ -191,20 +201,23 @@ type
     function LaticeRowProps: IProps;
     function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
   protected
+    procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   protected
-    fData: TGridData;
-    fEdTextChangedNotifier: IFluxNotifier;
-    fEdKeyDownNotifier: IFluxNotifier;
+    fPSGUIChannel: IPSGUIChannel;
+    fRowCount: Integer;
+    fColCount: Integer;
     fLaticeColColor: integer;
     fLaticeRowColor: integer;
     fLaticeColSize: integer;
     fLaticeRowSize: integer;
+    procedure SetRowCount(AValue: Integer);
+    procedure SetColCount(AValue: Integer);
   published
-    property Data: TGridData read fData write fData;
-    property EdTextChangedNotifier: IFluxNotifier read fEdTextChangedNotifier write fEdTextChangedNotifier;
-    property EdKeyDownNotifier: IFluxNotifier read fEdKeyDownNotifier write fEdKeyDownNotifier;
+    property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
+    property RowCount: Integer read fRowCount write SetRowCount;
+    property ColCount: Integer read fColCount write SetColCount;
     property LaticeColColor: integer read fLaticeColColor write fLaticeColColor;
     property LaticeRowColor: integer read fLaticeRowColor write fLaticeRowColor;
     property LaticeColSize: integer read fLaticeColSize write fLaticeColSize;
@@ -425,20 +438,48 @@ end;
 
 { TDesignComponentGrid }
 
+procedure TDesignComponentGrid.PSTextChannelObserver(const AValue: String);
+begin
+  fData[fCurrentRow, fCurrentCol] := AValue;
+end;
+
+procedure TDesignComponentGrid.PSKeyDownChannelObserver(const AValue: TKeyData);
+begin
+  case AValue.ControlKey of
+    ckTab: if AValue.Shift then Move(-1, 0) else Move(1, 0);
+    ckUp: Move(0, -1);
+    ckDown: Move(0, 1);
+  end;
+end;
+
+procedure TDesignComponentGrid.Move(AXDelta, AYDelta: Integer);
+var
+  mNew: Integer;
+begin
+  mNew := fCurrentCol + AXDelta;
+  if (mNew >= 0) and (mNew < ColCount) then
+    fCurrentCol := mNew;
+  mNew := fCurrentRow + AYDelta;
+  if (mNew >= 0) and (mNew < RowCount) then
+    fCurrentRow := mNew;
+  fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
+  PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+end;
+
 function TDesignComponentGrid.ColProps(Row, Col: integer): IProps;
 var
   mProp: IProp;
 begin
   Result := NewProps
     .SetInt(cProps.Place, cPlace.Elastic)
-    .SetStr(cProps.Text, Data[Row, Col])
+    .SetStr(cProps.Text, fData[Row, Col])
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.TextColor, SelfProps.AsInt(cProps.TextColor))
-    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.ColMMWidth));
+    .SetInt(cProps.MMWidth, SelfProps.AsInt(cGrid.ColMMWidth));
   if Row mod 2 = 1 then
-    mProp := SelfProps.PropByName[cProps.ColOddColor]
+    mProp := SelfProps.PropByName[cGrid.ColOddColor]
   else
-    mProp := SelfProps.PropByName[cProps.ColEvenColor];
+    mProp := SelfProps.PropByName[cGrid.ColEvenColor];
   if mProp <> nil then
     Result.SetInt(cProps.Color, mProp.AsInteger);
 end;
@@ -451,11 +492,11 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetInt(cProps.Layout, cLayout.Horizontal)
     .SetInt(cProps.Border, 0)
-    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.RowMMHeight));
+    .SetInt(cProps.MMHeight, SelfProps.AsInt(cGrid.RowMMHeight));
   if Row mod 2 = 1 then begin
-    mProp := SelfProps.PropByName[cProps.RowOddColor];
+    mProp := SelfProps.PropByName[cGrid.RowOddColor];
   end else begin
-    mProp := SelfProps.PropByName[cProps.RowEvenColor];
+    mProp := SelfProps.PropByName[cGrid.RowEvenColor];
   end;
   if mProp <> nil then
     Result.SetInt(cProps.Color, mProp.AsInteger).SetBool(cProps.Transparent, False);
@@ -464,21 +505,12 @@ end;
 function TDesignComponentGrid.MakeRow(Row: integer): TMetaElementArray;
 var
   i: integer;
-  mProps: IProps;
 begin
   Result := TMetaElementArray.Create;
-  SetLength(Result, Data.ColCount);
-  for i := 0 to Data.ColCount - 1 do
-    if (Row = Data.CurrentRow) and (i = Data.CurrentCol) then begin
-      mProps := ColProps(Row, i);
-      mProps
-        .SetObject(cProps.Data, Data.EditData)
-        .SetBool(cProps.Flat, True)
-        .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-        //.SetIntf(cProps.TextChangedNotifier, EdTextChangedNotifier)
-        //.SetIntf(cProps.KeyDownNotifier, EdKeyDownNotifier)
-        ;
-      Result[i] := ElementFactory.CreateElement(IDesignComponentEdit, mProps);
+  SetLength(Result, ColCount);
+  for i := 0 to ColCount - 1 do
+    if (Row = fCurrentRow) and (i = fCurrentCol) then begin
+      Result[i] := fEdit.Compose(nil, [])
     end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, ColProps(Row, i));
     end;
@@ -489,8 +521,8 @@ var
   i: integer;
 begin
   Result := TMetaElementArray.Create;
-  SetLength(Result, Data.RowCount);
-  for i := 0 to Data.RowCount - 1 do begin
+  SetLength(Result, RowCount);
+  for i := 0 to RowCount - 1 do begin
     Result[i] := ElementFactory.CreateElement(IStripBit, RowProps(i), Latice(MakeRow(i), IStripBit, LaticeColProps));
   end;
   Result := Latice(Result, IStripBit, LaticeRowProps);
@@ -521,12 +553,24 @@ var
 begin
   Result := nil;
   SetLength(Result, Length(AElements) * 2 + 1);
-  //Result[0] := ElementFactory.CreateElement(IStripBit, LaticeColProps);
   Result[0] := ElementFactory.CreateElement(ALaticeEl, ALaticeProps);
   for i := 0 to Length(AElements) - 1 do begin
     Result[i * 2 + 1] := AElements[i];
     Result[i * 2 + 2] := ElementFactory.CreateElement(ALaticeEl, ALaticeProps);
   end;
+end;
+
+procedure TDesignComponentGrid.InitValues;
+begin
+  inherited InitValues;
+  fEdit := Factory2.Locate<IDesignComponentEdit>(
+    NewProps
+    .SetBool(cProps.Flat, True)
+    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    .SetBool(cEdit.Focused, True)
+  );
+  fEdit.PSTextChannel.Subscribe(PSTextChannelObserver);
+  fEdit.PSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
 end;
 
 function TDesignComponentGrid.NewComposeProps: IProps;
@@ -542,6 +586,20 @@ function TDesignComponentGrid.DoCompose(const AProps: IProps;
 begin
   Result := ElementFactory.CreateElement(
     IStripBit, NewComposeProps, MakeGrid);
+end;
+
+procedure TDesignComponentGrid.SetRowCount(AValue: Integer);
+begin
+  if fRowCount = AValue then Exit;
+  fRowCount := AValue;
+  SetLength(fData, RowCount, ColCount);
+end;
+
+procedure TDesignComponentGrid.SetColCount(AValue: Integer);
+begin
+  if fColCount = AValue then Exit;
+  fColCount := AValue;
+  SetLength(fData, RowCount, ColCount);
 end;
 
 { TDesignComponentForm }

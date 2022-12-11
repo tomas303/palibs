@@ -581,12 +581,16 @@ end;
 
 procedure TEditBit.PSTextChannelObserver(const AValue: String);
 begin
+  if fCMTextChanged = nil then
+    Exit;
   if fText = AValue then
     Exit;
-  fCMTextChanged.Enabled := False;
+  if fCMTextChanged <> nil then
+    fCMTextChanged.Enabled := False;
   fText := AValue;
   AsEdit.Text := AValue;
-  fCMTextChanged.Enabled := True;
+  if fCMTextChanged <> nil then
+    fCMTextChanged.Enabled := True;
 end;
 
 function TEditBit.AsEdit: TCustomEdit;

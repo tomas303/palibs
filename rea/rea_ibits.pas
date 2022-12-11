@@ -48,11 +48,21 @@ type
   { TKeyData }
 
   TKeyData = record
-    ControlKey: TControlKey;
-    ShiftState: TShiftState;
+  strict private
+    fControlKey: TControlKey;
+    fAlt: Boolean;
+    fShift: Boolean;
+    fCtrl: Boolean;
+    fMeta: Boolean;
+  public
     constructor Create(ControlKey: TControlKey); overload;
     constructor Create(ControlKey: TControlKey; ShiftState: TShiftState); overload;
     constructor Create(AMsg: TLMKey); overload;
+    function ControlKey: TControlKey;
+    function Alt: Boolean;
+    function Shift: Boolean;
+    function Ctrl: Boolean;
+    function Meta: Boolean;
     class operator equal(a,b: TKeyData): Boolean;
     class operator notequal(a,b: TKeyData): Boolean;
   end;
@@ -104,31 +114,61 @@ end;
 
 constructor TKeyData.Create(ControlKey: TControlKey; ShiftState: TShiftState);
 begin
-  Self.ControlKey := ControlKey;
-  Self.ShiftState := ShiftState;
+  Self.fControlKey := ControlKey;
+  Self.fAlt := ssAlt in ShiftState;
+  Self.fCtrl := ssCtrl in ShiftState;
+  Self.fShift := ssShift in ShiftState;
+  Self.fMeta := ssMeta in ShiftState;
 end;
 
 constructor TKeyData.Create(AMsg: TLMKey);
+var
+  mControlKey: TControlKey;
 begin
   case AMsg.CharCode of
-    VK_RETURN: ControlKey := ckEnter;
-    VK_LEFT: ControlKey := ckLeft;
-    VK_RIGHT: ControlKey := ckRight;
-    VK_UP: ControlKey := ckUp;
-    VK_DOWN: ControlKey := ckDown;
-    VK_TAB: ControlKey := ckTab;
-    VK_ESCAPE: ControlKey := ckEsc;
-    VK_PRIOR: ControlKey := ckPgUp;
-    VK_NEXT: ControlKey := ckPgDown;
+    VK_RETURN: mControlKey := ckEnter;
+    VK_LEFT: mControlKey := ckLeft;
+    VK_RIGHT: mControlKey := ckRight;
+    VK_UP: mControlKey := ckUp;
+    VK_DOWN: mControlKey := ckDown;
+    VK_TAB: mControlKey := ckTab;
+    VK_ESCAPE: mControlKey := ckEsc;
+    VK_PRIOR: mControlKey := ckPgUp;
+    VK_NEXT: mControlKey := ckPgDown;
   else
-    ControlKey := ckUnknown;
+    mControlKey := ckUnknown;
   end;
-  ShiftState := MsgKeyDataToShiftState(AMsg.KeyData);
+  Create(mControlKey, MsgKeyDataToShiftState(AMsg.KeyData));
+end;
+
+function TKeyData.ControlKey: TControlKey;
+begin
+  Result := fControlKey;
+end;
+
+function TKeyData.Alt: Boolean;
+begin
+  Result := fAlt;
+end;
+
+function TKeyData.Shift: Boolean;
+begin
+  Result := fShift;
+end;
+
+function TKeyData.Ctrl: Boolean;
+begin
+  Result := fCtrl;
+end;
+
+function TKeyData.Meta: Boolean;
+begin
+  Result := fMeta;
 end;
 
 class operator TKeyData.equal(a, b: TKeyData): Boolean;
 begin
-  Result := Ord(a.ControlKey) = Ord(b.ControlKey);
+  Result := Ord(a.fControlKey) = Ord(b.fControlKey);
 end;
 
 class operator TKeyData.notequal(a, b: TKeyData): Boolean;
