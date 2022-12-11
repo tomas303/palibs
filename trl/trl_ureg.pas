@@ -11,13 +11,11 @@ uses
   trl_itree, trl_utree,
   trl_idifactory, trl_udifactory,
   trl_isysutils, trl_usysutils,
-  trl_iExecutor, trl_uExecutor,
   trl_imetaelement, trl_umetaelement,
   trl_imetaelementfactory, trl_umetaelementfactory,
   trl_ilink, trl_ulink,
   trl_ilog,
   trl_ireconciler, trl_ureconciler,
-  trl_inexus, trl_unexus,
   trl_pubsub,
   trl_isequence, trl_usequence;
 
@@ -36,11 +34,9 @@ type
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
     procedure RegisterLink;
-    function RegisterExecutor(const AID: string = ''): TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReconciler: TDIReg;
-    function RegisterNexus: TDIReg;
     function RegisterSequence(const AID: string; ACreateKind: TDIRegCreateKind = ckSingle): TDIReg;
     function RegisterPubSub: TDIReg;
     procedure RegisterCommon;
@@ -98,12 +94,6 @@ begin
   DIC.Add(TLink, ILink);
 end;
 
-function TReg.RegisterExecutor(const AID: string = ''): TDIReg;
-begin
-  Result := DIC.Add(TExecutor, IExecutor, AID, ckSingle);
-  Result.InjectProp('Log', ILog);
-end;
-
 function TReg.RegisterElement: TDIReg;
 begin
   Result := DIC.Add(TMetaElement, IMetaElement);
@@ -123,13 +113,6 @@ begin
   Result.InjectProp('Log', ILog);
   Result.InjectProp('Factory', IDIFactory);
   Result.InjectProp('Injector', IInjector);
-end;
-
-function TReg.RegisterNexus: TDIReg;
-begin
-  Result := DIC.Add(TNexus, INexus);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('Reconciler', IReconciler);
 end;
 
 function TReg.RegisterSequence(const AID: string; ACreateKind: TDIRegCreateKind = ckSingle): TDIReg;
@@ -153,11 +136,9 @@ begin
   RegisterProps;
   RegisterTreeNodes;
   RegisterLink;
-  RegisterExecutor;
   RegisterElement;
   RegisterElementFactory;
   RegisterReconciler;
-  RegisterNexus;
   RegisterSequence('', ckSingle);
   RegisterPubSub;
 end;

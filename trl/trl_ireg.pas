@@ -18,11 +18,9 @@ type
     function RegisterProps: TDIReg;
     procedure RegisterTreeNodes;
     procedure RegisterLink;
-    function RegisterExecutor(const AID: string = ''): TDIReg;
     function RegisterElement: TDIReg;
     function RegisterElementFactory: TDIReg;
     function RegisterReconciler: TDIReg;
-    function RegisterNexus: TDIReg;
     function RegisterSequence(const AID: string; ACreateKind: TDIRegCreateKind = ckSingle): TDIReg;
     function RegisterPubSub: TDIReg;
     procedure RegisterCommon;
