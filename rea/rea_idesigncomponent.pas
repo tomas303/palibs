@@ -7,7 +7,7 @@ unit rea_idesigncomponent;
 interface
 
 uses
-  trl_imetaelement, trl_iprops, rea_iprops, trl_pubsub, rea_ibits;
+  trl_imetaelement, trl_iprops, trl_pubsub, rea_ibits;
 
 type
 

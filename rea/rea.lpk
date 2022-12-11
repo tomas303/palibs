@@ -51,58 +51,6 @@
         <UnitName Value="rea_urenderer"/>
       </Item>
       <Item>
-        <Filename Value="rea_udesigncomponentdata.pas"/>
-        <UnitName Value="rea_udesigncomponentdata"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_udesigncomponentfunc.pas"/>
-        <UnitName Value="rea_udesigncomponentfunc"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_istyles.pas"/>
-        <UnitName Value="rea_istyles"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ustyles.pas"/>
-        <UnitName Value="rea_ustyles"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_iflux.pas"/>
-        <UnitName Value="rea_iflux"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_uflux.pas"/>
-        <UnitName Value="rea_uflux"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ufuncdispatcher.pas"/>
-        <UnitName Value="rea_ufuncdispatcher"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_idataconnector.pas"/>
-        <UnitName Value="rea_idataconnector"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_udataconnector.pas"/>
-        <UnitName Value="rea_udataconnector"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ireafactory.pas"/>
-        <UnitName Value="rea_ireafactory"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_ureafactory.pas"/>
-        <UnitName Value="rea_ureafactory"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_iprops.pas"/>
-        <UnitName Value="rea_iprops"/>
-      </Item>
-      <Item>
-        <Filename Value="rea_uprops.pas"/>
-        <UnitName Value="rea_uprops"/>
-      </Item>
-      <Item>
         <Filename Value="rea_upubsublauncher.pas"/>
         <UnitName Value="rea_upubsublauncher"/>
       </Item>

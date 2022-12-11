@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="9">
       <Item1>
         <Filename Value="tal_uapp.pas"/>
         <UnitName Value="tal_uapp"/>
@@ -39,21 +39,13 @@
         <UnitName Value="tal_uhistorysettings"/>
       </Item7>
       <Item8>
-        <Filename Value="tal_urealauncher.pas"/>
-        <UnitName Value="tal_urealauncher"/>
-      </Item8>
-      <Item9>
         <Filename Value="tal_ireg.pas"/>
         <UnitName Value="tal_ireg"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="tal_ureg.pas"/>
         <UnitName Value="tal_ureg"/>
-      </Item10>
-      <Item11>
-        <Filename Value="tal_uwinfunc.pas"/>
-        <UnitName Value="tal_uwinfunc"/>
-      </Item11>
+      </Item9>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="4">

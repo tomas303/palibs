@@ -5,10 +5,10 @@ unit rea_udesigncomponent;
 interface
 
 uses
-  rea_idesigncomponent, rea_udesigncomponentdata, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
-  trl_iprops, rea_ibits, trl_itree, trl_idifactory, rea_iflux, trl_ilog,
+  rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
+  trl_iprops, rea_ibits, trl_itree, trl_idifactory, trl_ilog,
   sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer,
-  trl_udifactory, rea_istyles, trl_pubsub;
+  trl_udifactory, trl_pubsub;
 
 type
 
@@ -17,7 +17,6 @@ type
   TDesignComponent = class(TDynaObject, IDesignComponent, INode)
   protected
     function NewProps: IProps;
-    function NewNotifier(const AActionID: integer): IFluxNotifier;
     function NewComposeProps: IProps; virtual;
   protected
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
@@ -50,8 +49,6 @@ type
     fFactory: IDIFactory;
     fFactory2: TDIFactory2;
     fNode: INode;
-    fStyle: IStyle;
-    fStyleKind: Integer;
     fPubSub: IPubSub;
   published
     property ID: string read fID write fID;
@@ -60,8 +57,6 @@ type
     property Factory: IDIFactory read fFactory write fFactory;
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property Node: INode read fNode write fNode;
-    property Style: IStyle read fStyle write fStyle;
-    property StyleKind: Integer read fStyleKind write fStyleKind;
     property PubSub: IPubSub read fPubSub write fPubSub;
   end;
 
@@ -850,11 +845,6 @@ begin
   Result := IProps(Factory.Locate(IProps));
 end;
 
-function TDesignComponent.NewNotifier(const AActionID: integer): IFluxNotifier;
-begin
-  Result := IFluxNotifier(Factory.Locate(IFluxNotifier, '', NewProps.SetInt(cAction.ActionID, AActionID)));
-end;
-
 function TDesignComponent.NewComposeProps: IProps;
 begin
   {
@@ -906,26 +896,17 @@ end;
 
 function TDesignComponent.StyleForeColor(const APropName: String): TColor;
 begin
-  if StyleKind = cStyleKind.None then
-    Result := SelfProps.AsInt(APropName)
-  else
-    Result := Style.Get(StyleKind).ForeColor;
+  Result := SelfProps.AsInt(APropName)
 end;
 
 function TDesignComponent.StyleBackColor(const APropName: String): TColor;
 begin
-  if StyleKind = cStyleKind.None then
-    Result := SelfProps.AsInt(APropName)
-  else
-    Result := Style.Get(StyleKind).BackColor;
+  Result := SelfProps.AsInt(APropName)
 end;
 
 function TDesignComponent.StyleSuppleColor(const APropName: String): TColor;
 begin
-  if StyleKind = cStyleKind.None then
-    Result := SelfProps.AsInt(APropName)
-  else
-    Result := Style.Get(StyleKind).SuppleColor;
+  Result := SelfProps.AsInt(APropName)
 end;
 
 function TDesignComponent.Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;

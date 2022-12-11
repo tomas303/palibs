@@ -5,12 +5,7 @@ unit tal_ureg;
 interface
 
 uses
-  tal_ireg, trl_idifactory, trl_dicontainer,
-  tal_urealauncher, trl_ilauncher,
-  trl_ilog, tal_uwindowlog, rea_iflux,
-  trl_iExecutor, trl_imetaelementfactory,
-  trl_imetaelement,
-  trl_ireconciler, rea_idesigncomponent, rea_irenderer, trl_udifactory;
+  tal_ireg, trl_dicontainer, trl_ilog, tal_uwindowlog;
 
 type
 
@@ -19,7 +14,6 @@ type
   TReg = class(TInterfacedObject, IReg)
   protected
     // IReg
-    function RegisterReactLauncher: TDIReg;
     function RegisterWindowLog: TDIReg;
   protected
     fDIC: TDIContainer;
@@ -30,16 +24,6 @@ type
 implementation
 
 { TReg }
-
-function TReg.RegisterReactLauncher: TDIReg;
-begin
-  Result := DIC.Add(TReactLauncher, ILauncher);
-  Result.InjectProp('FluxDispatcher', IFluxDispatcher);
-  Result.InjectProp('Executor', IExecutor);
-  Result.InjectProp('Renderer', IRenderer);
-  Result.InjectProp('GUI', IDesignComponentApp);
-  Result.InjectProp('Factory2', TDIFactory2);
-end;
 
 function TReg.RegisterWindowLog: TDIReg;
 begin

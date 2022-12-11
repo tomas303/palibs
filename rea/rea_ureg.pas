@@ -10,7 +10,6 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_irenderer, rea_urenderer,
-  rea_iflux,
   Forms, StdCtrls,
   trl_iExecutor,
   trl_iprops,
@@ -20,10 +19,6 @@ uses
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
   trl_udifactory,
-  rea_istyles, rea_ustyles,
-  rea_ufuncdispatcher, rea_uflux,
-  rea_idataconnector, rea_udataconnector,
-  rea_ireafactory, rea_ureafactory,
   trl_ilauncher, trl_pubsub, rea_upubsublauncher;
 
 type
@@ -49,13 +44,7 @@ type
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
-    function RegisterStyle: TDIReg;
-    function RegisterDispatcher: TDIReg;
-    function RegisterAction: TDIReg;
-    function RegisterNotifier(const ADispatcher: TGuid; const AID: string = ''): TDIReg;
-    function RegisterDataConnector: TDIReg;
     function RegisterPubSubLauncher: TDIReg;
-    function RegisterReaFactory: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -164,12 +153,6 @@ begin
   RegisterScales;
   RegisterMessageObservable;
   RegisterRenderer;
-  RegisterStyle;
-  RegisterDispatcher;
-  RegisterAction;
-  RegisterNotifier(IFluxDispatcher);
-  RegisterDataConnector;
-  RegisterReaFactory;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -184,7 +167,6 @@ begin
   Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
-  Result.InjectProp('Style', IStyle);
   Result.InjectProp('PubSub', IPubSub);
 end;
 
@@ -197,52 +179,12 @@ begin
   Result.InjectProp('Reconciler', IReconciler);
 end;
 
-function TReg.RegisterStyle: TDIReg;
-begin
-  Result := DIC.Add(TStyle, IStyle);
-end;
-
-function TReg.RegisterDispatcher: TDIReg;
-begin
-  Result := DIC.Add(TRdxFuncDispatcher, IFluxDispatcher, '', ckSingle);
-  Result.InjectProp('Executor', IExecutor);
-end;
-
-function TReg.RegisterAction: TDIReg;
-begin
-  Result := DIC.Add(TFluxAction, IFluxAction);
-  Result.InjectProp('Props', IProps);
-end;
-
-function TReg.RegisterNotifier(const ADispatcher: TGuid; const AID: string
-  ): TDIReg;
-begin
-  Result := DIC.Add(TFluxNotifier, IFluxNotifier);
-  // asi az pri reactu mozna    mReg.InjectProp('ActionID', cResizeFunc);
-  Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('Dispatcher', ADispatcher, AID);
-end;
-
-function TReg.RegisterDataConnector: TDIReg;
-begin
-  Result := DIC.Add(TDataConnector, IDataConnector);
-  Result.InjectProp('FluxDispatcher', IFluxDispatcher);
-  Result.InjectProp('ReaFactory', IReaFactory);
-  Result.InjectProp('Sequence', ISequence);
-end;
-
 function TReg.RegisterPubSubLauncher: TDIReg;
 begin
   Result := DIC.Add(TPubSubLauncher, ILauncher);
   Result.InjectProp('PubSub', IPubSub);
   Result.InjectProp('Renderer', IRenderer);
   Result.InjectProp('GUI', IDesignComponentApp);
-end;
-
-function TReg.RegisterReaFactory: TDIReg;
-begin
-  Result := DIC.Add(TReaFactory, IReaFactory);
-  Result.InjectProp('Factory2', TDIFactory2);
 end;
 
 end.

@@ -8,7 +8,7 @@ interface
 uses
   SysUtils, rea_ibits, Controls, trl_idifactory, forms, trl_itree,
   StdCtrls, trl_iprops, Graphics, trl_ilog,
-  rea_ilayout, rea_iflux, tvl_ucontrolbinder,
+  rea_ilayout, tvl_ucontrolbinder,
   LMessages, Classes, fgl;
 
 type
