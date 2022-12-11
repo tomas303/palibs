@@ -145,21 +145,29 @@ type
     procedure LMCloseQueryObserver(AMessage: TLMessage);
     procedure PSCloseChannelObserver;
     procedure SetPSCloseChannel(AValue: IPSCloseChannel);
+    procedure PSCloseChannelConnect;
+    procedure PSCloseChannelDisconnect;
   private
     fLMSize: IMessageObservable;
     procedure LMSizeObserver(AMessage: TLMessage);
     procedure PSSizeChannelObserver(const AData: TSizeData);
     procedure SetPSSizeChannel(AValue: IPSSizeChannel);
+    procedure PSSizeChannelConnect;
+    procedure PSSizeChannelDisonnect;
   private
     fLMMove: IMessageObservable;
     procedure LMMoveObserver(AMessage: TLMessage);
     procedure PSPositionChannelObserver(const AData: TPositionData);
     procedure SetPSPositionChannel(AValue: IPSPositionChannel);
+    procedure PSPositionChannelConnect;
+    procedure PSPositionChannelDisconnect;
   private
     fLMActivate: IMessageObservable;
     procedure LMActivateObserver(AMessage: TLMessage);
     procedure PSActivateChannelObserver;
     procedure SetPSActivateChannel(AValue: IPSActivateChannel);
+    procedure PSActivateChannelConnect;
+    procedure PSActivateChannelDisconnect;
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -168,6 +176,8 @@ type
     procedure DoRender; override;
     procedure EnableNotifiers; override;
     procedure DisableNotifiers; override;
+  public
+    procedure BeforeDestruction; override;
   protected
     fTiler: ITiler;
     fTitle: string;
@@ -220,11 +230,15 @@ type
     procedure CMTextChangedObserver(AMessage: TLMessage);
     procedure PSTextChannelObserver(const AValue: String);
     procedure SetPSTextChannel(AValue: IPSTextChannel);
+    procedure PSTextChannelConnect;
+    procedure PSTextChannelDisconnect;
   private
     fCNKeyDown: IMessageObservable;
     procedure CNKeyDownObserver(AMessage: TLMessage);
     procedure PSKeyDownChannelObserver(const AValue: TKeyData);
     procedure SetPSKeyDownChannel(AValue: IPSKeyChannel);
+    procedure PSKeyDownChannelConnect;
+    procedure PSKeyDownChannelDisconnect;
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
@@ -232,6 +246,7 @@ type
     procedure DisableNotifiers; override;
   public
     procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   protected
     fText: string;
     fFocused: Boolean;
@@ -267,12 +282,16 @@ type
     procedure OnClick(Sender: TObject);
     procedure PSClickChannelObserver;
     procedure SetPSClickChannel(AValue: IPSClickChannel);
+    procedure PSClickChannelConnect;
+    procedure PSClickChannelDisconnect;
   protected
     function AsButton: TLabel;
   protected
     procedure DoRender; override;
     procedure EnableNotifiers; override;
     procedure DisableNotifiers; override;
+  public
+    procedure BeforeDestruction; override;
   protected
     fText: string;
     fFontDirection: Integer;
@@ -443,18 +462,28 @@ end;
 
 procedure TButtonBit.SetPSClickChannel(AValue: IPSClickChannel);
 begin
-  if fPSClickChannel <> nil then
-  begin
-    AsButton.OnClick := nil;
-    fPSClickChannel.Unsubscribe(PSClickChannelObserver);
-    fClickEnabled := False;
-  end;
+  PSClickChannelDisconnect;
   fPSClickChannel := AValue;
+  PSClickChannelConnect;
+end;
+
+procedure TButtonBit.PSClickChannelConnect;
+begin
   if fPSClickChannel <> nil then
   begin
     AsButton.OnClick := OnClick;
     fPSClickChannel.Subscribe(PSClickChannelObserver);
     fClickEnabled := True;
+  end;
+end;
+
+procedure TButtonBit.PSClickChannelDisconnect;
+begin
+  if fPSClickChannel <> nil then
+  begin
+    AsButton.OnClick := nil;
+    fPSClickChannel.Unsubscribe(PSClickChannelObserver);
+    fClickEnabled := False;
   end;
 end;
 
@@ -508,6 +537,12 @@ begin
   inherited DisableNotifiers;
 end;
 
+procedure TButtonBit.BeforeDestruction;
+begin
+  PSClickChannelDisconnect;
+  inherited BeforeDestruction;
+end;
+
 { TTextBit }
 
 function TTextBit.AsText: TCustomLabel;
@@ -533,20 +568,30 @@ end;
 
 procedure TEditBit.SetPSTextChannel(AValue: IPSTextChannel);
 begin
-  if fPSTextChannel <> nil then
-  begin
-    fCMTextChanged.Unbind;
-    fCMTextChanged.Unsubscribe(CMTextChangedObserver);
-    fCMTextChanged := nil;
-    fPSTextChannel.Unsubscribe(PSTextChannelObserver);
-  end;
+  PSTextChannelDisconnect;
   fPSTextChannel := AValue;
+  PSTextChannelConnect;
+end;
+
+procedure TEditBit.PSTextChannelConnect;
+begin
   if fPSTextChannel <> nil then
   begin
     fCMTextChanged := NewMessageObservable(CM_TEXTCHANGED);
     fCMTextChanged.Bind(AsEdit);
     fCMTextChanged.Subscribe(CMTextChangedObserver);
     fPSTextChannel.Subscribe(PSTextChannelObserver);
+  end;
+end;
+
+procedure TEditBit.PSTextChannelDisconnect;
+begin
+  if fPSTextChannel <> nil then
+  begin
+    fCMTextChanged.Unbind;
+    fCMTextChanged.Unsubscribe(CMTextChangedObserver);
+    fCMTextChanged := nil;
+    fPSTextChannel.Unsubscribe(PSTextChannelObserver);
   end;
 end;
 
@@ -562,20 +607,30 @@ end;
 
 procedure TEditBit.SetPSKeyDownChannel(AValue: IPSKeyChannel);
 begin
-  if fPSKeyDownChannel <> nil then
-  begin
-    fCNKeyDown.Unbind;
-    fCNKeyDown.Unsubscribe(CNKeyDownObserver);
-    fCNKeyDown := nil;
-    fPSKeyDownChannel.Unsubscribe(PSKeyDownChannelObserver);
-  end;
+  PSKeyDownChannelDisconnect;
   fPSKeyDownChannel := AValue;
+  PSKeyDownChannelConnect;
+end;
+
+procedure TEditBit.PSKeyDownChannelConnect;
+begin
   if fPSKeyDownChannel <> nil then
   begin
     fCNKeyDown := NewMessageObservable(CN_KeyDown);
     fCNKeyDown.Bind(AsEdit);
     fCNKeyDown.Subscribe(CNKeyDownObserver);
     fPSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
+  end;
+end;
+
+procedure TEditBit.PSKeyDownChannelDisconnect;
+begin
+  if fPSKeyDownChannel <> nil then
+  begin
+    fCNKeyDown.Unbind;
+    fCNKeyDown.Unsubscribe(CNKeyDownObserver);
+    fCNKeyDown := nil;
+    fPSKeyDownChannel.Unsubscribe(PSKeyDownChannelObserver);
   end;
 end;
 
@@ -639,6 +694,13 @@ begin
   inherited AfterConstruction;
 end;
 
+procedure TEditBit.BeforeDestruction;
+begin
+  PSTextChannelDisconnect;
+  PSKeyDownChannelDisconnect;
+  inherited BeforeDestruction;
+end;
+
 { TFormBit }
 
 procedure TFormBit.LMCloseQueryObserver(AMessage: TLMessage);
@@ -653,20 +715,30 @@ end;
 
 procedure TFormBit.SetPSCloseChannel(AValue: IPSCloseChannel);
 begin
-  if fPSCloseChannel <> nil then
-  begin
-    fLMCloseQuery.Unbind;
-    fLMCloseQuery.Unsubscribe(LMCloseQueryObserver);
-    fLMCloseQuery := nil;
-    fPSCloseChannel.Unsubscribe(PSCloseChannelObserver);
-  end;
+  PSCloseChannelDisconnect;
   fPSCloseChannel := AValue;
+  PSCloseChannelConnect;
+end;
+
+procedure TFormBit.PSCloseChannelConnect;
+begin
   if fPSCloseChannel <> nil then
   begin
     fLMCloseQuery := NewMessageObservable(LM_CLOSEQUERY);
     fLMCloseQuery.Bind(AsForm);
     fLMCloseQuery.Subscribe(LMCloseQueryObserver);
     fPSCloseChannel.Subscribe(PSCloseChannelObserver);
+  end;
+end;
+
+procedure TFormBit.PSCloseChannelDisconnect;
+begin
+  if fPSCloseChannel <> nil then
+  begin
+    fLMCloseQuery.Unbind;
+    fLMCloseQuery.Unsubscribe(LMCloseQueryObserver);
+    fLMCloseQuery := nil;
+    fPSCloseChannel.Unsubscribe(PSCloseChannelObserver);
   end;
 end;
 
@@ -691,20 +763,30 @@ end;
 
 procedure TFormBit.SetPSSizeChannel(AValue: IPSSizeChannel);
 begin
-  if fPSSizeChannel <> nil then
-  begin
-    fLMSize.Unbind;
-    fLMSize.Unsubscribe(LMSizeObserver);
-    fLMSize := nil;
-    fPSSizeChannel.Unsubscribe(PSSizeChannelObserver);
-  end;
+  PSSizeChannelDisonnect;
   fPSSizeChannel := AValue;
+  PSSizeChannelConnect;
+end;
+
+procedure TFormBit.PSSizeChannelConnect;
+begin
   if fPSSizeChannel <> nil then
   begin
     fLMSize := NewMessageObservable(LM_SIZE);
     fLMSize.Bind(AsForm);
     fLMSize.Subscribe(LMSizeObserver);
     fPSSizeChannel.Subscribe(PSSizeChannelObserver);
+  end;
+end;
+
+procedure TFormBit.PSSizeChannelDisonnect;
+begin
+  if fPSSizeChannel <> nil then
+  begin
+    fLMSize.Unbind;
+    fLMSize.Unsubscribe(LMSizeObserver);
+    fLMSize := nil;
+    fPSSizeChannel.Unsubscribe(PSSizeChannelObserver);
   end;
 end;
 
@@ -729,20 +811,30 @@ end;
 
 procedure TFormBit.SetPSPositionChannel(AValue: IPSPositionChannel);
 begin
-  if fPSPositionChannel <> nil then
-  begin
-    fLMMove.Unbind;
-    fLMMove.Unsubscribe(LMMoveObserver);
-    fLMMove := nil;
-    fPSPositionChannel.Unsubscribe(PSPositionChannelObserver);
-  end;
+  PSPositionChannelDisconnect;
   fPSPositionChannel := AValue;
+  PSPositionChannelConnect;
+end;
+
+procedure TFormBit.PSPositionChannelConnect;
+begin
   if fPSPositionChannel <> nil then
   begin
     fLMMove := NewMessageObservable(LM_MOVE);
     fLMMove.Bind(AsForm);
     fLMMove.Subscribe(LMMoveObserver);
     fPSPositionChannel.Subscribe(PSPositionChannelObserver);
+  end;
+end;
+
+procedure TFormBit.PSPositionChannelDisconnect;
+begin
+  if fPSPositionChannel <> nil then
+  begin
+    fLMMove.Unbind;
+    fLMMove.Unsubscribe(LMMoveObserver);
+    fLMMove := nil;
+    fPSPositionChannel.Unsubscribe(PSPositionChannelObserver);
   end;
 end;
 
@@ -758,20 +850,30 @@ end;
 
 procedure TFormBit.SetPSActivateChannel(AValue: IPSActivateChannel);
 begin
-  if fPSActivateChannel <> nil then
-  begin
-    fLMActivate.Unbind;
-    fLMActivate.Unsubscribe(LMActivateObserver);
-    fLMActivate := nil;
-    fPSActivateChannel.Unsubscribe(PSActivateChannelObserver);
-  end;
+  PSActivateChannelDisconnect;
   fPSActivateChannel := AValue;
+  PSActivateChannelConnect;
+end;
+
+procedure TFormBit.PSActivateChannelConnect;
+begin
   if fPSActivateChannel <> nil then
   begin
     fLMActivate := NewMessageObservable(LM_ACTIVATE);
     fLMActivate.Bind(AsForm);
     fLMActivate.Subscribe(LMActivateObserver);
     fPSActivateChannel.Subscribe(PSActivateChannelObserver);
+  end;
+end;
+
+procedure TFormBit.PSActivateChannelDisconnect;
+begin
+  if fPSActivateChannel <> nil then
+  begin
+    fLMActivate.Unbind;
+    fLMActivate.Unsubscribe(LMActivateObserver);
+    fLMActivate := nil;
+    fPSActivateChannel.Unsubscribe(PSActivateChannelObserver);
   end;
 end;
 
@@ -848,6 +950,15 @@ begin
   if fLMCloseQuery <> nil then
     fLMCloseQuery.Enabled := False;
   inherited DisableNotifiers;
+end;
+
+procedure TFormBit.BeforeDestruction;
+begin
+  PSCloseChannelDisconnect;
+  PSSizeChannelDisonnect;
+  PSPositionChannelDisconnect;
+  PSActivateChannelDisconnect;
+  inherited BeforeDestruction;
 end;
 
 { TBit }

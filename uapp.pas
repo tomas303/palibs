@@ -82,7 +82,7 @@ begin
   fForm := Factory2.Locate<IDesignComponentForm>(NewProps
     .SetIntf('PSGUIChannel', fPSGUIChannel)
     .SetStr(cProps.Caption, 'Demo app')
-    .SetInt(cProps.Color, clGreen)
+    .SetInt(cProps.Color, clSilver)
     );
 
   fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
