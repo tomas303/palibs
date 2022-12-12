@@ -2,6 +2,7 @@ unit trl_pubsub;
 
 {$mode delphi}{$H+}
 {$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
@@ -14,6 +15,9 @@ type
 
   TPubSubChannelCallback = procedure of object;
   TPubSubChannelDataCallback<T> = procedure(const AData: T) of object;
+
+  TPubSubDataConversion<T, S> = reference to function(const AData: T): S;
+  TPubSubNewData<T> = reference to function: T;
 
   IPubSubChannel = interface
   ['{F5B8029B-095E-4E87-A621-C6C96D8177DE}']
@@ -37,6 +41,10 @@ type
     procedure PublishDebounced;
   end;
 
+  IPubSubBridge = interface
+  ['{DAE9973A-F201-4AFC-A79B-47569F273B59}']
+  end;
+
   TPubSub = class;
 
   IPubSub = interface
@@ -53,6 +61,7 @@ type
   strict private
     fEvents: TFPGInterfacedObjectList<IPubSubChannelExec>;
     fChannels: TFPGInterfacedObjectList<IPubSubChannelExec>;
+    fBridges: TFPGInterfacedObjectList<IPubSubBridge>;
     procedure EventPublished(const AChannel: IPubSubChannelExec);
     procedure ExecEvent;
     procedure PublishDebounced;
@@ -63,6 +72,24 @@ type
     procedure BeforeDestruction; override;
     function NewChannel: IPubSubChannel;
     function NewDataChannel<T>: IPubSubDataChannel<T>;
+    procedure NewDataBridge<T, S>(
+      const AInChannel: IPubSubDataChannel<T>;
+      const AOutChannel: IPubSubDataChannel<S>;
+      AConversion: TPubSubDataConversion<T, S>);
+    procedure NewDuplexDataBridge<T, S>(
+      const AInChannel: IPubSubDataChannel<T>;
+      const AOutChannel: IPubSubDataChannel<S>;
+      AInToOutConversion: TPubSubDataConversion<T, S>;
+      AOutToInConversion: TPubSubDataConversion<S, T>);
+    procedure NewBridge(const AInChannel, AOutChannel: IPubSubChannel);
+    procedure NewDuplexBridge(const AInChannel, AOutChannel: IPubSubChannel);
+    procedure NewNonDataToDataBridge<T>(
+      const AInChannel: IPubSubChannel;
+      const AOutChannel: IPubSubDataChannel<T>;
+      ANewData: TPubSubNewData<T>);
+    procedure NewDataToNonDataBridge<T>(
+      const AInChannel: IPubSubDataChannel<T>;
+      const AOutChannel: IPubSubChannel);
   protected
     fLog: ILog;
   published
@@ -112,6 +139,62 @@ type
     constructor Create(const APublishedCallback: TPubSubEventPublishedCallback);
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
+  end;
+
+  { TPubSubDataBridge }
+
+  TPubSubDataBridge<T, S> = class(TInterfacedObject, IPubSubBridge)
+  private
+    fInChannel: IPubSubDataChannel<T>;
+    fOutChannel: IPubSubDataChannel<S>;
+    fConversion: TPubSubDataConversion<T, S>;
+    procedure InObserver(const AData: T);
+  public
+    constructor Create(const AInChannel: IPubSubDataChannel<T>; const AOutChannel: IPubSubDataChannel<S>;
+      AConversion: TPubSubDataConversion<T, S>);
+    destructor Destroy; override;
+  end;
+
+  { TPubSubBridge }
+
+  TPubSubBridge = class(TInterfacedObject, IPubSubBridge)
+  private
+    fInChannel: IPubSubChannel;
+    fOutChannel: IPubSubChannel;
+    procedure InObserver;
+  public
+    constructor Create(const AInChannel: IPubSubChannel; const AOutChannel: IPubSubChannel);
+    destructor Destroy; override;
+  end;
+
+  { TPubSubNonDataToDataBridge }
+
+  TPubSubNonDataToDataBridge<T> = class(TInterfacedObject, IPubSubBridge)
+  private
+    fInChannel: IPubSubChannel;
+    fOutChannel: IPubSubDataChannel<T>;
+    fNewData: TPubSubNewData<T>;
+    procedure InObserver;
+  public
+    constructor Create(
+      const AInChannel: IPubSubChannel;
+      const AOutChannel: IPubSubDataChannel<T>;
+      ANewData: TPubSubNewData<T>);
+    destructor Destroy; override;
+  end;
+
+  { TPubSubDataToNonDataBridge }
+
+  TPubSubDataToNonDataBridge<T> = class(TInterfacedObject, IPubSubBridge)
+  private
+    fInChannel: IPubSubDataChannel<T>;
+    fOutChannel: IPubSubChannel;
+    procedure InObserver(const AData: T);
+  public
+    constructor Create(
+      const AInChannel: IPubSubDataChannel<T>;
+      const AOutChannel: IPubSubChannel);
+    destructor Destroy; override;
   end;
 
 implementation
@@ -184,6 +267,103 @@ begin
   FreeAndNil(fObservers);
   FreeAndNil(fDebouncer);
   inherited BeforeDestruction;
+end;
+
+{ TPubSubDataBridge }
+
+procedure TPubSubDataBridge<T, S>.InObserver(const AData: T);
+var
+  mData: S;
+begin
+  mData := fConversion(AData);
+  fOutChannel.Publish(mData);
+end;
+
+constructor TPubSubDataBridge<T, S>.Create(
+  const AInChannel: IPubSubDataChannel<T>;
+  const AOutChannel: IPubSubDataChannel<S>;
+  AConversion: TPubSubDataConversion<T, S>);
+begin
+  fInChannel := AInChannel;
+  fOutChannel := AOutChannel;
+  fConversion := AConversion;
+  fInChannel.Subscribe(InObserver);
+end;
+
+destructor TPubSubDataBridge<T, S>.Destroy;
+begin
+  fInChannel.Unsubscribe(InObserver);
+  inherited Destroy;
+end;
+
+{ TPubSubNonDataToDataBridge }
+
+procedure TPubSubNonDataToDataBridge<T>.InObserver;
+begin
+  fOutChannel.Publish(fNewData);
+end;
+
+constructor TPubSubNonDataToDataBridge<T>.Create(
+  const AInChannel: IPubSubChannel;
+  const AOutChannel: IPubSubDataChannel<T>;
+  ANewData: TPubSubNewData<T>);
+begin
+  inherited Create;
+  fInChannel := AInChannel;
+  fOutChannel := AOutChannel;
+  fNewData := ANewData;
+  fInChannel.Subscribe(InObserver);
+end;
+
+destructor TPubSubNonDataToDataBridge<T>.Destroy;
+begin
+  fInChannel.Unsubscribe(InObserver);
+  inherited Destroy;
+end;
+
+{ TPubSubDataToNonDataBridge }
+
+procedure TPubSubDataToNonDataBridge<T>.InObserver(const AData: T);
+begin
+  fOutChannel.Publish;
+end;
+
+constructor TPubSubDataToNonDataBridge<T>.Create(
+  const AInChannel: IPubSubDataChannel<T>;
+  const AOutChannel: IPubSubChannel);
+begin
+  inherited Create;
+  fInChannel := AInChannel;
+  fOutChannel := AOutChannel;
+  fInChannel.Subscribe(InObserver);
+end;
+
+destructor TPubSubDataToNonDataBridge<T>.Destroy;
+begin
+  fInChannel.Unsubscribe(InObserver);
+  inherited Destroy;
+end;
+
+{ TPubSubBridge }
+
+procedure TPubSubBridge.InObserver;
+begin
+  fOutChannel.Publish;
+end;
+
+constructor TPubSubBridge.Create(
+  const AInChannel: IPubSubChannel;
+  const AOutChannel: IPubSubChannel);
+begin
+  fInChannel := AInChannel;
+  fOutChannel := AOutChannel;
+  fInChannel.Subscribe(InObserver);
+end;
+
+destructor TPubSubBridge.Destroy;
+begin
+  fInChannel.Unsubscribe(InObserver);
+  inherited Destroy;
 end;
 
 { TPubSubChannel }
@@ -263,6 +443,47 @@ begin
   fChannels.Add(Result as IPubSubChannelExec);
 end;
 
+procedure TPubSub.NewDuplexDataBridge<T, S>(
+  const AInChannel: IPubSubDataChannel<T>;
+  const AOutChannel: IPubSubDataChannel<S>;
+  AInToOutConversion: TPubSubDataConversion<T, S>;
+  AOutToInConversion: TPubSubDataConversion<S, T>);
+begin
+  NewDataBridge<T, S>(AInChannel, AOutChannel, AInToOutConversion);
+  NewDataBridge<S, T>(AOutChannel, AInChannel, AOutToInConversion);
+end;
+
+procedure TPubSub.NewDataBridge<T, S>(
+  const AInChannel: IPubSubDataChannel<T>;
+  const AOutChannel: IPubSubDataChannel<S>;
+  AConversion: TPubSubDataConversion<T, S>);
+begin
+  fBridges.Add(TPubSubDataBridge<T, S>.Create(AInChannel, AOutChannel, AConversion));
+end;
+
+procedure TPubSub.NewBridge(const AInChannel, AOutChannel: IPubSubChannel);
+begin
+  fBridges.Add(TPubSubBridge.Create(AInChannel, AOutChannel));
+end;
+
+procedure TPubSub.NewDuplexBridge(const AInChannel, AOutChannel: IPubSubChannel);
+begin
+  NewBridge(AInChannel, AOutChannel);
+  NewBridge(AOutChannel, AInChannel)
+end;
+
+procedure TPubSub.NewNonDataToDataBridge<T>(const AInChannel: IPubSubChannel;
+  const AOutChannel: IPubSubDataChannel<T>; ANewData: TPubSubNewData<T>);
+begin
+  fBridges.Add(TPubSubNonDataToDataBridge<T>.Create(AInChannel, AOutChannel, ANewData));
+end;
+
+procedure TPubSub.NewDataToNonDataBridge<T>(const AInChannel: IPubSubDataChannel
+  <T>; const AOutChannel: IPubSubChannel);
+begin
+  fBridges.Add(TPubSubDataToNonDataBridge<T>.Create(AInChannel, AOutChannel));
+end;
+
 procedure TPubSub.ExecEvent;
 var
   chExec: IPubSubChannelExec;
@@ -306,10 +527,12 @@ begin
   inherited AfterConstruction;
   fChannels := TFPGInterfacedObjectList<IPubSubChannelExec>.Create;
   fEvents := TFPGInterfacedObjectList<IPubSubChannelExec>.Create;
+  fBridges := TFPGInterfacedObjectList<IPubSubBridge>.Create;
 end;
 
 procedure TPubSub.BeforeDestruction;
 begin
+  FreeAndNil(fBridges);
   FreeAndNil(fEvents);
   FreeAndNil(fChannels);
   inherited BeforeDestruction;

@@ -2,6 +2,7 @@ unit uapp;
 
 {$mode delphi}{$H+}
 {$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
@@ -73,7 +74,68 @@ type
     property Surename: String read fSurename write fSurename;
   end;
 
+  //TPSDataConversion<T, S> = reference to procedure(const AInChannel: IPubSubDataChannel<T>; const AOutChannel: IPubSubDataChannel<S>);
+  TPSDataConversion<T, S> = reference to function(const AData: T): S;
+
+  { TPSBridge }
+
+  TPSBridge<T, S> = class(TObject)
+  private
+    fInChannel: IPubSubDataChannel<T>;
+    fOutChannel: IPubSubDataChannel<S>;
+    fCallInOut: TPSDataConversion<T, S>;
+    fCallOutIn: TPSDataConversion<S, T>;
+    procedure InObserver(const AData: T);
+    procedure OutObserver(const AData: S);
+  public
+    constructor Create(const AInChannel: IPubSubDataChannel<T>; const AOutChannel: IPubSubDataChannel<S>;
+      ACallInOut: TPSDataConversion<T, S>; ACallOutIn: TPSDataConversion<S, T>);
+    destructor Destroy; override;
+  end;
+
+
+  //TPSBridge<T> = class(TObject)
+
 implementation
+
+{ TPSBridge }
+
+procedure TPSBridge<T, S>.InObserver(const AData: T);
+var
+  mData: S;
+begin
+  if Assigned(fCallInOut) then begin
+    mData := fCallInOut(AData);
+    fOutChannel.Publish(mData);
+  end;
+end;
+
+procedure TPSBridge<T, S>.OutObserver(const AData: S);
+var
+  mData: T;
+begin
+  if Assigned(fCallOutIn) then begin
+    mData := fCallOutIn(AData);
+    fInChannel.Publish(mData);
+  end;
+end;
+
+constructor TPSBridge<T, S>.Create(const AInChannel: IPubSubDataChannel<T>;
+  const AOutChannel: IPubSubDataChannel<S>; ACallInOut: TPSDataConversion<T, S>; ACallOutIn: TPSDataConversion<S, T>);
+begin
+  inherited Create;
+  fInChannel := AInChannel;
+  fOutChannel := AOutChannel;
+  fCallInOut := ACallInOut;
+  fCallOutIn := ACallOutIn;
+  fInChannel.Subscribe(InObserver);
+  fOutChannel.Subscribe(OutObserver);
+end;
+
+destructor TPSBridge<T, S>.Destroy;
+begin
+  inherited Destroy;
+end;
 
 { TGUI }
 
@@ -125,8 +187,8 @@ begin
   (fS1 as INode).AddChild(fGrid as INode);
   fS2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
   (fS2 as INode).AddChild(fEditName as INode);
+  (fS2 as INode).AddChild(fEditSurename as INode);
   fS3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
-  (fS3 as INode).AddChild(fEditSurename as INode);
 
   (fPager as INode).AddChild(fS1 as INode);
   (fPager as INode).AddChild(fS2 as INode);
@@ -184,6 +246,7 @@ end;
 procedure TGUI.InitValues;
 var
   mList: IPersistRefList;
+  mBrNameSurenam: TPSBridge<String, String>;
 begin
   inherited InitValues;
 
@@ -219,6 +282,25 @@ begin
 
   fEditName.PSTextChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
   fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
+
+  {
+  mBrNameSurenam := TPSBridge<String, String>.Create(fEditName.PSTextChannel, fEditSurename.PSTextChannel,
+    function (const AData: String): String
+    begin
+      Result := '!' + AData + '!';
+    end,
+    nil
+  );
+  }
+
+  PubSub.Factory.NewDataBridge<String, String>(
+    fEditName.PSTextChannel,
+    fEditSurename.PSTextChannel,
+    function (const AData: String): String
+    begin
+      Result := '!' + AData + '!';
+    end);
+
  end;
 
 { TApp }
