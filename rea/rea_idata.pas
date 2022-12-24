@@ -6,7 +6,7 @@ unit rea_idata;
 interface
 
 uses
-  trl_pubsub;
+  trl_pubsub, rea_ibits;
 
 type
 
@@ -62,6 +62,7 @@ type
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
+    procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
   end;
 
 implementation

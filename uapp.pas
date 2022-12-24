@@ -124,6 +124,7 @@ type
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
+    procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
   public
     constructor Create(const APubSub: IPubSub; const AStore: IPersistStore; const AList: IPersistRefList;
       const APSGUIChannel: IPSGUIChannel);
@@ -224,6 +225,25 @@ end;
 function TStoreDataConnector.PSCommandDataChannel: IPSCommandDataChannel;
 begin
   Result := fPSCommandDataChannel;
+end;
+
+procedure TStoreDataConnector.RegisterField(const AName: String;
+  const AFieldChannel: IPSTextChannel);
+begin
+  fPubSub.Factory.NewDataBridge<String, TFieldData>(
+    AFieldChannel,
+    PSFieldDataChannel,
+    function (const AData: String): TFieldData
+    begin
+      Result := TFieldData.Create(AName, AData);
+    end);
+  fPubSub.Factory.NewDataBridge<TRecordData, String>(
+   PSRecordDataChannel,
+   AFieldChannel,
+   function (const AData: TRecordData): String
+   begin
+     Result := AData.Accessor[AName];
+   end);
 end;
 
 constructor TStoreDataConnector.Create(const APubSub: IPubSub;
@@ -482,37 +502,8 @@ begin
    }
 
    fDataConnector := TStoreDataConnector.Create(PubSub, Store, GetPersons, fPSGUIChannel);
-
-   PubSub.Factory.NewDataBridge<String, TFieldData>(
-     fEditName.PSTextChannel,
-     fDataConnector.PSFieldDataChannel,
-     function (const AData: String): TFieldData
-     begin
-       Result := TFieldData.Create('Name', AData);
-     end);
-   PubSub.Factory.NewDataBridge<TRecordData, String>(
-       fDataConnector.PSRecordDataChannel,
-       fEditName.PSTextChannel,
-       function (const AData: TRecordData): String
-       begin
-         Result := AData.Accessor['Name'];
-       end);
-
-   PubSub.Factory.NewDataBridge<String, TFieldData>(
-     fEditSurename.PSTextChannel,
-     fDataConnector.PSFieldDataChannel,
-     function (const AData: String): TFieldData
-     begin
-       Result := TFieldData.Create('Surename', AData);
-     end);
-   PubSub.Factory.NewDataBridge<TRecordData, String>(
-    fDataConnector.PSRecordDataChannel,
-    fEditSurename.PSTextChannel,
-    function (const AData: TRecordData): String
-    begin
-      Result := AData.Accessor['Surename'];
-    end);
-
+   fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
+   fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
 
 
    PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
