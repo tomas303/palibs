@@ -2,6 +2,8 @@ unit rea_idata;
 
 {$mode delphi}{$H+}
 {$modeswitch advancedrecords}
+{$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
@@ -63,6 +65,7 @@ type
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
+    procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
   end;
 
 implementation

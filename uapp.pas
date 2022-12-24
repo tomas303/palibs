@@ -125,6 +125,7 @@ type
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
+    procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
   public
     constructor Create(const APubSub: IPubSub; const AStore: IPersistStore; const AList: IPersistRefList;
       const APSGUIChannel: IPSGUIChannel);
@@ -244,6 +245,18 @@ begin
    begin
      Result := AData.Accessor[AName];
    end);
+end;
+
+procedure TStoreDataConnector.RegisterCommand(const AChannel: IPubSubChannel;
+  const AData: TCommandData);
+begin
+  fPubSub.Factory.NewNonDataToDataBridge<TCommandData>(
+    AChannel,
+    PSCommandDataChannel,
+    function: TCommandData
+    begin
+      Result := AData
+    end);
 end;
 
 constructor TStoreDataConnector.Create(const APubSub: IPubSub;
@@ -491,49 +504,15 @@ begin
   fEditName.PSTextChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
   fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
 
-  {
-  PubSub.Factory.NewDataBridge<String, String>(
-    fEditName.PSTextChannel,
-    fEditSurename.PSTextChannel,
-    function (const AData: String): String
-    begin
-      Result := '!' + AData + '!';
-    end);
-   }
+  fDataConnector := TStoreDataConnector.Create(PubSub, Store, GetPersons, fPSGUIChannel);
+  fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
+  fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
 
-   fDataConnector := TStoreDataConnector.Create(PubSub, Store, GetPersons, fPSGUIChannel);
-   fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
-   fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
+  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommandData.Create(cdaFirst));
+  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommandData.Create(cdaLast));
+  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommandData.Create(cdaNext));
+  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommandData.Create(cdaPrior));
 
-
-   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
-     fFirst.PSClickChannel,
-     fDataConnector.PSCommandDataChannel,
-     function: TCommandData
-     begin
-       Result := TCommandData.Create(cdaFirst);
-     end);
-   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
-     fLast.PSClickChannel,
-     fDataConnector.PSCommandDataChannel,
-     function: TCommandData
-     begin
-       Result := TCommandData.Create(cdaLast);
-     end);
-   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
-     fNext.PSClickChannel,
-     fDataConnector.PSCommandDataChannel,
-     function: TCommandData
-     begin
-       Result := TCommandData.Create(cdaNext);
-     end);
-   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
-     fPrior.PSClickChannel,
-     fDataConnector.PSCommandDataChannel,
-     function: TCommandData
-     begin
-       Result := TCommandData.Create(cdaPrior);
-     end);
  end;
 
 { TApp }
