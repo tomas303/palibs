@@ -8,12 +8,13 @@ interface
 
 uses
   graphics, tal_uapp,
-  rea_idesigncomponent, rea_udesigncomponent,
+  rea_idesigncomponent, rea_udesigncomponent, rea_ilayout,
   trl_imetaelement, trl_iprops, trl_dicontainer, trl_itree,
   trl_pubsub, rea_ibits, trl_ilauncher,
   trl_urttibroker, trl_irttibroker,
   trl_upersiststore, trl_ipersist,
-  trl_upersistxml;
+  trl_upersistxml,
+  rea_idata;
 
 type
   { TApp }
@@ -30,11 +31,15 @@ type
   TGUI = class(TDesignComponent, IDesignComponentApp)
   private
     fForm: IDesignComponentForm;
-    fEditName, fEditSurename: IDesignComponentEdit;
     fS1, fS2, fS3: IDesignComponent;
     fPager: IDesignComponent;
     fGrid: IDesignComponentGrid;
+    fDataConnector: IDataConnector;
+    fSPersons, fSData, fSCommands: IDesignComponentStrip;
+    fEditName, fEditSurename: IDesignComponentEdit;
+    fNext, fPrior, fFirst, fLast: IDesignComponentButton;
     procedure CreateComponents;
+    function GetPersons: IPersistRefList;
   private
     fAppSettings: IRBData;
     fPSGUIChannel: IPSGUIChannel;
@@ -74,67 +79,142 @@ type
     property Surename: String read fSurename write fSurename;
   end;
 
-  //TPSDataConversion<T, S> = reference to procedure(const AInChannel: IPubSubDataChannel<T>; const AOutChannel: IPubSubDataChannel<S>);
-  TPSDataConversion<T, S> = reference to function(const AData: T): S;
 
-  { TPSBridge }
+  { TPerson }
 
-  TPSBridge<T, S> = class(TObject)
+  TPerson = class
   private
-    fInChannel: IPubSubDataChannel<T>;
-    fOutChannel: IPubSubDataChannel<S>;
-    fCallInOut: TPSDataConversion<T, S>;
-    fCallOutIn: TPSDataConversion<S, T>;
-    procedure InObserver(const AData: T);
-    procedure OutObserver(const AData: S);
-  public
-    constructor Create(const AInChannel: IPubSubDataChannel<T>; const AOutChannel: IPubSubDataChannel<S>;
-      ACallInOut: TPSDataConversion<T, S>; ACallOutIn: TPSDataConversion<S, T>);
-    destructor Destroy; override;
+    fName: String;
+    fSurename: String;
+  published
+    property Name: String read fName write fName;
+    property Surename: String read fSurename write fSurename;
   end;
 
+  { TStoreDataConnector }
 
-  //TPSBridge<T> = class(TObject)
+  TStoreDataConnector =  class(TInterfacedObject, IDataConnector)
+  private
+    procedure PublishData;
+  private
+    fActualData: IRBData;
+    fActualIndex: integer;
+    fList: IPersistRefList;
+    fStore: IPersistStore;
+    fPubSub: IPubSub;
+    fPSFieldDataChannel: IPSFieldDataChannel;
+    fPSCommandDataChannel: IPSCommandDataChannel;
+    fPSGUIChannel: IPSGUIChannel;
+    procedure PSFieldDataChannelObserver(const AData: TFieldData);
+    procedure PSCommandDataChannelObserver(const AData: TCommandData);
+  protected
+    function PSFieldDataChannel: IPSFieldDataChannel;
+    function PSCommandDataChannel: IPSCommandDataChannel;
+  public
+    constructor Create(const APubSub: IPubSub; const AStore: IPersistStore; const AList: IPersistRefList;
+      const APSGUIChannel: IPSGUIChannel);
+    procedure BeforeDestruction; override;
+  end;
 
 implementation
 
-{ TPSBridge }
+{ TStoreDataConnector }
 
-procedure TPSBridge<T, S>.InObserver(const AData: T);
+procedure TStoreDataConnector.PublishData;
 var
-  mData: S;
+  i: integer;
 begin
-  if Assigned(fCallInOut) then begin
-    mData := fCallInOut(AData);
-    fOutChannel.Publish(mData);
+  if fActualData = nil then
+    Exit;
+  for i := 0 to fActualData.Count - 1 do begin
+    fPSFieldDataChannel.Publish(TFieldData.Create(
+      fActualData.Items[i].Name,
+      fActualData.Items[i].AsString
+    ));
   end;
 end;
 
-procedure TPSBridge<T, S>.OutObserver(const AData: S);
-var
-  mData: T;
+procedure TStoreDataConnector.PSFieldDataChannelObserver(const AData: TFieldData
+  );
 begin
-  if Assigned(fCallOutIn) then begin
-    mData := fCallOutIn(AData);
-    fInChannel.Publish(mData);
+  if fActualData = nil then
+    Exit;
+  fActualData.ItemByName[AData.Name].AsString := AData.Value;
+  fStore.Save(fActualData);
+end;
+
+procedure TStoreDataConnector.PSCommandDataChannelObserver(
+  const AData: TCommandData);
+begin
+  case AData.Action of
+    cdaNext:
+      begin
+        if fActualIndex < fList.Count -1 then begin
+          inc(fActualIndex);
+          fActualData := fList.Data[fActualIndex];
+          PublishData;
+        end;
+      end;
+    cdaPrior:
+      begin
+        if fActualIndex > 0 then begin
+          dec(fActualIndex);
+          fActualData := fList.Data[fActualIndex];
+          PublishData;
+        end;
+      end;
+    cdaFirst:
+      begin
+        if fList.Count > 0 then begin
+          fActualIndex := 0;
+          fActualData := fList.Data[fActualIndex];
+          PublishData;
+        end;
+      end;
+    cdaLast:
+      begin
+        if fList.Count > 0 then begin
+          fActualIndex := fList.Count - 1;
+          fActualData := fList.Data[fActualIndex];
+          PublishData;
+        end;
+      end;
   end;
 end;
 
-constructor TPSBridge<T, S>.Create(const AInChannel: IPubSubDataChannel<T>;
-  const AOutChannel: IPubSubDataChannel<S>; ACallInOut: TPSDataConversion<T, S>; ACallOutIn: TPSDataConversion<S, T>);
+function TStoreDataConnector.PSFieldDataChannel: IPSFieldDataChannel;
 begin
-  inherited Create;
-  fInChannel := AInChannel;
-  fOutChannel := AOutChannel;
-  fCallInOut := ACallInOut;
-  fCallOutIn := ACallOutIn;
-  fInChannel.Subscribe(InObserver);
-  fOutChannel.Subscribe(OutObserver);
+  Result := fPSFieldDataChannel;
 end;
 
-destructor TPSBridge<T, S>.Destroy;
+function TStoreDataConnector.PSCommandDataChannel: IPSCommandDataChannel;
 begin
-  inherited Destroy;
+  Result := fPSCommandDataChannel;
+end;
+
+constructor TStoreDataConnector.Create(const APubSub: IPubSub;
+  const AStore: IPersistStore;
+  const AList: IPersistRefList;
+  const APSGUIChannel: IPSGUIChannel);
+begin
+  fPubSub := APubSub;
+  fStore := AStore;
+  fList := AList;
+  fPSGUIChannel := APSGUIChannel;
+  fPSFieldDataChannel := fPubSub.Factory.NewDataChannel<TFieldData>;
+  fPSFieldDataChannel.Subscribe(PSFieldDataChannelObserver);
+  fPSCommandDataChannel := fPubSub.Factory.NewDataChannel<TCommandData>;
+  fPSCommandDataChannel.Subscribe(PSCommandDataChannelObserver);
+  if fList.Count > 0 then
+    fActualData := fList.Data[0];
+  PublishData;
+end;
+
+procedure TStoreDataConnector.BeforeDestruction;
+begin
+  fPSFieldDataChannel.Unsubscribe(PSFieldDataChannelObserver);
+  fPSCommandDataChannel.Unsubscribe(PSCommandDataChannelObserver);
+  inherited BeforeDestruction;
 end;
 
 { TGUI }
@@ -142,25 +222,72 @@ end;
 procedure TGUI.CreateComponents;
 begin
   fForm := Factory2.Locate<IDesignComponentForm>(NewProps
+    .SetStr(cProps.ID, 'mainform')
     .SetIntf('PSGUIChannel', fPSGUIChannel)
     .SetStr(cProps.Caption, 'Demo app')
     .SetInt(cProps.Color, clSilver)
     );
 
   fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
+    .SetStr(cProps.ID, 'name')
     .SetInt(cProps.Color, clAqua)
     .SetInt(cProps.MMWidth, 50)
+    .SetInt(cProps.MMHeight, 50)
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
     );
   fEditSurename := Factory2.Locate<IDesignComponentEdit>(NewProps
+    .SetStr(cProps.ID, 'surename')
     .SetInt(cProps.Color, clSkyBlue)
     .SetInt(cProps.MMWidth, 50)
+    .SetInt(cProps.MMHeight, 50)
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
     );
-  //(fForm as INode).AddChild(fEditName as INode);
-  //(fForm as INode).AddChild(fEditSurename as INode);
+
+  fSPersons := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Vertical)
+    //.SetInt(cProps.MMWidth, 50)
+    //.SetInt(cProps.MMHeight, 50)
+    .SetBool('Transparent', True));
+  fSData := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Vertical)
+    //.SetInt(cProps.MMWidth, 50)
+    //.SetInt(cProps.MMHeight, 60)
+    .SetBool('Transparent', True));
+  fSCommands := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Horizontal)
+    //.SetInt(cProps.MMWidth, 50)
+    //.SetInt(cProps.MMHeight, 50)
+    .SetBool('Transparent', True));
+
+  fNext := Factory2.Locate<IDesignComponentButton>(NewProps
+    .SetStr(cProps.ID, 'next')
+    .SetStr(cProps.Text, 'next'));
+  fPrior := Factory2.Locate<IDesignComponentButton>(NewProps
+    .SetStr(cProps.ID, 'prior')
+    .SetStr(cProps.Text, 'prior'));
+  fFirst := Factory2.Locate<IDesignComponentButton>(NewProps
+    .SetStr(cProps.ID, 'first')
+    .SetStr(cProps.Text, 'first'));
+  fLast := Factory2.Locate<IDesignComponentButton>(NewProps
+    .SetStr(cProps.ID, 'last')
+    .SetStr(cProps.Text, 'last'));
+
+
+  (fSData as INode).AddChild(fEditName as INode);
+  (fSData as INode).AddChild(fEditSurename as INode);
+  (fSCommands as INode).AddChild(fFirst as INode);
+  (fSCommands as INode).AddChild(fPrior as INode);
+  (fSCommands as INode).AddChild(fNext as INode);
+  (fSCommands as INode).AddChild(fLast as INode);
+
+  (fSPersons as INode).AddChild(fSData as INode);
+  (fSPersons as INode).AddChild(fSCommands as INode);
+
 
 
   fGrid := Factory2.Locate<IDesignComponentGrid>(NewProps
@@ -186,9 +313,10 @@ begin
   fS1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
   (fS1 as INode).AddChild(fGrid as INode);
   fS2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
-  (fS2 as INode).AddChild(fEditName as INode);
-  (fS2 as INode).AddChild(fEditSurename as INode);
+  //(fS2 as INode).AddChild(fEditName as INode);
+  //(fS2 as INode).AddChild(fEditSurename as INode);
   fS3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
+  (fS3 as INode).AddChild(fSPersons as INode);
 
   (fPager as INode).AddChild(fS1 as INode);
   (fPager as INode).AddChild(fS2 as INode);
@@ -196,6 +324,29 @@ begin
 
   (fForm as INode).AddChild(fPager as INode);
 
+end;
+
+function TGUI.GetPersons: IPersistRefList;
+var
+  mPerson: IRBData;
+begin
+  Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
+  if Result.Count = 0 then
+  begin
+    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    mPerson.ItemByName['Name'].AsString := 'John';
+    mPerson.ItemByName['Surename'].AsString := 'Doe';
+    Store.Save(mPerson);
+    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    mPerson.ItemByName['Name'].AsString := 'Jim';
+    mPerson.ItemByName['Surename'].AsString := 'Beam';
+    Store.Save(mPerson);
+    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    mPerson.ItemByName['Name'].AsString := 'Anthony';
+    mPerson.ItemByName['Surename'].AsString := 'Hopkins';
+    Store.Save(mPerson);
+  end;
+  Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
 end;
 
 procedure TGUI.PSNameObserver(const AValue: String);
@@ -246,7 +397,7 @@ end;
 procedure TGUI.InitValues;
 var
   mList: IPersistRefList;
-  mBrNameSurenam: TPSBridge<String, String>;
+  mListPersons: IPersistRefList;
 begin
   inherited InitValues;
 
@@ -269,6 +420,8 @@ begin
     fAppSettings := mList.Data[0];
   end;
 
+
+
   CreateComponents;
 
   fForm.PSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
@@ -284,15 +437,6 @@ begin
   fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
 
   {
-  mBrNameSurenam := TPSBridge<String, String>.Create(fEditName.PSTextChannel, fEditSurename.PSTextChannel,
-    function (const AData: String): String
-    begin
-      Result := '!' + AData + '!';
-    end,
-    nil
-  );
-  }
-
   PubSub.Factory.NewDataBridge<String, String>(
     fEditName.PSTextChannel,
     fEditSurename.PSTextChannel,
@@ -300,7 +444,65 @@ begin
     begin
       Result := '!' + AData + '!';
     end);
+   }
 
+   fDataConnector := TStoreDataConnector.Create(PubSub, Store, GetPersons, fPSGUIChannel);
+   PubSub.Factory.NewDuplexDataBridge<String, TFieldData>(
+     fEditName.PSTextChannel,
+     fDataConnector.PSFieldDataChannel,
+     function (const AData: String): TFieldData
+     begin
+       Result := TFieldData.Create('Name', AData);
+     end,
+     function (const AData: TFieldData): String
+     begin
+       if AData.Name = 'Name' then
+         Result := AData.Value
+       else
+         raise EPubSubBridgeNoWay.Create('');
+     end);
+   PubSub.Factory.NewDuplexDataBridge<String, TFieldData>(
+     fEditSurename.PSTextChannel,
+     fDataConnector.PSFieldDataChannel,
+     function (const AData: String): TFieldData
+     begin
+       Result := TFieldData.Create('Surename', AData);
+     end,
+     function (const AData: TFieldData): String
+     begin
+       if AData.Name = 'Surename' then
+         Result := AData.Value
+       else
+         raise EPubSubBridgeNoWay.Create('');
+     end);
+   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
+     fFirst.PSClickChannel,
+     fDataConnector.PSCommandDataChannel,
+     function: TCommandData
+     begin
+       Result := TCommandData.Create(cdaFirst);
+     end);
+   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
+     fLast.PSClickChannel,
+     fDataConnector.PSCommandDataChannel,
+     function: TCommandData
+     begin
+       Result := TCommandData.Create(cdaLast);
+     end);
+   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
+     fNext.PSClickChannel,
+     fDataConnector.PSCommandDataChannel,
+     function: TCommandData
+     begin
+       Result := TCommandData.Create(cdaNext);
+     end);
+   PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
+     fPrior.PSClickChannel,
+     fDataConnector.PSCommandDataChannel,
+     function: TCommandData
+     begin
+       Result := TCommandData.Create(cdaPrior);
+     end);
  end;
 
 { TApp }
@@ -322,6 +524,7 @@ begin
   mReg := DIC.Add(TPersistRefList, IPersistRefList);
   // persist data
   RegisterDataClass(DIC, TAppSettings);
+  RegisterDataClass(DIC, TPerson);
   //
   mReg := DIC.Add(TStoreCache);
   //

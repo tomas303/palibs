@@ -54,6 +54,10 @@
         <Filename Value="rea_upubsublauncher.pas"/>
         <UnitName Value="rea_upubsublauncher"/>
       </Item>
+      <Item>
+        <Filename Value="rea_idata.pas"/>
+        <UnitName Value="rea_idata"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

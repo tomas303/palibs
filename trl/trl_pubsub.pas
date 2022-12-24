@@ -12,6 +12,7 @@ uses
 type
 
   EPubSubUnhandled = class(Exception);
+  EPubSubBridgeNoWay = class(Exception);
 
   TPubSubChannelCallback = procedure of object;
   TPubSubChannelDataCallback<T> = procedure(const AData: T) of object;
@@ -300,7 +301,7 @@ end;
 
 procedure TPubSubNonDataToDataBridge<T>.InObserver;
 begin
-  fOutChannel.Publish(fNewData);
+  fOutChannel.Publish(fNewData());
 end;
 
 constructor TPubSubNonDataToDataBridge<T>.Create(
