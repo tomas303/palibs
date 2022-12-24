@@ -94,6 +94,18 @@ type
   { TStoreDataConnector }
 
   TStoreDataConnector =  class(TInterfacedObject, IDataConnector)
+  private type
+
+    { TAccessor }
+
+    TAccessor = class(TInterfacedObject, IDataAccessor)
+    private
+      fData: IRBData;
+      function GetValue(const AName: String): String;
+    public
+      constructor Create(const AData: IRBData);
+    end;
+
   private
     procedure PublishData;
   private
@@ -103,12 +115,14 @@ type
     fStore: IPersistStore;
     fPubSub: IPubSub;
     fPSFieldDataChannel: IPSFieldDataChannel;
+    fPSRecordDataChannel: IPSRecordDataChannel;
     fPSCommandDataChannel: IPSCommandDataChannel;
     fPSGUIChannel: IPSGUIChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
     procedure PSCommandDataChannelObserver(const AData: TCommandData);
   protected
     function PSFieldDataChannel: IPSFieldDataChannel;
+    function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
   public
     constructor Create(const APubSub: IPubSub; const AStore: IPersistStore; const AList: IPersistRefList;
@@ -118,6 +132,18 @@ type
 
 implementation
 
+{ TStoreDataConnector.TAccessor }
+
+function TStoreDataConnector.TAccessor.GetValue(const AName: String): String;
+begin
+  Result := fData.ItemByName[AName].AsString;
+end;
+
+constructor TStoreDataConnector.TAccessor.Create(const AData: IRBData);
+begin
+  fData := AData;
+end;
+
 { TStoreDataConnector }
 
 procedure TStoreDataConnector.PublishData;
@@ -126,12 +152,15 @@ var
 begin
   if fActualData = nil then
     Exit;
+  {
   for i := 0 to fActualData.Count - 1 do begin
     fPSFieldDataChannel.Publish(TFieldData.Create(
       fActualData.Items[i].Name,
       fActualData.Items[i].AsString
     ));
   end;
+  }
+  fPSRecordDataChannel.Publish(TRecordData.Create(TAccessor.Create(fActualData)));
 end;
 
 procedure TStoreDataConnector.PSFieldDataChannelObserver(const AData: TFieldData
@@ -187,6 +216,11 @@ begin
   Result := fPSFieldDataChannel;
 end;
 
+function TStoreDataConnector.PSRecordDataChannel: IPSRecordDataChannel;
+begin
+  Result := fPSRecordDataChannel;
+end;
+
 function TStoreDataConnector.PSCommandDataChannel: IPSCommandDataChannel;
 begin
   Result := fPSCommandDataChannel;
@@ -203,6 +237,7 @@ begin
   fPSGUIChannel := APSGUIChannel;
   fPSFieldDataChannel := fPubSub.Factory.NewDataChannel<TFieldData>;
   fPSFieldDataChannel.Subscribe(PSFieldDataChannelObserver);
+  fPSRecordDataChannel := fPubSub.Factory.NewDataChannel<TRecordData>;
   fPSCommandDataChannel := fPubSub.Factory.NewDataChannel<TCommandData>;
   fPSCommandDataChannel.Subscribe(PSCommandDataChannelObserver);
   if fList.Count > 0 then
@@ -447,34 +482,39 @@ begin
    }
 
    fDataConnector := TStoreDataConnector.Create(PubSub, Store, GetPersons, fPSGUIChannel);
-   PubSub.Factory.NewDuplexDataBridge<String, TFieldData>(
+
+   PubSub.Factory.NewDataBridge<String, TFieldData>(
      fEditName.PSTextChannel,
      fDataConnector.PSFieldDataChannel,
      function (const AData: String): TFieldData
      begin
        Result := TFieldData.Create('Name', AData);
-     end,
-     function (const AData: TFieldData): String
-     begin
-       if AData.Name = 'Name' then
-         Result := AData.Value
-       else
-         raise EPubSubBridgeNoWay.Create('');
      end);
-   PubSub.Factory.NewDuplexDataBridge<String, TFieldData>(
+   PubSub.Factory.NewDataBridge<TRecordData, String>(
+       fDataConnector.PSRecordDataChannel,
+       fEditName.PSTextChannel,
+       function (const AData: TRecordData): String
+       begin
+         Result := AData.Accessor['Name'];
+       end);
+
+   PubSub.Factory.NewDataBridge<String, TFieldData>(
      fEditSurename.PSTextChannel,
      fDataConnector.PSFieldDataChannel,
      function (const AData: String): TFieldData
      begin
        Result := TFieldData.Create('Surename', AData);
-     end,
-     function (const AData: TFieldData): String
-     begin
-       if AData.Name = 'Surename' then
-         Result := AData.Value
-       else
-         raise EPubSubBridgeNoWay.Create('');
      end);
+   PubSub.Factory.NewDataBridge<TRecordData, String>(
+    fDataConnector.PSRecordDataChannel,
+    fEditSurename.PSTextChannel,
+    function (const AData: TRecordData): String
+    begin
+      Result := AData.Accessor['Surename'];
+    end);
+
+
+
    PubSub.Factory.NewNonDataToDataBridge<TCommandData>(
      fFirst.PSClickChannel,
      fDataConnector.PSCommandDataChannel,
