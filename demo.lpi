@@ -91,6 +91,9 @@
       <Item>
         <Name Value="ELaunchStop"/>
       </Item>
+      <Item>
+        <Name Value="EPubSubBridgeNoWay"/>
+      </Item>
     </Exceptions>
   </Debugging>
 </CONFIG>

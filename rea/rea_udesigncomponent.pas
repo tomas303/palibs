@@ -781,7 +781,7 @@ var
 begin
   mc := SelfProps.AsInt(cProps.Color);
   Result := ElementFactory.CreateElement(IStripBit,
-    NewProps
+    NewComposeProps
       .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
       .SetStr(cProps.Caption, SelfProps.AsStr(cProps.Caption))
       .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color)),

@@ -20,19 +20,21 @@ type
   TPubSubDataConversion<T, S> = reference to function(const AData: T): S;
   TPubSubNewData<T> = reference to function: T;
 
+  TPubSubKind = (pskLocal, pskBridge);
+
   IPubSubChannel = interface
   ['{F5B8029B-095E-4E87-A621-C6C96D8177DE}']
-    procedure Publish;
+    procedure Publish(ASource: TPubSubKind = pskLocal);
     procedure Debounce;
-    procedure Subscribe(const ACallback: TPubSubChannelCallback);
+    procedure Subscribe(const ACallback: TPubSubChannelCallback; ATarget: TPubSubKind = pskLocal);
     procedure Unsubscribe(const ACallback: TPubSubChannelCallback);
   end;
 
   IPubSubDataChannel<T> = interface
   ['{6C3DDC7D-A867-4DAE-8B92-D74C8F878E3F}']
-    procedure Publish(const AData: T);
+    procedure Publish(const AData: T; ASource: TPubSubKind = pskLocal);
     procedure Debounce(const AData: T; const Group: String = '');
-    procedure Subscribe(const ACallback: TPubSubChannelDataCallback<T>);
+    procedure Subscribe(const ACallback: TPubSubChannelDataCallback<T>; ATarget: TPubSubKind = pskLocal);
     procedure Unsubscribe(const ACallback: TPubSubChannelDataCallback<T>);
   end;
 
@@ -102,16 +104,30 @@ type
   { TPubSubChannel }
 
   TPubSubChannel = class(TInterfacedObject, IPubSubChannel, IPubSubChannelExec)
+  strict private type
+
+    { TEvent }
+
+    TEvent = record
+    strict private
+      fSource: TPubSubKind;
+    public
+      constructor Create(ASource: TPubSubKind);
+      class operator equal(a,b: TEvent): Boolean;
+      property Source: TPubSubKind read fSource;
+    end;
+
   strict private
+    fEvents: TFPGList<TEvent>;
     fPublishedCallback: TPubSubEventPublishedCallback;
     fDebouncer: Boolean;
     procedure ExecEvent;
   strict private
-    fObservers: TList<TPubSubChannelCallback>;
-    procedure Publish;
+    fObservers: TDictionary<TPubSubChannelCallback, TPubSubKind>;
+    procedure Publish(ASource: TPubSubKind = pskLocal);
     procedure Debounce;
     procedure PublishDebounced;
-    procedure Subscribe(const ACallback: TPubSubChannelCallback);
+    procedure Subscribe(const ACallback: TPubSubChannelCallback; ATarget: TPubSubKind = pskLocal);
     procedure Unsubscribe(const ACallback: TPubSubChannelCallback);
   public
     constructor Create(const APublishedCallback: TPubSubEventPublishedCallback);
@@ -123,18 +139,33 @@ type
 
   TPubSubDataChannel<T> = class(TInterfacedObject, IPubSubDataChannel<T>, IPubSubChannelExec)
   strict private type
+
     TCallback = TPubSubChannelDataCallback<T>;
+
+    { TEvent }
+
+    TEvent = record
+    strict private
+      fData: T;
+      fSource: TPubSubKind;
+    public
+      constructor Create(AData: T; ASource: TPubSubKind);
+      class operator equal(a,b: TEvent): Boolean;
+      property Data: T read fData;
+      property Source: TPubSubKind read fSource;
+    end;
+
   strict private
-    fEvents: TFPGList<T>;
+    fEvents: TFPGList<TEvent>;
     fDebouncer: TFPGMap<String, T>;
     fPublishedCallback: TPubSubEventPublishedCallback;
     procedure ExecEvent;
     procedure PublishDebounced;
   strict private
-    fObservers: TList<TCallback>;
-    procedure Publish(const AData: T);
+    fObservers: TDictionary<TCallback, TPubSubKind>;
+    procedure Publish(const AData: T; ASource: TPubSubKind = pskLocal);
     procedure Debounce(const AData: T; const Group: String = '');
-    procedure Subscribe(const ACallback: TCallback);
+    procedure Subscribe(const ACallback: TCallback; ATarget: TPubSubKind = pskLocal);
     procedure Unsubscribe(const ACallback: TPubSubChannelDataCallback<T>);
   public
     constructor Create(const APublishedCallback: TPubSubEventPublishedCallback);
@@ -204,10 +235,22 @@ implementation
 
 procedure TPubSubDataChannel<T>.ExecEvent;
 var
-  cb: TCallback;
+  m: TPair<TCallback, TPubSubKind>;
+  mEvent: TEvent;
 begin
   try
-    for cb in fObservers do cb(fEvents[0]);
+    mEvent := fEvents[0];
+    for m in fObservers do begin
+      try
+        if mEvent.Source = pskLocal then
+          m.Key(mEvent.Data)
+        else if (mEvent.Source = pskBridge) and (m.Value = pskLocal) then
+          m.Key(mEvent.Data);
+      except
+        on E: EPubSubBridgeNoWay do ;
+        else raise;
+      end;
+    end;
   finally
     fEvents.Delete(0);
   end;
@@ -222,9 +265,9 @@ begin
   fDebouncer.Clear;
 end;
 
-procedure TPubSubDataChannel<T>.Publish(const AData: T);
+procedure TPubSubDataChannel<T>.Publish(const AData: T; ASource: TPubSubKind);
 begin
-  fEvents.Add(AData);
+  fEvents.Add(TEvent.Create(AData, ASource));
   fPublishedCallback(Self);
 end;
 
@@ -234,16 +277,16 @@ begin
 end;
 
 procedure TPubSubDataChannel<T>.Subscribe(
-  const ACallback: TCallback);
+  const ACallback: TCallback; ATarget: TPubSubKind);
 begin
-  if fObservers.IndexOf(ACallback) = -1 then
-    fObservers.Add(ACallback);
+  if not fObservers.ContainsKey(ACallback) then
+    fObservers.Add(ACallback, ATarget);
 end;
 
 procedure TPubSubDataChannel<T>.Unsubscribe(
   const ACallback: TPubSubChannelDataCallback<T>);
 begin
-  if fObservers.IndexOf(ACallback) <> -1 then
+  if fObservers.ContainsKey(ACallback) then
     fObservers.Remove(ACallback);
 end;
 
@@ -257,8 +300,8 @@ end;
 procedure TPubSubDataChannel<T>.AfterConstruction;
 begin
   inherited AfterConstruction;
-  fEvents := TFPGList<T>.Create;
-  fObservers := TList<TCallback>.Create;
+  fEvents := TFPGList<TEvent>.Create;
+  fObservers := TDictionary<TCallback, TPubSubKind>.Create;
   fDebouncer := TFPGMap<String, T>.Create;
 end;
 
@@ -277,7 +320,7 @@ var
   mData: S;
 begin
   mData := fConversion(AData);
-  fOutChannel.Publish(mData);
+  fOutChannel.Publish(mData, pskBridge);
 end;
 
 constructor TPubSubDataBridge<T, S>.Create(
@@ -288,7 +331,7 @@ begin
   fInChannel := AInChannel;
   fOutChannel := AOutChannel;
   fConversion := AConversion;
-  fInChannel.Subscribe(InObserver);
+  fInChannel.Subscribe(InObserver, pskBridge);
 end;
 
 destructor TPubSubDataBridge<T, S>.Destroy;
@@ -301,7 +344,7 @@ end;
 
 procedure TPubSubNonDataToDataBridge<T>.InObserver;
 begin
-  fOutChannel.Publish(fNewData());
+  fOutChannel.Publish(fNewData(), pskBridge);
 end;
 
 constructor TPubSubNonDataToDataBridge<T>.Create(
@@ -313,7 +356,7 @@ begin
   fInChannel := AInChannel;
   fOutChannel := AOutChannel;
   fNewData := ANewData;
-  fInChannel.Subscribe(InObserver);
+  fInChannel.Subscribe(InObserver, pskBridge);
 end;
 
 destructor TPubSubNonDataToDataBridge<T>.Destroy;
@@ -326,7 +369,7 @@ end;
 
 procedure TPubSubDataToNonDataBridge<T>.InObserver(const AData: T);
 begin
-  fOutChannel.Publish;
+  fOutChannel.Publish(pskBridge);
 end;
 
 constructor TPubSubDataToNonDataBridge<T>.Create(
@@ -336,7 +379,7 @@ begin
   inherited Create;
   fInChannel := AInChannel;
   fOutChannel := AOutChannel;
-  fInChannel.Subscribe(InObserver);
+  fInChannel.Subscribe(InObserver, pskBridge);
 end;
 
 destructor TPubSubDataToNonDataBridge<T>.Destroy;
@@ -345,11 +388,36 @@ begin
   inherited Destroy;
 end;
 
+{ TPubSubDataChannel.TEvent }
+
+constructor TPubSubDataChannel<T>.TEvent.Create(AData: T; ASource: TPubSubKind);
+begin
+  fData := AData;
+  fSource := ASource;
+end;
+
+class operator TPubSubDataChannel<T>.TEvent.equal(a, b: TEvent): Boolean;
+begin
+  Result := (a.Data = b.Data) and (a.Source = b.Source);
+end;
+
+{ TPubSubChannel.TEvent }
+
+constructor TPubSubChannel.TEvent.Create(ASource: TPubSubKind);
+begin
+  fSource := ASource;
+end;
+
+class operator TPubSubChannel.TEvent.equal(a, b: TEvent): Boolean;
+begin
+  Result := a.Source = b.Source;
+end;
+
 { TPubSubBridge }
 
 procedure TPubSubBridge.InObserver;
 begin
-  fOutChannel.Publish;
+  fOutChannel.Publish(pskBridge);
 end;
 
 constructor TPubSubBridge.Create(
@@ -358,7 +426,7 @@ constructor TPubSubBridge.Create(
 begin
   fInChannel := AInChannel;
   fOutChannel := AOutChannel;
-  fInChannel.Subscribe(InObserver);
+  fInChannel.Subscribe(InObserver, pskBridge);
 end;
 
 destructor TPubSubBridge.Destroy;
@@ -371,13 +439,30 @@ end;
 
 procedure TPubSubChannel.ExecEvent;
 var
-  cb: TPubSubChannelCallback;
+  m: TPair<TPubSubChannelCallback, TPubSubKind>;
+  mEvent: TEvent;
 begin
-  for cb in fObservers do cb();
+  try
+    mEvent := fEvents[0];
+    for m in fObservers do begin
+      try
+        if mEvent.Source = pskLocal then
+          m.Key()
+        else if (mEvent.Source = pskBridge) and (m.Value = pskLocal) then
+          m.Key();
+      except
+        on E: EPubSubBridgeNoWay do ;
+        else raise;
+      end;
+    end;
+  finally
+    fEvents.Delete(0);
+  end;
 end;
 
-procedure TPubSubChannel.Publish;
+procedure TPubSubChannel.Publish(ASource: TPubSubKind);
 begin
+  fEvents.Add(TEvent.Create(ASource));
   fPublishedCallback(Self);
 end;
 
@@ -394,15 +479,15 @@ begin
   end;
 end;
 
-procedure TPubSubChannel.Subscribe(const ACallback: TPubSubChannelCallback);
+procedure TPubSubChannel.Subscribe(const ACallback: TPubSubChannelCallback; ATarget: TPubSubKind);
 begin
-  if fObservers.IndexOf(ACallback) = -1 then
-    fObservers.Add(ACallback);
+  if not fObservers.ContainsKey(ACallback) then
+    fObservers.Add(ACallback, ATarget);
 end;
 
 procedure TPubSubChannel.Unsubscribe(const ACallback: TPubSubChannelCallback);
 begin
-  if fObservers.IndexOf(ACallback) <> -1 then
+  if fObservers.ContainsKey(ACallback) then
     fObservers.Remove(ACallback);
 end;
 
@@ -416,11 +501,13 @@ end;
 procedure TPubSubChannel.AfterConstruction;
 begin
   inherited AfterConstruction;
-  fObservers := TList<TPubSubChannelCallback>.Create;
+  fEvents := TFPGList<TEvent>.Create;
+  fObservers := TDictionary<TPubSubChannelCallback, TPubSubKind>.Create;
 end;
 
 procedure TPubSubChannel.BeforeDestruction;
 begin
+  FreeAndNil(fEvents);
   FreeAndNil(fObservers);
   inherited BeforeDestruction;
 end;
