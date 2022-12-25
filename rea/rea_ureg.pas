@@ -17,7 +17,8 @@ uses
   rea_idesigncomponent, rea_udesigncomponent,
   trl_ireg, trl_isequence,
   trl_udifactory,
-  trl_ilauncher, trl_pubsub, rea_upubsublauncher;
+  trl_ilauncher, trl_pubsub, rea_upubsublauncher,
+  trl_ipersist, rea_idata, rea_ustoreconnector;
 
 type
 
@@ -43,6 +44,7 @@ type
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterPubSubLauncher: TDIReg;
+    function RegisterStoreConnector: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -151,6 +153,7 @@ begin
   RegisterScales;
   RegisterMessageObservable;
   RegisterRenderer;
+  RegisterStoreConnector;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -183,6 +186,14 @@ begin
   Result.InjectProp('PubSub', IPubSub);
   Result.InjectProp('Renderer', IRenderer);
   Result.InjectProp('GUI', IDesignComponentApp);
+end;
+
+function TReg.RegisterStoreConnector: TDIReg;
+begin
+  Result := DIC.Add(TStoreConnector, IDataConnector, TStoreConnector.ClassName);
+  Result.InjectProp('PubSub', IPubSub);
+  Result.InjectProp('Store', IPersistStore);
+  Result.InjectProp('List', IPersistRefList);
 end;
 
 end.

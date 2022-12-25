@@ -58,6 +58,10 @@
         <Filename Value="rea_idata.pas"/>
         <UnitName Value="rea_idata"/>
       </Item>
+      <Item>
+        <Filename Value="rea_ustoreconnector.pas"/>
+        <UnitName Value="rea_ustoreconnector"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

@@ -28,8 +28,8 @@ type
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
     function RegisterRenderer: TDIReg;
     function RegisterPubSubLauncher: TDIReg;
+    function RegisterStoreConnector: TDIReg;
   end;
-
 
 implementation
 
