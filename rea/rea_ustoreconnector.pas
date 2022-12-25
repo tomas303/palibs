@@ -27,20 +27,31 @@ type
       constructor Create(const AData: IRBData);
     end;
 
+    { TEmptyAccessor }
+
+    TEmptyAccessor = class(TInterfacedObject, IDataAccessor)
+    private
+      function GetValue(const AName: String): String;
+    end;
+
   private
     procedure PublishData;
+    procedure PublishInfo(AFrom, ATo: Integer);
+    function NewAccessor(AIndex: Integer): IDataAccessor;
   private
     fActualData: IRBData;
     fActualIndex: integer;
     fPSFieldDataChannel: IPSFieldDataChannel;
     fPSRecordDataChannel: IPSRecordDataChannel;
     fPSCommandDataChannel: IPSCommandDataChannel;
+    fPSInfoDataChannel: IPSInfoDataChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
     procedure PSCommandDataChannelObserver(const AData: TCommandData);
   protected
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
+    function PSInfoDataChannel: IPSInfoDataChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
   public
@@ -59,6 +70,13 @@ type
 
 implementation
 
+{ TStoreConnector.TEmptyAccessor }
+
+function TStoreConnector.TEmptyAccessor.GetValue(const AName: String): String;
+begin
+  Result := '';
+end;
+
 { TStoreConnector.TAccessor }
 
 function TStoreConnector.TAccessor.GetValue(const AName: String): String;
@@ -74,20 +92,33 @@ end;
 { TStoreConnector }
 
 procedure TStoreConnector.PublishData;
-var
-  i: integer;
 begin
   if fActualData = nil then
     Exit;
-  {
-  for i := 0 to fActualData.Count - 1 do begin
-    fPSFieldDataChannel.Publish(TFieldData.Create(
-      fActualData.Items[i].Name,
-      fActualData.Items[i].AsString
-    ));
-  end;
-  }
   fPSRecordDataChannel.Publish(TRecordData.Create(TAccessor.Create(fActualData)));
+end;
+
+procedure TStoreConnector.PublishInfo(AFrom, ATo: Integer);
+var
+  i: integer;
+begin
+  if ATo >= AFrom then begin
+    for i := AFrom to ATo do begin
+      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(i)));
+    end;
+  end else begin
+    for i := AFrom downto ATo do begin
+      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(i)));
+    end;
+  end;
+end;
+
+function TStoreConnector.NewAccessor(AIndex: Integer): IDataAccessor;
+begin
+  if (AIndex < 0) or (AIndex > fList.Count - 1) then
+    Result := TEmptyAccessor.Create
+  else
+    TAccessor.Create(fList.Data[AIndex]);
 end;
 
 procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData
@@ -101,40 +132,35 @@ end;
 
 procedure TStoreConnector.PSCommandDataChannelObserver(
   const AData: TCommandData);
+var
+  mNewIndex: Integer;
 begin
   case AData.Action of
-    cdaNext:
-      begin
-        if fActualIndex < fList.Count -1 then begin
-          inc(fActualIndex);
-          fActualData := fList.Data[fActualIndex];
-          PublishData;
-        end;
+    cdaMove: begin
+      mNewIndex := fActualIndex + AData.Delta;
+      if (mNewIndex >= 0) and (mNewIndex <= fList.Count -1) then begin
+        fActualIndex := mNewIndex;
+        fActualData := fList.Data[fActualIndex];
+        PublishData;
       end;
-    cdaPrior:
-      begin
-        if fActualIndex > 0 then begin
-          dec(fActualIndex);
-          fActualData := fList.Data[fActualIndex];
-          PublishData;
-        end;
+    end;
+    cdaFirst: begin
+      if fList.Count > 0 then begin
+        fActualIndex := 0;
+        fActualData := fList.Data[fActualIndex];
+        PublishData;
       end;
-    cdaFirst:
-      begin
-        if fList.Count > 0 then begin
-          fActualIndex := 0;
-          fActualData := fList.Data[fActualIndex];
-          PublishData;
-        end;
+    end;
+    cdaLast: begin
+      if fList.Count > 0 then begin
+        fActualIndex := fList.Count - 1;
+        fActualData := fList.Data[fActualIndex];
+        PublishData;
       end;
-    cdaLast:
-      begin
-        if fList.Count > 0 then begin
-          fActualIndex := fList.Count - 1;
-          fActualData := fList.Data[fActualIndex];
-          PublishData;
-        end;
-      end;
+    end;
+    cdaInfo: begin
+      PublishInfo(AData.FromPos, AData.ToPos);
+    end;
   end;
 end;
 
@@ -147,6 +173,7 @@ begin
   fPSRecordDataChannel := fPubSub.Factory.NewDataChannel<TRecordData>;
   fPSCommandDataChannel := fPubSub.Factory.NewDataChannel<TCommandData>;
   fPSCommandDataChannel.Subscribe(PSCommandDataChannelObserver);
+  fPSInfoDataChannel := fPubSub.Factory.NewDataChannel<TInfoData>;
 end;
 
 procedure TStoreConnector.SetList(AValue: IPersistRefList);
@@ -171,6 +198,11 @@ end;
 function TStoreConnector.PSCommandDataChannel: IPSCommandDataChannel;
 begin
   Result := fPSCommandDataChannel;
+end;
+
+function TStoreConnector.PSInfoDataChannel: IPSInfoDataChannel;
+begin
+  Result := fPSInfoDataChannel;
 end;
 
 procedure TStoreConnector.RegisterField(const AName: String;

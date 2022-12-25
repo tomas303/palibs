@@ -313,14 +313,14 @@ begin
   fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
 
   fDataConnector := Factory2.Locate<IDataConnector>('TStoreConnector', NewProps.SetIntf('List', GetPersons));
-
   fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
   fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
+  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommandData.CreateFirst);
+  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommandData.CreateLast);
+  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommandData.CreateNext);
+  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommandData.CreatePrior);
 
-  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommandData.Create(cdaFirst));
-  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommandData.Create(cdaLast));
-  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommandData.Create(cdaNext));
-  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommandData.Create(cdaPrior));
+
 
  end;
 

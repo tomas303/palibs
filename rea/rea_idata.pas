@@ -42,33 +42,74 @@ type
     public property Accessor: IDataAccessor read fAccessor;
   end;
 
-  TCommandDataAction = (cdaFirst, cdaLast, cdaNext, cdaPrior);
+  TCommandDataAction = (cdaFirst, cdaLast, cdaMove, cdaInfo);
 
   { TCommandData }
 
   TCommandData = record
   strict private
     fAction: TCommandDataAction;
+    fDelta: Integer;
+    fFromPos: Integer;
+    fToPos: Integer;
   public
-    constructor Create(const AAction: TCommandDataAction);
+    class function CreateFirst: TCommandData; static;
+    class function CreateLast: TCommandData; static;
+    class function CreateNext: TCommandData; static;
+    class function CreatePrior: TCommandData; static;
+    class function CreateMove(ADelta: Integer): TCommandData; static;
+    class function CreateInfo(AFromPos, AToPos: Integer): TCommandData; static;
     class operator equal(a,b: TCommandData): Boolean;
     public property Action: TCommandDataAction read fAction;
+    public property Delta: Integer read fDelta;
+    public property FromPos: Integer read fFromPos;
+    public property ToPos: Integer read fToPos;
   end;
+
+  { TInfoData }
+
+  TInfoData = record
+  strict private
+    fPosition: Integer;
+    fAccessor: IDataAccessor;
+  public
+    constructor Create(APosition: Integer; const AAccessor: IDataAccessor);
+    class operator equal(a,b: TInfoData): Boolean;
+    public property Position: Integer read fPosition;
+    public property Accessor: IDataAccessor read fAccessor;
+  end;
+
 
   IPSFieldDataChannel = IPubSubDataChannel<TFieldData>;
   IPSRecordDataChannel = IPubSubDataChannel<TRecordData>;
   IPSCommandDataChannel = IPubSubDataChannel<TCommandData>;
+  IPSInfoDataChannel = IPubSubDataChannel<TInfoData>;
 
   IDataConnector = interface
   ['{1653E0AC-C7FC-4773-A921-51DCA67080D9}']
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
+    function PSInfoDataChannel: IPSInfoDataChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
   end;
 
 implementation
+
+{ TInfoData }
+
+constructor TInfoData.Create(APosition: Integer; const AAccessor: IDataAccessor
+  );
+begin
+  fPosition := APosition;
+  fAccessor :=  AAccessor;
+end;
+
+class operator TInfoData.equal(a, b: TInfoData): Boolean;
+begin
+  Result := (a.Position = b.Position) and (a.Accessor = b.Accessor);
+end;
 
 { TRecordData }
 
@@ -84,14 +125,45 @@ end;
 
 { TCommandData }
 
-constructor TCommandData.Create(const AAction: TCommandDataAction);
+class function TCommandData.CreateFirst: TCommandData;
 begin
-  fAction := AAction;
+  Result.fAction := cdaFirst;
+end;
+
+class function TCommandData.CreateLast: TCommandData;
+begin
+  Result.fAction := cdaLast;
+end;
+
+class function TCommandData.CreateNext: TCommandData;
+begin
+  Result := CreateMove(1);
+end;
+
+class function TCommandData.CreatePrior: TCommandData;
+begin
+  Result := CreateMove(-1);
+end;
+
+class function TCommandData.CreateMove(ADelta: Integer): TCommandData;
+begin
+  Result.fAction := cdaMove;
+  Result.fDelta := ADelta;
+end;
+
+class function TCommandData.CreateInfo(AFromPos, AToPos: Integer): TCommandData;
+begin
+  Result.fAction := cdaInfo;
+  Result.fFromPos := AFromPos;
+  Result.fToPos := AToPos;
 end;
 
 class operator TCommandData.equal(a, b: TCommandData): Boolean;
 begin
-  Result := a.Action = b.Action;
+  Result := (a.Action = b.Action)
+    and (a.Delta = b.Delta)
+    and (a.FromPos = b.FromPos)
+    and (a.ToPos = b.ToPos);
 end;
 
 { TFieldData }

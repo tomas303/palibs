@@ -177,6 +177,20 @@ type
   { TDesignComponentGrid }
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
+  private
+    fPSGridCmdMoveChannel: IPSGridCmdMoveChannel;
+    function PSGridCmdMoveChannel: IPSGridCmdMoveChannel;
+  private
+    fPSGridCmdInfoChannel: IPSGridCmdInfoChannel;
+    function PSGridCmdInfoChannel: IPSGridCmdInfoChannel;
+  private
+    fPSGridRecordChannel: IPSGridRecordChannel;
+    procedure PSGridRecordChannelObserver(const AData: TGridRecord);
+    function PSGridRecordChannel: IPSGridRecordChannel;
+  private
+    fPSGridMoverChannel: IPSGridMoverChannel;
+    procedure PSGridMoverChannelObserver(const AData: TGridMover);
+    function PSGridMoverChannel: IPSGridMoverChannel;
   private type
     TMatrix = array of array of string;
   private
@@ -433,6 +447,37 @@ end;
 
 { TDesignComponentGrid }
 
+function TDesignComponentGrid.PSGridCmdMoveChannel: IPSGridCmdMoveChannel;
+begin
+  Result := fPSGridCmdMoveChannel;
+end;
+
+function TDesignComponentGrid.PSGridCmdInfoChannel: IPSGridCmdInfoChannel;
+begin
+  Result := fPSGridCmdInfoChannel;
+end;
+
+procedure TDesignComponentGrid.PSGridRecordChannelObserver(
+  const AData: TGridRecord);
+begin
+
+end;
+
+function TDesignComponentGrid.PSGridRecordChannel: IPSGridRecordChannel;
+begin
+  Result := fPSGridRecordChannel;
+end;
+
+procedure TDesignComponentGrid.PSGridMoverChannelObserver(const AData: TGridMover);
+begin
+
+end;
+
+function TDesignComponentGrid.PSGridMoverChannel: IPSGridMoverChannel;
+begin
+  Result := fPSGridMoverChannel;
+end;
+
 procedure TDesignComponentGrid.PSTextChannelObserver(const AValue: String);
 begin
   fData[fCurrentRow, fCurrentCol] := AValue;
@@ -566,6 +611,12 @@ begin
   );
   fEdit.PSTextChannel.Subscribe(PSTextChannelObserver);
   fEdit.PSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
+  fPSGridCmdMoveChannel := PubSub.Factory.NewDataChannel<TGridCmdMove>;
+  fPSGridCmdInfoChannel := PubSub.Factory.NewDataChannel<TGridCmdInfo>;
+  fPSGridRecordChannel := PubSub.Factory.NewDataChannel<TGridRecord>;
+  fPSGridRecordChannel.Subscribe(PSGridRecordChannelObserver);
+  fPSGridMoverChannel := PubSub.Factory.NewDataChannel<TGridMover>;
+  fPSGridMoverChannel.Subscribe(PSGridMoverChannelObserver);
 end;
 
 function TDesignComponentGrid.NewComposeProps: IProps;
