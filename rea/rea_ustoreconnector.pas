@@ -45,6 +45,7 @@ type
     fPSRecordDataChannel: IPSRecordDataChannel;
     fPSCommandDataChannel: IPSCommandDataChannel;
     fPSInfoDataChannel: IPSInfoDataChannel;
+    fPSPositionChangeChannel: IPSPositionChangeChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
     procedure PSCommandDataChannelObserver(const AData: TCommandData);
   protected
@@ -52,6 +53,7 @@ type
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
     function PSInfoDataChannel: IPSInfoDataChannel;
+    function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
   public
@@ -104,11 +106,11 @@ var
 begin
   if ATo >= AFrom then begin
     for i := AFrom to ATo do begin
-      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(i)));
+      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(fActualIndex + i)));
     end;
   end else begin
     for i := AFrom downto ATo do begin
-      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(i)));
+      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(fActualIndex + i)));
     end;
   end;
 end;
@@ -118,7 +120,7 @@ begin
   if (AIndex < 0) or (AIndex > fList.Count - 1) then
     Result := TEmptyAccessor.Create
   else
-    TAccessor.Create(fList.Data[AIndex]);
+    Result := TAccessor.Create(fList.Data[AIndex]);
 end;
 
 procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData
@@ -142,6 +144,7 @@ begin
         fActualIndex := mNewIndex;
         fActualData := fList.Data[fActualIndex];
         PublishData;
+        fPSPositionChangeChannel.Publish(TPositionChange.New(AData.Delta));
       end;
     end;
     cdaFirst: begin
@@ -149,6 +152,7 @@ begin
         fActualIndex := 0;
         fActualData := fList.Data[fActualIndex];
         PublishData;
+        fPSPositionChangeChannel.Publish(TPositionChange.New);
       end;
     end;
     cdaLast: begin
@@ -156,6 +160,7 @@ begin
         fActualIndex := fList.Count - 1;
         fActualData := fList.Data[fActualIndex];
         PublishData;
+        fPSPositionChangeChannel.Publish(TPositionChange.New);
       end;
     end;
     cdaInfo: begin
@@ -174,6 +179,8 @@ begin
   fPSCommandDataChannel := fPubSub.Factory.NewDataChannel<TCommandData>;
   fPSCommandDataChannel.Subscribe(PSCommandDataChannelObserver);
   fPSInfoDataChannel := fPubSub.Factory.NewDataChannel<TInfoData>;
+  fPSPositionChangeChannel := fPubSub.Factory.NewDataChannel<TPositionChange>;
+  fPSPositionChangeChannel.Publish(TPositionChange.New);
 end;
 
 procedure TStoreConnector.SetList(AValue: IPersistRefList);
@@ -203,6 +210,11 @@ end;
 function TStoreConnector.PSInfoDataChannel: IPSInfoDataChannel;
 begin
   Result := fPSInfoDataChannel;
+end;
+
+function TStoreConnector.PSPositionChangeChannel: IPSPositionChangeChannel;
+begin
+  Result := fPSPositionChangeChannel;
 end;
 
 procedure TStoreConnector.RegisterField(const AName: String;

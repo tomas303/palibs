@@ -8,7 +8,7 @@ unit rea_idata;
 interface
 
 uses
-  trl_pubsub, rea_ibits;
+  trl_pubsub, rea_ibits, trl_funcp;
 
 type
 
@@ -80,10 +80,24 @@ type
   end;
 
 
+  { TPositionChange }
+
+  TPositionChange = record
+  private
+    fDelta: TOptional<Integer>;
+  public
+    class function New: TPositionChange; overload; static;
+    class function New(ADelta: Integer): TPositionChange; overload; static;
+    class operator Initialize(var a: TPositionChange);
+    class operator equal(a,b: TPositionChange): Boolean;
+    property Delta: TOptional<Integer> read fDelta;
+  end;
+
   IPSFieldDataChannel = IPubSubDataChannel<TFieldData>;
   IPSRecordDataChannel = IPubSubDataChannel<TRecordData>;
   IPSCommandDataChannel = IPubSubDataChannel<TCommandData>;
   IPSInfoDataChannel = IPubSubDataChannel<TInfoData>;
+  IPSPositionChangeChannel = IPubSubDataChannel<TPositionChange>;
 
   IDataConnector = interface
   ['{1653E0AC-C7FC-4773-A921-51DCA67080D9}']
@@ -91,11 +105,33 @@ type
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
     function PSInfoDataChannel: IPSInfoDataChannel;
+    function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
   end;
 
 implementation
+
+{ TPositionChange }
+
+class function TPositionChange.New(ADelta: Integer): TPositionChange;
+begin
+  Result.fDelta := TOptional<Integer>.New(ADelta);
+end;
+
+class function TPositionChange.New: TPositionChange;
+begin
+end;
+
+class operator TPositionChange.Initialize(var a: TPositionChange);
+begin
+  a.Delta.Clear;
+end;
+
+class operator TPositionChange.equal(a, b: TPositionChange): Boolean;
+begin
+  Result := a.Delta = b.Delta;
+end;
 
 { TInfoData }
 

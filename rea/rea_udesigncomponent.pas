@@ -177,6 +177,22 @@ type
   { TDesignComponentGrid }
 
   TDesignComponentGrid = class(TDesignComponent, IDesignComponentGrid)
+  private type
+
+    { TShiftInfo }
+
+    TShiftInfo = record
+    strict private
+      fFirst: Integer;
+      fLast: Integer;
+      fDistance: Integer;
+    public
+      constructor Create(AFirst, ALast, ADistance: Integer);
+      property First: Integer read fFirst;
+      property Last: Integer read fLast;
+      property Distance: Integer read fDistance;
+    end;
+
   private
     fPSGridCmdMoveChannel: IPSGridCmdMoveChannel;
     function PSGridCmdMoveChannel: IPSGridCmdMoveChannel;
@@ -194,13 +210,17 @@ type
   private type
     TMatrix = array of array of string;
   private
+    fSourceRow: Integer;
     fData: TMatrix;
     fCurrentRow: Integer;
     fCurrentCol: Integer;
     fEdit: IDesignComponentEdit;
     procedure PSTextChannelObserver(const AValue: String);
     procedure PSKeyDownChannelObserver(const AValue: TKeyData);
-    procedure Move(AXDelta, AYDelta: Integer);
+    procedure MoveVertically(ADelta: Integer);
+    procedure MoveHorizontally(ADelta: Integer);
+    procedure CopyRow(AFrom, ATo: Integer);
+    procedure ShiftRows(AInfo: TShiftInfo);
   private
     function ColProps(Row, Col: integer): IProps;
     function RowProps(Row: integer): IProps;
@@ -285,6 +305,16 @@ type
   end;
 
 implementation
+
+{ TDesignComponentGrid.TShiftInfo }
+
+constructor TDesignComponentGrid.TShiftInfo.Create(AFirst, ALast,
+  ADistance: Integer);
+begin
+  fFirst := AFirst;
+  fLast := ALast;
+  fDistance := ADistance;
+end;
 
 { TDesignComponentPager.TClickLink }
 
@@ -459,8 +489,13 @@ end;
 
 procedure TDesignComponentGrid.PSGridRecordChannelObserver(
   const AData: TGridRecord);
+var
+  i: Integer;
 begin
-
+  for i := 0 to Length(AData.Data) - 1 do
+    fData[AData.Pos + fSourceRow, i] := AData.Data[i];
+  PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+  fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
 end;
 
 function TDesignComponentGrid.PSGridRecordChannel: IPSGridRecordChannel;
@@ -469,8 +504,30 @@ begin
 end;
 
 procedure TDesignComponentGrid.PSGridMoverChannelObserver(const AData: TGridMover);
+var
+  mDelta: integer;
+  mShiftInfo: TShiftInfo;
 begin
-
+  if AData.Delta.HasValue then begin
+    mDelta := AData.Delta.Value + fSourceRow - fCurrentRow;
+    if mDelta < 0 then begin
+      mShiftInfo := TShiftInfo.Create(0, RowCount - 1 + mDelta, -mDelta);
+      ShiftRows(mShiftInfo);
+      fPSGridCmdInfoChannel.Publish(TGridCmdInfo.Create(-fSourceRow, -mDelta - 1 - fSourceRow));
+    end
+    else if mDelta > 0 then begin
+      mShiftInfo := TShiftInfo.Create(mDelta, RowCount - 1, -mDelta);
+      ShiftRows(mShiftInfo);
+      fPSGridCmdInfoChannel.Publish(TGridCmdInfo.Create(RowCount - mDelta - fSourceRow, RowCount - 1 - fSourceRow));
+    end else begin
+      fSourceRow := fSourceRow + AData.Delta.Value;
+    end;
+    PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+  end else begin
+    fSourceRow := fCurrentRow;
+    fPSGridCmdInfoChannel.Publish(TGridCmdInfo.Create(-fSourceRow, RowCount - 1 - fSourceRow));
+  end;
+  fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
 end;
 
 function TDesignComponentGrid.PSGridMoverChannel: IPSGridMoverChannel;
@@ -486,24 +543,62 @@ end;
 procedure TDesignComponentGrid.PSKeyDownChannelObserver(const AValue: TKeyData);
 begin
   case AValue.ControlKey of
-    ckTab: if AValue.Shift then Move(-1, 0) else Move(1, 0);
-    ckUp: Move(0, -1);
-    ckDown: Move(0, 1);
+    ckTab: if AValue.Shift then MoveHorizontally(-1) else MoveHorizontally(1);
+    ckUp: MoveVertically(-1);
+    ckDown: MoveVertically(1);
+    ckPgUp: MoveVertically(-fRowCount);
+    ckPgDown: MoveVertically(fRowCount);
   end;
 end;
 
-procedure TDesignComponentGrid.Move(AXDelta, AYDelta: Integer);
+procedure TDesignComponentGrid.MoveVertically(ADelta: Integer);
 var
-  mNew: Integer;
+  mNewPos: Integer;
 begin
-  mNew := fCurrentCol + AXDelta;
-  if (mNew >= 0) and (mNew < ColCount) then
-    fCurrentCol := mNew;
-  mNew := fCurrentRow + AYDelta;
-  if (mNew >= 0) and (mNew < RowCount) then
-    fCurrentRow := mNew;
+  mNewPos := fCurrentRow + ADelta;
+  if mNewPos < 0 then begin
+    fPSGridCmdMoveChannel.Publish(TGridCmdMove.Create(ADelta));
+  end else if mNewPos > RowCount - 1 then begin
+    fPSGridCmdMoveChannel.Publish(TGridCmdMove.Create(ADelta));
+  end else begin
+    fCurrentRow := mNewPos;
+    fPSGridCmdMoveChannel.Publish(TGridCmdMove.Create(ADelta));
+  end;
+end;
+
+procedure TDesignComponentGrid.MoveHorizontally(ADelta: Integer);
+var
+  mNewPos: Integer;
+begin
+  mNewPos := fCurrentCol + ADelta;
+  if mNewPos < 0 then
+    mNewPos := 0
+  else if mNewPos > ColCount - 1 then
+    mNewPos := ColCount - 1;
+  fCurrentCol := mNewPos;
   fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
   PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+end;
+
+procedure TDesignComponentGrid.CopyRow(AFrom, ATo: Integer);
+var
+  i: integer;
+begin
+  for i := 0 to ColCount - 1 do
+    fData[ATo, i] := fData[AFrom, i];
+end;
+
+procedure TDesignComponentGrid.ShiftRows(AInfo: TShiftInfo);
+var
+  i: integer;
+begin
+  if AInfo.Distance < 0 then begin
+    for i := AInfo.First to AInfo.Last do
+      CopyRow(i, i + AInfo.Distance);
+  end else if AInfo.Distance > 0 then begin
+    for i := AInfo.Last downto AInfo.First do
+      CopyRow(i, i + AInfo.Distance);
+  end;
 end;
 
 function TDesignComponentGrid.ColProps(Row, Col: integer): IProps;

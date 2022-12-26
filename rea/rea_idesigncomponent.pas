@@ -172,7 +172,8 @@ type
   private
     fDelta: TOptional<Integer>;
   public
-    constructor Create(ADelta: Integer);
+    class function New: TGridMover; static; overload;
+    class function New(ADelta: Integer): TGridMover; static; overload;
     class operator Initialize(var a: TGridMover);
     class operator equal(a,b: TGridMover): Boolean;
     property Delta: TOptional<Integer> read fDelta;
@@ -300,9 +301,13 @@ implementation
 
 { TGridMover }
 
-constructor TGridMover.Create(ADelta: Integer);
+class function TGridMover.New: TGridMover;
 begin
-  fDelta := TOptional<Integer>.New(ADelta);
+end;
+
+class function TGridMover.New(ADelta: Integer): TGridMover;
+begin
+  Result.fDelta := TOptional<Integer>.New(ADelta);
 end;
 
 class operator TGridMover.Initialize(var a: TGridMover);

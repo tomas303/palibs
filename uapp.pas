@@ -14,7 +14,7 @@ uses
   trl_urttibroker, trl_irttibroker,
   trl_upersiststore, trl_ipersist,
   trl_upersistxml,
-  rea_idata;
+  rea_idata, sysutils;
 
 type
   { TApp }
@@ -205,22 +205,29 @@ end;
 function TGUI.GetPersons: IPersistRefList;
 var
   mPerson: IRBData;
+  i: integer;
 begin
   Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
   if Result.Count = 0 then
   begin
-    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-    mPerson.ItemByName['Name'].AsString := 'John';
-    mPerson.ItemByName['Surename'].AsString := 'Doe';
-    Store.Save(mPerson);
-    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-    mPerson.ItemByName['Name'].AsString := 'Jim';
-    mPerson.ItemByName['Surename'].AsString := 'Beam';
-    Store.Save(mPerson);
-    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-    mPerson.ItemByName['Name'].AsString := 'Anthony';
-    mPerson.ItemByName['Surename'].AsString := 'Hopkins';
-    Store.Save(mPerson);
+    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    //mPerson.ItemByName['Name'].AsString := 'John';
+    //mPerson.ItemByName['Surename'].AsString := 'Doe';
+    //Store.Save(mPerson);
+    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    //mPerson.ItemByName['Name'].AsString := 'Jim';
+    //mPerson.ItemByName['Surename'].AsString := 'Beam';
+    //Store.Save(mPerson);
+    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    //mPerson.ItemByName['Name'].AsString := 'Anthony';
+    //mPerson.ItemByName['Surename'].AsString := 'Hopkins';
+    //Store.Save(mPerson);
+    for i := 1 to 100 do begin
+      mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+      mPerson.ItemByName['Name'].AsString := 'Name ' + i.ToString;
+      mPerson.ItemByName['Surename'].AsString := 'Surename ' + i.ToString;
+      Store.Save(mPerson);
+    end;
   end;
   Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
 end;
@@ -319,6 +326,44 @@ begin
   fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommandData.CreateLast);
   fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommandData.CreateNext);
   fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommandData.CreatePrior);
+
+
+  PubSub.Factory.NewDataBridge<TGridCmdMove, TCommandData>(
+    fGrid.PSGridCmdMoveChannel,
+    fDataConnector.PSCommandDataChannel,
+    function (const x: TGridCmdMove): TCommandData
+    begin
+      Result := TCommandData.CreateMove(x.Delta);
+    end);
+  PubSub.Factory.NewDataBridge<TGridCmdInfo, TCommandData>(
+    fGrid.PSGridCmdInfoChannel,
+    fDataConnector.PSCommandDataChannel,
+    function (const x: TGridCmdInfo): TCommandData
+    begin
+      Result := TCommandData.CreateInfo(x.FromPos, x.ToPos);
+    end);
+
+  PubSub.Factory.NewDataBridge<TInfoData, TGridRecord>(
+    fDataConnector.PSInfoDataChannel,
+    fGrid.PSGridRecordChannel,
+    function (const x: TInfoData): TGridRecord
+    begin
+      Result := TGridRecord.Create(
+        x.Position,
+        TArray<String>.Create(x.Accessor['Name'], x.Accessor['Surename'])
+        );
+    end);
+
+  PubSub.Factory.NewDataBridge<TPositionChange, TGridMover>(
+    fDataConnector.PSPositionChangeChannel,
+    fGrid.PSGridMoverChannel,
+    function (const x: TPositionChange): TGridMover
+    begin
+      if x.Delta.HasValue then
+        Result := TGridMover.New(x.Delta.Value)
+      else
+        Result := TGridMover.New;
+    end);
 
 
 
