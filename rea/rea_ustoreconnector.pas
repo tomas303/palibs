@@ -43,17 +43,17 @@ type
     fActualIndex: integer;
     fPSFieldDataChannel: IPSFieldDataChannel;
     fPSRecordDataChannel: IPSRecordDataChannel;
-    fPSCommandDataChannel: IPSCommandDataChannel;
+    fPSCommandChannel: IPSCommandChannel;
     fPSPositionChangeChannel: IPSPositionChangeChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
-    procedure PSCommandDataChannelObserver(const AData: TCommandData);
+    procedure PSCommandChannelObserver(const AData: TCommand);
   protected
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
-    function PSCommandDataChannel: IPSCommandDataChannel;
+    function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
-    procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
+    procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
   public
     procedure BeforeDestruction; override;
   protected
@@ -130,13 +130,13 @@ begin
   fStore.Save(fActualData);
 end;
 
-procedure TStoreConnector.PSCommandDataChannelObserver(
-  const AData: TCommandData);
+procedure TStoreConnector.PSCommandChannelObserver(
+  const AData: TCommand);
 var
   mNewIndex: Integer;
 begin
   case AData.Action of
-    cdaMove: begin
+    cmdMove: begin
       mNewIndex := fActualIndex + AData.Delta;
       if (mNewIndex >= 0) and (mNewIndex <= fList.Count -1) then begin
         fActualIndex := mNewIndex;
@@ -145,7 +145,7 @@ begin
         fPSPositionChangeChannel.Publish(TPositionChange.New(AData.Delta));
       end;
     end;
-    cdaFirst: begin
+    cmdFirst: begin
       if fList.Count > 0 then begin
         fActualIndex := 0;
         fActualData := fList.Data[fActualIndex];
@@ -153,7 +153,7 @@ begin
         fPSPositionChangeChannel.Publish(TPositionChange.New);
       end;
     end;
-    cdaLast: begin
+    cmdLast: begin
       if fList.Count > 0 then begin
         fActualIndex := fList.Count - 1;
         fActualData := fList.Data[fActualIndex];
@@ -161,7 +161,7 @@ begin
         fPSPositionChangeChannel.Publish(TPositionChange.New);
       end;
     end;
-    cdaInfo: begin
+    cmdInfo: begin
       PublishInfo(AData.FromPos, AData.ToPos);
     end;
   end;
@@ -174,8 +174,8 @@ begin
   fPSFieldDataChannel := fPubSub.Factory.NewDataChannel<TFieldData>;
   fPSFieldDataChannel.Subscribe(PSFieldDataChannelObserver);
   fPSRecordDataChannel := fPubSub.Factory.NewDataChannel<TRecordData>;
-  fPSCommandDataChannel := fPubSub.Factory.NewDataChannel<TCommandData>;
-  fPSCommandDataChannel.Subscribe(PSCommandDataChannelObserver);
+  fPSCommandChannel := fPubSub.Factory.NewDataChannel<TCommand>;
+  fPSCommandChannel.Subscribe(PSCommandChannelObserver);
   fPSPositionChangeChannel := fPubSub.Factory.NewDataChannel<TPositionChange>;
   fPSPositionChangeChannel.Publish(TPositionChange.New);
 end;
@@ -199,9 +199,9 @@ begin
   Result := fPSRecordDataChannel;
 end;
 
-function TStoreConnector.PSCommandDataChannel: IPSCommandDataChannel;
+function TStoreConnector.PSCommandChannel: IPSCommandChannel;
 begin
-  Result := fPSCommandDataChannel;
+  Result := fPSCommandChannel;
 end;
 
 function TStoreConnector.PSPositionChangeChannel: IPSPositionChangeChannel;
@@ -232,12 +232,12 @@ begin
 end;
 
 procedure TStoreConnector.RegisterCommand(const AChannel: IPubSubChannel;
-  const AData: TCommandData);
+  const AData: TCommand);
 begin
-  fPubSub.Factory.NewNonDataToDataBridge<TCommandData>(
+  fPubSub.Factory.NewNonDataToDataBridge<TCommand>(
     AChannel,
-    PSCommandDataChannel,
-    function: TCommandData
+    PSCommandChannel,
+    function: TCommand
     begin
       Result := AData
     end);
@@ -246,7 +246,7 @@ end;
 procedure TStoreConnector.BeforeDestruction;
 begin
   fPSFieldDataChannel.Unsubscribe(PSFieldDataChannelObserver);
-  fPSCommandDataChannel.Unsubscribe(PSCommandDataChannelObserver);
+  fPSCommandChannel.Unsubscribe(PSCommandChannelObserver);
   inherited BeforeDestruction;
 end;
 

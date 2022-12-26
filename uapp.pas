@@ -322,25 +322,25 @@ begin
   fDataConnector := Factory2.Locate<IDataConnector>('TStoreConnector', NewProps.SetIntf('List', GetPersons));
   fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
   fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
-  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommandData.CreateFirst);
-  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommandData.CreateLast);
-  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommandData.CreateNext);
-  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommandData.CreatePrior);
+  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommand.CreateFirst);
+  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommand.CreateLast);
+  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommand.CreateNext);
+  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommand.CreatePrior);
 
 
-  PubSub.Factory.NewDataBridge<TGridCmdMove, TCommandData>(
+  PubSub.Factory.NewDataBridge<TGridCmdMove, TCommand>(
     fGrid.PSGridCmdMoveChannel,
-    fDataConnector.PSCommandDataChannel,
-    function (const x: TGridCmdMove): TCommandData
+    fDataConnector.PSCommandChannel,
+    function (const x: TGridCmdMove): TCommand
     begin
-      Result := TCommandData.CreateMove(x.Delta);
+      Result := TCommand.CreateMove(x.Delta);
     end);
-  PubSub.Factory.NewDataBridge<TGridCmdInfo, TCommandData>(
+  PubSub.Factory.NewDataBridge<TGridCmdInfo, TCommand>(
     fGrid.PSGridCmdInfoChannel,
-    fDataConnector.PSCommandDataChannel,
-    function (const x: TGridCmdInfo): TCommandData
+    fDataConnector.PSCommandChannel,
+    function (const x: TGridCmdInfo): TCommand
     begin
-      Result := TCommandData.CreateInfo(x.FromPos, x.ToPos);
+      Result := TCommand.CreateInfo(x.FromPos, x.ToPos);
     end);
 
   PubSub.Factory.NewDataBridge<TRecordData, TGridRecord>(
