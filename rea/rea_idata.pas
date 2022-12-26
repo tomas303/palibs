@@ -35,10 +35,12 @@ type
 
   TRecordData = record
   strict private
+    fPosition: Integer;
     fAccessor: IDataAccessor;
   public
-    constructor Create(const AAccessor: IDataAccessor);
+    constructor Create(APosition: Integer; const AAccessor: IDataAccessor);
     class operator equal(a,b: TRecordData): Boolean;
+    public property Position: Integer read fPosition;
     public property Accessor: IDataAccessor read fAccessor;
   end;
 
@@ -66,20 +68,6 @@ type
     public property ToPos: Integer read fToPos;
   end;
 
-  { TInfoData }
-
-  TInfoData = record
-  strict private
-    fPosition: Integer;
-    fAccessor: IDataAccessor;
-  public
-    constructor Create(APosition: Integer; const AAccessor: IDataAccessor);
-    class operator equal(a,b: TInfoData): Boolean;
-    public property Position: Integer read fPosition;
-    public property Accessor: IDataAccessor read fAccessor;
-  end;
-
-
   { TPositionChange }
 
   TPositionChange = record
@@ -96,7 +84,6 @@ type
   IPSFieldDataChannel = IPubSubDataChannel<TFieldData>;
   IPSRecordDataChannel = IPubSubDataChannel<TRecordData>;
   IPSCommandDataChannel = IPubSubDataChannel<TCommandData>;
-  IPSInfoDataChannel = IPubSubDataChannel<TInfoData>;
   IPSPositionChangeChannel = IPubSubDataChannel<TPositionChange>;
 
   IDataConnector = interface
@@ -104,7 +91,6 @@ type
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
-    function PSInfoDataChannel: IPSInfoDataChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
@@ -133,30 +119,17 @@ begin
   Result := a.Delta = b.Delta;
 end;
 
-{ TInfoData }
-
-constructor TInfoData.Create(APosition: Integer; const AAccessor: IDataAccessor
-  );
-begin
-  fPosition := APosition;
-  fAccessor :=  AAccessor;
-end;
-
-class operator TInfoData.equal(a, b: TInfoData): Boolean;
-begin
-  Result := (a.Position = b.Position) and (a.Accessor = b.Accessor);
-end;
-
 { TRecordData }
 
-constructor TRecordData.Create(const AAccessor: IDataAccessor);
+constructor TRecordData.Create(APosition: Integer; const AAccessor: IDataAccessor);
 begin
+  fPosition := APosition;
   fAccessor := AAccessor;
 end;
 
 class operator TRecordData.equal(a, b: TRecordData): Boolean;
 begin
-  Result := a.Accessor = b.Accessor;
+  Result := (a.Position = b.Position) and (a.Accessor = b.Accessor);
 end;
 
 { TCommandData }

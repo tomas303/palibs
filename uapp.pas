@@ -343,10 +343,10 @@ begin
       Result := TCommandData.CreateInfo(x.FromPos, x.ToPos);
     end);
 
-  PubSub.Factory.NewDataBridge<TInfoData, TGridRecord>(
-    fDataConnector.PSInfoDataChannel,
+  PubSub.Factory.NewDataBridge<TRecordData, TGridRecord>(
+    fDataConnector.PSRecordDataChannel,
     fGrid.PSGridRecordChannel,
-    function (const x: TInfoData): TGridRecord
+    function (const x: TRecordData): TGridRecord
     begin
       Result := TGridRecord.Create(
         x.Position,

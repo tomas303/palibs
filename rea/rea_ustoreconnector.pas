@@ -44,7 +44,6 @@ type
     fPSFieldDataChannel: IPSFieldDataChannel;
     fPSRecordDataChannel: IPSRecordDataChannel;
     fPSCommandDataChannel: IPSCommandDataChannel;
-    fPSInfoDataChannel: IPSInfoDataChannel;
     fPSPositionChangeChannel: IPSPositionChangeChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
     procedure PSCommandDataChannelObserver(const AData: TCommandData);
@@ -52,7 +51,6 @@ type
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandDataChannel: IPSCommandDataChannel;
-    function PSInfoDataChannel: IPSInfoDataChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommandData);
@@ -97,7 +95,7 @@ procedure TStoreConnector.PublishData;
 begin
   if fActualData = nil then
     Exit;
-  fPSRecordDataChannel.Publish(TRecordData.Create(TAccessor.Create(fActualData)));
+  fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fActualData)));
 end;
 
 procedure TStoreConnector.PublishInfo(AFrom, ATo: Integer);
@@ -106,11 +104,11 @@ var
 begin
   if ATo >= AFrom then begin
     for i := AFrom to ATo do begin
-      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(fActualIndex + i)));
+      fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(fActualIndex + i)));
     end;
   end else begin
     for i := AFrom downto ATo do begin
-      fPSInfoDataChannel.Publish(TInfoData.Create(i, NewAccessor(fActualIndex + i)));
+      fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(fActualIndex + i)));
     end;
   end;
 end;
@@ -178,7 +176,6 @@ begin
   fPSRecordDataChannel := fPubSub.Factory.NewDataChannel<TRecordData>;
   fPSCommandDataChannel := fPubSub.Factory.NewDataChannel<TCommandData>;
   fPSCommandDataChannel.Subscribe(PSCommandDataChannelObserver);
-  fPSInfoDataChannel := fPubSub.Factory.NewDataChannel<TInfoData>;
   fPSPositionChangeChannel := fPubSub.Factory.NewDataChannel<TPositionChange>;
   fPSPositionChangeChannel.Publish(TPositionChange.New);
 end;
@@ -207,11 +204,6 @@ begin
   Result := fPSCommandDataChannel;
 end;
 
-function TStoreConnector.PSInfoDataChannel: IPSInfoDataChannel;
-begin
-  Result := fPSInfoDataChannel;
-end;
-
 function TStoreConnector.PSPositionChangeChannel: IPSPositionChangeChannel;
 begin
   Result := fPSPositionChangeChannel;
@@ -232,7 +224,10 @@ begin
    AFieldChannel,
    function (const AData: TRecordData): String
    begin
-     Result := AData.Accessor[AName];
+     if AData.Position = 0 then
+       Result := AData.Accessor[AName]
+     else
+       raise EPubSubBridgeNoWay.Create('');
    end);
 end;
 
