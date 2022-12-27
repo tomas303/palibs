@@ -492,10 +492,21 @@ procedure TDesignComponentGrid.PSGridRecordChannelObserver(
 var
   i: Integer;
 begin
-  for i := 0 to Length(AData.Data) - 1 do
-    fData[AData.Pos + fSourceRow, i] := AData.Data[i];
-  PSGUIChannel.Debounce(TGUIData.Create(gaRender));
-  fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
+  if AData.Data.HasValue then begin
+    for i := 0 to Length(AData.Data.Value) - 1 do
+      fData[AData.Pos + fSourceRow, i] := AData.Data.Value[i];
+    PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+    fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
+  end else begin
+    for i := 0 to ColCount - 1 do
+      fData[AData.Pos + fSourceRow, i] := '';
+    if AData.Pos < 0 then begin
+      fCurrentRow := 0;
+      fPSGridMoverChannel.Publish(TGridMover.New);
+    end else begin
+      fCurrentRow := fSourceRow;
+    end;
+  end;
 end;
 
 function TDesignComponentGrid.PSGridRecordChannel: IPSGridRecordChannel;

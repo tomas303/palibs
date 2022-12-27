@@ -100,15 +100,23 @@ end;
 
 procedure TStoreConnector.PublishInfo(AFrom, ATo: Integer);
 var
-  i: integer;
+  i, mInd: integer;
 begin
   if ATo >= AFrom then begin
     for i := AFrom to ATo do begin
-      fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(fActualIndex + i)));
+      mInd := fActualIndex + i;
+      if (mInd < 0) or (mInd > fList.Count - 1) then
+        fPSRecordDataChannel.Publish(TRecordData.Create(i))
+      else
+        fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(mInd)));
     end;
   end else begin
     for i := AFrom downto ATo do begin
-      fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(fActualIndex + i)));
+      mInd := fActualIndex + i;
+      if (mInd < 0) or (mInd > fList.Count - 1) then
+        fPSRecordDataChannel.Publish(TRecordData.Create(i))
+      else
+        fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(mInd)));
     end;
   end;
 end;
@@ -134,31 +142,38 @@ procedure TStoreConnector.PSCommandChannelObserver(
   const AData: TCommand);
 var
   mNewIndex: Integer;
+  mDelta: Integer;
 begin
   case AData.Action of
     cmdMove: begin
       mNewIndex := fActualIndex + AData.Delta;
-      if (mNewIndex >= 0) and (mNewIndex <= fList.Count -1) then begin
-        fActualIndex := mNewIndex;
+      if mNewIndex < 0 then
+        mDelta := -fActualIndex
+      else if mNewIndex > fList.Count - 1 then
+        mDelta := fList.Count - 1 - fActualIndex
+      else
+        mDelta := AData.Delta;
+      if mDelta <> 0 then begin
+        fActualIndex := fActualIndex + mDelta;
         fActualData := fList.Data[fActualIndex];
+        fPSPositionChangeChannel.Publish(TPositionChange.New(mDelta));
         PublishData;
-        fPSPositionChangeChannel.Publish(TPositionChange.New(AData.Delta));
       end;
     end;
     cmdFirst: begin
       if fList.Count > 0 then begin
         fActualIndex := 0;
         fActualData := fList.Data[fActualIndex];
-        PublishData;
         fPSPositionChangeChannel.Publish(TPositionChange.New);
+        PublishData;
       end;
     end;
     cmdLast: begin
       if fList.Count > 0 then begin
         fActualIndex := fList.Count - 1;
         fActualData := fList.Data[fActualIndex];
-        PublishData;
         fPSPositionChangeChannel.Publish(TPositionChange.New);
+        PublishData;
       end;
     end;
     cmdInfo: begin
@@ -224,8 +239,8 @@ begin
    AFieldChannel,
    function (const AData: TRecordData): String
    begin
-     if AData.Position = 0 then
-       Result := AData.Accessor[AName]
+     if (AData.Position = 0) and AData.Accessor.HasValue then
+       Result := AData.Accessor.Value[AName]
      else
        raise EPubSubBridgeNoWay.Create('');
    end);

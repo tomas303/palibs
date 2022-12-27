@@ -348,10 +348,14 @@ begin
     fGrid.PSGridRecordChannel,
     function (const x: TRecordData): TGridRecord
     begin
-      Result := TGridRecord.Create(
-        x.Position,
-        TArray<String>.Create(x.Accessor['Name'], x.Accessor['Surename'])
-        );
+      if x.Accessor.HasValue then begin
+        Result := TGridRecord.Create(
+          x.Position,
+          TArray<String>.Create(x.Accessor.Value['Name'], x.Accessor.Value['Surename'])
+          );
+      end else begin
+        Result := TGridRecord.Create(x.Position);
+      end;
     end);
 
   PubSub.Factory.NewDataBridge<TPositionChange, TGridMover>(

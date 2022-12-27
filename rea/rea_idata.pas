@@ -12,6 +12,14 @@ uses
 
 type
 
+  { IDataAccessor }
+
+  IDataAccessor = interface
+  ['{48A69436-153D-4760-8B77-F0FF3600F8E7}']
+    function GetValue(const AName: String): String;
+    property Value[const AName: String]: String read GetValue; default;
+  end;
+
   { TFieldData }
 
   TFieldData = record
@@ -25,23 +33,18 @@ type
     public property Value: String read fValue;
   end;
 
-  IDataAccessor = interface
-  ['{48A69436-153D-4760-8B77-F0FF3600F8E7}']
-    function GetValue(const AName: String): String;
-    property Value[const AName: String]: String read GetValue; default;
-  end;
-
   { TRecordData }
 
   TRecordData = record
   strict private
     fPosition: Integer;
-    fAccessor: IDataAccessor;
+    fAccessor: TOptional<IDataAccessor>;
   public
-    constructor Create(APosition: Integer; const AAccessor: IDataAccessor);
+    constructor Create(APosition: Integer); overload;
+    constructor Create(APosition: Integer; const AAccessor: IDataAccessor); overload;
     class operator equal(a,b: TRecordData): Boolean;
     public property Position: Integer read fPosition;
-    public property Accessor: IDataAccessor read fAccessor;
+    public property Accessor: TOptional<IDataAccessor> read fAccessor;
   end;
 
   TCommandAction = (cmdFirst, cmdLast, cmdMove, cmdInfo);
@@ -121,10 +124,16 @@ end;
 
 { TRecordData }
 
+constructor TRecordData.Create(APosition: Integer);
+begin
+  fPosition := APosition;
+  fAccessor := TOptional<IDataAccessor>.New;
+end;
+
 constructor TRecordData.Create(APosition: Integer; const AAccessor: IDataAccessor);
 begin
   fPosition := APosition;
-  fAccessor := AAccessor;
+  fAccessor := TOptional<IDataAccessor>.New(AAccessor);
 end;
 
 class operator TRecordData.equal(a, b: TRecordData): Boolean;

@@ -119,16 +119,6 @@ type
     property Action: TGUIAction read fAction;
   end;
 
-  {
-
-  insertrecord
-  deleterecord
-  askforrelativedata
-  receiverelativedata
-  recivemovementcurrent
-
-  }
-
   { TGridCmdMove }
 
   TGridCmdMove = record
@@ -156,14 +146,17 @@ type
   { TGridRecord }
 
   TGridRecord = record
+  private type
+    TSArray = TArray<String>;
   private
     fPos: Integer;
-    fData: TArray<String>;
+    fData: TOptional<TArray<String>>;
   public
-    constructor Create(APos: Integer; const AData: TArray<String>);
+    constructor Create(APos: Integer; const AData: TArray<String>); overload;
+    constructor Create(APos: Integer); overload;
     class operator equal(a,b: TGridRecord): Boolean;
     property Pos: Integer read fPos;
-    property Data: TArray<String> read fData;
+    property Data: TOptional<TArray<String>> read fData;
   end;
 
   { TGridMover }
@@ -186,25 +179,6 @@ type
   IPSGridCmdInfoChannel = IPubSubDataChannel<TGridCmdInfo>;
   IPSGridRecordChannel = IPubSubDataChannel<TGridRecord>;
   IPSGridMoverChannel = IPubSubDataChannel<TGridMover>;
-
-  { IGridDataProvider }
-
-  IGridDataProvider = interface
-  ['{308CF052-70BC-46D9-8B76-C565B3920261}']
-    function Prev: Boolean;
-    function Next: Boolean;
-    function IsEmpty: Boolean;
-    function GetValue(Ind: integer): string;
-    procedure SetValue(Ind: integer; AValue: string);
-    function NewBookmark: IInterface;
-    procedure GotoBookmark(ABookmark: IInterface);
-    function GetSilent: Boolean;
-    procedure SetSilent(AValue: Boolean);
-    function GetMoveActionID: Integer;
-    property Value[Ind: integer]: string read GetValue write SetValue; default;
-    property Silent: Boolean read GetSilent write SetSilent;
-    property MoveActionID: Integer read GetMoveActionID;
-  end;
 
   IDesignComponent = interface
   ['{AD83F143-4C0A-4703-A38A-E3F175036FE6}']
@@ -325,7 +299,13 @@ end;
 constructor TGridRecord.Create(APos: Integer; const AData: TArray<String>);
 begin
   fPos := APos;
-  fData := AData;
+  fData := TOptional<TSArray>.New(AData);
+end;
+
+constructor TGridRecord.Create(APos: Integer);
+begin
+  fPos := APos;
+  fData := TOptional<TSArray>.New;
 end;
 
 class operator TGridRecord.equal(a, b: TGridRecord): Boolean;
