@@ -378,8 +378,8 @@ begin
     if not fSID.IsClear then
       fData := fStore.Load(fSID)
     else
-    if fClassName <> '' then
-      fData := fStore.New(fClassName)
+    if ClassName <> '' then
+      fData := fStore.New(ClassName)
   end;
   Result := fData;
 end;

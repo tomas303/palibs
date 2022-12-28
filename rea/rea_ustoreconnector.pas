@@ -8,7 +8,8 @@ unit rea_ustoreconnector;
 interface
 
 uses
-  rea_idata, trl_ipersist, trl_irttibroker, trl_pubsub, rea_ibits;
+  rea_idata, trl_ipersist, trl_irttibroker, trl_pubsub, rea_ibits,
+  trl_funcp, sysutils;
 
 type
 
@@ -35,12 +36,12 @@ type
     end;
 
   private
-    procedure PublishData;
-    procedure PublishInfo(AFrom, ATo: Integer);
+    procedure PublishActualRecord;
+    procedure PublishRecords(AFrom, ATo: Integer);
     function NewAccessor(AIndex: Integer): IDataAccessor;
   private
-    fActualData: IRBData;
-    fActualIndex: integer;
+    fActualData: TOptional<IRBData>;
+    fActualIndex: TOptional<Integer>;
     fPSFieldDataChannel: IPSFieldDataChannel;
     fPSRecordDataChannel: IPSRecordDataChannel;
     fPSCommandChannel: IPSCommandChannel;
@@ -91,32 +92,45 @@ end;
 
 { TStoreConnector }
 
-procedure TStoreConnector.PublishData;
+procedure TStoreConnector.PublishActualRecord;
 begin
-  if fActualData = nil then
-    Exit;
-  fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fActualData)));
+  if fActualData.HasValue then
+    fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fActualData.Value)))
+  else
+    fPSRecordDataChannel.Publish(TRecordData.Create(0))
 end;
 
-procedure TStoreConnector.PublishInfo(AFrom, ATo: Integer);
+procedure TStoreConnector.PublishRecords(AFrom, ATo: Integer);
 var
   i, mInd: integer;
 begin
-  if ATo >= AFrom then begin
-    for i := AFrom to ATo do begin
-      mInd := fActualIndex + i;
-      if (mInd < 0) or (mInd > fList.Count - 1) then
-        fPSRecordDataChannel.Publish(TRecordData.Create(i))
-      else
-        fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(mInd)));
+  if fActualIndex.HasValue then begin
+    if ATo >= AFrom then begin
+      for i := AFrom to ATo do begin
+        mInd := fActualIndex.Value + i;
+        if (mInd < 0) or (mInd > fList.Count - 1) then
+          fPSRecordDataChannel.Publish(TRecordData.Create(i))
+        else
+          fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(mInd)));
+      end;
+    end else begin
+      for i := AFrom downto ATo do begin
+        mInd := fActualIndex.Value + i;
+        if (mInd < 0) or (mInd > fList.Count - 1) then
+          fPSRecordDataChannel.Publish(TRecordData.Create(i))
+        else
+          fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(mInd)));
+      end;
     end;
   end else begin
-    for i := AFrom downto ATo do begin
-      mInd := fActualIndex + i;
-      if (mInd < 0) or (mInd > fList.Count - 1) then
-        fPSRecordDataChannel.Publish(TRecordData.Create(i))
-      else
-        fPSRecordDataChannel.Publish(TRecordData.Create(i, NewAccessor(mInd)));
+    if ATo >= AFrom then begin
+      for i := AFrom to ATo do begin
+          fPSRecordDataChannel.Publish(TRecordData.Create(i))
+      end;
+    end else begin
+      for i := AFrom downto ATo do begin
+          fPSRecordDataChannel.Publish(TRecordData.Create(i))
+      end;
     end;
   end;
 end;
@@ -132,10 +146,10 @@ end;
 procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData
   );
 begin
-  if fActualData = nil then
-    Exit;
-  fActualData.ItemByName[AData.Name].AsString := AData.Value;
-  fStore.Save(fActualData);
+  if fActualData.HasValue then begin
+    fActualData.Value.ItemByName[AData.Name].AsString := AData.Value;
+    fStore.Save(fActualData.Value);
+  end;
 end;
 
 procedure TStoreConnector.PSCommandChannelObserver(
@@ -146,36 +160,61 @@ var
 begin
   case AData.Action of
     cmdMove: begin
-      mNewIndex := fActualIndex + AData.Delta;
-      if mNewIndex < 0 then
-        mDelta := -fActualIndex
-      else if mNewIndex > fList.Count - 1 then
-        mDelta := fList.Count - 1 - fActualIndex
-      else
-      mDelta := AData.Delta;
-      fActualIndex := fActualIndex + mDelta;
-      fActualData := fList.Data[fActualIndex];
-      fPSPositionChangeChannel.Publish(TPositionChange.New(mDelta));
-      PublishData;
+      if fActualIndex.HasValue then begin
+        mNewIndex := fActualIndex.Value + AData.Delta;
+        if mNewIndex < 0 then
+          mDelta := -fActualIndex.Value
+        else if mNewIndex > fList.Count - 1 then
+          mDelta := fList.Count - 1 - fActualIndex.Value
+        else
+          mDelta := AData.Delta;
+        fActualIndex := TOptional<Integer>.New(fActualIndex.Value + mDelta);
+        fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
+        fPSPositionChangeChannel.Publish(TPositionChange.New(mDelta));
+        PublishActualRecord;
+      end else begin
+        fPSPositionChangeChannel.Publish(TPositionChange.New(0));
+        PublishActualRecord;
+      end;
     end;
     cmdFirst: begin
       if fList.Count > 0 then begin
-        fActualIndex := 0;
-        fActualData := fList.Data[fActualIndex];
+        fActualIndex := TOptional<Integer>.New(0);
+        fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
         fPSPositionChangeChannel.Publish(TPositionChange.New);
-        PublishData;
+        PublishActualRecord;
       end;
     end;
     cmdLast: begin
       if fList.Count > 0 then begin
-        fActualIndex := fList.Count - 1;
-        fActualData := fList.Data[fActualIndex];
+        fActualIndex := TOptional<Integer>.New(fList.Count - 1);
+        fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
         fPSPositionChangeChannel.Publish(TPositionChange.New);
-        PublishData;
+        PublishActualRecord;
       end;
     end;
     cmdInfo: begin
-      PublishInfo(AData.FromPos, AData.ToPos);
+      PublishRecords(AData.FromPos, AData.ToPos);
+    end;
+    cmdInsert: begin
+      if fActualIndex.HasValue then begin
+        fList.Insert(AData.Pos + fActualIndex.Value, AData.Ref);
+        fActualIndex := TOptional<Integer>.New(AData.Pos + fActualIndex.Value);
+        fActualData := TOptional<IRBData>.New(AData.Ref.Data);
+      end else begin
+        fList.Insert(0, AData.Ref);
+        fActualIndex := TOptional<Integer>.New(0);
+        fActualData := TOptional<IRBData>.New(AData.Ref.Data);
+      end;
+      fPSPositionChangeChannel.Publish(TPositionChange.New);
+    end;
+    cmdDelete: begin
+      fList.Delete(AData.Pos + fActualIndex.Value);
+      if fList.Count = 0 then begin
+        fActualIndex := TOptional<Integer>.New;
+        fActualData := TOptional<IRBData>.New;
+      end;
+      fPSPositionChangeChannel.Publish(TPositionChange.New);
     end;
   end;
 end;
@@ -196,10 +235,15 @@ end;
 procedure TStoreConnector.SetList(AValue: IPersistRefList);
 begin
   if fList = AValue then Exit;
-  fList:=AValue;
-  if fList.Count > 0 then
-    fActualData := fList.Data[0];
-  PublishData;
+  fList := AValue;
+  if fList.Count > 0 then begin
+    fActualIndex := TOptional<Integer>.New(0);
+    fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
+  end else begin
+    fActualIndex := TOptional<Integer>.New;
+    fActualData := TOptional<IRBData>.New;
+  end;
+  PublishActualRecord;
 end;
 
 function TStoreConnector.PSFieldDataChannel: IPSFieldDataChannel;

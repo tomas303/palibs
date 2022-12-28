@@ -43,7 +43,7 @@ type
   end;
 
 
-  TControlKey = (ckUnknown, ckEnter, ckLeft, ckRight, ckUp, ckDown, ckTab, ckEsc, ckPgUp, ckPgDown);
+  TControlKey = (ckUnknown, ckEnter, ckLeft, ckRight, ckUp, ckDown, ckTab, ckEsc, ckPgUp, ckPgDown, ckInsert, ckDelete);
 
   { TKeyData }
 
@@ -135,6 +135,8 @@ begin
     VK_ESCAPE: mControlKey := ckEsc;
     VK_PRIOR: mControlKey := ckPgUp;
     VK_NEXT: mControlKey := ckPgDown;
+    VK_INSERT: mControlKey := ckInsert;
+    VK_DELETE: mControlKey := ckDelete;
   else
     mControlKey := ckUnknown;
   end;

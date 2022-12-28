@@ -143,6 +143,34 @@ type
     property ToPos: Integer read fToPos;
   end;
 
+  { TGridCmdRow }
+
+  TGridCmdRowAction = (cmdNew, cmdDelete);
+
+  TGridCmdRow = record
+  private
+    fPos: Integer;
+    fAction: TGridCmdRowAction;
+  public
+    constructor Create(APos: Integer; AAction: TGridCmdRowAction);
+    class operator equal(a,b: TGridCmdRow): Boolean;
+    property Pos: Integer read fPos;
+    property Action: TGridCmdRowAction read fAction;
+  end;
+
+  { TGridCmdField }
+
+  TGridCmdField = record
+  private
+    fCol: Integer;
+    fValue: String;
+  public
+    constructor Create(ACol: Integer; const AValue: String);
+    class operator equal(a,b: TGridCmdField): Boolean;
+    property Col: Integer read fCol;
+    property Value: String read fValue;
+  end;
+
   { TGridRecord }
 
   TGridRecord = record
@@ -177,6 +205,8 @@ type
 
   IPSGridCmdMoveChannel = IPubSubDataChannel<TGridCmdMove>;
   IPSGridCmdInfoChannel = IPubSubDataChannel<TGridCmdInfo>;
+  IPSGridCmdRowChannel = IPubSubDataChannel<TGridCmdRow>;
+  IPSGridCmdFieldChannel = IPubSubDataChannel<TGridCmdField>;
   IPSGridRecordChannel = IPubSubDataChannel<TGridRecord>;
   IPSGridMoverChannel = IPubSubDataChannel<TGridMover>;
 
@@ -229,6 +259,8 @@ type
   ['{72646A21-0264-4798-A9DE-C0B3E843806B}']
     function PSGridCmdMoveChannel: IPSGridCmdMoveChannel;
     function PSGridCmdInfoChannel: IPSGridCmdInfoChannel;
+    function PSGridCmdRowChannel: IPSGridCmdRowChannel;
+    function PSGridCmdFieldChannel: IPSGridCmdFieldChannel;
     function PSGridRecordChannel: IPSGridRecordChannel;
     function PSGridMoverChannel: IPSGridMoverChannel;
   end;
@@ -273,10 +305,37 @@ const
 
 implementation
 
+{ TGridCmdField }
+
+constructor TGridCmdField.Create(ACol: Integer; const AValue: String);
+begin
+  fCol := ACol;
+  fValue := AValue;
+end;
+
+class operator TGridCmdField.equal(a, b: TGridCmdField): Boolean;
+begin
+  Result := (a.Col = b.Col) and (a.Value = b.Value);
+end;
+
+{ TGridCmdRow }
+
+constructor TGridCmdRow.Create(APos: Integer; AAction: TGridCmdRowAction);
+begin
+  fPos := APos;
+  fAction := AAction;
+end;
+
+class operator TGridCmdRow.equal(a, b: TGridCmdRow): Boolean;
+begin
+  Result := (a.Pos = b.Pos) and (a.Action = b.Action);
+end;
+
 { TGridMover }
 
 class function TGridMover.New: TGridMover;
 begin
+  Result.fDelta := TOptional<Integer>.New;
 end;
 
 class function TGridMover.New(ADelta: Integer): TGridMover;

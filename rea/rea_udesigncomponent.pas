@@ -200,6 +200,12 @@ type
     fPSGridCmdInfoChannel: IPSGridCmdInfoChannel;
     function PSGridCmdInfoChannel: IPSGridCmdInfoChannel;
   private
+    fPSGridCmdRowChannel: IPSGridCmdRowChannel;
+    function PSGridCmdRowChannel: IPSGridCmdRowChannel;
+  private
+    fPSGridCmdFieldChannel: IPSGridCmdFieldChannel;
+    function PSGridCmdFieldChannel: IPSGridCmdFieldChannel;
+  private
     fPSGridRecordChannel: IPSGridRecordChannel;
     procedure PSGridRecordChannelObserver(const AData: TGridRecord);
     function PSGridRecordChannel: IPSGridRecordChannel;
@@ -223,6 +229,8 @@ type
     procedure ShiftRows(AInfo: TShiftInfo);
     procedure ChangeRowData(ARow: Integer; AData: TArray<String>);
     procedure EraseRowData(ARow: Integer);
+    procedure InsertRecord;
+    procedure DeleteRecord;
     procedure SentGUIRender;
     procedure SentEditChange;
     procedure SentRows(AFrom, ATo: Integer);
@@ -492,6 +500,16 @@ begin
   Result := fPSGridCmdInfoChannel;
 end;
 
+function TDesignComponentGrid.PSGridCmdRowChannel: IPSGridCmdRowChannel;
+begin
+  Result := fPSGridCmdRowChannel;
+end;
+
+function TDesignComponentGrid.PSGridCmdFieldChannel: IPSGridCmdFieldChannel;
+begin
+  Result := fPSGridCmdFieldChannel;
+end;
+
 procedure TDesignComponentGrid.PSGridRecordChannelObserver(
   const AData: TGridRecord);
 begin
@@ -553,6 +571,7 @@ end;
 procedure TDesignComponentGrid.PSTextChannelObserver(const AValue: String);
 begin
   fData[fCurrentRow, fCurrentCol] := AValue;
+  PSGridCmdFieldChannel.Publish(TGridCmdField.Create(fCurrentCol, AValue));
 end;
 
 procedure TDesignComponentGrid.PSKeyDownChannelObserver(const AValue: TKeyData);
@@ -563,6 +582,8 @@ begin
     ckDown: MoveVertically(1);
     ckPgUp: MoveVertically(-fRowCount);
     ckPgDown: MoveVertically(fRowCount);
+    ckInsert: InsertRecord;
+    ckDelete: DeleteRecord;
   end;
 end;
 
@@ -637,6 +658,16 @@ begin
     fData[ARow, i] := '';
   if ARow = fCurrentRow then
     SentEditChange;
+end;
+
+procedure TDesignComponentGrid.InsertRecord;
+begin
+  PSGridCmdRowChannel.Publish(TGridCmdRow.Create(fCurrentRow - fSourceRow, cmdNew));
+end;
+
+procedure TDesignComponentGrid.DeleteRecord;
+begin
+  PSGridCmdRowChannel.Publish(TGridCmdRow.Create(fCurrentRow - fSourceRow, cmdDelete));
 end;
 
 procedure TDesignComponentGrid.SentGUIRender;
@@ -761,6 +792,8 @@ begin
   fEdit.PSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
   fPSGridCmdMoveChannel := PubSub.Factory.NewDataChannel<TGridCmdMove>;
   fPSGridCmdInfoChannel := PubSub.Factory.NewDataChannel<TGridCmdInfo>;
+  fPSGridCmdRowChannel := PubSub.Factory.NewDataChannel<TGridCmdRow>;
+  fPSGridCmdFieldChannel := PubSub.Factory.NewDataChannel<TGridCmdField>;
   fPSGridRecordChannel := PubSub.Factory.NewDataChannel<TGridRecord>;
   fPSGridRecordChannel.Subscribe(PSGridRecordChannelObserver);
   fPSGridMoverChannel := PubSub.Factory.NewDataChannel<TGridMover>;

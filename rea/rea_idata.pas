@@ -8,7 +8,7 @@ unit rea_idata;
 interface
 
 uses
-  trl_pubsub, rea_ibits, trl_funcp;
+  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist;
 
 type
 
@@ -47,7 +47,7 @@ type
     public property Accessor: TOptional<IDataAccessor> read fAccessor;
   end;
 
-  TCommandAction = (cmdFirst, cmdLast, cmdMove, cmdInfo);
+  TCommandAction = (cmdFirst, cmdLast, cmdMove, cmdInfo, cmdInsert, cmdDelete);
 
   { TCommand }
 
@@ -57,6 +57,8 @@ type
     fDelta: Integer;
     fFromPos: Integer;
     fToPos: Integer;
+    fRef: IPersistRef;
+    fPos: Integer;
   public
     class function CreateFirst: TCommand; static;
     class function CreateLast: TCommand; static;
@@ -64,11 +66,15 @@ type
     class function CreatePrior: TCommand; static;
     class function CreateMove(ADelta: Integer): TCommand; static;
     class function CreateInfo(AFromPos, AToPos: Integer): TCommand; static;
+    class function CreateInsert(APos: Integer; const ARef: IPersistRef): TCommand; static;
+    class function CreateDelete(APos: Integer): TCommand; static;
     class operator equal(a,b: TCommand): Boolean;
     public property Action: TCommandAction read fAction;
     public property Delta: Integer read fDelta;
     public property FromPos: Integer read fFromPos;
     public property ToPos: Integer read fToPos;
+    public property Ref: IPersistRef read fRef;
+    public property Pos: Integer read fPos;
   end;
 
   { TPositionChange }
@@ -174,6 +180,19 @@ begin
   Result.fAction := cmdInfo;
   Result.fFromPos := AFromPos;
   Result.fToPos := AToPos;
+end;
+
+class function TCommand.CreateInsert(APos: Integer; const ARef: IPersistRef): TCommand;
+begin
+  Result.fAction := cmdInsert;
+  Result.fPos:=  APos;
+  Result.fRef := ARef;
+end;
+
+class function TCommand.CreateDelete(APos: Integer): TCommand;
+begin
+  Result.fAction := cmdDelete;
+  Result.fPos := APos;
 end;
 
 class operator TCommand.equal(a, b: TCommand): Boolean;

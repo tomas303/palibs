@@ -50,6 +50,7 @@ type
   private
     procedure BeforeClose;
     procedure CloseProgram;
+    function TGridCmdRow_TCommand: TPubSubDataConversion<TGridCmdRow, TCommand>;
   protected
     function PSGUIChannel: IPSGUIChannel;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
@@ -208,28 +209,28 @@ var
   i: integer;
 begin
   Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
-  if Result.Count = 0 then
-  begin
-    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-    //mPerson.ItemByName['Name'].AsString := 'John';
-    //mPerson.ItemByName['Surename'].AsString := 'Doe';
-    //Store.Save(mPerson);
-    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-    //mPerson.ItemByName['Name'].AsString := 'Jim';
-    //mPerson.ItemByName['Surename'].AsString := 'Beam';
-    //Store.Save(mPerson);
-    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-    //mPerson.ItemByName['Name'].AsString := 'Anthony';
-    //mPerson.ItemByName['Surename'].AsString := 'Hopkins';
-    //Store.Save(mPerson);
-    for i := 1 to 100 do begin
-      mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-      mPerson.ItemByName['Name'].AsString := 'Name ' + i.ToString;
-      mPerson.ItemByName['Surename'].AsString := 'Surename ' + i.ToString;
-      Store.Save(mPerson);
-    end;
-  end;
-  Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
+  //if Result.Count = 0 then
+  //begin
+  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+  //  //mPerson.ItemByName['Name'].AsString := 'John';
+  //  //mPerson.ItemByName['Surename'].AsString := 'Doe';
+  //  //Store.Save(mPerson);
+  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+  //  //mPerson.ItemByName['Name'].AsString := 'Jim';
+  //  //mPerson.ItemByName['Surename'].AsString := 'Beam';
+  //  //Store.Save(mPerson);
+  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+  //  //mPerson.ItemByName['Name'].AsString := 'Anthony';
+  //  //mPerson.ItemByName['Surename'].AsString := 'Hopkins';
+  //  //Store.Save(mPerson);
+  //  for i := 1 to 100 do begin
+  //    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+  //    mPerson.ItemByName['Name'].AsString := 'Name ' + i.ToString;
+  //    mPerson.ItemByName['Surename'].AsString := 'Surename ' + i.ToString;
+  //    Store.Save(mPerson);
+  //  end;
+  //  Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
+  //end;
 end;
 
 procedure TGUI.PSNameObserver(const AValue: String);
@@ -264,6 +265,23 @@ procedure TGUI.CloseProgram;
 begin
   BeforeClose;
   raise ELaunchStop.Create('');
+end;
+
+function TGUI.TGridCmdRow_TCommand: TPubSubDataConversion<TGridCmdRow, TCommand>;
+begin
+  Result := function(const x: TGridCmdRow): TCommand
+  begin
+    case x.Action of
+      TGridCmdRowAction.cmdNew: begin
+        Result := TCommand.CreateInsert(x.Pos, Factory2.Locate<IPersistRef>(TPerson.ClassName));
+      end;
+      TGridCmdRowAction.cmdDelete: begin
+        Result := TCommand.CreateDelete(x.Pos);
+      end;
+    else
+      raise Exception.Create('unknown cmdrow command');
+    end;
+  end;
 end;
 
 function TGUI.PSGUIChannel: IPSGUIChannel;
@@ -342,6 +360,23 @@ begin
     begin
       Result := TCommand.CreateInfo(x.FromPos, x.ToPos);
     end);
+  PubSub.Factory.NewDataBridge<TGridCmdRow, TCommand>(
+    fGrid.PSGridCmdRowChannel,
+    fDataConnector.PSCommandChannel,
+    TGridCmdRow_TCommand);
+  PubSub.Factory.NewDataBridge<TGridCmdField, TFieldData>(
+    fGrid.PSGridCmdFieldChannel,
+    fDataConnector.PSFieldDataChannel,
+    function (const x: TGridCmdField): TFieldData
+    begin
+      case x.Col of
+        0: Result := TFieldData.Create('Name', x.Value);
+        1: Result := TFieldData.Create('Surename', x.Value);
+      else
+        raise Exception.Create('unknown column map for name');
+      end;
+    end);
+
 
   PubSub.Factory.NewDataBridge<TRecordData, TGridRecord>(
     fDataConnector.PSRecordDataChannel,
@@ -393,6 +428,10 @@ begin
   // persist data
   RegisterDataClass(DIC, TAppSettings);
   RegisterDataClass(DIC, TPerson);
+
+  mReg := DIC.Add(TPersistRef<TPerson>, IPersistRef, TPerson.ClassName);
+  mReg.InjectProp('Store', IPersistStore);
+
   //
   mReg := DIC.Add(TStoreCache);
   //
