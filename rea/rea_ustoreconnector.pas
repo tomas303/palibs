@@ -152,13 +152,11 @@ begin
       else if mNewIndex > fList.Count - 1 then
         mDelta := fList.Count - 1 - fActualIndex
       else
-        mDelta := AData.Delta;
-      if mDelta <> 0 then begin
-        fActualIndex := fActualIndex + mDelta;
-        fActualData := fList.Data[fActualIndex];
-        fPSPositionChangeChannel.Publish(TPositionChange.New(mDelta));
-        PublishData;
-      end;
+      mDelta := AData.Delta;
+      fActualIndex := fActualIndex + mDelta;
+      fActualData := fList.Data[fActualIndex];
+      fPSPositionChangeChannel.Publish(TPositionChange.New(mDelta));
+      PublishData;
     end;
     cmdFirst: begin
       if fList.Count > 0 then begin
