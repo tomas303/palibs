@@ -40,7 +40,6 @@ type
     procedure PublishRecords(AFrom, ATo: Integer);
     function NewAccessor(AIndex: Integer): IDataAccessor;
   private
-    fActualData: TOptional<IRBData>;
     fActualIndex: TOptional<Integer>;
     fPSFieldDataChannel: IPSFieldDataChannel;
     fPSRecordDataChannel: IPSRecordDataChannel;
@@ -94,8 +93,8 @@ end;
 
 procedure TStoreConnector.PublishActualRecord;
 begin
-  if fActualData.HasValue then
-    fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fActualData.Value)))
+  if fActualIndex.HasValue then
+    fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fList.Data[fActualIndex.Value])))
   else
     fPSRecordDataChannel.Publish(TRecordData.Create(0))
 end;
@@ -143,12 +142,14 @@ begin
     Result := TAccessor.Create(fList.Data[AIndex]);
 end;
 
-procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData
-  );
+procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData);
+var
+  mActualData: IRBData;
 begin
-  if fActualData.HasValue then begin
-    fActualData.Value.ItemByName[AData.Name].AsString := AData.Value;
-    fStore.Save(fActualData.Value);
+  if fActualIndex.HasValue then begin
+    mActualData := fList.Data[fActualIndex.Value];
+    mActualData.ItemByName[AData.Name].AsString := AData.Value;
+    fStore.Save(mActualData);
   end;
 end;
 
@@ -157,6 +158,7 @@ procedure TStoreConnector.PSCommandChannelObserver(
 var
   mNewIndex: Integer;
   mDelta: Integer;
+  mIndex: Integer;
 begin
   case AData.Action of
     cmdMove: begin
@@ -169,7 +171,6 @@ begin
         else
           mDelta := AData.Delta;
         fActualIndex := TOptional<Integer>.New(fActualIndex.Value + mDelta);
-        fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
         fPSPositionChangeChannel.Publish(TPositionChange.New(mDelta));
         PublishActualRecord;
       end else begin
@@ -180,7 +181,6 @@ begin
     cmdFirst: begin
       if fList.Count > 0 then begin
         fActualIndex := TOptional<Integer>.New(0);
-        fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
         fPSPositionChangeChannel.Publish(TPositionChange.New);
         PublishActualRecord;
       end;
@@ -188,7 +188,6 @@ begin
     cmdLast: begin
       if fList.Count > 0 then begin
         fActualIndex := TOptional<Integer>.New(fList.Count - 1);
-        fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
         fPSPositionChangeChannel.Publish(TPositionChange.New);
         PublishActualRecord;
       end;
@@ -200,21 +199,24 @@ begin
       if fActualIndex.HasValue then begin
         fList.Insert(AData.Pos + fActualIndex.Value, AData.Ref);
         fActualIndex := TOptional<Integer>.New(AData.Pos + fActualIndex.Value);
-        fActualData := TOptional<IRBData>.New(AData.Ref.Data);
       end else begin
         fList.Insert(0, AData.Ref);
         fActualIndex := TOptional<Integer>.New(0);
-        fActualData := TOptional<IRBData>.New(AData.Ref.Data);
       end;
       fPSPositionChangeChannel.Publish(TPositionChange.New);
     end;
     cmdDelete: begin
-      fList.Delete(AData.Pos + fActualIndex.Value);
-      if fList.Count = 0 then begin
-        fActualIndex := TOptional<Integer>.New;
-        fActualData := TOptional<IRBData>.New;
+      if fActualIndex.HasValue then begin
+        mIndex := AData.Pos + fActualIndex.Value;
+        Store.Delete(fList.Data[mIndex]);
+        fList.Delete(mIndex);
+        if fList.Count = 0 then begin
+          fActualIndex := TOptional<Integer>.New;
+        end else if fActualIndex.Value > fList.Count - 1 then begin
+          fActualIndex := TOptional<Integer>.New(fList.Count - 1);
+        end;
+        fPSPositionChangeChannel.Publish(TPositionChange.New);
       end;
-      fPSPositionChangeChannel.Publish(TPositionChange.New);
     end;
   end;
 end;
@@ -238,10 +240,8 @@ begin
   fList := AValue;
   if fList.Count > 0 then begin
     fActualIndex := TOptional<Integer>.New(0);
-    fActualData := TOptional<IRBData>.New(fList.Data[fActualIndex.Value]);
   end else begin
     fActualIndex := TOptional<Integer>.New;
-    fActualData := TOptional<IRBData>.New;
   end;
   PublishActualRecord;
 end;

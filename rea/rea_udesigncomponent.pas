@@ -519,7 +519,8 @@ begin
   end else begin
     EraseRowData(AData.Pos + fSourceRow);
     if AData.Pos < 0 then begin
-      fCurrentRow := 0;
+      if fCurrentRow > 0 then
+        Dec(fCurrentRow);
       fPSGridMoverChannel.Publish(TGridMover.New);
     end else begin
       if AData.Pos + fSourceRow = fCurrentRow then begin
