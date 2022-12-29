@@ -515,6 +515,7 @@ procedure TDesignComponentGrid.PSGridRecordChannelObserver(
 begin
   if AData.Data.HasValue then begin
     ChangeRowData(AData.Pos + fSourceRow, AData.Data.Value);
+    SentEditChange;
     SentGUIRender;
   end else begin
     EraseRowData(AData.Pos + fSourceRow);
@@ -568,8 +569,10 @@ end;
 
 procedure TDesignComponentGrid.PSTextChannelObserver(const AValue: String);
 begin
-  fData[fCurrentRow, fCurrentCol] := AValue;
-  PSGridCmdFieldChannel.Publish(TGridCmdField.Create(fCurrentCol, AValue));
+  if fData[fCurrentRow, fCurrentCol] <> AValue then begin
+    fData[fCurrentRow, fCurrentCol] := AValue;
+    PSGridCmdFieldChannel.Publish(TGridCmdField.Create(fCurrentCol, AValue));
+  end;
 end;
 
 procedure TDesignComponentGrid.PSKeyDownChannelObserver(const AValue: TKeyData);
@@ -580,8 +583,8 @@ begin
     ckDown: MoveVertically(1);
     ckPgUp: MoveVertically(-fRowCount);
     ckPgDown: MoveVertically(fRowCount);
-    ckInsert: InsertRecord;
-    ckDelete: DeleteRecord;
+    ckInsert: if AValue.Ctrl then InsertRecord;
+    ckDelete: if AValue.Ctrl then DeleteRecord;
   end;
 end;
 
@@ -642,20 +645,27 @@ var
   i: Integer;
 begin
   Assert(Length(AData) = ColCount);
-  for i := 0 to ColCount - 1 do
-    fData[ARow, i] := AData[i];
-  if ARow = fCurrentRow then
-    SentEditChange;
+  for i := 0 to ColCount - 1 do begin
+    if fData[ARow, i] <> AData[i] then begin
+      fData[ARow, i] := AData[i];
+      if (ARow = fCurrentRow) and (i = fCurrentCol) then
+        SentEditChange;
+    end;
+  end;
+
 end;
 
 procedure TDesignComponentGrid.EraseRowData(ARow: Integer);
 var
   i: Integer;
 begin
-  for i := 0 to ColCount - 1 do
-    fData[ARow, i] := '---';
-  if ARow = fCurrentRow then
-    SentEditChange;
+  for i := 0 to ColCount - 1 do begin
+    if fData[ARow, i] <> '---' then begin
+      fData[ARow, i] := '---';
+      if (ARow = fCurrentRow) and (i = fCurrentCol) then
+        SentEditChange;
+    end;
+  end;
 end;
 
 procedure TDesignComponentGrid.InsertRecord;

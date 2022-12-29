@@ -150,6 +150,7 @@ begin
     mActualData := fList.Data[fActualIndex.Value];
     mActualData.ItemByName[AData.Name].AsString := AData.Value;
     fStore.Save(mActualData);
+    PublishActualRecord;
   end;
 end;
 
