@@ -209,28 +209,28 @@ var
   i: integer;
 begin
   Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
-  //if Result.Count = 0 then
-  //begin
-  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //  //mPerson.ItemByName['Name'].AsString := 'John';
-  //  //mPerson.ItemByName['Surename'].AsString := 'Doe';
-  //  //Store.Save(mPerson);
-  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //  //mPerson.ItemByName['Name'].AsString := 'Jim';
-  //  //mPerson.ItemByName['Surename'].AsString := 'Beam';
-  //  //Store.Save(mPerson);
-  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //  //mPerson.ItemByName['Name'].AsString := 'Anthony';
-  //  //mPerson.ItemByName['Surename'].AsString := 'Hopkins';
-  //  //Store.Save(mPerson);
-  //  for i := 1 to 100 do begin
-  //    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //    mPerson.ItemByName['Name'].AsString := 'Name ' + i.ToString;
-  //    mPerson.ItemByName['Surename'].AsString := 'Surename ' + i.ToString;
-  //    Store.Save(mPerson);
-  //  end;
-  //  Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
-  //end;
+  if Result.Count = 0 then
+  begin
+    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    //mPerson.ItemByName['Name'].AsString := 'John';
+    //mPerson.ItemByName['Surename'].AsString := 'Doe';
+    //Store.Save(mPerson);
+    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    //mPerson.ItemByName['Name'].AsString := 'Jim';
+    //mPerson.ItemByName['Surename'].AsString := 'Beam';
+    //Store.Save(mPerson);
+    //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+    //mPerson.ItemByName['Name'].AsString := 'Anthony';
+    //mPerson.ItemByName['Surename'].AsString := 'Hopkins';
+    //Store.Save(mPerson);
+    for i := 1 to 14 do begin
+      mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
+      mPerson.ItemByName['Name'].AsString := 'Name ' + i.ToString;
+      mPerson.ItemByName['Surename'].AsString := 'Surename ' + i.ToString;
+      Store.Save(mPerson);
+    end;
+    Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
+  end;
 end;
 
 procedure TGUI.PSNameObserver(const AValue: String);

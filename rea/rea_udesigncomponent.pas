@@ -440,7 +440,7 @@ end;
 
 procedure TDesignComponentEdit.PSTextChannelObserver(const AValue: String);
 begin
-  Text := AValue;
+  fText := AValue;
 end;
 
 function TDesignComponentEdit.PSTextChannel: IPSTextChannel;
@@ -519,13 +519,10 @@ begin
   end else begin
     EraseRowData(AData.Pos + fSourceRow);
     if AData.Pos < 0 then begin
-      if fCurrentRow > 0 then
+      if fCurrentRow > 0 then begin
         Dec(fCurrentRow);
-      fPSGridMoverChannel.Publish(TGridMover.New);
-    end else begin
-      if AData.Pos + fSourceRow = fCurrentRow then begin
-         fCurrentRow := fSourceRow;
-         SentEditChange;
+        SentEditChange;
+        fPSGridMoverChannel.Debounce(TGridMover.New);
       end;
     end;
   end;
@@ -656,7 +653,7 @@ var
   i: Integer;
 begin
   for i := 0 to ColCount - 1 do
-    fData[ARow, i] := '';
+    fData[ARow, i] := '---';
   if ARow = fCurrentRow then
     SentEditChange;
 end;
