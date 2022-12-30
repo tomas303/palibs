@@ -154,10 +154,10 @@ begin
     .SetStr(cProps.Text, 'last'));
 
   fCommandsStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.MMWidth, 50)
+    .SetInt(cProps.MMHeight, 50)
     .SetInt(cProps.Layout, cLayout.Horizontal)
-    //.SetInt(cProps.MMWidth, 50)
-    //.SetInt(cProps.MMHeight, 50)
     .SetBool('Transparent', True));
   (fCommandsStrip as INode).AddChild(fFirst as INode);
   (fCommandsStrip as INode).AddChild(fPrior as INode);
@@ -170,24 +170,19 @@ begin
   fPersonsNameEdit := Factory2.Locate<IDesignComponentEdit>(NewProps
     .SetStr(cProps.ID, 'name')
     .SetInt(cProps.Color, clAqua)
-    .SetInt(cProps.MMWidth, 50)
-    .SetInt(cProps.MMHeight, 50)
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
     );
   fPersonsSurenameEdit := Factory2.Locate<IDesignComponentEdit>(NewProps
     .SetStr(cProps.ID, 'surename')
     .SetInt(cProps.Color, clSkyBlue)
-    .SetInt(cProps.MMWidth, 50)
-    .SetInt(cProps.MMHeight, 50)
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
     );
   fPersonsEditStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.MMHeight, 60)
     .SetInt(cProps.Layout, cLayout.Vertical)
-    //.SetInt(cProps.MMWidth, 50)
-    //.SetInt(cProps.MMHeight, 60)
     .SetBool('Transparent', True));
   (fPersonsEditStrip as INode).AddChild(fPersonsNameEdit as INode);
   (fPersonsEditStrip as INode).AddChild(fPersonsSurenameEdit as INode);
@@ -212,24 +207,32 @@ end;
 
 procedure TGUI.CreatePersonsStrip;
 var
-  mStrip: IDesignComponentStrip;
+  mStrip1, mStrip2: IDesignComponentStrip;
 begin
   fPersonsStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
     .SetInt(cProps.Place, cPlace.Elastic)
     .SetInt(cProps.Layout, cLayout.Horizontal)
     .SetBool('Transparent', True));
-  (fPersonsStrip as INode).AddChild(fPersonsGrid as INode);
 
+  mStrip1 := Factory2.Locate<IDesignComponentStrip>(NewProps
+      .SetInt(cProps.Place, cPlace.Elastic)
+      .SetInt(cProps.Layout, cLayout.Overlay)
+      .SetInt(cProps.MMWidth, 100)
+      .SetInt(cProps.Color, clGreen)
+      .SetBool('Transparent', False));
+  (mStrip1 as INode).AddChild(fPersonsGrid as INode);
 
-  mStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
+  mStrip2 := Factory2.Locate<IDesignComponentStrip>(NewProps
     .SetInt(cProps.Place, cPlace.Elastic)
     .SetInt(cProps.Layout, cLayout.Vertical)
-    .SetBool('Transparent', True));
-  (fPersonsStrip as INode).AddChild(mStrip as INode);
+    .SetInt(cProps.MMWidth, 50)
+    .SetInt(cProps.Color, clPurple)
+    .SetBool('Transparent', False));
+  (mStrip2 as INode).AddChild(fPersonsEditStrip as INode);
+  (mStrip2 as INode).AddChild(fCommandsStrip as INode);
 
-  (mStrip as INode).AddChild(fPersonsEditStrip as INode);
-  (mStrip as INode).AddChild(fCommandsStrip as INode);
-
+  (fPersonsStrip as INode).AddChild(mStrip1 as INode);
+  (fPersonsStrip as INode).AddChild(mStrip2 as INode);
 end;
 
 procedure TGUI.CreateComponents;

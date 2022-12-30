@@ -1096,7 +1096,7 @@ begin
     .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
 }
   Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
-    {cProps.MMWidth, cProps.MMHeight,} cProps.Border,
+    cProps.MMWidth, cProps.MMHeight, cProps.Border,
     cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
 end;
 
