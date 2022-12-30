@@ -31,25 +31,35 @@ type
   TGUI = class(TDesignComponent, IDesignComponentApp)
   private
     fForm: IDesignComponentForm;
-    fS1, fS2, fS3: IDesignComponent;
     fPager: IDesignComponent;
-    fGrid: IDesignComponentGrid;
-    fDataConnector: IDataConnector;
-    fSPersons, fSData, fSCommands: IDesignComponentStrip;
-    fEditName, fEditSurename: IDesignComponentEdit;
+    fPage1, fPage2, fPage3: IDesignComponent;
+    fPersonsNameEdit: IDesignComponentEdit;
+    fPersonsSurenameEdit: IDesignComponentEdit;
+    fPersonsGrid: IDesignComponentGrid;
+    fPersonsStrip: IDesignComponentStrip;
+    fPersonsEditStrip: IDesignComponentStrip;
+    fCommandsStrip: IDesignComponentStrip;
     fNext, fPrior, fFirst, fLast: IDesignComponentButton;
+    fDataConnector: IDataConnector;
+    procedure CreateForm;
+    procedure CreatePager;
+    procedure CreateCommandsStrip;
+    procedure CreatePersonsEditStrip;
+    procedure CreatePersonsGrid;
+    procedure CreatePersonsStrip;
     procedure CreateComponents;
-    function GetPersons: IPersistRefList;
   private
     fAppSettings: IRBData;
     fPSGUIChannel: IPSGUIChannel;
-    procedure PSNameObserver(const AValue: String);
-    procedure PSSurenameObserver(const AValue: String);
+  private
     procedure PSSizeObserver(const AValue: TSizeData);
     procedure PSPositionObserver(const AValue: TPositionData);
+    procedure PSCloseProgramObserver;
   private
-    procedure BeforeClose;
-    procedure CloseProgram;
+    function GetAppSettings: IRBData;
+    procedure PublishAppSettings;
+    function GetPersons: IPersistRefList;
+    procedure CreateDataConnectors;
   protected
     function PSGUIChannel: IPSGUIChannel;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
@@ -68,15 +78,11 @@ type
     fLeft: Integer;
     fWidth: Integer;
     fHeight: Integer;
-    fName: String;
-    fSurename: String;
   published
     property Top: Integer read fTop write fTop;
     property Left: Integer read fLeft write fLeft;
     property Width: Integer read fWidth write fWidth;
     property Height: Integer read fHeight write fHeight;
-    property Name: String read fName write fName;
-    property Surename: String read fSurename write fSurename;
   end;
 
 
@@ -95,7 +101,7 @@ implementation
 
 { TGUI }
 
-procedure TGUI.CreateComponents;
+procedure TGUI.CreateForm;
 begin
   fForm := Factory2.Locate<IDesignComponentForm>(NewProps
     .SetStr(cProps.ID, 'mainform')
@@ -103,43 +109,37 @@ begin
     .SetStr(cProps.Caption, 'Demo app')
     .SetInt(cProps.Color, clSilver)
     );
+  fForm.PSSizeChannel.Subscribe(PSSizeObserver);
+  fForm.PSPositionChannel.Subscribe(PSPositionObserver);
+  fForm.PSCloseChannel.Subscribe(PSCloseProgramObserver);
+end;
 
-  fEditName := Factory2.Locate<IDesignComponentEdit>(NewProps
-    .SetStr(cProps.ID, 'name')
-    .SetInt(cProps.Color, clAqua)
-    .SetInt(cProps.MMWidth, 50)
-    .SetInt(cProps.MMHeight, 50)
-    .SetInt(cProps.FontColor, clBlack)
-    .SetInt(cProps.TextColor,  clYellow)
-    );
-  fEditSurename := Factory2.Locate<IDesignComponentEdit>(NewProps
-    .SetStr(cProps.ID, 'surename')
-    .SetInt(cProps.Color, clSkyBlue)
-    .SetInt(cProps.MMWidth, 50)
-    .SetInt(cProps.MMHeight, 50)
-    .SetInt(cProps.FontColor, clBlack)
-    .SetInt(cProps.TextColor,  clYellow)
-    );
+procedure TGUI.CreatePager;
+begin
+  fPager := Factory2.Locate<IDesignComponentPager>(NewProps
+   .SetIntf('PSGUIChannel', fPSGUIChannel)
+   .SetInt(cPager.SwitchEdge, cEdge.Top)
+   .SetInt(cPager.SwitchSize, 25)
+  );
 
-  fSPersons := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.Layout, cLayout.Vertical)
-    //.SetInt(cProps.MMWidth, 50)
-    //.SetInt(cProps.MMHeight, 50)
-    .SetBool('Transparent', True));
-  fSData := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.Layout, cLayout.Vertical)
-    //.SetInt(cProps.MMWidth, 50)
-    //.SetInt(cProps.MMHeight, 60)
-    .SetBool('Transparent', True));
-  fSCommands := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.Layout, cLayout.Horizontal)
-    //.SetInt(cProps.MMWidth, 50)
-    //.SetInt(cProps.MMHeight, 50)
-    .SetBool('Transparent', True));
+  fPage1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
+  (fPage1 as INode).AddChild(fPersonsStrip as INode);
+  fPage2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
+  //(fPage2 as INode).AddChild(fPersonsNameEdit as INode);
+  //(fPage2 as INode).AddChild(fPersonsSurenameEdit as INode);
+  fPage3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
+  //(fPage3 as INode).AddChild(fPersonsStrip as INode);
 
+  (fPager as INode).AddChild(fPage1 as INode);
+  (fPager as INode).AddChild(fPage2 as INode);
+  (fPager as INode).AddChild(fPage3 as INode);
+
+  (fForm as INode).AddChild(fPager as INode);
+
+end;
+
+procedure TGUI.CreateCommandsStrip;
+begin
   fNext := Factory2.Locate<IDesignComponentButton>(NewProps
     .SetStr(cProps.ID, 'next')
     .SetStr(cProps.Text, 'next'));
@@ -153,20 +153,49 @@ begin
     .SetStr(cProps.ID, 'last')
     .SetStr(cProps.Text, 'last'));
 
+  fCommandsStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Horizontal)
+    //.SetInt(cProps.MMWidth, 50)
+    //.SetInt(cProps.MMHeight, 50)
+    .SetBool('Transparent', True));
+  (fCommandsStrip as INode).AddChild(fFirst as INode);
+  (fCommandsStrip as INode).AddChild(fPrior as INode);
+  (fCommandsStrip as INode).AddChild(fNext as INode);
+  (fCommandsStrip as INode).AddChild(fLast as INode);
+end;
 
-  (fSData as INode).AddChild(fEditName as INode);
-  (fSData as INode).AddChild(fEditSurename as INode);
-  (fSCommands as INode).AddChild(fFirst as INode);
-  (fSCommands as INode).AddChild(fPrior as INode);
-  (fSCommands as INode).AddChild(fNext as INode);
-  (fSCommands as INode).AddChild(fLast as INode);
+procedure TGUI.CreatePersonsEditStrip;
+begin
+  fPersonsNameEdit := Factory2.Locate<IDesignComponentEdit>(NewProps
+    .SetStr(cProps.ID, 'name')
+    .SetInt(cProps.Color, clAqua)
+    .SetInt(cProps.MMWidth, 50)
+    .SetInt(cProps.MMHeight, 50)
+    .SetInt(cProps.FontColor, clBlack)
+    .SetInt(cProps.TextColor,  clYellow)
+    );
+  fPersonsSurenameEdit := Factory2.Locate<IDesignComponentEdit>(NewProps
+    .SetStr(cProps.ID, 'surename')
+    .SetInt(cProps.Color, clSkyBlue)
+    .SetInt(cProps.MMWidth, 50)
+    .SetInt(cProps.MMHeight, 50)
+    .SetInt(cProps.FontColor, clBlack)
+    .SetInt(cProps.TextColor,  clYellow)
+    );
+  fPersonsEditStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Vertical)
+    //.SetInt(cProps.MMWidth, 50)
+    //.SetInt(cProps.MMHeight, 60)
+    .SetBool('Transparent', True));
+  (fPersonsEditStrip as INode).AddChild(fPersonsNameEdit as INode);
+  (fPersonsEditStrip as INode).AddChild(fPersonsSurenameEdit as INode);
+end;
 
-  (fSPersons as INode).AddChild(fSData as INode);
-  (fSPersons as INode).AddChild(fSCommands as INode);
-
-
-
-  fGrid := Factory2.Locate<IDesignComponentGrid>(NewProps
+procedure TGUI.CreatePersonsGrid;
+begin
+  fPersonsGrid := Factory2.Locate<IDesignComponentGrid>(NewProps
     .SetIntf('PSGUIChannel', fPSGUIChannel)
     .SetInt(cGrid.RowCount, 5)
     .SetInt(cGrid.ColCount, 2)
@@ -179,27 +208,50 @@ begin
     .SetInt(cGrid.LaticeColSize, 2)
     .SetInt(cGrid.LaticeRowSize, 2)
     );
+end;
 
-  fPager := Factory2.Locate<IDesignComponentPager>(NewProps
-   .SetIntf('PSGUIChannel', fPSGUIChannel)
-   .SetInt(cPager.SwitchEdge, cEdge.Top)
-   .SetInt(cPager.SwitchSize, 25)
-  );
+procedure TGUI.CreatePersonsStrip;
+var
+  mStrip: IDesignComponentStrip;
+begin
+  fPersonsStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Horizontal)
+    .SetBool('Transparent', True));
+  (fPersonsStrip as INode).AddChild(fPersonsGrid as INode);
 
-  fS1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
-  (fS1 as INode).AddChild(fGrid as INode);
-  fS2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
-  //(fS2 as INode).AddChild(fEditName as INode);
-  //(fS2 as INode).AddChild(fEditSurename as INode);
-  fS3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
-  (fS3 as INode).AddChild(fSPersons as INode);
 
-  (fPager as INode).AddChild(fS1 as INode);
-  (fPager as INode).AddChild(fS2 as INode);
-  (fPager as INode).AddChild(fS3 as INode);
+  mStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cProps.Place, cPlace.Elastic)
+    .SetInt(cProps.Layout, cLayout.Vertical)
+    .SetBool('Transparent', True));
+  (fPersonsStrip as INode).AddChild(mStrip as INode);
 
-  (fForm as INode).AddChild(fPager as INode);
+  (mStrip as INode).AddChild(fPersonsEditStrip as INode);
+  (mStrip as INode).AddChild(fCommandsStrip as INode);
 
+end;
+
+procedure TGUI.CreateComponents;
+begin
+  CreateForm;
+  CreatePersonsGrid;
+  CreatePersonsEditStrip;
+  CreateCommandsStrip;
+  CreatePersonsStrip;
+  CreatePager;
+end;
+
+procedure TGUI.CreateDataConnectors;
+begin
+  fDataConnector := Factory2.Locate<IDataConnector>('TStoreConnector', NewProps.SetIntf('List', GetPersons));
+  fDataConnector.RegisterEdit('Name', fPersonsNameEdit);
+  fDataConnector.RegisterEdit('Surename', fPersonsSurenameEdit);
+  fDataConnector.RegisterGrid(TArray<String>.Create('Name', 'Surename'), fPersonsGrid, TPerson);
+  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommand.CreateFirst);
+  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommand.CreateLast);
+  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommand.CreateNext);
+  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommand.CreatePrior);
 end;
 
 function TGUI.GetPersons: IPersistRefList;
@@ -232,16 +284,6 @@ begin
   end;
 end;
 
-procedure TGUI.PSNameObserver(const AValue: String);
-begin
-  fAppSettings.ItemByName['Name'].AsString := AValue;
-end;
-
-procedure TGUI.PSSurenameObserver(const AValue: String);
-begin
-  fAppSettings.ItemByName['Surename'].AsString := AValue;
-end;
-
 procedure TGUI.PSSizeObserver(const AValue: TSizeData);
 begin
   fAppSettings.ItemByName['Width'].AsInteger := AValue.Width;
@@ -254,16 +296,36 @@ begin
   fAppSettings.ItemByName['Top'].AsInteger := AValue.Top;
 end;
 
-procedure TGUI.BeforeClose;
+procedure TGUI.PSCloseProgramObserver;
 begin
   Store.Save(fAppSettings);
   Store.Close;
+  raise ELaunchStop.Create('');
 end;
 
-procedure TGUI.CloseProgram;
+function TGUI.GetAppSettings: IRBData;
+var
+  mList: IPersistRefList;
 begin
-  BeforeClose;
-  raise ELaunchStop.Create('');
+  mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
+  if mList.Count = 0 then
+  begin
+    Result := PersistFactory.Create(IRBData, TAppSettings.ClassName) as IRBData;
+    Result.ItemByName['Width'].AsInteger := 600;
+    Result.ItemByName['Height'].AsInteger := 200;
+    Result.ItemByName['Left'].AsInteger := 300;
+    Result.ItemByName['Top'].AsInteger := 400;
+  end
+  else
+  begin
+    Result := mList.Data[0];
+  end;
+end;
+
+procedure TGUI.PublishAppSettings;
+begin
+  fForm.PSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
+  fForm.PSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
 end;
 
 function TGUI.PSGUIChannel: IPSGUIChannel;
@@ -278,58 +340,14 @@ begin
 end;
 
 procedure TGUI.InitValues;
-var
-  mList: IPersistRefList;
-  mListPersons: IPersistRefList;
 begin
   inherited InitValues;
-
   fPSGUIChannel := PubSub.Factory.NewDataChannel<TGUIData>;
-
   Store.Open('/root/demosettings.xml');
-  mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
-  if mList.Count = 0 then
-  begin
-    fAppSettings := PersistFactory.Create(IRBData, TAppSettings.ClassName) as IRBData;
-    fAppSettings.ItemByName['Name'].AsString := 'John';
-    fAppSettings.ItemByName['Surename'].AsString := 'Doe';
-    fAppSettings.ItemByName['Width'].AsInteger := 600;
-    fAppSettings.ItemByName['Height'].AsInteger := 200;
-    fAppSettings.ItemByName['Left'].AsInteger := 300;
-    fAppSettings.ItemByName['Top'].AsInteger := 400;
-  end
-  else
-  begin
-    fAppSettings := mList.Data[0];
-  end;
-
-
-
   CreateComponents;
-
-  fForm.PSSizeChannel.Publish(TSizeData.Create(Self, fAppSettings.ItemByName['Width'].AsInteger, fAppSettings.ItemByName['Height'].AsInteger));
-  fForm.PSSizeChannel.Subscribe(PSSizeObserver);
-  fForm.PSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
-  fForm.PSPositionChannel.Subscribe(PSPositionObserver);
-  fForm.PSCloseChannel.Subscribe(CloseProgram);
-
-  fEditName.PSTextChannel.Subscribe(PSNameObserver);
-  fEditSurename.PSTextChannel.Subscribe(PSSurenameObserver);
-
-  fEditName.PSTextChannel.Publish(fAppSettings.ItemByName['Name'].AsString);
-  fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
-
-  fDataConnector := Factory2.Locate<IDataConnector>('TStoreConnector', NewProps.SetIntf('List', GetPersons));
-  fDataConnector.RegisterEdit('Name', fEditName);
-  fDataConnector.RegisterEdit('Surename', fEditSurename);
-  fDataConnector.RegisterGrid(TArray<String>.Create('Name', 'Surename'), fGrid, TPerson);
-
-  fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommand.CreateFirst);
-  fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommand.CreateLast);
-  fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommand.CreateNext);
-  fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommand.CreatePrior);
-
-
+  CreateDataConnectors;
+  fAppSettings := GetAppSettings;
+  PublishAppSettings;
  end;
 
 { TApp }
