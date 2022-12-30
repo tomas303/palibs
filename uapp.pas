@@ -50,7 +50,6 @@ type
   private
     procedure BeforeClose;
     procedure CloseProgram;
-    function TGridCmdRow_TCommand: TPubSubDataConversion<TGridCmdRow, TCommand>;
   protected
     function PSGUIChannel: IPSGUIChannel;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
@@ -267,23 +266,6 @@ begin
   raise ELaunchStop.Create('');
 end;
 
-function TGUI.TGridCmdRow_TCommand: TPubSubDataConversion<TGridCmdRow, TCommand>;
-begin
-  Result := function(const x: TGridCmdRow): TCommand
-  begin
-    case x.Action of
-      TGridCmdRowAction.cmdNew: begin
-        Result := TCommand.CreateInsert(x.Pos, Factory2.Locate<IPersistRef>(TPerson.ClassName));
-      end;
-      TGridCmdRowAction.cmdDelete: begin
-        Result := TCommand.CreateDelete(x.Pos);
-      end;
-    else
-      raise Exception.Create('unknown cmdrow command');
-    end;
-  end;
-end;
-
 function TGUI.PSGUIChannel: IPSGUIChannel;
 begin
   Result := fPSGUIChannel;
@@ -340,70 +322,13 @@ begin
   fDataConnector := Factory2.Locate<IDataConnector>('TStoreConnector', NewProps.SetIntf('List', GetPersons));
   fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
   fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
+
+  fDataConnector.RegisterGrid(TArray<String>.Create('Name', 'Surename'), fGrid, TPerson);
+
   fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommand.CreateFirst);
   fDataConnector.RegisterCommand(fLast.PSClickChannel, TCommand.CreateLast);
   fDataConnector.RegisterCommand(fNext.PSClickChannel, TCommand.CreateNext);
   fDataConnector.RegisterCommand(fPrior.PSClickChannel, TCommand.CreatePrior);
-
-
-  PubSub.Factory.NewDataBridge<TGridCmdMove, TCommand>(
-    fGrid.PSGridCmdMoveChannel,
-    fDataConnector.PSCommandChannel,
-    function (const x: TGridCmdMove): TCommand
-    begin
-      Result := TCommand.CreateMove(x.Delta);
-    end);
-  PubSub.Factory.NewDataBridge<TGridCmdInfo, TCommand>(
-    fGrid.PSGridCmdInfoChannel,
-    fDataConnector.PSCommandChannel,
-    function (const x: TGridCmdInfo): TCommand
-    begin
-      Result := TCommand.CreateInfo(x.FromPos, x.ToPos);
-    end);
-  PubSub.Factory.NewDataBridge<TGridCmdRow, TCommand>(
-    fGrid.PSGridCmdRowChannel,
-    fDataConnector.PSCommandChannel,
-    TGridCmdRow_TCommand);
-  PubSub.Factory.NewDataBridge<TGridCmdField, TFieldData>(
-    fGrid.PSGridCmdFieldChannel,
-    fDataConnector.PSFieldDataChannel,
-    function (const x: TGridCmdField): TFieldData
-    begin
-      case x.Col of
-        0: Result := TFieldData.Create('Name', x.Value);
-        1: Result := TFieldData.Create('Surename', x.Value);
-      else
-        raise Exception.Create('unknown column map for name');
-      end;
-    end);
-
-
-  PubSub.Factory.NewDataBridge<TRecordData, TGridRecord>(
-    fDataConnector.PSRecordDataChannel,
-    fGrid.PSGridRecordChannel,
-    function (const x: TRecordData): TGridRecord
-    begin
-      if x.Accessor.HasValue then begin
-        Result := TGridRecord.Create(
-          x.Position,
-          TArray<String>.Create(x.Accessor.Value['Name'], x.Accessor.Value['Surename'])
-          );
-      end else begin
-        Result := TGridRecord.Create(x.Position);
-      end;
-    end);
-
-  PubSub.Factory.NewDataBridge<TPositionChange, TGridMover>(
-    fDataConnector.PSPositionChangeChannel,
-    fGrid.PSGridMoverChannel,
-    function (const x: TPositionChange): TGridMover
-    begin
-      if x.Delta.HasValue then
-        Result := TGridMover.New(x.Delta.Value)
-      else
-        Result := TGridMover.New;
-    end);
-
 
 
  end;

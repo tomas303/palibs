@@ -9,7 +9,7 @@ interface
 
 uses
   rea_idata, trl_ipersist, trl_irttibroker, trl_pubsub, rea_ibits,
-  trl_funcp, sysutils;
+  trl_funcp, sysutils, rea_idesigncomponent, trl_udifactory;
 
 type
 
@@ -53,16 +53,19 @@ type
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
+    procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
   public
     procedure BeforeDestruction; override;
   protected
+    fFactory2: TDIFactory2;
     fPubSub: IPubSub;
     fStore: IPersistStore;
     fList: IPersistRefList;
     procedure SetList(AValue: IPersistRefList);
     procedure SetPubSub(AValue: IPubSub);
   published
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property PubSub: IPubSub read fPubSub write SetPubSub;
     property Store: IPersistStore read fStore write fStore;
     property List: IPersistRefList read fList write SetList;
@@ -162,7 +165,7 @@ var
   mIndex: Integer;
 begin
   case AData.Action of
-    cmdMove: begin
+    TCommandAction.cmdMove: begin
       if fActualIndex.HasValue then begin
         mNewIndex := fActualIndex.Value + AData.Delta;
         if mNewIndex < 0 then
@@ -179,24 +182,24 @@ begin
         PublishActualRecord;
       end;
     end;
-    cmdFirst: begin
+    TCommandAction.cmdFirst: begin
       if fList.Count > 0 then begin
         fActualIndex := TOptional<Integer>.New(0);
         fPSPositionChangeChannel.Publish(TPositionChange.New);
         PublishActualRecord;
       end;
     end;
-    cmdLast: begin
+    TCommandAction.cmdLast: begin
       if fList.Count > 0 then begin
         fActualIndex := TOptional<Integer>.New(fList.Count - 1);
         fPSPositionChangeChannel.Publish(TPositionChange.New);
         PublishActualRecord;
       end;
     end;
-    cmdInfo: begin
+    TCommandAction.cmdInfo: begin
       PublishRecords(AData.FromPos, AData.ToPos);
     end;
-    cmdInsert: begin
+    TCommandAction.cmdInsert: begin
       if fActualIndex.HasValue then begin
         fList.Insert(AData.Pos + fActualIndex.Value, AData.Ref);
         fActualIndex := TOptional<Integer>.New(AData.Pos + fActualIndex.Value);
@@ -206,7 +209,7 @@ begin
       end;
       fPSPositionChangeChannel.Publish(TPositionChange.New);
     end;
-    cmdDelete: begin
+    TCommandAction.cmdDelete: begin
       if fActualIndex.HasValue then begin
         mIndex := AData.Pos + fActualIndex.Value;
         Store.Delete(fList.Data[mIndex]);
@@ -287,6 +290,81 @@ begin
      else
        raise EPubSubBridgeNoWay.Create('');
    end);
+end;
+
+procedure TStoreConnector.RegisterGrid(const ANames: TArray<String>;
+  const AGrid: IDesignComponentGrid; const AClass: TClass);
+begin
+  fPubSub.Factory.NewDataBridge<TGridCmdMove, TCommand>(
+    AGrid.PSGridCmdMoveChannel,
+    PSCommandChannel,
+    function (const x: TGridCmdMove): TCommand
+    begin
+      Result := TCommand.CreateMove(x.Delta);
+    end);
+
+  fPubSub.Factory.NewDataBridge<TGridCmdInfo, TCommand>(
+    AGrid.PSGridCmdInfoChannel,
+    PSCommandChannel,
+    function (const x: TGridCmdInfo): TCommand
+    begin
+      Result := TCommand.CreateInfo(x.FromPos, x.ToPos);
+    end);
+
+  fPubSub.Factory.NewDataBridge<TGridCmdRow, TCommand>(
+    AGrid.PSGridCmdRowChannel,
+    PSCommandChannel,
+    function(const x: TGridCmdRow): TCommand
+    begin
+      case x.Action of
+        TGridCmdRowAction.cmdNew: begin
+          Result := TCommand.CreateInsert(x.Pos, Factory2.Locate<IPersistRef>(AClass.ClassName));
+        end;
+        TGridCmdRowAction.cmdDelete: begin
+          Result := TCommand.CreateDelete(x.Pos);
+        end;
+      else
+        raise Exception.Create('unknown cmdrow command');
+      end;
+    end);
+
+  fPubSub.Factory.NewDataBridge<TGridCmdField, TFieldData>(
+    AGrid.PSGridCmdFieldChannel,
+    PSFieldDataChannel,
+    function (const x: TGridCmdField): TFieldData
+    begin
+      Result := TFieldData.Create(ANames[x.Col], x.Value);
+    end);
+
+  fPubSub.Factory.NewDataBridge<TRecordData, TGridRecord>(
+    PSRecordDataChannel,
+    AGrid.PSGridRecordChannel,
+    function (const x: TRecordData): TGridRecord
+    var
+      mVals: TArray<String>;
+      i: integer;
+    begin
+      if x.Accessor.HasValue then begin
+        SetLength(mVals, Length(ANames));
+        for i := Low(ANames) to High(ANames) do
+          mVals[i] := x.Accessor.Value[ANames[i]];
+        Result := TGridRecord.Create(x.Position, mVals);
+      end else begin
+        Result := TGridRecord.Create(x.Position);
+      end;
+    end);
+
+  fPubSub.Factory.NewDataBridge<TPositionChange, TGridMover>(
+    PSPositionChangeChannel,
+    AGrid.PSGridMoverChannel,
+    function (const x: TPositionChange): TGridMover
+    begin
+      if x.Delta.HasValue then
+        Result := TGridMover.New(x.Delta.Value)
+      else
+        Result := TGridMover.New;
+    end);
+
 end;
 
 procedure TStoreConnector.RegisterCommand(const AChannel: IPubSubChannel;

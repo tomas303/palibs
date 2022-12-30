@@ -8,7 +8,7 @@ unit rea_idata;
 interface
 
 uses
-  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist;
+  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist, rea_idesigncomponent;
 
 type
 
@@ -103,6 +103,7 @@ type
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
+    procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
   end;
 
 implementation
