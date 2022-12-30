@@ -1,6 +1,8 @@
 unit rea_udesigncomponent;
 
 {$mode delphi}{$H+}
+{$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
@@ -23,9 +25,6 @@ type
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
     procedure ComposeChildren(const AParentEl: IMetaElement);
     procedure DoStartingValues; virtual;
-    function StyleForeColor(const APropName: String): TColor;
-    function StyleBackColor(const APropName: String): TColor;
-    function StyleSuppleColor(const APropName: String): TColor;
   protected
     // IDesignComponent = interface
     function Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
@@ -130,6 +129,8 @@ type
     procedure DoStartingValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+  public
+    procedure BeforeDestruction; override;
   end;
 
   { TDesignComponentStrip }
@@ -269,36 +270,22 @@ type
   { TDesignComponentPager }
 
   TDesignComponentPager = class(TDesignComponent, IDesignComponentPager)
-  private type
-
-    { TClickLink }
-
-    TClickLink = class
-    strict private
-      fIndex: Integer;
-      fPSClickChannel: IPSClickChannel;
-      fPSPagerChannel: IPSPagerChannel;
-      procedure PSClickChannelObserver;
-    public
-      constructor Create(AIndex: Integer; const APSPagerChannel: IPSPagerChannel;
-        const APSClickChannel: IPSClickChannel);
-    end;
-
   private
     fIndex: Integer;
     fPSPagerChannel: IPSPagerChannel;
-    fClickLinks: TFPGObjectList<TClickLink>;
+    fSwitch: TArray<IDesignComponent>;
     procedure PSPagerChannelObserver(const AIndex: Integer);
   private
     function RenderPage(const APageElement: IMetaElement): IMetaElement;
     function MakeSwitch: IMetaElement;
     function MakeBody: IMetaElement;
+    function NewSwitch: TArray<IDesignComponent>;
+    function NewSwitchFunc(AIndex: Integer): TPubSubNewData<Integer>;
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
   public
-    procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   protected
     fSwitchEdge: Integer;
@@ -327,22 +314,6 @@ begin
   fFirst := AFirst;
   fLast := ALast;
   fDistance := ADistance;
-end;
-
-{ TDesignComponentPager.TClickLink }
-
-procedure TDesignComponentPager.TClickLink.PSClickChannelObserver;
-begin
-  fPSPagerChannel.Publish(fIndex);
-end;
-
-constructor TDesignComponentPager.TClickLink.Create(AIndex: Integer;
-  const APSPagerChannel: IPSPagerChannel; const APSClickChannel: IPSClickChannel);
-begin
-  fIndex := AIndex;
-  fPSPagerChannel := APSPagerChannel;
-  fPSClickChannel := APSClickChannel;
-  fPSClickChannel.Subscribe(PSClickChannelObserver);
 end;
 
 { TDesignComponentHBox }
@@ -930,21 +901,12 @@ var
   i: integer;
   mSwitch: TMetaElementArray;
   mProps: IProps;
-  mText: String;
-  mSwitchDC: IDesignComponentButton;
-  mClickLink: TClickLink;
 begin
-  fClickLinks.Clear;
+  fSwitch := NewSwitch;
   SetLength(mSwitch, Count);
   for i := 0 to Count - 1 do
   begin
-    mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
-    mSwitchDC :=  Factory2.Locate<IDesignComponentButton>(NewProps
-      .SetStr(cButton.Text, mText)
-    );
-    mClickLink := TClickLink.Create(i, fPSPagerChannel, mSwitchDC.PSClickChannel);
-    fClickLinks.Add(mClickLink);
-    mSwitch[i] := mSwitchDC.Compose(nil, nil);
+    mSwitch[i] := fSwitch[i].Compose(nil, nil);
   end;
   mProps := NewProps;
   case SwitchEdge of
@@ -967,6 +929,37 @@ begin
     NewProps
       .SetInt(cProps.Layout, cLayout.Overlay),
     [mActual]);
+end;
+
+function TDesignComponentPager.NewSwitch: TArray<IDesignComponent>;
+var
+  i: Integer;
+  mText: String;
+  mButton: IDesignComponentButton;
+begin
+  SetLength(Result, Count);
+  for i := 0 to Count - 1 do
+  begin
+    mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
+    mButton := Factory2.Locate<IDesignComponentButton>(NewProps
+      .SetStr(cButton.Text, mText)
+    );
+    PubSub.Factory.NewNonDataToDataBridge<Integer>(
+      mButton.PSClickChannel,
+      fPSPagerChannel,
+      NewSwitchFunc(i)
+    );
+    Result[i] := mButton;
+  end;
+end;
+
+function TDesignComponentPager.NewSwitchFunc(AIndex: Integer): TPubSubNewData<
+  Integer>;
+begin
+  Result := function (): Integer
+  begin
+    Result := AIndex;
+  end
 end;
 
 procedure TDesignComponentPager.InitValues;
@@ -1000,16 +993,9 @@ begin
   Result := ElementFactory.CreateElement(IStripBit, NewComposeProps, mChildren);
 end;
 
-procedure TDesignComponentPager.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  fClickLinks := TFPGObjectList<TClickLink>.Create(True);
-end;
-
 procedure TDesignComponentPager.BeforeDestruction;
 begin
   fPSPagerChannel.Unsubscribe(PSPagerChannelObserver);
-  FreeAndNil(fClickLinks);
   inherited BeforeDestruction;
 end;
 
@@ -1078,6 +1064,12 @@ begin
   Result := ElementFactory.CreateElement(IButtonBit, NewComposeProps);
 end;
 
+procedure TDesignComponentButton.BeforeDestruction;
+begin
+  PubSub.Factory.DropChannel(fPSClickChannel);
+  inherited BeforeDestruction;
+end;
+
 { TDesignComponent }
 
 function TDesignComponent.NewProps: IProps;
@@ -1087,14 +1079,6 @@ end;
 
 function TDesignComponent.NewComposeProps: IProps;
 begin
-  {
-  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
-    cProps.MMWidth, cProps.MMHeight, cProps.Border])
-    .SetInt(cProps.Color, StyleBackColor(cProps.Color))
-    .SetInt(cProps.FontColor, StyleForeColor(cProps.FontColor))
-    .SetInt(cProps.TextColor, StyleForeColor(cProps.TextColor))
-    .SetInt(cProps.BorderColor, StyleSuppleColor(cProps.BorderColor));
-}
   Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
     cProps.MMWidth, cProps.MMHeight, cProps.Border,
     cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
@@ -1132,21 +1116,6 @@ begin
   .SetInt(cProps.Color, clFuchsia)
   .SetInt(cProps.FontColor, clOlive)
   .SetInt(cProps.BorderColor, clAqua);
-end;
-
-function TDesignComponent.StyleForeColor(const APropName: String): TColor;
-begin
-  Result := SelfProps.AsInt(APropName)
-end;
-
-function TDesignComponent.StyleBackColor(const APropName: String): TColor;
-begin
-  Result := SelfProps.AsInt(APropName)
-end;
-
-function TDesignComponent.StyleSuppleColor(const APropName: String): TColor;
-begin
-  Result := SelfProps.AsInt(APropName)
 end;
 
 function TDesignComponent.Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;

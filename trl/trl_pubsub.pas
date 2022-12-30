@@ -46,6 +46,7 @@ type
 
   IPubSubBridge = interface
   ['{DAE9973A-F201-4AFC-A79B-47569F273B59}']
+    function IsConnecting(const AChannel: IPubSubChannelExec): Boolean;
   end;
 
   TPubSub = class;
@@ -70,11 +71,14 @@ type
     procedure PublishDebounced;
     function Factory: TPubSub;
     function IsEmpty: Boolean;
+    procedure RemoveBridges(const AChannel: IPubSubChannelExec);
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
     function NewChannel: IPubSubChannel;
+    procedure DropChannel(const AChannel: IPubSubChannel);
     function NewDataChannel<T>: IPubSubDataChannel<T>;
+    procedure DropDataChannel<T>(const AChannel: IPubSubDataChannel<T>);
     procedure NewDataBridge<T, S>(
       const AInChannel: IPubSubDataChannel<T>;
       const AOutChannel: IPubSubDataChannel<S>;
@@ -181,6 +185,7 @@ type
     fOutChannel: IPubSubDataChannel<S>;
     fConversion: TPubSubDataConversion<T, S>;
     procedure InObserver(const AData: T);
+    function IsConnecting(const AChannel: IPubSubChannelExec): Boolean;
   public
     constructor Create(const AInChannel: IPubSubDataChannel<T>; const AOutChannel: IPubSubDataChannel<S>;
       AConversion: TPubSubDataConversion<T, S>);
@@ -194,6 +199,7 @@ type
     fInChannel: IPubSubChannel;
     fOutChannel: IPubSubChannel;
     procedure InObserver;
+    function IsConnecting(const AChannel: IPubSubChannelExec): Boolean;
   public
     constructor Create(const AInChannel: IPubSubChannel; const AOutChannel: IPubSubChannel);
     destructor Destroy; override;
@@ -207,6 +213,7 @@ type
     fOutChannel: IPubSubDataChannel<T>;
     fNewData: TPubSubNewData<T>;
     procedure InObserver;
+    function IsConnecting(const AChannel: IPubSubChannelExec): Boolean;
   public
     constructor Create(
       const AInChannel: IPubSubChannel;
@@ -222,6 +229,7 @@ type
     fInChannel: IPubSubDataChannel<T>;
     fOutChannel: IPubSubChannel;
     procedure InObserver(const AData: T);
+    function IsConnecting(const AChannel: IPubSubChannelExec): Boolean;
   public
     constructor Create(
       const AInChannel: IPubSubDataChannel<T>;
@@ -323,6 +331,13 @@ begin
   fOutChannel.Publish(mData, pskBridge);
 end;
 
+function TPubSubDataBridge<T, S>.IsConnecting(const AChannel: IPubSubChannelExec
+  ): Boolean;
+begin
+  Result := (AChannel = (fInChannel as IPubSubChannelExec))
+    or (AChannel = (fOutChannel as IPubSubChannelExec));
+end;
+
 constructor TPubSubDataBridge<T, S>.Create(
   const AInChannel: IPubSubDataChannel<T>;
   const AOutChannel: IPubSubDataChannel<S>;
@@ -345,6 +360,13 @@ end;
 procedure TPubSubNonDataToDataBridge<T>.InObserver;
 begin
   fOutChannel.Publish(fNewData(), pskBridge);
+end;
+
+function TPubSubNonDataToDataBridge<T>.IsConnecting(
+  const AChannel: IPubSubChannelExec): Boolean;
+begin
+  Result := (AChannel = (fInChannel as IPubSubChannelExec))
+    or (AChannel = (fOutChannel as IPubSubChannelExec));
 end;
 
 constructor TPubSubNonDataToDataBridge<T>.Create(
@@ -370,6 +392,13 @@ end;
 procedure TPubSubDataToNonDataBridge<T>.InObserver(const AData: T);
 begin
   fOutChannel.Publish(pskBridge);
+end;
+
+function TPubSubDataToNonDataBridge<T>.IsConnecting(
+  const AChannel: IPubSubChannelExec): Boolean;
+begin
+  Result := (AChannel = (fInChannel as IPubSubChannelExec))
+    or (AChannel = (fOutChannel as IPubSubChannelExec));
 end;
 
 constructor TPubSubDataToNonDataBridge<T>.Create(
@@ -418,6 +447,13 @@ end;
 procedure TPubSubBridge.InObserver;
 begin
   fOutChannel.Publish(pskBridge);
+end;
+
+function TPubSubBridge.IsConnecting(const AChannel: IPubSubChannelExec
+  ): Boolean;
+begin
+  Result := (AChannel = (fInChannel as IPubSubChannelExec))
+    or (AChannel = (fOutChannel as IPubSubChannelExec));
 end;
 
 constructor TPubSubBridge.Create(
@@ -525,10 +561,22 @@ begin
   fChannels.Add(Result as IPubSubChannelExec);
 end;
 
+procedure TPubSub.DropChannel(const AChannel: IPubSubChannel);
+begin
+  RemoveBridges(AChannel as IPubSubChannelExec);
+  fChannels.Remove(AChannel as IPubSubChannelExec);
+end;
+
 function TPubSub.NewDataChannel<T>: IPubSubDataChannel<T>;
 begin
   Result := TPubSubDataChannel<T>.Create(EventPublished);
   fChannels.Add(Result as IPubSubChannelExec);
+end;
+
+procedure TPubSub.DropDataChannel<T>(const AChannel: IPubSubDataChannel<T>);
+begin
+  RemoveBridges(AChannel as IPubSubChannelExec);
+  fChannels.Remove(AChannel as IPubSubChannelExec);
 end;
 
 procedure TPubSub.NewDuplexDataBridge<T, S>(
@@ -608,6 +656,19 @@ end;
 function TPubSub.IsEmpty: Boolean;
 begin
   Result := fEvents.Count = 0;
+end;
+
+procedure TPubSub.RemoveBridges(const AChannel: IPubSubChannelExec);
+var
+  i: Integer;
+begin
+  i := 0;
+  while i <= fBridges.Count - 1 do begin
+    if fBridges[i].IsConnecting(AChannel) then
+      fBridges.Delete(i)
+    else
+      inc(i);
+  end;
 end;
 
 procedure TPubSub.AfterConstruction;
