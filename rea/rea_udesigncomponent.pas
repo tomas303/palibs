@@ -483,7 +483,6 @@ begin
     if AData.Pos < 0 then begin
       if fCurrentRow > 0 then begin
         Dec(fCurrentRow);
-        SentEditChange;
         fPSGridMoverChannel.Debounce(TGridMover.New);
       end;
     end;
@@ -520,6 +519,7 @@ begin
   end else begin
     fSourceRow := fCurrentRow;
     SentRows(0, RowCount - 1);
+    SentEditChange;
   end;
 end;
 
@@ -560,6 +560,7 @@ begin
     fPSGridCmdMoveChannel.Publish(TGridCmdMove.Create(ADelta));
   end else begin
     fCurrentRow := mNewPos;
+    SentEditChange;
     fPSGridCmdMoveChannel.Publish(TGridCmdMove.Create(ADelta));
   end;
 end;
