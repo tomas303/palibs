@@ -320,9 +320,8 @@ begin
   fEditSurename.PSTextChannel.Publish(fAppSettings.ItemByName['Surename'].AsString);
 
   fDataConnector := Factory2.Locate<IDataConnector>('TStoreConnector', NewProps.SetIntf('List', GetPersons));
-  fDataConnector.RegisterField('Name', fEditName.PSTextChannel);
-  fDataConnector.RegisterField('Surename', fEditSurename.PSTextChannel);
-
+  fDataConnector.RegisterEdit('Name', fEditName);
+  fDataConnector.RegisterEdit('Surename', fEditSurename);
   fDataConnector.RegisterGrid(TArray<String>.Create('Name', 'Surename'), fGrid, TPerson);
 
   fDataConnector.RegisterCommand(fFirst.PSClickChannel, TCommand.CreateFirst);

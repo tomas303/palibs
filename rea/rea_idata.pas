@@ -101,9 +101,9 @@ type
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
-    procedure RegisterField(const AName: String; const AFieldChannel: IPSTextChannel);
-    procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
+    procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
+    procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
   end;
 
 implementation
