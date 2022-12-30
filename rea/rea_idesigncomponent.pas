@@ -212,7 +212,7 @@ type
 
   IDesignComponent = interface
   ['{AD83F143-4C0A-4703-A38A-E3F175036FE6}']
-    function Compose(const AParentProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+    function Compose: IMetaElement;
   end;
 
   IDesignComponentApp = interface(IDesignComponent)

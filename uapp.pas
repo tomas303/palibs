@@ -62,7 +62,7 @@ type
     procedure CreateDataConnectors;
   protected
     function PSGUIChannel: IPSGUIChannel;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
     procedure InitValues; override;
   protected
     fStore: IPersistStore;
@@ -336,10 +336,9 @@ begin
   Result := fPSGUIChannel;
 end;
 
-function TGUI.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray
-  ): IMetaElement;
+function TGUI.DoCompose: IMetaElement;
 begin
-  Result := fForm.Compose(nil, []);
+  Result := fForm.Compose;
 end;
 
 procedure TGUI.InitValues;

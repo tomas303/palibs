@@ -18,7 +18,6 @@ type
     fHeadBit: IBit;
     fHeadEl: IMetaElement;
   protected
-    function GetChildren(const AElement: IMetaElement): TMetaElementArray;
     function EmptyChildren: TMetaElementArray;
     function ExpandElement(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
     function ExpandElement2(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
@@ -44,16 +43,6 @@ type
 implementation
 
 { TRenderer }
-
-function TRenderer.GetChildren(const AElement: IMetaElement): TMetaElementArray;
-var
-  i: integer;
-begin
-  Result := nil;
-  SetLength(Result, (AElement as INode).Count);
-  for i := 0 to (AElement as INode).Count - 1 do
-    Result[i] := (AElement as INode).Child[i] as IMetaElement;
-end;
 
 function TRenderer.EmptyChildren: TMetaElementArray;
 begin
@@ -97,7 +86,7 @@ begin
   while Factory.CanLocateAs(Result.Guid, IDesignComponent) do
   begin
     mComponent := IUnknown(Factory.Locate(Result.Guid, Result.TypeID, Result.Props)) as IDesignComponent;
-    mNewEl := mComponent.Compose(AParentProps.Clone, GetChildren(Result));
+    mNewEl := mComponent.Compose;
     Result := mNewEl;
   end;
 end;
@@ -106,15 +95,13 @@ function TRenderer.RenderChain(const AElement: IMetaElement; const AParentProps:
 var
   mComponent: IDesignComponent;
   mNewEl: IMetaElement;
-  mChildren: TMetaElementArray;
   mc:string;
 begin
   Result := AElement;
   while Factory.CanLocateAs(Result.Guid, IDesignComponent) do
   begin
     mComponent := IUnknown(Factory.Locate(Result.Guid, Result.TypeID, Result.Props)) as IDesignComponent;
-    mChildren := GetChildren(Result);
-    mNewEl := mComponent.Compose(AParentProps.Clone, mChildren);
+    mNewEl := mComponent.Compose;
     Result := mNewEl;
   end;
 

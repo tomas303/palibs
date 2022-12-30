@@ -21,13 +21,13 @@ type
     function NewProps: IProps;
     function NewComposeProps: IProps; virtual;
   protected
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; virtual; abstract;
+    function DoCompose: IMetaElement; virtual; abstract;
     procedure AddChildren(const AElement: IMetaElement; const AChildren: TMetaElementArray);
     procedure ComposeChildren(const AParentEl: IMetaElement);
     procedure DoStartingValues; virtual;
   protected
     // IDesignComponent = interface
-    function Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+    function Compose: IMetaElement;
   public
     procedure AfterConstruction; override;
   protected
@@ -79,7 +79,7 @@ type
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   protected
     fPSGUIChannel: IPSGUIChannel;
     fMMLeft: Integer;
@@ -108,7 +108,7 @@ type
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   protected
     fText: String;
     procedure SetText(AText: String);
@@ -128,7 +128,7 @@ type
     procedure InitValues; override;
     procedure DoStartingValues; override;
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   public
     procedure BeforeDestruction; override;
   end;
@@ -137,7 +137,7 @@ type
 
   TDesignComponentStrip = class(TDesignComponent, IDesignComponentStrip)
   protected
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   end;
 
   { TDesignComponentBox }
@@ -148,7 +148,7 @@ type
   protected
     function BoxLayout: Integer; virtual; abstract;
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   end;
 
   { TDesignComponentHBox }
@@ -172,7 +172,7 @@ type
   TDesignComponentText = class(TDesignComponent, IDesignComponentText)
   protected
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   end;
 
   { TDesignComponentGrid }
@@ -246,7 +246,7 @@ type
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   protected
     fPSGUIChannel: IPSGUIChannel;
     fRowCount: Integer;
@@ -284,7 +284,7 @@ type
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   public
     procedure BeforeDestruction; override;
   protected
@@ -301,7 +301,7 @@ type
 
   TDesignComponentFrame = class(TDesignComponent, IDesignComponentFrame)
   protected
-    function DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement; override;
+    function DoCompose: IMetaElement; override;
   end;
 
 implementation
@@ -357,7 +357,7 @@ begin
   mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
   (AParentEl as INode).AddChild(mStrip as INode);
   for i := 0 to Count - 1 do begin
-    mEl := (GetChild(i) as IDesignComponent).Compose(nil, nil);
+    mEl := (GetChild(i) as IDesignComponent).Compose;
     (AParentEl as INode).AddChild(mEl as INode);
     mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
     (AParentEl as INode).AddChild(mStrip as INode);
@@ -371,26 +371,18 @@ begin
     .SetInt(cProps.Layout, BoxLayout);
 end;
 
-function TDesignComponentBox.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentBox.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IStripBit, NewComposeProps);
-  if AChildren <> nil then
-    AddChildren(Result, AChildren)
-  else
-    MakeChildren(Result);
+  MakeChildren(Result);
 end;
 
 { TDesignComponentFrame }
 
-function TDesignComponentFrame.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentFrame.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IStripBit, NewComposeProps);
-  if AChildren <> nil then
-    AddChildren(Result, AChildren)
-  else
-    ComposeChildren(Result);
+  ComposeChildren(Result);
 end;
 
 { TDesignComponentText }
@@ -401,8 +393,7 @@ begin
   Result.SetStr(cProps.Text, self.SelfProps.AsStr(cProps.Text));
 end;
 
-function TDesignComponentText.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentText.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(ITextBit, NewComposeProps);
 end;
@@ -445,8 +436,7 @@ begin
     .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel);
 end;
 
-function TDesignComponentEdit.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentEdit.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IEditBit, NewComposeProps);
 end;
@@ -708,7 +698,7 @@ begin
   SetLength(Result, ColCount);
   for i := 0 to ColCount - 1 do
     if (Row = fCurrentRow) and (i = fCurrentCol) then begin
-      Result[i] := fEdit.Compose(nil, [])
+      Result[i] := fEdit.Compose
     end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, ColProps(Row, i));
     end;
@@ -787,8 +777,7 @@ begin
    .SetInt(cProps.Layout, cLayout.Vertical);
 end;
 
-function TDesignComponentGrid.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentGrid.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(
     IStripBit, NewComposeProps, MakeGrid);
@@ -871,14 +860,10 @@ begin
   .SetIntf(cForm.PSActivateChannel, PSActivateChannel)
 end;
 
-function TDesignComponentForm.DoCompose(const AProps: IProps;
-  const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentForm.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IFormBit, NewComposeProps);
-  if AChildren <> nil then
-    AddChildren(Result, AChildren)
-  else
-    ComposeChildren(Result);
+  ComposeChildren(Result);
 end;
 
 { TDesignComponentPager }
@@ -906,7 +891,7 @@ begin
   SetLength(mSwitch, Count);
   for i := 0 to Count - 1 do
   begin
-    mSwitch[i] := fSwitch[i].Compose(nil, nil);
+    mSwitch[i] := fSwitch[i].Compose;
   end;
   mProps := NewProps;
   case SwitchEdge of
@@ -923,7 +908,7 @@ function TDesignComponentPager.MakeBody: IMetaElement;
 var
   mActual: IMetaElement;
 begin
-  mActual := (GetChild(fIndex) as IDesignComponent).Compose(nil, nil);
+  mActual := (GetChild(fIndex) as IDesignComponent).Compose;
   Result := ElementFactory.CreateElement(
     IStripBit,
     NewProps
@@ -980,7 +965,7 @@ begin
   end;
 end;
 
-function TDesignComponentPager.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentPager.DoCompose: IMetaElement;
 var
   mChildren: TMetaElementArray;
 begin
@@ -1001,21 +986,14 @@ end;
 
 { TDesignComponentStrip }
 
-function TDesignComponentStrip.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
-var
-  mc:integer;
+function TDesignComponentStrip.DoCompose: IMetaElement;
 begin
-  mc := SelfProps.AsInt(cProps.Color);
   Result := ElementFactory.CreateElement(IStripBit,
     NewComposeProps
       .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
       .SetStr(cProps.Caption, SelfProps.AsStr(cProps.Caption))
-      .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color)),
-    AChildren);
-  if AChildren <> nil then
-    AddChildren(Result, AChildren)
-  else
-    ComposeChildren(Result);
+      .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color)));
+  ComposeChildren(Result);
 end;
 
 { TDesignComponentButton }
@@ -1054,13 +1032,8 @@ begin
     .SetIntf(cButton.PSClickChannel, PSClickChannel);
 end;
 
-function TDesignComponentButton.DoCompose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponentButton.DoCompose: IMetaElement;
 begin
-  {
-  Result := ElementFactory.CreateElement(IDesignComponentFrame,
-    NewOuterProps,
-    [ElementFactory.CreateElement(IButtonBit, NewComposeProps)]);
-  }
   Result := ElementFactory.CreateElement(IButtonBit, NewComposeProps);
 end;
 
@@ -1096,11 +1069,10 @@ end;
 procedure TDesignComponent.ComposeChildren(const AParentEl: IMetaElement);
 var
   i: Integer;
-  mNode: INode;
   mEl: IMetaElement;
 begin
   for i := 0 to Count - 1 do begin
-    mEl := (GetChild(i) as IDesignComponent).Compose(nil, nil);
+    mEl := (GetChild(i) as IDesignComponent).Compose;
     (AParentEl as INode).AddChild(mEl as INode);
   end;
 end;
@@ -1118,9 +1090,9 @@ begin
   .SetInt(cProps.BorderColor, clAqua);
 end;
 
-function TDesignComponent.Compose(const AProps: IProps; const AChildren: TMetaElementArray): IMetaElement;
+function TDesignComponent.Compose: IMetaElement;
 begin
-  Result := DoCompose(AProps, AChildren);
+  Result := DoCompose;
 end;
 
 procedure TDesignComponent.AfterConstruction;

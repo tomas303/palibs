@@ -13,10 +13,6 @@ type
     procedure Render(const AElement: IMetaElement);
   end;
 
-const
-  cNotifyRender = -400;
-  cNotifyCloseGUI = -401;
-
 implementation
 
 end.

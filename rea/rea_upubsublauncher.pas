@@ -78,7 +78,7 @@ procedure TPubSubLauncher.Render;
 var
   mEl: IMetaElement;
 begin
-  mEl := Gui.Compose(nil, []);
+  mEl := Gui.Compose{(nil, [])};
   if mEl = nil then begin
     raise exception.create('nil element');
   end;
