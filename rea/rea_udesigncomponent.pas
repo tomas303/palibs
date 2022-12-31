@@ -297,13 +297,6 @@ type
     property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
   end;
 
-  { TDesignComponentFrame }
-
-  TDesignComponentFrame = class(TDesignComponent, IDesignComponentFrame)
-  protected
-    function DoCompose: IMetaElement; override;
-  end;
-
 implementation
 
 { TDesignComponentGrid.TShiftInfo }
@@ -349,8 +342,6 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetBool(cProps.Transparent, False)
     .SetInt(cProps.Color, AParentEl.Props.AsInt(cProps.Color))
-    .SetInt(cProps.FontColor, AParentEl.Props.AsInt(cProps.FontColor))
-    .SetInt(cProps.BorderColor, AParentEl.Props.AsInt(cProps.BorderColor))
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.BoxLaticeSize))
     .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.BoxLaticeSize));
@@ -375,14 +366,6 @@ function TDesignComponentBox.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(IStripBit, NewComposeProps);
   MakeChildren(Result);
-end;
-
-{ TDesignComponentFrame }
-
-function TDesignComponentFrame.DoCompose: IMetaElement;
-begin
-  Result := ElementFactory.CreateElement(IStripBit, NewComposeProps);
-  ComposeChildren(Result);
 end;
 
 { TDesignComponentText }

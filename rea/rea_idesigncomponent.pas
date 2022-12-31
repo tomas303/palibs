@@ -295,10 +295,6 @@ type
     Caption = cProps.Caption;
   end;
 
-  IDesignComponentFrame = interface(IDesignComponent)
-  ['{33417F52-E1E5-46E3-9E4B-7733FD2CA1D0}']
-  end;
-
 const
   cEditHeight = 25;
   cCaptionWidth = 100;

@@ -36,7 +36,7 @@ type
     fPersonsNameEdit: IDesignComponentEdit;
     fPersonsSurenameEdit: IDesignComponentEdit;
     fPersonsGrid: IDesignComponentGrid;
-    fPersonsStrip: IDesignComponentStrip;
+    fPersonsDC: IDesignComponent;
     fPersonsEditStrip: IDesignComponentStrip;
     fCommandsStrip: IDesignComponentStrip;
     fNext, fPrior, fFirst, fLast: IDesignComponentButton;
@@ -123,12 +123,12 @@ begin
   );
 
   fPage1 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'red').SetInt(cProps.Color, clRed).SetBool('Transparent', False));
-  (fPage1 as INode).AddChild(fPersonsStrip as INode);
+  (fPage1 as INode).AddChild(fPersonsDC as INode);
   fPage2 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'blue').SetInt(cProps.Color, clBlue).SetBool('Transparent', False));
   //(fPage2 as INode).AddChild(fPersonsNameEdit as INode);
   //(fPage2 as INode).AddChild(fPersonsSurenameEdit as INode);
   fPage3 := Factory2.Locate<IDesignComponentStrip>(NewProps.SetStr(cProps.Caption, 'lime').SetInt(cProps.Color, clLime).SetBool('Transparent', False));
-  //(fPage3 as INode).AddChild(fPersonsStrip as INode);
+  //(fPage3 as INode).AddChild(fPersonsDC as INode);
 
   (fPager as INode).AddChild(fPage1 as INode);
   (fPager as INode).AddChild(fPage2 as INode);
@@ -172,12 +172,14 @@ begin
     .SetInt(cProps.Color, clAqua)
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
+    .SetBool(cProps.Flat, True)
     );
   fPersonsSurenameEdit := Factory2.Locate<IDesignComponentEdit>(NewProps
     .SetStr(cProps.ID, 'surename')
     .SetInt(cProps.Color, clSkyBlue)
     .SetInt(cProps.FontColor, clBlack)
     .SetInt(cProps.TextColor,  clYellow)
+    .SetBool(cProps.Flat, True)
     );
   fPersonsEditStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
     .SetInt(cProps.Place, cPlace.FixFront)
@@ -208,11 +210,17 @@ end;
 procedure TGUI.CreatePersonsStrip;
 var
   mStrip1, mStrip2: IDesignComponentStrip;
+  mH: IDesignComponent;
 begin
-  fPersonsStrip := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.Layout, cLayout.Horizontal)
+  fPersonsDC := Factory2.Locate<IDesignComponentVBox>(NewProps
+    .SetInt(cProps.BoxLaticeSize, 5)
+    .SetInt(cProps.Color, clGray)
     .SetBool('Transparent', True));
+  mH := Factory2.Locate<IDesignComponentHBox>(NewProps
+    .SetInt(cProps.BoxLaticeSize, 5)
+    .SetInt(cProps.Color, clGray)
+    .SetBool('Transparent', True));
+  (fPersonsDC as INode).AddChild(mH as INode);
 
   mStrip1 := Factory2.Locate<IDesignComponentStrip>(NewProps
       .SetInt(cProps.Place, cPlace.Elastic)
@@ -231,8 +239,10 @@ begin
   (mStrip2 as INode).AddChild(fPersonsEditStrip as INode);
   (mStrip2 as INode).AddChild(fCommandsStrip as INode);
 
-  (fPersonsStrip as INode).AddChild(mStrip1 as INode);
-  (fPersonsStrip as INode).AddChild(mStrip2 as INode);
+  (mH as INode).AddChild(mStrip1 as INode);
+  (mH as INode).AddChild(mStrip2 as INode);
+
+
 end;
 
 procedure TGUI.CreateComponents;
