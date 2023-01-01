@@ -9,7 +9,7 @@ uses
   trl_ilauncher, forms, trl_pubsub,
   rea_irenderer, rea_urenderer,
   rea_idesigncomponent,
-  trl_imetaelement;
+  trl_imetaelement, trl_iprops, trl_udifactory;
 
 type
 
@@ -17,6 +17,8 @@ type
 
   TPubSubLauncher = class(TInterfacedObject, ILauncher)
   private
+    fPSGUIChannel: IPSGUIChannel;
+    fGUI: IDesignComponentApp;
     procedure StartUp;
     procedure ShutDown;
     procedure Loop;
@@ -28,13 +30,13 @@ type
   public
     procedure AfterConstruction; override;
   protected
+    fFactory2: TDIFactory2;
     fPubSub: IPubSub;
     fRenderer: IRenderer;
-    fGUI: IDesignComponentApp;
   published
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property PubSub: IPubSub read fPubSub write fPubSub;
     property Renderer: IRenderer read fRenderer write fRenderer;
-    property GUI: IDesignComponentApp read fGUI write fGUI;
   end;
 
 implementation
@@ -43,13 +45,17 @@ implementation
 
 procedure TPubSubLauncher.StartUp;
 begin
-  GUI.PSGUIChannel.Subscribe(PSGUIChannelObserver);
-  Render;
+  fPSGUIChannel := PubSub.Factory.NewDataChannel<TGUIData>;
+  fPSGUIChannel.Subscribe(PSGUIChannelObserver);
+  fGUI := Factory2.Locate<IDesignComponentApp>(
+    Factory2.Locate<IProps>.SetIntf('PSGUIChannel', fPSGUIChannel)
+  );
 end;
 
 procedure TPubSubLauncher.ShutDown;
 begin
-  GUI.PSGUIChannel.Unsubscribe(PSGUIChannelObserver);
+  fPSGUIChannel.Unsubscribe(PSGUIChannelObserver);
+  PubSub.Factory.DropDataChannel<TGUIData>(fPSGUIChannel);
   Application.Terminate;
 end;
 
@@ -78,7 +84,7 @@ procedure TPubSubLauncher.Render;
 var
   mEl: IMetaElement;
 begin
-  mEl := Gui.Compose{(nil, [])};
+  mEl := fGui.Compose{(nil, [])};
   if mEl = nil then begin
     raise exception.create('nil element');
   end;

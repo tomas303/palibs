@@ -127,7 +127,6 @@ type
     function WrapInStrip(const ADC: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
   private
     fAppSettings: IRBData;
-    fPSGUIChannel: IPSGUIChannel;
   private
     procedure PSSizeObserver(const AValue: TSizeData);
     procedure PSPositionObserver(const AValue: TPositionData);
@@ -139,15 +138,16 @@ type
     procedure CreateComponents;
     procedure CreateDataConnectors;
   protected
-    function PSGUIChannel: IPSGUIChannel;
     function DoCompose: IMetaElement; override;
     procedure InitValues; override;
   protected
     fStore: IPersistStore;
     fPersistFactory: IPersistFactory;
+    fPSGUIChannel: IPSGUIChannel;
   published
     property Store: IPersistStore read fStore write fStore;
     property PersistFactory: IPersistFactory read fPersistFactory write fPersistFactory;
+    property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
   end;
 
 implementation
@@ -457,11 +457,6 @@ begin
   fForm.PSPositionChannel.Publish(TPositionData.Create(Self, fAppSettings.ItemByName['Left'].AsInteger, fAppSettings.ItemByName['Top'].AsInteger));
 end;
 
-function TGUI.PSGUIChannel: IPSGUIChannel;
-begin
-  Result := fPSGUIChannel;
-end;
-
 function TGUI.DoCompose: IMetaElement;
 begin
   Result := fForm.Compose;
@@ -470,7 +465,6 @@ end;
 procedure TGUI.InitValues;
 begin
   inherited InitValues;
-  fPSGUIChannel := PubSub.Factory.NewDataChannel<TGUIData>;
   Store.Open('/root/demosettings.xml');
   CreateComponents;
   CreateDataConnectors;

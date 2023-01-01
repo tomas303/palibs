@@ -182,9 +182,9 @@ end;
 function TReg.RegisterPubSubLauncher: TDIReg;
 begin
   Result := DIC.Add(TPubSubLauncher, ILauncher);
+  Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('PubSub', IPubSub);
   Result.InjectProp('Renderer', IRenderer);
-  Result.InjectProp('GUI', IDesignComponentApp);
 end;
 
 function TReg.RegisterStoreConnector: TDIReg;

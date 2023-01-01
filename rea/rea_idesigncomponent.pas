@@ -217,7 +217,6 @@ type
 
   IDesignComponentApp = interface(IDesignComponent)
   ['{4035F57F-CA74-4D0E-8972-3A2162FAB714}']
-    function PSGUIChannel: IPSGUIChannel;
   end;
 
   IDesignComponentForm = interface(IDesignComponent)
