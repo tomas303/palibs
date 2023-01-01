@@ -68,12 +68,13 @@ type
 
   TGUIPersons = class(TDesignComponent, IGUIPersons)
   private const
-    cLaticeSize = 2;
+    cRowSize = 30;
   private
     fNameEdit: IDesignComponentEdit;
     fSurenameEdit: IDesignComponentEdit;
     fGrid: IDesignComponentGrid;
-      protected
+    function StickLabelProps(const ACaption: String): IProps;
+  protected
     procedure InitValues; override;
     function DoCompose: IMetaElement; override;
     function GetNameEdit: IDesignComponentEdit;
@@ -216,20 +217,27 @@ end;
 
 { TGUIPersons }
 
+function TGUIPersons.StickLabelProps(const ACaption: String): IProps;
+begin
+  Result := NewComposeProps
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.MMHeight, cRowSize)
+    .SetStr(cProps.Caption, ACaption)
+    .SetInt(cProps.CaptionWidth, 100)
+    .SetInt(cProps.CaptionHeight, cRowSize)
+    .SetInt(cProps.CaptionEdge, cEdge.Left);
+end;
+
 procedure TGUIPersons.InitValues;
 begin
   inherited InitValues;
   fNameEdit := Factory2.Locate<IDesignComponentEdit>(NewComposeProps
-    .SetInt(cProps.Place, cPlace.FixFront)
-    .SetInt(cProps.MMHeight, 30)
     .SetStr(cProps.ID, 'person_name')
     .SetBool(cProps.Flat, True)
     .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
     .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
     );
   fSurenameEdit := Factory2.Locate<IDesignComponentEdit>(NewComposeProps
-    .SetInt(cProps.Place, cPlace.FixFront)
-    .SetInt(cProps.MMHeight, 30)
     .SetStr(cProps.ID, 'person_surename')
     .SetBool(cProps.Flat, True)
     .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
@@ -248,8 +256,8 @@ begin
     .SetInt(cGrid.ColMMWidth, 25)
     .SetInt(cGrid.LaticeColColor, clBlack)
     .SetInt(cGrid.LaticeRowColor, clBlack)
-    .SetInt(cGrid.LaticeColSize, cLaticeSize)
-    .SetInt(cGrid.LaticeRowSize, cLaticeSize)
+    .SetInt(cGrid.LaticeColSize, 2)
+    .SetInt(cGrid.LaticeRowSize, 2)
     );
 end;
 
@@ -260,16 +268,16 @@ begin
   mBEdit := Factory2.Locate<IDesignComponentVBox>(NewComposeProps
     .SetBool(cProps.Transparent, True)
   );
-  (mBEdit as INode).AddChild(fNameEdit as INode);
-  (mBEdit as INode).AddChild(fSurenameEdit as INode);
+  (mBEdit as INode).AddChild(Morph.StickLabel(fNameEdit, StickLabelProps('Name')) as INode);
+  (mBEdit as INode).AddChild(Morph.StickLabel(fSurenameEdit, StickLabelProps('Surename')) as INode);
   mBGridEdit := Factory2.Locate<IDesignComponentHBox>(NewComposeProps
-    .SetInt(cProps.BoxLaticeSize, cLaticeSize)
+    .SetInt(cProps.BoxLaticeSize, 10)
     .SetBool(cProps.Transparent, True)
   );
   (mBGridEdit as INode).AddChild(fGrid as INode);
   (mBGridEdit as INode).AddChild(mBEdit as INode);
   mBMain := Factory2.Locate<IDesignComponentVBox>(NewComposeProps
-    .SetInt(cProps.BoxLaticeSize, cLaticeSize)
+    .SetInt(cProps.BoxLaticeSize, 5)
     .SetBool(cProps.Transparent, True)
   );
   (mBMain as INode).AddChild(mBGridEdit as INode);

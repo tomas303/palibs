@@ -34,10 +34,9 @@ type
       TextChangedFunc = 'TextChangedFunc';
       KeyDownFunc = 'KeyDownFunc';
       Caption = 'Caption';
+      CaptionEdge = 'CaptionEdge';
       CaptionWidth = 'CaptionWidth';
       CaptionHeight = 'CaptionHeight';
-      PairWidth = 'PairWidth';
-      CaptionEdge = 'CaptionEdge';
       CaptionEditBorder = 'CaptionEditBorder';
       CaptionEditBorderColor = 'CaptionEditBorderColor';
       SwitchEdge = 'SwitchEdge';
@@ -105,6 +104,8 @@ type
     Right = 2;
     Bottom = 3;
   end;
+
+  TCaptionEdge = (ceLeft, ceTop, ceRight, ceBottom);
 
   { TGUIData }
 
@@ -215,6 +216,11 @@ type
     function Compose: IMetaElement;
   end;
 
+  IMorph = interface
+  ['{094E488A-FA1D-40F8-ABDD-C1113A5225DC}']
+    function StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;
+  end;
+
   IDesignComponentApp = interface(IDesignComponent)
   ['{4035F57F-CA74-4D0E-8972-3A2162FAB714}']
   end;
@@ -278,20 +284,6 @@ type
     SwitchEdgeRight = cEdge.Right;
     SwitchEdgeBottom = cEdge.Bottom;
     SwitchSize = cProps.SwitchSize;
-  end;
-
-  IDesignComponentLabelEdit = interface(IDesignComponent)
-  ['{EAA33F6C-C4B8-40A2-B37E-82C7EE013EF7}']
-  end;
-
-  IDesignComponentLabelEditHelper = type helper for IDesignComponentLabelEdit
-  public const
-    CaptionEdge = cProps.CaptionEdge;
-    CaptionEdgeLeft = cEdge.Left;
-    CaptionEdgeTop = cEdge.Top;
-    CaptionEdgeRight = cEdge.Right;
-    CaptionEdgeBottom = cEdge.Bottom;
-    Caption = cProps.Caption;
   end;
 
 const

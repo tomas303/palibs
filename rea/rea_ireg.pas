@@ -29,6 +29,7 @@ type
     function RegisterRenderer: TDIReg;
     function RegisterPubSubLauncher: TDIReg;
     function RegisterStoreConnector: TDIReg;
+    function RegisterMorph: TDIReg;
   end;
 
 implementation

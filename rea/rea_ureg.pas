@@ -45,6 +45,7 @@ type
     function RegisterRenderer: TDIReg;
     function RegisterPubSubLauncher: TDIReg;
     function RegisterStoreConnector: TDIReg;
+    function RegisterMorph: TDIReg;
   protected
     fDIC: TDIContainer;
   published
@@ -153,6 +154,7 @@ begin
   RegisterMessageObservable;
   RegisterRenderer;
   RegisterStoreConnector;
+  RegisterMorph;
 end;
 
 function TReg.RegisterDesignComponent(AComponentClass: TClass;
@@ -168,6 +170,7 @@ begin
   Result.InjectProp('ElementFactory', IMetaElementFactory);
   Result.InjectProp('Node', INode, 'parent');
   Result.InjectProp('PubSub', IPubSub);
+  Result.InjectProp('Morph', IMorph);
 end;
 
 function TReg.RegisterRenderer: TDIReg;
@@ -194,6 +197,12 @@ begin
   Result.InjectProp('PubSub', IPubSub);
   Result.InjectProp('Store', IPersistStore);
   Result.InjectProp('List', IPersistRefList);
+end;
+
+function TReg.RegisterMorph: TDIReg;
+begin
+  Result := DIC.Add(TMorph, IMorph);
+  Result.InjectProp('Factory2', TDIFactory2);
 end;
 
 end.

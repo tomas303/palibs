@@ -14,6 +14,19 @@ uses
 
 type
 
+  { TMorph }
+
+  TMorph = class(TInterfacedObject, IMorph)
+  private
+    function NewProps: IProps;
+  private
+    function StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;
+  protected
+    fFactory2: TDIFactory2;
+  published
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
+  end;
+
   { TDesignComponent }
 
   TDesignComponent = class(TDynaObject, IDesignComponent, INode)
@@ -49,6 +62,7 @@ type
     fFactory2: TDIFactory2;
     fNode: INode;
     fPubSub: IPubSub;
+    fMorph: IMorph;
   published
     property ID: string read fID write fID;
     property Log: ILog read fLog write fLog;
@@ -57,6 +71,7 @@ type
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property Node: INode read fNode write fNode;
     property PubSub: IPubSub read fPubSub write fPubSub;
+    property Morph: IMorph read fMorph write fMorph;
   end;
 
   { TDesignComponentForm }
@@ -298,6 +313,69 @@ type
   end;
 
 implementation
+
+{ TMorph }
+
+function TMorph.NewProps: IProps;
+begin
+  Result := Factory2.Locate<IProps>;
+end;
+
+function TMorph.StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;
+
+  function CloneProps: IProps;
+  begin
+    Result := AProps.Clone([cProps.MMWidth, cProps.MMHeight, cProps.Transparent,
+      cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
+  end;
+
+  function GetLayout: Integer;
+  begin
+    case AProps.AsInt(cProps.CaptionEdge) of
+      cEdge.Left, cEdge.Right: Result := cLayout.Horizontal;
+      cEdge.Top, cEdge.Bottom: Result := cLayout.Vertical;
+    else
+      raise Exception.Create('unsupported caption edge');
+    end;
+  end;
+
+  function GetLabelPlace: Integer;
+  begin
+    case AProps.AsInt(cProps.CaptionEdge) of
+      cEdge.Left, cEdge.Top: Result := cPlace.FixFront;
+      cEdge.Right, cEdge.Bottom: Result := cPlace.FixBack;
+    else
+      raise Exception.Create('unsupported caption edge');
+    end;
+  end;
+
+  function NewLabel: IDesignComponent;
+  begin
+    Result := Factory2.Locate<IDesignComponentText>(CloneProps
+      .SetInt(cProps.Place, GetLabelPlace)
+      .SetInt(cProps.MMWidth, AProps.AsInt(cProps.CaptionWidth))
+      .SetInt(cProps.MMHeight, AProps.AsInt(cProps.CaptionHeight))
+      .SetStr(cProps.Text, AProps.AsStr(cProps.Caption))
+    );
+  end;
+
+begin
+  Result := Factory2.Locate<IDesignComponentStrip>(AProps
+    .SetInt(cProps.Layout, GetLayout)
+  );
+  case AProps.AsInt(cProps.CaptionEdge) of
+    cEdge.Left, cEdge.Top: begin
+      (Result as INode).AddChild(NewLabel as INode);
+      (Result as INode).AddChild(AComponent as INode);
+    end;
+    cEdge.Right, cEdge.Bottom: begin
+      (Result as INode).AddChild(AComponent as INode);
+      (Result as INode).AddChild(NewLabel as INode);
+    end;
+  else
+    raise Exception.Create('unsupported caption edge');
+  end;
+end;
 
 { TDesignComponentGrid.TShiftInfo }
 

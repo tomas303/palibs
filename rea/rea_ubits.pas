@@ -261,7 +261,7 @@ type
     property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
   end;
 
-  { TTextBit }
+ { TTextBit }
 
   TTextBit = class(TBit, ITextBit)
   protected
@@ -563,7 +563,7 @@ begin
   inherited;
   AsText.Caption := Text;
   AsText.Font.Color := TextColor;
-  AsText.Show;
+  AsText.Align := alCustom;
 end;
 
 { TEditBit }
