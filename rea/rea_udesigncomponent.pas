@@ -340,7 +340,7 @@ var
 begin
   mStripProps := NewProps
     .SetInt(cProps.Place, cPlace.FixFront)
-    .SetBool(cProps.Transparent, False)
+    .SetBool(cProps.Transparent, AParentEl.Props.AsBool(cProps.Transparent))
     .SetInt(cProps.Color, AParentEl.Props.AsInt(cProps.Color))
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.BoxLaticeSize))
@@ -357,9 +357,10 @@ end;
 
 function TDesignComponentBox.NewComposeProps: IProps;
 begin
-  Result := inherited NewComposeProps;
-  Result
-    .SetInt(cProps.Layout, BoxLayout);
+  Result := inherited NewComposeProps
+    .SetInt(cProps.Layout, BoxLayout)
+    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent));
 end;
 
 function TDesignComponentBox.DoCompose: IMetaElement;
@@ -911,6 +912,8 @@ begin
   begin
     mText := (GetChild(i) as TDynaObject).SelfProps.AsStr(cProps.Caption);
     mButton := Factory2.Locate<IDesignComponentButton>(NewProps
+      .SetInt(cButton.Color, SelfProps.AsInt(cButton.Color))
+      .SetBool(cButton.Transparent, SelfProps.AsBool(cButton.Transparent))
       .SetStr(cButton.Text, mText)
     );
     PubSub.Factory.NewNonDataToDataBridge<Integer>(
@@ -1010,6 +1013,8 @@ function TDesignComponentButton.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
   Result
+    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
     .SetInt(cProps.Place, cPlace.Elastic)
     .SetInt(cProps.FontDirection, SelfProps.AsInt(cProps.FontDirection))
     .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
@@ -1068,10 +1073,10 @@ begin
   .SetInt(cProps.Place, cPlace.Elastic)
   .SetInt(cProps.Border, 0)
   .SetStr(cProps.Text, '')
-  .SetBool(cProps.Transparent, False)
-  .SetInt(cProps.Color, clFuchsia)
-  .SetInt(cProps.FontColor, clOlive)
-  .SetInt(cProps.BorderColor, clAqua);
+  .SetBool(cProps.Transparent, True)
+  .SetInt(cProps.Color, clWhite)
+  .SetInt(cProps.FontColor, clBlack)
+  .SetInt(cProps.BorderColor, clBlack);
 end;
 
 function TDesignComponent.Compose: IMetaElement;

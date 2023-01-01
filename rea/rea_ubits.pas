@@ -291,16 +291,19 @@ type
     procedure EnableNotifiers; override;
     procedure DisableNotifiers; override;
   public
+    procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   protected
     fText: string;
     fFontDirection: Integer;
     fFontColor: TColor;
     fPSClickChannel: IPSClickChannel;
+    fTransparent: Boolean;
   published
     property Text: string read fText write fText;
     property FontDirection: integer read fFontDirection write fFontDirection;
     property FontColor: TColor read fFontColor write fFontColor;
+    property Transparent: Boolean read fTransparent write fTransparent;
     property PSClickChannel: IPSClickChannel read fPSClickChannel write SetPSClickChannel;
   end;
 
@@ -387,10 +390,8 @@ end;
 procedure TStripBit.DoHookParent(const AParent: TWinControl);
 var
   mChild: INode;
-  mclass: string;
 begin
   for mChild in (Self as INode) do begin
-    mclass := (mChild as tobject).ClassName;
     (mChild as IBit).HookParent(AParent);
   end;
 end;
@@ -512,6 +513,7 @@ begin
   AsButton.Layout := tlCenter;
   AsButton.Font.Quality := fqCleartype;
   AsButton.Font.Color := FontColor;
+  AsButton.Transparent := Transparent;
   case FontDirection of
     cFontDirection.VertLeft:
       AsButton.Font.Orientation := 900;
@@ -535,6 +537,12 @@ procedure TButtonBit.DisableNotifiers;
 begin
   fClickEnabled := False;
   inherited DisableNotifiers;
+end;
+
+procedure TButtonBit.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  Transparent := True;
 end;
 
 procedure TButtonBit.BeforeDestruction;
