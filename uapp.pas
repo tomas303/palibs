@@ -73,7 +73,7 @@ type
     fNameEdit: IDesignComponentEdit;
     fSurenameEdit: IDesignComponentEdit;
     fGrid: IDesignComponentGrid;
-    function StickLabelProps(const ACaption: String): IProps;
+    function ComposeEditRow(const ACaption: String; AEdit: IDesignComponent): IDesignComponent;
   protected
     procedure InitValues; override;
     function DoCompose: IMetaElement; override;
@@ -215,15 +215,13 @@ end;
 
 { TGUIPersons }
 
-function TGUIPersons.StickLabelProps(const ACaption: String): IProps;
+function TGUIPersons.ComposeEditRow(const ACaption: String;
+  AEdit: IDesignComponent): IDesignComponent;
 begin
-  Result := NewComposeProps
-    .SetInt(cProps.Place, cPlace.FixFront)
-    .SetInt(cProps.MMHeight, cRowSize)
-    .SetStr(cProps.Caption, ACaption)
-    .SetInt(cProps.CaptionWidth, 100)
-    .SetInt(cProps.CaptionHeight, cRowSize)
-    .SetInt(cProps.CaptionEdge, cEdge.Left);
+  Result := Morph.WrapInStrip(
+    Morph.StickLabel(AEdit, ACaption, cEdge.Left, 100, cRowSize),
+    cRowSize, cPlace.FixFront
+  );
 end;
 
 procedure TGUIPersons.InitValues;
@@ -266,8 +264,8 @@ begin
   mBEdit := Factory2.Locate<IDesignComponentVBox>(NewComposeProps
     .SetBool(cProps.Transparent, True)
   );
-  (mBEdit as INode).AddChild(Morph.StickLabel(fNameEdit, StickLabelProps('Name')) as INode);
-  (mBEdit as INode).AddChild(Morph.StickLabel(fSurenameEdit, StickLabelProps('Surename')) as INode);
+  (mBEdit as INode).AddChild(ComposeEditRow('Name', fNameEdit) as INode);
+  (mBEdit as INode).AddChild(ComposeEditRow('Surename', fSurenameEdit) as INode);
   mBGridEdit := Factory2.Locate<IDesignComponentHBox>(NewComposeProps
     .SetInt(cProps.BoxLaticeSize, 10)
     .SetBool(cProps.Transparent, True)

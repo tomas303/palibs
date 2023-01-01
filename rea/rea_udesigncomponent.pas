@@ -22,7 +22,7 @@ type
   private
     function WrapInStrip(const AComponent: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
     function NewPage(const ACaption: String; ALayout: Integer; const AComponents: TArray<IDesignComponent>): IDesignComponent;
-    function StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;
+    function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; AWidth, AHeight: Integer): IDesignComponent;
   protected
     fFactory2: TDIFactory2;
   published
@@ -350,17 +350,13 @@ begin
   end;
 end;
 
-function TMorph.StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;
-
-  function CloneProps: IProps;
-  begin
-    Result := AProps.Clone([cProps.MMWidth, cProps.MMHeight, cProps.Transparent,
-      cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
-  end;
+function TMorph.StickLabel(const AComponent: IDesignComponent;
+  const ACaption: String; AEdge: Integer; AWidth, AHeight: Integer
+  ): IDesignComponent;
 
   function GetLayout: Integer;
   begin
-    case AProps.AsInt(cProps.CaptionEdge) of
+    case AEdge of
       cEdge.Left, cEdge.Right: Result := cLayout.Horizontal;
       cEdge.Top, cEdge.Bottom: Result := cLayout.Vertical;
     else
@@ -370,7 +366,7 @@ function TMorph.StickLabel(const AComponent: IDesignComponent; const AProps: IPr
 
   function GetLabelPlace: Integer;
   begin
-    case AProps.AsInt(cProps.CaptionEdge) of
+    case AEdge of
       cEdge.Left, cEdge.Top: Result := cPlace.FixFront;
       cEdge.Right, cEdge.Bottom: Result := cPlace.FixBack;
     else
@@ -380,19 +376,20 @@ function TMorph.StickLabel(const AComponent: IDesignComponent; const AProps: IPr
 
   function NewLabel: IDesignComponent;
   begin
-    Result := Factory2.Locate<IDesignComponentText>(CloneProps
+    Result := Factory2.Locate<IDesignComponentText>(NewProps
       .SetInt(cProps.Place, GetLabelPlace)
-      .SetInt(cProps.MMWidth, AProps.AsInt(cProps.CaptionWidth))
-      .SetInt(cProps.MMHeight, AProps.AsInt(cProps.CaptionHeight))
-      .SetStr(cProps.Text, AProps.AsStr(cProps.Caption))
+      .SetInt(cProps.MMWidth, AWidth)
+      .SetInt(cProps.MMHeight, AHeight)
+      .SetStr(cProps.Text, ACaption)
     );
   end;
 
 begin
-  Result := Factory2.Locate<IDesignComponentStrip>(AProps
+  Result := Factory2.Locate<IDesignComponentStrip>(NewProps
     .SetInt(cProps.Layout, GetLayout)
+    .SetBool(cProps.Transparent, True)
   );
-  case AProps.AsInt(cProps.CaptionEdge) of
+  case AEdge of
     cEdge.Left, cEdge.Top: begin
       (Result as INode).AddChild(NewLabel as INode);
       (Result as INode).AddChild(AComponent as INode);
