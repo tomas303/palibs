@@ -219,7 +219,7 @@ function TGUIPersons.ComposeEditRow(const ACaption: String;
   AEdit: IDesignComponent): IDesignComponent;
 begin
   Result := Morph.WrapInStrip(
-    Morph.StickLabel(AEdit, ACaption, cEdge.Left, 100, cRowSize),
+    Morph.StickLabel(AEdit, ACaption, cEdge.Left, 100),
     cRowSize, cPlace.FixFront
   );
 end;

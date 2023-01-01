@@ -220,7 +220,7 @@ type
   ['{094E488A-FA1D-40F8-ABDD-C1113A5225DC}']
     function WrapInStrip(const AComponent: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
     function NewPage(const ACaption: String; ALayout: Integer; const AComponents: TArray<IDesignComponent>): IDesignComponent;
-    function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; AWidth, AHeight: Integer): IDesignComponent;
+    function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; ASize: Integer): IDesignComponent;
   end;
 
   IDesignComponentApp = interface(IDesignComponent)

@@ -22,7 +22,7 @@ type
   private
     function WrapInStrip(const AComponent: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
     function NewPage(const ACaption: String; ALayout: Integer; const AComponents: TArray<IDesignComponent>): IDesignComponent;
-    function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; AWidth, AHeight: Integer): IDesignComponent;
+    function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; ASize: Integer): IDesignComponent;
   protected
     fFactory2: TDIFactory2;
   published
@@ -351,14 +351,33 @@ begin
 end;
 
 function TMorph.StickLabel(const AComponent: IDesignComponent;
-  const ACaption: String; AEdge: Integer; AWidth, AHeight: Integer
-  ): IDesignComponent;
+  const ACaption: String; AEdge: Integer; ASize: Integer): IDesignComponent;
 
   function GetLayout: Integer;
   begin
     case AEdge of
       cEdge.Left, cEdge.Right: Result := cLayout.Horizontal;
       cEdge.Top, cEdge.Bottom: Result := cLayout.Vertical;
+    else
+      raise Exception.Create('unsupported caption edge');
+    end;
+  end;
+
+  function GetWidth: Integer;
+  begin
+    case AEdge of
+      cEdge.Left, cEdge.Right: Result := ASize;
+      cEdge.Top, cEdge.Bottom: Result := 0;
+    else
+      raise Exception.Create('unsupported caption edge');
+    end;
+  end;
+
+  function GetHeight: Integer;
+  begin
+    case AEdge of
+      cEdge.Left, cEdge.Right: Result := 0;
+      cEdge.Top, cEdge.Bottom: Result := ASize;
     else
       raise Exception.Create('unsupported caption edge');
     end;
@@ -378,8 +397,8 @@ function TMorph.StickLabel(const AComponent: IDesignComponent;
   begin
     Result := Factory2.Locate<IDesignComponentText>(NewProps
       .SetInt(cProps.Place, GetLabelPlace)
-      .SetInt(cProps.MMWidth, AWidth)
-      .SetInt(cProps.MMHeight, AHeight)
+      .SetInt(cProps.MMWidth, GetWidth)
+      .SetInt(cProps.MMHeight, GetHeight)
       .SetStr(cProps.Text, ACaption)
     );
   end;
