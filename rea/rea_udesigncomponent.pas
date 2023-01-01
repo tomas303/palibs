@@ -20,6 +20,8 @@ type
   private
     function NewProps: IProps;
   private
+    function WrapInStrip(const AComponent: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
+    function NewPage(const ACaption: String; ALayout: Integer; const AComponents: TArray<IDesignComponent>): IDesignComponent;
     function StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;
   protected
     fFactory2: TDIFactory2;
@@ -319,6 +321,33 @@ implementation
 function TMorph.NewProps: IProps;
 begin
   Result := Factory2.Locate<IProps>;
+end;
+
+function TMorph.WrapInStrip(const AComponent: IDesignComponent; ASize: Integer;
+  APlace: Integer): IDesignComponent;
+begin
+  Result := Factory2.Locate<IDesignComponentStrip>(NewProps
+      .SetInt(cProps.Place, APlace)
+      .SetInt(cProps.MMWidth, ASize)
+      .SetInt(cProps.MMHeight, ASize)
+      .SetBool(cProps.Transparent, True)
+    );
+    (Result as INode).AddChild(AComponent as INode);
+end;
+
+function TMorph.NewPage(const ACaption: String; ALayout: Integer;
+  const AComponents: TArray<IDesignComponent>): IDesignComponent;
+var
+  mDC: IDesignComponent;
+begin
+  Result := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetBool(cProps.Transparent, True)
+    .SetStr(cProps.Caption, ACaption)
+    .SetInt(cProps.Layout, ALayout)
+  );
+  for mDC in AComponents do begin
+    (Result as INode).AddChild(mDC as INode);
+  end;
 end;
 
 function TMorph.StickLabel(const AComponent: IDesignComponent; const AProps: IProps): IDesignComponent;

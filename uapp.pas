@@ -123,9 +123,7 @@ type
     fForm: IDesignComponentForm;
     fDataConnector: IDataConnector;
     function NewForm(const ADCs: TArray<IDesignComponent>): IDesignComponentForm;
-    function NewPage(const ACaption: String; ALayout: Integer; const ADCs: TArray<IDesignComponent>): IDesignComponent;
     function NewPager(const APages: TArray<IDesignComponent>): IDesignComponent;
-    function WrapInStrip(const ADC: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
   private
     fAppSettings: IRBData;
   private
@@ -319,20 +317,6 @@ begin
   end;
 end;
 
-function TGUI.NewPage(const ACaption: String; ALayout: Integer; const ADCs: TArray<IDesignComponent>): IDesignComponent;
-var
-  mDC: IDesignComponent;
-begin
-  Result := Factory2.Locate<IDesignComponentStrip>(NewComposeProps
-    .SetBool(cProps.Transparent, True)
-    .SetStr(cProps.Caption, ACaption)
-    .SetInt(cProps.Layout, ALayout)
-  );
-  for mDC in ADCs do begin
-    (Result as INode).AddChild(mDC as INode);
-  end;
-end;
-
 function TGUI.NewPager(const APages: TArray<IDesignComponent>): IDesignComponent;
 var
   mPage: IDesignComponent;
@@ -361,22 +345,10 @@ begin
    .SetBool(cProps.Transparent, False)
   );
   mPager := NewPager([
-    NewPage('Persons', cLayout.Vertical, [fPersons, WrapInStrip(fCommands, 25, cPlace.FixBack)]),
-    NewPage('Test', cLayout.Vertical, [])
+    Morph.NewPage('Persons', cLayout.Vertical, [fPersons, Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)]),
+    Morph.NewPage('Test', cLayout.Vertical, [])
   ]);
   fForm := NewForm([mPager]);
-end;
-
-function TGUI.WrapInStrip(const ADC: IDesignComponent; ASize: Integer;
-  APlace: Integer): IDesignComponent;
-begin
-  Result := Factory2.Locate<IDesignComponentStrip>(NewProps
-    .SetInt(cProps.Place, APlace)
-    .SetInt(cProps.MMWidth, ASize)
-    .SetInt(cProps.MMHeight, ASize)
-    .SetBool(cProps.Transparent, True)
-  );
-  (Result as INode).AddChild(ADC as INode);
 end;
 
 procedure TGUI.CreateDataConnectors;
