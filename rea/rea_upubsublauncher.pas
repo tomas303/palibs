@@ -50,6 +50,7 @@ begin
   fGUI := Factory2.Locate<IDesignComponentApp>(
     Factory2.Locate<IProps>.SetIntf('PSGUIChannel', fPSGUIChannel)
   );
+  fPSGUIChannel.Debounce(TGUIData.Create(gaRender));
 end;
 
 procedure TPubSubLauncher.ShutDown;

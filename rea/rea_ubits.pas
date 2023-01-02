@@ -316,9 +316,6 @@ var
   cb: TMessageObserverCallback;
 begin
   inherited DoControlWndProc(TheMessage);
-  if TheMessage.Msg = CM_TEXTCHANGED then begin
-    Enabled := Enabled;
-  end;
   if not Enabled then
     Exit;
   if TheMessage.Msg = Msg then begin
@@ -751,10 +748,16 @@ begin
 end;
 
 procedure TFormBit.LMSizeObserver(AMessage: TLMessage);
+var
+  mMsg: TLMSize;
 begin
-  Width := AsForm.Width;
-  Height := AsForm.Height;
-  PSSizeChannel.Publish(TSizeData.Create(Self, HScale.Unscale(AsForm.Width), VScale.Unscale(AsForm.Height)));
+  // lcl doesn't update form's size ... so take it directly from message
+  mMsg := TLMSize(AMessage);
+  if (Width <> mMsg.Width) or (Height <> mMsg.Height) then begin
+    Width := mMsg.Width;
+    Height := mMsg.Height;
+    PSSizeChannel.Publish(TSizeData.Create(Self, HScale.Unscale(Width), VScale.Unscale(Height)));
+  end;
 end;
 
 procedure TFormBit.PSSizeChannelObserver(const AData: TSizeData);
@@ -799,10 +802,16 @@ begin
 end;
 
 procedure TFormBit.LMMoveObserver(AMessage: TLMessage);
+var
+  mMsg: TLMMove;
 begin
-  Left := AsForm.Left;
-  Top := AsForm.Top;
-  PSPositionChannel.Publish(TPositionData.Create(Self, HScale.Unscale(AsForm.Left), VScale.Unscale(AsForm.Top)));
+  // lcl doesn't update form's size ... so take it directly from message
+  mMsg := TLMMove(AMessage);
+  if (Left <> mMsg.XPos) or (Top <> mMsg.YPos) then begin
+    Left := mMsg.XPos;
+    Top := mMsg.YPos;
+    PSPositionChannel.Publish(TPositionData.Create(Self, HScale.Unscale(Left), VScale.Unscale(Top)));
+  end;
 end;
 
 procedure TFormBit.PSPositionChannelObserver(const AData: TPositionData);
