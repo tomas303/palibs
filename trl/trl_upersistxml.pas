@@ -722,7 +722,7 @@ end;
 procedure TXmlStore.Open(const AFile: string);
 begin
   CheckOpen;
-  fFile := AFile;
+  fFile := ExpandFileName(AFile);
   Open;
 end;
 
