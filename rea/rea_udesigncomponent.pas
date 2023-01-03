@@ -96,6 +96,7 @@ type
     fPSActivateChannel: IPSActivateChannel;
     function PSActivateChannel: IPSActivateChannel;
   protected
+    procedure DoStartingValues; override;
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose: IMetaElement; override;
@@ -970,6 +971,17 @@ end;
 function TDesignComponentForm.PSActivateChannel: IPSActivateChannel;
 begin
   Result := fPSActivateChannel;
+end;
+
+procedure TDesignComponentForm.DoStartingValues;
+begin
+  inherited DoStartingValues;
+  // when lcl work with WM_SIZE message, flag wcfBoundsRealized must be set, otherways message didn't update forms size
+  // flag wcfBoundsRealized is set in TWinControl.RealizeBounds but only in case sizes differs
+  MMLeft := 0;
+  MMTop := 0;
+  MMWidth := 200;
+  MMHeight := 200;
 end;
 
 procedure TDesignComponentForm.InitValues;

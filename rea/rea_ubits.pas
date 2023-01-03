@@ -748,14 +748,10 @@ begin
 end;
 
 procedure TFormBit.LMSizeObserver(AMessage: TLMessage);
-var
-  mMsg: TLMSize;
 begin
-  // lcl doesn't update form's size ... so take it directly from message
-  mMsg := TLMSize(AMessage);
-  if (Width <> mMsg.Width) or (Height <> mMsg.Height) then begin
-    Width := mMsg.Width;
-    Height := mMsg.Height;
+  if (Width <> AsForm.Width) or (Height <> AsForm.Height) then begin
+    Width := AsForm.Width;
+    Height := AsForm.Height;
     PSSizeChannel.Publish(TSizeData.Create(Self, HScale.Unscale(Width), VScale.Unscale(Height)));
   end;
 end;
@@ -802,14 +798,10 @@ begin
 end;
 
 procedure TFormBit.LMMoveObserver(AMessage: TLMessage);
-var
-  mMsg: TLMMove;
 begin
-  // lcl doesn't update form's size ... so take it directly from message
-  mMsg := TLMMove(AMessage);
-  if (Left <> mMsg.XPos) or (Top <> mMsg.YPos) then begin
-    Left := mMsg.XPos;
-    Top := mMsg.YPos;
+  if (Left <> AsForm.Left) or (Top <> AsForm.Top) then begin
+    Left := AsForm.Left;
+    Top := AsForm.Top;
     PSPositionChannel.Publish(TPositionData.Create(Self, HScale.Unscale(Left), VScale.Unscale(Top)));
   end;
 end;
