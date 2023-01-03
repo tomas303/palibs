@@ -95,7 +95,7 @@ type
     procedure AfterOpen;
     procedure Close; overload;
     procedure Close(const AStream: TStream); overload;
-
+    function IsOpened: Boolean;
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
   published
@@ -749,6 +749,11 @@ begin
   fSIDMgr.Save(Doc);
   WriteXMLFile(fDoc, AStream);
   FreeAndNil(fDoc);
+end;
+
+function TXmlStore.IsOpened: Boolean;
+begin
+  Result := fDoc <> nil;
 end;
 
 procedure TXmlStore.Flush;

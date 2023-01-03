@@ -142,6 +142,7 @@ type
     procedure Close; overload;
     procedure Close(const AStream: TStream); overload;
     procedure Flush;
+    function IsOpened: Boolean;
   end;
 
   { IPersistRef }
@@ -210,7 +211,7 @@ type
     procedure Close(const AStream: TStream); overload;
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
-
+    function IsOpened: Boolean;
   end;
 
   { IPersistManyRefs }

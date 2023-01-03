@@ -158,6 +158,7 @@ type
     procedure Close; overload;
     procedure Close(const AStream: TStream); overload;
     procedure Flush;
+    function IsOpened: Boolean;
     property SID[const AData: IRBData]: TSID read GetSID;
     // IPersistQuery
     function SelectClass(const AClass: string): IPersistRefList;
@@ -638,6 +639,11 @@ end;
 procedure TPersistStore.Flush;
 begin
   fDevice.Flush;
+end;
+
+function TPersistStore.IsOpened: Boolean;
+begin
+  Result := fDevice.IsOpened;
 end;
 
 function TPersistStore.SelectClass(const AClass: string): IPersistRefList;

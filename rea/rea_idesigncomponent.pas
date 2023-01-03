@@ -221,6 +221,8 @@ type
     function WrapInStrip(const AComponent: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
     function NewPage(const ACaption: String; ALayout: Integer; const AComponents: TArray<IDesignComponent>): IDesignComponent;
     function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; ASize: Integer): IDesignComponent;
+    function WrapUp(const AComponent: IDesignComponent; AHeight: Integer): IDesignComponent; overload;
+    function WrapUp(const AComponent: IDesignComponent; AHeight: Integer; const ACaption: String; ACaptionWidth: Integer): IDesignComponent; overload;
   end;
 
   IDesignComponentApp = interface(IDesignComponent)
@@ -239,6 +241,8 @@ type
   ['{BBF9AEB9-28A5-4E15-840D-3483885936E1}']
     function PSTextChannel: IPSTextChannel;
     function PSKeyDownChannel: IPSKeyChannel;
+    function GetText: String;
+    property Text: String read GetText;
   end;
 
   IDesignComponentText = interface(IDesignComponent)

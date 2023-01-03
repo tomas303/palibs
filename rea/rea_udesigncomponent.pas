@@ -23,6 +23,8 @@ type
     function WrapInStrip(const AComponent: IDesignComponent; ASize: Integer; APlace: Integer): IDesignComponent;
     function NewPage(const ACaption: String; ALayout: Integer; const AComponents: TArray<IDesignComponent>): IDesignComponent;
     function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; ASize: Integer): IDesignComponent;
+    function WrapUp(const AComponent: IDesignComponent; AHeight: Integer): IDesignComponent; overload;
+    function WrapUp(const AComponent: IDesignComponent; AHeight: Integer; const ACaption: String; ACaptionWidth: Integer): IDesignComponent; overload;
   protected
     fFactory2: TDIFactory2;
   published
@@ -123,14 +125,16 @@ type
     function PSTextChannel: IPSTextChannel;
     function PSKeyDownChannel: IPSKeyChannel;
   protected
+    procedure DoStartingValues; override;
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose: IMetaElement; override;
   protected
     fText: String;
+    function GetText: String;
     procedure SetText(AText: String);
   published
-    property Text: String read fText write SetText;
+    property Text: String read GetText write SetText;
   end;
 
   { TDesignComponentButton }
@@ -422,6 +426,21 @@ begin
   end;
 end;
 
+function TMorph.WrapUp(const AComponent: IDesignComponent; AHeight: Integer
+  ): IDesignComponent;
+begin
+  Result := WrapInStrip(AComponent, AHeight, cPlace.FixFront);
+end;
+
+function TMorph.WrapUp(const AComponent: IDesignComponent; AHeight: Integer;
+  const ACaption: String; ACaptionWidth: Integer): IDesignComponent;
+begin
+  Result := WrapInStrip(
+    StickLabel(AComponent, ACaption, cEdge.Left, ACaptionWidth),
+    AHeight, cPlace.FixFront
+  );
+end;
+
 { TDesignComponentGrid.TShiftInfo }
 
 constructor TDesignComponentGrid.TShiftInfo.Create(AFirst, ALast,
@@ -520,6 +539,17 @@ end;
 function TDesignComponentEdit.PSKeyDownChannel: IPSKeyChannel;
 begin
   Result := fPSKeyDownChannel;
+end;
+
+function TDesignComponentEdit.GetText: String;
+begin
+  Result := fText;
+end;
+
+procedure TDesignComponentEdit.DoStartingValues;
+begin
+  inherited DoStartingValues;
+  SelfProps.SetBool(cProps.Flat, True);
 end;
 
 procedure TDesignComponentEdit.InitValues;
