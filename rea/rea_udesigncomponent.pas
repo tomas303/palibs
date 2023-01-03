@@ -25,6 +25,7 @@ type
     function StickLabel(const AComponent: IDesignComponent; const ACaption: String; AEdge: Integer; ASize: Integer): IDesignComponent;
     function WrapUp(const AComponent: IDesignComponent; AHeight: Integer): IDesignComponent; overload;
     function WrapUp(const AComponent: IDesignComponent; AHeight: Integer; const ACaption: String; ACaptionWidth: Integer): IDesignComponent; overload;
+    function WrapUpElastic(const AComponent: IDesignComponent; const ACaption: String; ACaptionWidth: Integer): IDesignComponent;
   protected
     fFactory2: TDIFactory2;
   published
@@ -439,6 +440,16 @@ begin
   Result := WrapInStrip(
     StickLabel(AComponent, ACaption, cEdge.Left, ACaptionWidth),
     AHeight, cPlace.FixFront
+  );
+end;
+
+function TMorph.WrapUpElastic(const AComponent: IDesignComponent;
+  const ACaption: String; ACaptionWidth: Integer
+  ): IDesignComponent;
+begin
+  Result := WrapInStrip(
+    StickLabel(AComponent, ACaption, cEdge.Left, ACaptionWidth),
+    0, cPlace.Elastic
   );
 end;
 
