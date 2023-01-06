@@ -17,6 +17,7 @@ type
   private
     fHeadBit: IBit;
     fHeadEl: IMetaElement;
+    procedure LogNode(const ANode: INode; ALevel: Integer = 0);
   protected
     function EmptyChildren: TMetaElementArray;
     function ExpandElement(const AElement: IMetaElement; const AParentProps: IProps): IMetaElement;
@@ -43,6 +44,22 @@ type
 implementation
 
 { TRenderer }
+
+procedure TRenderer.LogNode(const ANode: INode; ALevel: Integer);
+var
+  mChild: INode;
+begin
+{$IfDef GUIDEBUG}
+  if ANode = nil then begin
+    Log.DebugLn(DupeString('--', ALevel) + ' nil');
+  end else begin
+    Log.DebugLn(DupeString('--', ALevel) + ' ' + (ANode as TObject).ClassName);
+    for mChild in ANode do begin
+      LogNode(mChild, ALevel + 1);
+    end;
+  end;
+{$EndIf GUIDEBUG}
+end;
 
 function TRenderer.EmptyChildren: TMetaElementArray;
 begin
@@ -154,6 +171,14 @@ begin
   mNew := Reconciler.Reconcile(fHeadEl, fHeadBit, mNewEl);
   mNewBit := mNew as IBit;
   fHeadEl := mNewEl;
+  {$IfDef GUIDEBUG}
+  Log.DebugLnEnter('--- NEW BIT ---');
+  LogNode(mNewBit as INode);
+  Log.DebugLnExit('--- NEW BIT ---');
+  Log.DebugLnEnter('--- OLD BIT ---');
+  LogNode(fHeadBit as INode);
+  Log.DebugLnExit('--- OLD BIT ---');
+  {$EndIf GUIDEBUG}
   fHeadBit := mNewBit;
   fHeadBit.Render;
 end;

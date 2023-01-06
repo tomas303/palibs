@@ -6,13 +6,15 @@ interface
 
 uses
   trl_ireconciler, trl_ilog, trl_idifactory, trl_iinjector, trl_imetaelement,
-  trl_iprops, trl_itree, sysutils, Math;
+  trl_iprops, trl_itree, sysutils, Math, StrUtils;
 
 type
 
   { TReconciler }
 
   TReconciler = class(TInterfacedObject, IReconciler)
+  private
+    procedure LogElement(const ANode: INode; ALevel: Integer = 0);
   protected
     procedure RemoveChild(const AParentBit: INode; AIndex: integer);
     procedure InsertChild(const AParentBit: INode; const AChildElement: IMetaElement; AIndex: integer);
@@ -35,6 +37,22 @@ type
 implementation
 
 { TReconciler }
+
+procedure TReconciler.LogElement(const ANode: INode; ALevel: Integer);
+var
+  mChild: INode;
+begin
+{$IfDef GUIDEBUG}
+  if ANode = nil then begin
+    Log.DebugLn(DupeString('--', ALevel) + ' nil');
+  end else begin
+    Log.DebugLn(DupeString('--', ALevel) + ' ' + (ANode as IMetaElement).TypeGuid + '/' + (ANode as IMetaElement).TypeID + '     ' + (ANode as IMetaElement).Props.Info);
+    for mChild in ANode do begin
+      LogElement(mChild, ALevel + 1);
+    end;
+  end;
+{$EndIf GUIDEBUG}
+end;
 
 procedure TReconciler.RemoveChild(const AParentBit: INode; AIndex: integer);
 var
@@ -111,17 +129,18 @@ begin
   begin
     mOldChildEl := (AOldElement as INode).Child[i] as IMetaElement;
     mNewChildEl := (ANewElement as INode).Child[i] as IMetaElement;
-    if (mOldChildEl.TypeGuid <> mNewChildEl.TypeGuid) or (mOldChildEl.TypeID <> mNewChildEl.TypeID) then
-    begin
+    // temporarily disable processdiff ... buggy
+    //if (mOldChildEl.TypeGuid <> mNewChildEl.TypeGuid) or (mOldChildEl.TypeID <> mNewChildEl.TypeID) then
+    //begin
       // change of type
       RemoveChild(ABit, i);
       InsertChild(ABit, mNewChildEl, i);
-    end
-    else
-    begin
-      // same type - process difference
-      ProcessDiff(ABit.Child[i], mNewChildEl, mOldChildEl);
-    end;
+    //end
+    //else
+    //begin
+    //  // same type - process difference
+    //  ProcessDiff(ABit.Child[i], mNewChildEl, mOldChildEl);
+    //end;
   end;
   if (ANewElement as INode).Count > (AOldElement as INode).Count then
   begin
@@ -172,17 +191,29 @@ begin
       AddChild(mb, mchE);
     end;
   end else
-  if (AOldElement.TypeGuid <> ANewElement.TypeGuid) or (AOldElement.TypeID <> ANewElement.TypeID) then begin
+  if (AOldElement.TypeGuid <> ANewElement.TypeGuid) or (AOldElement.TypeID <> ANewElement.TypeID) then
+  begin
     Log.DebugLn('from ' + AOldElement.TypeGuid + '.' + AOldElement.TypeID + ' to ' + ANewElement.TypeGuid + '.' + ANewElement.TypeID);
     Result := IUnknown(Factory.Locate(ANewElement.Guid, ANewElement.TypeID, ANewElement.Props.Clone));
     for i := 0 to (ANewElement as INode).Count - 1 do
       AddChild(Result as INode, (ANewElement as INode).Child[i] as IMetaElement);
-  end else begin
+  end
+  else
+  begin
     Log.DebugLn('equalize props');
     Result := AOldEntity;
     ProcessDiff(Result as INode, ANewElement, AOldElement);
   end;
   Log.DebugLnExit({$I %CURRENTROUTINE%});
+  {$IfDef GUIDEBUG}
+  Log.DebugLnEnter('--- OLD ELEMENT ---');
+  LogElement(AOldElement as INode);
+  Log.DebugLnExit('--- OLD ELEMENT ---');
+  Log.DebugLnEnter('--- NEW ELEMENT ---');
+  LogElement(ANewElement as INode);
+  Log.DebugLnExit('--- NEW ELEMENT ---');
+  {$EndIf}
+
 end;
 
 end.
