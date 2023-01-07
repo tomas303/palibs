@@ -987,7 +987,6 @@ end;
 
 procedure TBit.SetColor(AValue: TColor);
 begin
-  if avalue=0 then exit;
   if fColor=AValue then Exit;
   fColor:=AValue;
 end;
