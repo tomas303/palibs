@@ -9,6 +9,7 @@ uses
 
 type
   TPropType = (ptUndefined, ptInt, ptStr, ptBool, ptGuid, ptInterface, ptObject);
+  TPropDiffMode = (pdmAll, pdmDifferent);
 
   IProp = interface
   ['{B36E5E43-AFB2-4A28-8E09-E7BC682BE1F0}']
@@ -93,7 +94,7 @@ type
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
     function AsObject(const AIndex: integer): TObject;
-    function Diff(const AProps: IProps): IProps;
+    function Diff(const AProps: IProps; AMode: TPropDiffMode): IProps;
     function Info: string;
   end;
 

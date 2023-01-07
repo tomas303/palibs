@@ -109,7 +109,7 @@ procedure TReconciler.ProcessDiff(const ABit: INode; const ANewChildElement,
 var
   mDiffProps: IProps;
 begin
-  mDiffProps := ANewChildElement.Props.Diff(AOldChildElement.Props);
+  mDiffProps := ANewChildElement.Props.Diff(AOldChildElement.Props, pdmAll);
   if mDiffProps.Count > 0 then
   begin
     Injector.Write(ABit as TObject, mDiffProps);
@@ -129,22 +129,18 @@ begin
   begin
     mOldChildEl := (AOldElement as INode).Child[i] as IMetaElement;
     mNewChildEl := (ANewElement as INode).Child[i] as IMetaElement;
-    // temporarily disable processdiff ... buggy
-    //if (mOldChildEl.TypeGuid <> mNewChildEl.TypeGuid) or (mOldChildEl.TypeID <> mNewChildEl.TypeID) then
-    //begin
-      // change of type
+    if (mOldChildEl.TypeGuid <> mNewChildEl.TypeGuid) or (mOldChildEl.TypeID <> mNewChildEl.TypeID) then
+    begin
       RemoveChild(ABit, i);
       InsertChild(ABit, mNewChildEl, i);
-    //end
-    //else
-    //begin
-    //  // same type - process difference
-    //  ProcessDiff(ABit.Child[i], mNewChildEl, mOldChildEl);
-    //end;
+    end
+    else
+    begin
+      ProcessDiff(ABit.Child[i], mNewChildEl, mOldChildEl);
+    end;
   end;
   if (ANewElement as INode).Count > (AOldElement as INode).Count then
   begin
-    // add new ones
     for i := (AOldElement as INode).Count to (ANewElement as INode).Count - 1 do
     begin
       mNewChildEl := (ANewElement as INode).Child[i] as IMetaElement;
@@ -153,7 +149,6 @@ begin
   end
   else
   begin
-    // remove old ones
     for i := (ANewElement as INode).Count to (AOldElement as INode).Count - 1 do
     begin
       RemoveChild(ABit, (ANewElement as INode).Count);

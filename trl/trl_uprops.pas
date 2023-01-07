@@ -210,7 +210,7 @@ type
     function AsGuid(const AIndex: integer): TGUID;
     function AsIntf(const AIndex: integer): IUnknown;
     function AsObject(const AIndex: integer): TObject;
-    function Diff(const AProps: IProps): IProps;
+    function Diff(const AProps: IProps; AMode: TPropDiffMode): IProps;
     function Info: string;
   protected
     // IPropFinder
@@ -903,7 +903,7 @@ begin
     Result := nil;
 end;
 
-function TProps.Diff(const AProps: IProps): IProps;
+function TProps.Diff(const AProps: IProps; AMode: TPropDiffMode): IProps;
 var
   i: integer;
   mMyProp, mTheirProp: IProp;
@@ -912,8 +912,26 @@ begin
   for i := 0 to Count - 1 do begin
     mMyProp := Prop[i];
     mTheirProp := AProps.PropByName[Name(i)];
-    if (mTheirProp = nil) or not mTheirProp.Equals(mMyProp) then
+    if AMode = pdmAll then
+      Result.SetProp(Name(i), mMyProp)
+    else if (AMode = pdmDifferent) and mTheirProp.Equals(mMyProp) then
+      Result.SetProp(Name(i), mMyProp)
+    else if (mTheirProp = nil) then
       Result.SetProp(Name(i), mMyProp);
+  end;
+  for i := 0 to AProps.Count - 1 do begin
+    mMyProp := PropByName[AProps.Name(i)];
+    if mMyProp = nil then begin
+      case AProps.Prop[i].PropType of
+        ptUndefined: raise Exception.Create('cannot process diff for undefined type');
+        ptInt: Result.SetInt(AProps.Name(i), 0);
+        ptStr: Result.SetStr(AProps.Name(i), '');
+        ptBool: Result.SetBool(AProps.Name(i), False);
+        ptGuid: Result.SetGuid(AProps.Name(i), GUID_NULL);
+        ptInterface: Result.SetIntf(AProps.Name(i), nil);
+        ptObject: Result.SetObject(AProps.Name(i), nil);
+      end;
+    end;
   end;
 end;
 
