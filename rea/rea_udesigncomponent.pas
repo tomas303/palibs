@@ -123,9 +123,14 @@ type
     procedure PSTextChannelObserver(const AValue: String);
   private
     fPSKeyDownChannel: IPSKeyChannel;
+  private
+    fIsFocused: Boolean;
+    fPSFocusChannel: IPSFocusChannel;
+    procedure PSFocusChannelObserver(const AValue: TFocusData);
   protected
     function PSTextChannel: IPSTextChannel;
     function PSKeyDownChannel: IPSKeyChannel;
+    function PSFocusChannel: IPSFocusChannel;
   protected
     procedure DoStartingValues; override;
     procedure InitValues; override;
@@ -245,8 +250,10 @@ type
     fCurrentRow: Integer;
     fCurrentCol: Integer;
     fEdit: IDesignComponentEdit;
+    fEditFocused: Boolean;
     procedure PSTextChannelObserver(const AValue: String);
     procedure PSKeyDownChannelObserver(const AValue: TKeyData);
+    procedure PSFocusChannelObserver(const AValue: TFocusData);
     procedure MoveVertically(ADelta: Integer);
     procedure MoveHorizontally(ADelta: Integer);
     procedure CopyRow(AFrom, ATo: Integer);
@@ -543,6 +550,11 @@ begin
   fText := AValue;
 end;
 
+procedure TDesignComponentEdit.PSFocusChannelObserver(const AValue: TFocusData);
+begin
+  fIsFocused := AValue.Focused;
+end;
+
 function TDesignComponentEdit.PSTextChannel: IPSTextChannel;
 begin
   Result := fPSTextChannel;
@@ -551,6 +563,11 @@ end;
 function TDesignComponentEdit.PSKeyDownChannel: IPSKeyChannel;
 begin
   Result := fPSKeyDownChannel;
+end;
+
+function TDesignComponentEdit.PSFocusChannel: IPSFocusChannel;
+begin
+  Result := fPSFocusChannel;
 end;
 
 function TDesignComponentEdit.GetText: String;
@@ -570,6 +587,8 @@ begin
   fPSTextChannel := PubSub.Factory.NewDataChannel<String>;
   fPSTextChannel.Subscribe(PSTextChannelObserver);
   fPSKeyDownChannel := PubSub.Factory.NewDataChannel<TKeyData>;
+  fPSFocusChannel := PubSub.Factory.NewDataChannel<TFocusData>;
+  fPSFocusChannel.Subscribe(PSFocusChannelObserver);
 end;
 
 function TDesignComponentEdit.NewComposeProps: IProps;
@@ -579,10 +598,11 @@ begin
     .SetStr(cProps.Text, Text)
     .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
     .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
-    .SetBool(cProps.Focused, SelfProps.AsBool(cProps.Focused))
+    .SetBool(cProps.Focused, fIsFocused)
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
     .SetIntf(cEdit.PSTextChannel, PSTextChannel)
-    .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel);
+    .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel)
+    .SetIntf(cEdit.PSFocusChannel, PSFocusChannel)
 end;
 
 function TDesignComponentEdit.DoCompose: IMetaElement;
@@ -698,6 +718,11 @@ begin
   end;
 end;
 
+procedure TDesignComponentGrid.PSFocusChannelObserver(const AValue: TFocusData);
+begin
+  fEditFocused := AValue.Focused;
+end;
+
 procedure TDesignComponentGrid.MoveVertically(ADelta: Integer);
 var
   mNewPos: Integer;
@@ -723,6 +748,10 @@ begin
     mNewPos := 0
   else if mNewPos > ColCount - 1 then
     mNewPos := ColCount - 1;
+  if (ADelta < 0) and fEditFocused then
+    fEdit.PSFocusChannel.Publish(TFocusData.Create(Self, True))
+  else if (ADelta > 0) and fEditFocused and (fCurrentCol < ColCount - 1) then
+    fEdit.PSFocusChannel.Publish(TFocusData.Create(Self, True));
   fCurrentCol := mNewPos;
   SentEditChange;
   SentGUIRender;
@@ -905,10 +934,10 @@ begin
     NewProps
     .SetBool(cProps.Flat, True)
     .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-    .SetBool(cEdit.Focused, True)
   );
   fEdit.PSTextChannel.Subscribe(PSTextChannelObserver);
   fEdit.PSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
+  fEdit.PSFocusChannel.Subscribe(PSFocusChannelObserver);
   fPSGridCmdMoveChannel := PubSub.Factory.NewDataChannel<TGridCmdMove>;
   fPSGridCmdInfoChannel := PubSub.Factory.NewDataChannel<TGridCmdInfo>;
   fPSGridCmdRowChannel := PubSub.Factory.NewDataChannel<TGridCmdRow>;

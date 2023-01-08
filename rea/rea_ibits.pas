@@ -67,6 +67,19 @@ type
     class operator notequal(a,b: TKeyData): Boolean;
   end;
 
+  { TFocusData }
+
+  TFocusData = record
+  strict private
+    fSource: TObject;
+    fFocused: Boolean;
+  public
+    constructor Create(ASource: TObject; AFocused: Boolean);
+    class operator equal(a,b: TFocusData): Boolean;
+    function Source: TObject;
+    function Focused: Boolean;
+  end;
+
   IPSTextChannel = IPubSubDataChannel<String>;
   IPSSizeChannel = IPubSubDataChannel<TSizeData>;
   IPSPositionChannel = IPubSubDataChannel<TPositionData>;
@@ -74,6 +87,7 @@ type
   IPSCloseChannel = IPubSubChannel;
   IPSActivateChannel = IPubSubChannel;
   IPSClickChannel = IPubSubChannel;
+  IPSFocusChannel = IPubSubDataChannel<TFocusData>;
 
   // wrapper for real control and its binder
   IBit = interface
@@ -104,6 +118,29 @@ type
   end;
 
 implementation
+
+{ TFocusData }
+
+constructor TFocusData.Create(ASource: TObject; AFocused: Boolean);
+begin
+  fSource := ASource;
+  fFocused := AFocused;
+end;
+
+class operator TFocusData.equal(a, b: TFocusData): Boolean;
+begin
+  Result := (a.fSource = b.fSource) and (a.fFocused = b.fFocused);
+end;
+
+function TFocusData.Source: TObject;
+begin
+  Result := fSource;
+end;
+
+function TFocusData.Focused: Boolean;
+begin
+  Result := fFocused;
+end;
 
 { TKeyData }
 

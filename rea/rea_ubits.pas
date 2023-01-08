@@ -239,6 +239,15 @@ type
     procedure SetPSKeyDownChannel(AValue: IPSKeyChannel);
     procedure PSKeyDownChannelConnect;
     procedure PSKeyDownChannelDisconnect;
+  private
+    fCMEnter: IMessageObservable;
+    fCMExit: IMessageObservable;
+    procedure CMEnterObserver(AMessage: TLMessage);
+    procedure CMExitObserver(AMessage: TLMessage);
+    procedure PSFocusChannelObserver(const AValue: TFocusData);
+    procedure SetPSFocusChannel(AValue: IPSFocusChannel);
+    procedure PSFocusChannelConnect;
+    procedure PSFocusChannelDisconnect;
   protected
     function AsEdit: TCustomEdit;
     procedure DoRender; override;
@@ -253,12 +262,14 @@ type
     fFlat: Boolean;
     fPSTextChannel: IPSTextChannel;
     fPSKeyDownChannel: IPSKeyChannel;
+    fPSFocusChannel: IPSFocusChannel;
   published
     property Text: string read fText write fText;
     property Focused: Boolean read fFocused write fFocused;
     property Flat: Boolean read fFlat write fFlat;
     property PSTextChannel: IPSTextChannel read fPSTextChannel write SetPSTextChannel;
     property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
+    property PSFocusChannel: IPSFocusChannel read fPSFocusChannel write SetPSFocusChannel;
   end;
 
  { TTextBit }
@@ -639,6 +650,58 @@ begin
   end;
 end;
 
+procedure TEditBit.CMEnterObserver(AMessage: TLMessage);
+begin
+  PSFocusChannel.Publish(TFocusData.Create(Self, True));
+end;
+
+procedure TEditBit.CMExitObserver(AMessage: TLMessage);
+begin
+  PSFocusChannel.Publish(TFocusData.Create(Self, False));
+end;
+
+procedure TEditBit.PSFocusChannelObserver(const AValue: TFocusData);
+begin
+  if AValue.Source <> Self then
+    if AValue.Focused and not AsEdit.Focused then
+      AsEdit.SetFocus;
+end;
+
+procedure TEditBit.SetPSFocusChannel(AValue: IPSFocusChannel);
+begin
+  PSFocusChannelDisconnect;
+  fPSFocusChannel := AValue;
+  PSFocusChannelConnect;
+end;
+
+procedure TEditBit.PSFocusChannelConnect;
+begin
+  if fPSFocusChannel <> nil then
+  begin
+    fCMEnter := NewMessageObservable(CM_ENTER);
+    fCMEnter.Bind(AsEdit);
+    fCMEnter.Subscribe(CMEnterObserver());
+    fCMExit := NewMessageObservable(CM_EXIT);
+    fCMExit.Bind(AsEdit);
+    fCMExit.Subscribe(CMExitObserver());
+    fPSFocusChannel.Subscribe(PSFocusChannelObserver());
+  end;
+end;
+
+procedure TEditBit.PSFocusChannelDisconnect;
+begin
+  if fPSFocusChannel <> nil then
+  begin
+    fCMEnter.Unbind;
+    fCMEnter.Unsubscribe(CMEnterObserver());
+    fCMEnter := nil;
+    fCMExit.Unbind;
+    fCMExit.Unsubscribe(CMExitObserver());
+    fCMExit := nil;
+    fPSFocusChannel.Unsubscribe(PSFocusChannelObserver());
+  end;
+end;
+
 procedure TEditBit.PSTextChannelObserver(const AValue: String);
 begin
   if fCMTextChanged = nil then
@@ -703,6 +766,7 @@ procedure TEditBit.BeforeDestruction;
 begin
   PSTextChannelDisconnect;
   PSKeyDownChannelDisconnect;
+  PSFocusChannelDisconnect;
   inherited BeforeDestruction;
 end;
 

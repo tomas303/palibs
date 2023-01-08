@@ -60,6 +60,7 @@ type
   public const
     PSTextChannel = 'PSTextChannel';
     PSKeyDownChannel = 'PSKeyDownChannel';
+    PSFocusChannel = 'PSFocusChannel';
   end;
 
   cForm = class(cProps)
@@ -242,6 +243,7 @@ type
   ['{BBF9AEB9-28A5-4E15-840D-3483885936E1}']
     function PSTextChannel: IPSTextChannel;
     function PSKeyDownChannel: IPSKeyChannel;
+    function PSFocusChannel: IPSFocusChannel;
     function GetText: String;
     property Text: String read GetText;
   end;
