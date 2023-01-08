@@ -137,6 +137,7 @@ procedure TReg.RegisterCommon;
 begin
   RegisterDesignComponent(TDesignComponentForm, IDesignComponentForm);
   RegisterDesignComponent(TDesignComponentEdit, IDesignComponentEdit);
+  RegisterDesignComponent(TDesignComponentMemo, IDesignComponentMemo);
   RegisterDesignComponent(TDesignComponentText, IDesignComponentText);
   RegisterDesignComponent(TDesignComponentButton, IDesignComponentButton);
   RegisterDesignComponent(TDesignComponentStrip, IDesignComponentStrip);
@@ -148,6 +149,7 @@ begin
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
+  RegisterBitTerminus(TMemoBit, IMemoBit, TMemo, 'uimemo');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
   RegisterBitTerminus(TButtonBit, IButtonBit, TLabel, 'uibutton');
   RegisterScales;

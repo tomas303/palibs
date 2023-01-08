@@ -248,6 +248,15 @@ type
     property Text: String read GetText;
   end;
 
+  IDesignComponentMemo = interface(IDesignComponent)
+  ['{3AEB2E7E-E350-411A-96BA-F6D37B8B1858}']
+    function PSTextChannel: IPSTextChannel;
+    function PSKeyDownChannel: IPSKeyChannel;
+    function PSFocusChannel: IPSFocusChannel;
+    function GetText: String;
+    property Text: String read GetText;
+  end;
+
   IDesignComponentText = interface(IDesignComponent)
   ['{E5A64708-B673-4284-96B7-F7ACAE44BE0C}']
   end;

@@ -272,6 +272,56 @@ type
     property PSFocusChannel: IPSFocusChannel read fPSFocusChannel write SetPSFocusChannel;
   end;
 
+  { TMemoBit }
+
+  TMemoBit = class(TBit, IMemoBit)
+  private
+    fCMTextChanged: IMessageObservable;
+    procedure CMTextChangedObserver(AMessage: TLMessage);
+    procedure PSTextChannelObserver(const AValue: String);
+    procedure SetPSTextChannel(AValue: IPSTextChannel);
+    procedure PSTextChannelConnect;
+    procedure PSTextChannelDisconnect;
+  private
+    fCNKeyDown: IMessageObservable;
+    procedure CNKeyDownObserver(AMessage: TLMessage);
+    procedure PSKeyDownChannelObserver(const AValue: TKeyData);
+    procedure SetPSKeyDownChannel(AValue: IPSKeyChannel);
+    procedure PSKeyDownChannelConnect;
+    procedure PSKeyDownChannelDisconnect;
+  private
+    fCMEnter: IMessageObservable;
+    fCMExit: IMessageObservable;
+    procedure CMEnterObserver(AMessage: TLMessage);
+    procedure CMExitObserver(AMessage: TLMessage);
+    procedure PSFocusChannelObserver(const AValue: TFocusData);
+    procedure SetPSFocusChannel(AValue: IPSFocusChannel);
+    procedure PSFocusChannelConnect;
+    procedure PSFocusChannelDisconnect;
+  protected
+    function AsMemo: TCustomMemo;
+    procedure DoRender; override;
+    procedure EnableNotifiers; override;
+    procedure DisableNotifiers; override;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+  protected
+    fText: string;
+    fFocused: Boolean;
+    fFlat: Boolean;
+    fPSTextChannel: IPSTextChannel;
+    fPSKeyDownChannel: IPSKeyChannel;
+    fPSFocusChannel: IPSFocusChannel;
+  published
+    property Text: string read fText write fText;
+    property Focused: Boolean read fFocused write fFocused;
+    property Flat: Boolean read fFlat write fFlat;
+    property PSTextChannel: IPSTextChannel read fPSTextChannel write SetPSTextChannel;
+    property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
+    property PSFocusChannel: IPSFocusChannel read fPSFocusChannel write SetPSFocusChannel;
+  end;
+
  { TTextBit }
 
   TTextBit = class(TBit, ITextBit)
@@ -735,8 +785,6 @@ begin
     AsEdit.SetFocus;
     AsEdit.SelLength := 0;
   end;
-  if AsEdit.Height > 6 then
-    AsEdit.Font.Height := (AsEdit.Height div 4) * 3;
 end;
 
 procedure TEditBit.EnableNotifiers;
@@ -763,6 +811,200 @@ begin
 end;
 
 procedure TEditBit.BeforeDestruction;
+begin
+  PSTextChannelDisconnect;
+  PSKeyDownChannelDisconnect;
+  PSFocusChannelDisconnect;
+  inherited BeforeDestruction;
+end;
+
+{ TMemoBit }
+
+procedure TMemoBit.CMTextChangedObserver(AMessage: TLMessage);
+begin
+  fText := AsMemo.Text;
+  fPSTextChannel.Publish(AsMemo.Text);
+end;
+
+procedure TMemoBit.SetPSTextChannel(AValue: IPSTextChannel);
+begin
+  PSTextChannelDisconnect;
+  fPSTextChannel := AValue;
+  PSTextChannelConnect;
+end;
+
+procedure TMemoBit.PSTextChannelConnect;
+begin
+  if fPSTextChannel <> nil then
+  begin
+    fCMTextChanged := NewMessageObservable(CM_TEXTCHANGED);
+    fCMTextChanged.Bind(AsMemo);
+    fCMTextChanged.Subscribe(CMTextChangedObserver);
+    fPSTextChannel.Subscribe(PSTextChannelObserver);
+  end;
+end;
+
+procedure TMemoBit.PSTextChannelDisconnect;
+begin
+  if fPSTextChannel <> nil then
+  begin
+    fCMTextChanged.Unbind;
+    fCMTextChanged.Unsubscribe(CMTextChangedObserver);
+    fCMTextChanged := nil;
+    fPSTextChannel.Unsubscribe(PSTextChannelObserver);
+  end;
+end;
+
+procedure TMemoBit.CNKeyDownObserver(AMessage: TLMessage);
+begin
+  PSKeyDownChannel.Publish(TKeyData.Create(TLMKeyDown(AMessage)));
+end;
+
+procedure TMemoBit.PSKeyDownChannelObserver(const AValue: TKeyData);
+begin
+
+end;
+
+procedure TMemoBit.SetPSKeyDownChannel(AValue: IPSKeyChannel);
+begin
+  PSKeyDownChannelDisconnect;
+  fPSKeyDownChannel := AValue;
+  PSKeyDownChannelConnect;
+end;
+
+procedure TMemoBit.PSKeyDownChannelConnect;
+begin
+  if fPSKeyDownChannel <> nil then
+  begin
+    fCNKeyDown := NewMessageObservable(CN_KeyDown);
+    fCNKeyDown.Bind(AsMemo);
+    fCNKeyDown.Subscribe(CNKeyDownObserver);
+    fPSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
+  end;
+end;
+
+procedure TMemoBit.PSKeyDownChannelDisconnect;
+begin
+  if fPSKeyDownChannel <> nil then
+  begin
+    fCNKeyDown.Unbind;
+    fCNKeyDown.Unsubscribe(CNKeyDownObserver);
+    fCNKeyDown := nil;
+    fPSKeyDownChannel.Unsubscribe(PSKeyDownChannelObserver);
+  end;
+end;
+
+procedure TMemoBit.CMEnterObserver(AMessage: TLMessage);
+begin
+  PSFocusChannel.Publish(TFocusData.Create(Self, True));
+end;
+
+procedure TMemoBit.CMExitObserver(AMessage: TLMessage);
+begin
+  PSFocusChannel.Publish(TFocusData.Create(Self, False));
+end;
+
+procedure TMemoBit.PSFocusChannelObserver(const AValue: TFocusData);
+begin
+  if AValue.Source <> Self then
+    if AValue.Focused and not AsMemo.Focused then
+      AsMemo.SetFocus;
+end;
+
+procedure TMemoBit.SetPSFocusChannel(AValue: IPSFocusChannel);
+begin
+  PSFocusChannelDisconnect;
+  fPSFocusChannel := AValue;
+  PSFocusChannelConnect;
+end;
+
+procedure TMemoBit.PSFocusChannelConnect;
+begin
+  if fPSFocusChannel <> nil then
+  begin
+    fCMEnter := NewMessageObservable(CM_ENTER);
+    fCMEnter.Bind(AsMemo);
+    fCMEnter.Subscribe(CMEnterObserver());
+    fCMExit := NewMessageObservable(CM_EXIT);
+    fCMExit.Bind(AsMemo);
+    fCMExit.Subscribe(CMExitObserver());
+    fPSFocusChannel.Subscribe(PSFocusChannelObserver());
+  end;
+end;
+
+procedure TMemoBit.PSFocusChannelDisconnect;
+begin
+  if fPSFocusChannel <> nil then
+  begin
+    fCMEnter.Unbind;
+    fCMEnter.Unsubscribe(CMEnterObserver());
+    fCMEnter := nil;
+    fCMExit.Unbind;
+    fCMExit.Unsubscribe(CMExitObserver());
+    fCMExit := nil;
+    fPSFocusChannel.Unsubscribe(PSFocusChannelObserver());
+  end;
+end;
+
+procedure TMemoBit.PSTextChannelObserver(const AValue: String);
+begin
+  if fCMTextChanged = nil then
+    Exit;
+  if fText = AValue then
+    Exit;
+  if fCMTextChanged <> nil then
+    fCMTextChanged.Enabled := False;
+  fText := AValue;
+  AsMemo.Text := AValue;
+  if fCMTextChanged <> nil then
+    fCMTextChanged.Enabled := True;
+end;
+
+function TMemoBit.AsMemo: TCustomMemo;
+begin
+  Result := AsControl as TCustomMemo;
+end;
+
+procedure TMemoBit.DoRender;
+begin
+  inherited;
+  if Flat then
+    AsMemo.BorderStyle := bsNone;
+  AsMemo.Color := Color;
+  AsMemo.Font.Color := TextColor;
+  AsMemo.Text := Text;
+  AsMemo.Show;
+  if Focused then begin
+    Focused := False;
+    AsMemo.SetFocus;
+    AsMemo.SelLength := 0;
+  end;
+end;
+
+procedure TMemoBit.EnableNotifiers;
+begin
+  inherited EnableNotifiers;
+  if fCMTextChanged <> nil then
+    fCMTextChanged.Enabled := True;
+  if fCNKeyDown <> nil then
+    fCNKeyDown.Enabled := True;
+end;
+
+procedure TMemoBit.DisableNotifiers;
+begin
+  if fCMTextChanged <> nil then
+    fCMTextChanged.Enabled := False;
+  if fCNKeyDown <> nil then
+    fCNKeyDown.Enabled := False;
+  inherited DisableNotifiers;
+end;
+
+procedure TMemoBit.AfterConstruction;
+begin
+  inherited AfterConstruction;
+end;
+
+procedure TMemoBit.BeforeDestruction;
 begin
   PSTextChannelDisconnect;
   PSKeyDownChannelDisconnect;

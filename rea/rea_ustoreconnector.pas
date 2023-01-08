@@ -53,6 +53,7 @@ type
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
+    procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
   public
@@ -272,6 +273,28 @@ end;
 
 procedure TStoreConnector.RegisterEdit(const AName: String;
   const AEdit: IDesignComponentEdit);
+begin
+  fPubSub.Factory.NewDataBridge<String, TFieldData>(
+    AEdit.PSTextChannel,
+    PSFieldDataChannel,
+    function (const AData: String): TFieldData
+    begin
+      Result := TFieldData.Create(AName, AData);
+    end);
+  fPubSub.Factory.NewDataBridge<TRecordData, String>(
+   PSRecordDataChannel,
+   AEdit.PSTextChannel,
+   function (const AData: TRecordData): String
+   begin
+     if (AData.Position = 0) and AData.Accessor.HasValue then
+       Result := AData.Accessor.Value[AName]
+     else
+       raise EPubSubBridgeNoWay.Create('');
+   end);
+end;
+
+procedure TStoreConnector.RegisterMemo(const AName: String;
+  const AEdit: IDesignComponentMemo);
 begin
   fPubSub.Factory.NewDataBridge<String, TFieldData>(
     AEdit.PSTextChannel,

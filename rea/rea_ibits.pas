@@ -109,6 +109,10 @@ type
   ['{0392A25E-1D90-4F37-9279-09F32D6F7D03}']
   end;
 
+  IMemoBit = interface
+  ['{38D03281-94A8-466B-AFC3-FE1DC58BE8F9}']
+  end;
+
   ITextBit = interface
    ['{4178C1EC-AA39-4429-B48C-7058676ABA7B}']
   end;

@@ -102,6 +102,7 @@ type
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
+    procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
   end;

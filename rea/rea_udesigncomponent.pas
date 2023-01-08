@@ -144,6 +144,35 @@ type
     property Text: String read GetText write SetText;
   end;
 
+  { TDesignComponentMemo }
+
+  TDesignComponentMemo = class(TDesignComponent, IDesignComponentMemo)
+  private
+    fPSTextChannel: IPSTextChannel;
+    procedure PSTextChannelObserver(const AValue: String);
+  private
+    fPSKeyDownChannel: IPSKeyChannel;
+  private
+    fIsFocused: Boolean;
+    fPSFocusChannel: IPSFocusChannel;
+    procedure PSFocusChannelObserver(const AValue: TFocusData);
+  protected
+    function PSTextChannel: IPSTextChannel;
+    function PSKeyDownChannel: IPSKeyChannel;
+    function PSFocusChannel: IPSFocusChannel;
+  protected
+    procedure DoStartingValues; override;
+    procedure InitValues; override;
+    function NewComposeProps: IProps; override;
+    function DoCompose: IMetaElement; override;
+  protected
+    fText: String;
+    function GetText: String;
+    procedure SetText(AText: String);
+  published
+    property Text: String read GetText write SetText;
+  end;
+
   { TDesignComponentButton }
 
   TDesignComponentButton = class(TDesignComponent, IDesignComponentButton)
@@ -611,6 +640,81 @@ begin
 end;
 
 procedure TDesignComponentEdit.SetText(AText: String);
+begin
+  if AText <> fText then begin
+    fText := AText;
+    fPSTextChannel.Publish(fText);
+  end;
+end;
+
+{ TDesignComponentMemo }
+
+procedure TDesignComponentMemo.PSTextChannelObserver(const AValue: String);
+begin
+  fText := AValue;
+end;
+
+procedure TDesignComponentMemo.PSFocusChannelObserver(const AValue: TFocusData);
+begin
+  fIsFocused := AValue.Focused;
+end;
+
+function TDesignComponentMemo.PSTextChannel: IPSTextChannel;
+begin
+  Result := fPSTextChannel;
+end;
+
+function TDesignComponentMemo.PSKeyDownChannel: IPSKeyChannel;
+begin
+  Result := fPSKeyDownChannel;
+end;
+
+function TDesignComponentMemo.PSFocusChannel: IPSFocusChannel;
+begin
+  Result := fPSFocusChannel;
+end;
+
+function TDesignComponentMemo.GetText: String;
+begin
+  Result := fText;
+end;
+
+procedure TDesignComponentMemo.DoStartingValues;
+begin
+  inherited DoStartingValues;
+  SelfProps.SetBool(cProps.Flat, True);
+end;
+
+procedure TDesignComponentMemo.InitValues;
+begin
+  inherited InitValues;
+  fPSTextChannel := PubSub.Factory.NewDataChannel<String>;
+  fPSTextChannel.Subscribe(PSTextChannelObserver);
+  fPSKeyDownChannel := PubSub.Factory.NewDataChannel<TKeyData>;
+  fPSFocusChannel := PubSub.Factory.NewDataChannel<TFocusData>;
+  fPSFocusChannel.Subscribe(PSFocusChannelObserver);
+end;
+
+function TDesignComponentMemo.NewComposeProps: IProps;
+begin
+  Result := inherited NewComposeProps;
+  Result
+    .SetStr(cProps.Text, Text)
+    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
+    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
+    .SetBool(cProps.Focused, fIsFocused)
+    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
+    .SetIntf(cEdit.PSTextChannel, PSTextChannel)
+    .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel)
+    .SetIntf(cEdit.PSFocusChannel, PSFocusChannel)
+end;
+
+function TDesignComponentMemo.DoCompose: IMetaElement;
+begin
+  Result := ElementFactory.CreateElement(IMemoBit, NewComposeProps);
+end;
+
+procedure TDesignComponentMemo.SetText(AText: String);
 begin
   if AText <> fText then begin
     fText := AText;
