@@ -95,16 +95,12 @@ var
   mReg: TDIReg;
   mRBClass: IRBData;
   i: integer;
-  mn: string;
-  mt: TTypeKind;
 begin
   // persist class
   mReg := ADIC.Add(AClass);
   mReg.InjectProp('', InjectPersistRef);
   mRBClass := TRBData.Create(AClass);
   for i := 0 to mRBClass.Count - 1 do begin
-    mn:= mRBClass[i].Name;
-    mt := mRBClass[i].TypeKind;
     if mRBClass[i].TypeKind = tkClass then begin
       mReg.InjectProp(mRBClass[i].Name, mRBClass[i].AsClass);
     end;
