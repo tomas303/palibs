@@ -17,13 +17,10 @@ type
       Children = 'Children';
       Layout = 'Layout';
       Place = 'Place';
+      PlaceSize = 'PlaceSize';
       Title = 'Title';
       Color = 'Color';
       TextColor = 'TextColor';
-      MMLeft = 'MMLeft';
-      MMTop = 'MMTop';
-      MMWidth = 'MMWidth';
-      MMHeight = 'MMHeight';
       Value = 'Value';
       Text = 'Text';
       Border = 'Border';
@@ -81,7 +78,6 @@ type
     RowCount = 'RowCount';
     ColCount = 'ColCount';
     RowMMHeight = 'RowMMHeight';
-    ColMMWidth = 'ColMMWidth';
     LaticeColColor = 'LaticeColColor';
     LaticeRowColor = 'LaticeRowColor';
     LaticeColSize = 'LaticeColSize';

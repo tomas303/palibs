@@ -75,22 +75,13 @@ type
   protected
     fLayout: integer;
     fPlace: integer;
-    fMMLeft: integer;
-    fMMTop: integer;
-    fMMWidth: integer;
-    fMMHeight: integer;
+    fPlaceSize: integer;
     function GetLayout: integer;
     function GetPlace: integer;
-    function GetMMLeft: integer;
-    function GetMMTop: integer;
-    function GetMMWidth: integer;
-    function GetMMHeight: integer;
+    function GetPlaceSize: integer;
     procedure SetLayout(AValue: integer);
     procedure SetPlace(AValue: integer);
-    procedure SetMMLeft(AValue: integer);
-    procedure SetMMTop(AValue: integer);
-    procedure SetMMWidth(AValue: integer);
-    procedure SetMMHeight(AValue: integer);
+    procedure SetPlaceSize(AValue: integer);
   protected
     // IPlace
     fLeft: integer;
@@ -131,10 +122,7 @@ type
   published
     property Layout: integer read GetLayout write SetLayout;
     property Place: integer read GetPlace write SetPlace;
-    property MMLeft: integer read GetMMLeft write SetMMLeft;
-    property MMTop: integer read GetMMTop write SetMMTop;
-    property MMWidth: integer read GetMMWidth write SetMMWidth;
-    property MMHeight: integer read GetMMHeight write SetMMHeight;
+    property PlaceSize: integer read GetPlaceSize write SetPlaceSize;
   end;
 
   { TFormBit }
@@ -177,6 +165,7 @@ type
     procedure EnableNotifiers; override;
     procedure DisableNotifiers; override;
   public
+    procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
   protected
     fTiler: ITiler;
@@ -1267,6 +1256,20 @@ begin
   inherited DisableNotifiers;
 end;
 
+procedure TFormBit.AfterConstruction;
+var
+  mMon: TMonitor;
+begin
+  inherited AfterConstruction;
+  fWidth := 400;
+  fHeight := 150;
+  mMon := Screen.MonitorFromPoint(point(0,0));
+  if mMon <> nil then begin
+    fLeft := (mMon.Width - fWidth) div 2;
+    fTop := (mMon.Height - fHeight) div 2;
+  end;
+end;
+
 procedure TFormBit.BeforeDestruction;
 begin
   PSCloseChannelDisconnect;
@@ -1307,6 +1310,11 @@ begin
       .SetInt('Msg', AMsg)
     )
   );
+end;
+
+procedure TBit.SetPlaceSize(AValue: integer);
+begin
+  fPlaceSize := AValue;
 end;
 
 procedure TBit.AddChild(const ANode: INode);
@@ -1413,24 +1421,9 @@ begin
   Result := fPlace;
 end;
 
-function TBit.GetMMLeft: integer;
+function TBit.GetPlaceSize: integer;
 begin
-  Result := fMMLeft;
-end;
-
-function TBit.GetMMTop: integer;
-begin
-  Result := fMMTop;
-end;
-
-function TBit.GetMMWidth: integer;
-begin
-  Result := fMMWidth;
-end;
-
-function TBit.GetMMHeight: integer;
-begin
-  Result := fMMHeight;
+  Result := fPlaceSize;
 end;
 
 function TBit.GetLeft: integer;
@@ -1461,30 +1454,6 @@ end;
 procedure TBit.SetPlace(AValue: integer);
 begin
   fPlace := AValue;
-end;
-
-procedure TBit.SetMMLeft(AValue: integer);
-begin
-  fMMLeft := AValue;
-  Left := HScale.Scale(MMLeft);
-end;
-
-procedure TBit.SetMMTop(AValue: integer);
-begin
-  fMMTop := AValue;
-  Top := VScale.Scale(MMTop);
-end;
-
-procedure TBit.SetMMWidth(AValue: integer);
-begin
-  fMMWidth := AValue;
-  Width := HScale.Scale(MMWidth);
-end;
-
-procedure TBit.SetMMHeight(AValue: integer);
-begin
-  fMMHeight := AValue;
-  Height := VScale.Scale(MMHeight);
 end;
 
 procedure TBit.SetLeft(AValue: integer);

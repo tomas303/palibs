@@ -14,11 +14,13 @@ type
   IUniItem = interface
   ['{BFC52343-B9AE-4908-9D2F-E7A234421EF1}']
     function GetPlace: integer;
+    function GetPlaceSize: integer;
     function GetSize: integer;
     function GetStart: integer;
     procedure SetSize(AValue: integer);
     procedure SetStart(AValue: integer);
     property Place: integer read GetPlace;
+    property PlaceSize: integer read GetPlaceSize;
     property Start: integer read GetStart write SetStart;
     property Size: integer read GetSize write SetSize;
   end;
@@ -29,6 +31,7 @@ type
   protected
     // IUniItem = interface
     function GetPlace: integer; virtual; abstract;
+    function GetPlaceSize: integer; virtual; abstract;
     function GetSize: integer; virtual; abstract;
     function GetStart: integer; virtual; abstract;
     procedure SetSize(AValue: integer); virtual; abstract;
@@ -50,6 +53,7 @@ type
   protected
     // IUniItem = interface
     function GetPlace: integer; override;
+    function GetPlaceSize: integer; override;
     function GetSize: integer; override;
     function GetStart: integer; override;
     procedure SetSize(AValue: integer); override;
@@ -62,6 +66,7 @@ type
   protected
     // IUniItem = interface
     function GetPlace: integer; override;
+    function GetPlaceSize: integer; override;
     function GetSize: integer; override;
     function GetStart: integer; override;
     procedure SetSize(AValue: integer); override;
@@ -135,6 +140,7 @@ begin
     case mUni.Place of
       cPlace.FixFront, cPlace.FixMiddle, cPlace.FixBack:
         begin
+          mUni.Size := mUni.PlaceSize;
           Result := Result + mUni.Size;
         end;
     end;
@@ -294,6 +300,11 @@ begin
   Result := (fItem as IBitPosition).Place;
 end;
 
+function TUniVerticalItem.GetPlaceSize: integer;
+begin
+  Result := (fItem as IBitPosition).PlaceSize;
+end;
+
 function TUniVerticalItem.GetSize: integer;
 begin
   Result := (fItem as IBitPosition).Height;
@@ -326,6 +337,11 @@ end;
 function TUniHorizontalItem.GetPlace: integer;
 begin
   Result := (fItem as IBitPosition).Place;
+end;
+
+function TUniHorizontalItem.GetPlaceSize: integer;
+begin
+  Result := (fItem as IBitPosition).PlaceSize;
 end;
 
 function TUniHorizontalItem.GetSize: integer;

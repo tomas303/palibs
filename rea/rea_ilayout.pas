@@ -49,8 +49,10 @@ type
   ['{6F549B99-D125-4D6C-B93D-E4ACB2B59E4D}']
     function GetLayout: integer;
     function GetPlace: integer;
+    function GetPlaceSize: integer;
     property Layout: integer read GetLayout;
     property Place: integer read GetPlace;
+    property PlaceSize: integer read GetPlaceSize;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;

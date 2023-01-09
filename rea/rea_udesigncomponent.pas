@@ -370,8 +370,7 @@ function TMorph.WrapInStrip(const AComponent: IDesignComponent; ASize: Integer;
 begin
   Result := Factory2.Locate<IDesignComponentStrip>(NewProps
       .SetInt(cProps.Place, APlace)
-      .SetInt(cProps.MMWidth, ASize)
-      .SetInt(cProps.MMHeight, ASize)
+      .SetInt(cProps.PlaceSize, ASize)
       .SetBool(cProps.Transparent, True)
     );
     (Result as INode).AddChild(AComponent as INode);
@@ -405,26 +404,6 @@ function TMorph.StickLabel(const AComponent: IDesignComponent;
     end;
   end;
 
-  function GetWidth: Integer;
-  begin
-    case AEdge of
-      cEdge.Left, cEdge.Right: Result := ASize;
-      cEdge.Top, cEdge.Bottom: Result := 0;
-    else
-      raise Exception.Create('unsupported caption edge');
-    end;
-  end;
-
-  function GetHeight: Integer;
-  begin
-    case AEdge of
-      cEdge.Left, cEdge.Right: Result := 0;
-      cEdge.Top, cEdge.Bottom: Result := ASize;
-    else
-      raise Exception.Create('unsupported caption edge');
-    end;
-  end;
-
   function GetLabelPlace: Integer;
   begin
     case AEdge of
@@ -439,8 +418,7 @@ function TMorph.StickLabel(const AComponent: IDesignComponent;
   begin
     Result := Factory2.Locate<IDesignComponentText>(NewProps
       .SetInt(cProps.Place, GetLabelPlace)
-      .SetInt(cProps.MMWidth, GetWidth)
-      .SetInt(cProps.MMHeight, GetHeight)
+      .SetInt(cProps.PlaceSize, ASize)
       .SetStr(cProps.Text, ACaption)
     );
   end;
@@ -533,8 +511,7 @@ begin
     .SetBool(cProps.Transparent, AParentEl.Props.AsBool(cProps.Transparent))
     .SetInt(cProps.Color, AParentEl.Props.AsInt(cProps.Color))
     .SetInt(cProps.Border, 0)
-    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.BoxLaticeSize))
-    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.BoxLaticeSize));
+    .SetInt(cProps.PlaceSize, SelfProps.AsInt(cProps.BoxLaticeSize));
   mStrip := ElementFactory.CreateElement(IStripBit, mStripProps);
   (AParentEl as INode).AddChild(mStrip as INode);
   for i := 0 to Count - 1 do begin
@@ -625,8 +602,6 @@ begin
   Result := inherited NewComposeProps;
   Result
     .SetStr(cProps.Text, Text)
-    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
-    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
     .SetBool(cProps.Focused, fIsFocused)
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
     .SetIntf(cEdit.PSTextChannel, PSTextChannel)
@@ -700,8 +675,6 @@ begin
   Result := inherited NewComposeProps;
   Result
     .SetStr(cProps.Text, Text)
-    .SetInt(cProps.MMWidth, SelfProps.AsInt(cProps.MMWidth))
-    .SetInt(cProps.MMHeight, SelfProps.AsInt(cProps.MMHeight))
     .SetBool(cProps.Focused, fIsFocused)
     .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
     .SetIntf(cEdit.PSTextChannel, PSTextChannel)
@@ -945,8 +918,7 @@ begin
     .SetInt(cProps.Place, cPlace.Elastic)
     .SetStr(cProps.Text, fData[Row, Col])
     .SetInt(cProps.Border, 0)
-    .SetInt(cProps.TextColor, SelfProps.AsInt(cProps.TextColor))
-    .SetInt(cProps.MMWidth, SelfProps.AsInt(cGrid.ColMMWidth));
+    .SetInt(cProps.TextColor, SelfProps.AsInt(cProps.TextColor));
   if Row mod 2 = 1 then
     mProp := SelfProps.PropByName[cGrid.ColOddColor]
   else
@@ -963,7 +935,7 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetInt(cProps.Layout, cLayout.Horizontal)
     .SetInt(cProps.Border, 0)
-    .SetInt(cProps.MMHeight, SelfProps.AsInt(cGrid.RowMMHeight));
+    .SetInt(cProps.PlaceSize, SelfProps.AsInt(cGrid.RowMMHeight));
   if Row mod 2 = 1 then begin
     mProp := SelfProps.PropByName[cGrid.RowOddColor];
   end else begin
@@ -1005,7 +977,7 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetBool(cProps.Transparent, False)
     .SetInt(cProps.Color, LaticeColColor)
-    .SetInt(cProps.MMWidth, LaticeColSize);
+    .SetInt(cProps.PlaceSize, LaticeColSize);
 end;
 
 function TDesignComponentGrid.LaticeRowProps: IProps;
@@ -1014,7 +986,7 @@ begin
     .SetInt(cProps.Place, cPlace.FixFront)
     .SetBool(cProps.Transparent, False)
     .SetInt(cProps.Color, LaticeRowColor)
-    .SetInt(cProps.MMHeight, LaticeRowSize);
+    .SetInt(cProps.PlaceSize, LaticeRowSize);
 end;
 
 function TDesignComponentGrid.Latice(AElements: TMetaElementArray;
@@ -1144,10 +1116,6 @@ begin
   Result := inherited NewComposeProps;
   Result
   .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-  .SetInt(cProps.MMLeft, MMLeft)
-  .SetInt(cProps.MMTop, MMTop)
-  .SetInt(cProps.MMWidth, MMWidth)
-  .SetInt(cProps.MMHeight, MMHeight)
   .SetIntf(cForm.PSCloseChannel, PSCloseChannel)
   .SetIntf(cForm.PSSizeChannel, PSSizeChannel)
   .SetIntf(cForm.PSPositionChannel, PSPositionChannel)
@@ -1187,14 +1155,15 @@ begin
   begin
     mSwitch[i] := fSwitch[i].Compose;
   end;
-  mProps := NewProps;
+  mProps := NewProps
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.PlaceSize, SwitchSize);
   case SwitchEdge of
     cEdge.Left, cEdge.Right:
-      mProps.SetInt(cProps.Layout, cLayout.Vertical).SetInt(cProps.MMWidth, SwitchSize);
+      mProps.SetInt(cProps.Layout, cLayout.Vertical);
     cEdge.Top, cEdge.Bottom:
-      mProps.SetInt(cProps.Layout, cLayout.Horizontal).SetInt(cProps.MMHeight, SwitchSize);
+      mProps.SetInt(cProps.Layout, cLayout.Horizontal);
   end;
-  mProps.SetInt(cProps.Place, cPlace.FixFront);
   Result := ElementFactory.CreateElement(IStripBit, mProps, mSwitch);
 end;
 
@@ -1301,7 +1270,7 @@ end;
 
 function TDesignComponentButton.NewOuterProps: IProps;
 begin
-  Result := SelfProps.Clone([cProps.Place, cProps.MMWidth, cProps.MMHeight])
+  Result := SelfProps.Clone([cProps.Place, cProps.PlaceSize])
     .SetInt(cProps.Border, 4)
     .SetInt(cProps.BorderColor, clGray);
 end;
@@ -1350,8 +1319,8 @@ end;
 
 function TDesignComponent.NewComposeProps: IProps;
 begin
-  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.Title,
-    cProps.MMWidth, cProps.MMHeight, cProps.Border,
+  Result := SelfProps.Clone([cProps.Layout, cProps.Place, cProps.PlaceSize,
+    cProps.Title, cProps.Border,
     cProps.Color, cProps.FontColor, cProps.TextColor, cProps.BorderColor]);
 end;
 
