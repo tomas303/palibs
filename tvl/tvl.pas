@@ -8,9 +8,9 @@ unit tvl;
 interface
 
 uses
-  tvl_messages, tvl_ucontrolbinder, tvl_iiconutils, tvl_uiconutils, 
-  tvl_uiconutils_windows, tvl_uiconutils_unix, tvl_uiconutils_common, 
-  tvl_igui, tvl_ugui, tvl_imainform, tvl_itimer, tvl_utimer, tvl_ureg, tvl_ireg;
+  tvl_ucontrolbinder, tvl_iiconutils, tvl_uiconutils, tvl_uiconutils_windows, 
+  tvl_uiconutils_unix, tvl_uiconutils_common, tvl_igui, tvl_ugui, 
+  tvl_imainform, tvl_itimer, tvl_utimer, tvl_ureg, tvl_ireg;
 
 implementation
 

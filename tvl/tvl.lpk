@@ -9,63 +9,59 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="14">
+    <Files Count="13">
       <Item1>
-        <Filename Value="tvl_messages.pas"/>
-        <UnitName Value="tvl_messages"/>
-      </Item1>
-      <Item2>
         <Filename Value="tvl_ucontrolbinder.pas"/>
         <UnitName Value="tvl_ucontrolbinder"/>
-      </Item2>
-      <Item3>
+      </Item1>
+      <Item2>
         <Filename Value="tvl_iiconutils.pas"/>
         <UnitName Value="tvl_iiconutils"/>
-      </Item3>
-      <Item4>
+      </Item2>
+      <Item3>
         <Filename Value="tvl_uiconutils.pas"/>
         <UnitName Value="tvl_uiconutils"/>
-      </Item4>
-      <Item5>
+      </Item3>
+      <Item4>
         <Filename Value="tvl_uiconutils_windows.pas"/>
         <UnitName Value="tvl_uiconutils_windows"/>
-      </Item5>
-      <Item6>
+      </Item4>
+      <Item5>
         <Filename Value="tvl_uiconutils_unix.pas"/>
         <UnitName Value="tvl_uiconutils_unix"/>
-      </Item6>
-      <Item7>
+      </Item5>
+      <Item6>
         <Filename Value="tvl_uiconutils_common.pas"/>
         <UnitName Value="tvl_uiconutils_common"/>
-      </Item7>
-      <Item8>
+      </Item6>
+      <Item7>
         <Filename Value="tvl_igui.pas"/>
         <UnitName Value="tvl_igui"/>
-      </Item8>
-      <Item9>
+      </Item7>
+      <Item8>
         <Filename Value="tvl_ugui.pas"/>
         <UnitName Value="tvl_ugui"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="tvl_imainform.pas"/>
         <UnitName Value="tvl_imainform"/>
-      </Item10>
-      <Item11>
+      </Item9>
+      <Item10>
         <Filename Value="tvl_itimer.pas"/>
         <UnitName Value="tvl_itimer"/>
-      </Item11>
-      <Item12>
+      </Item10>
+      <Item11>
         <Filename Value="tvl_utimer.pas"/>
         <UnitName Value="tvl_utimer"/>
-      </Item12>
-      <Item13>
+      </Item11>
+      <Item12>
         <Filename Value="tvl_ureg.pas"/>
         <UnitName Value="tvl_ureg"/>
-      </Item13>
-      <Item14>
+      </Item12>
+      <Item13>
         <Filename Value="tvl_ireg.pas"/>
         <UnitName Value="tvl_ireg"/>
-      </Item14>
+      </Item13>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="4">
