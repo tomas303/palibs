@@ -109,7 +109,7 @@ procedure TReconciler.ProcessDiff(const ABit: INode; const ANewChildElement,
 var
   mDiffProps: IProps;
 begin
-  mDiffProps := ANewChildElement.Props.Diff(AOldChildElement.Props, pdmAll);
+  mDiffProps := ANewChildElement.Props.Diff(AOldChildElement.Props, pdmDifferent);
   if mDiffProps.Count > 0 then
   begin
     Injector.Write(ABit as TObject, mDiffProps);
