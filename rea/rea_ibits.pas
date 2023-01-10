@@ -80,6 +80,23 @@ type
     function Focused: Boolean;
   end;
 
+  { TLayoutData }
+
+  TLayoutData = record
+  strict private
+    fLeft: Integer;
+    fTop: Integer;
+    fWidth: Integer;
+    fHeight: Integer;
+  public
+    constructor Create(ALeft, ATop, AWidth, AHeight: Integer);
+    class operator equal(a,b: TLayoutData): Boolean;
+    function Left: Integer;
+    function Top: Integer;
+    function Width: Integer;
+    function Height: Integer;
+  end;
+
   IPSTextChannel = IPubSubDataChannel<String>;
   IPSSizeChannel = IPubSubDataChannel<TSizeData>;
   IPSPositionChannel = IPubSubDataChannel<TPositionData>;
@@ -88,6 +105,7 @@ type
   IPSActivateChannel = IPubSubChannel;
   IPSClickChannel = IPubSubChannel;
   IPSFocusChannel = IPubSubDataChannel<TFocusData>;
+  IPSLayoutChannel = IPubSubDataChannel<TLayoutData>;
 
   // wrapper for real control and its binder
   IBit = interface
@@ -122,6 +140,41 @@ type
   end;
 
 implementation
+
+{ TLayoutData }
+
+constructor TLayoutData.Create(ALeft, ATop, AWidth, AHeight: Integer);
+begin
+  fLeft := ALeft;
+  fTop := ATop;
+  fWidth := AWidth;
+  fHeight := AHeight;
+end;
+
+class operator TLayoutData.equal(a, b: TLayoutData): Boolean;
+begin
+  Result := (a.Left = b.Left) and (a.Top = b.Top) and (a.Width = b.Width) and (a.Height = b.Height);
+end;
+
+function TLayoutData.Left: Integer;
+begin
+  Result := fLeft;
+end;
+
+function TLayoutData.Top: Integer;
+begin
+  Result := fTop;
+end;
+
+function TLayoutData.Width: Integer;
+begin
+  Result := fWidth;
+end;
+
+function TLayoutData.Height: Integer;
+begin
+  Result := fHeight;
+end;
 
 { TFocusData }
 

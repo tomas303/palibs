@@ -288,7 +288,7 @@ begin
     cLayout.Overlay:
       begin
         Reposition(AContainer as INode, TUniHorizontalItem, 0, (AContainer as IBitPosition).Width - 2*ABorder);
-        Reposition(AContainer as INode, TUniVerticalItem, 0, (AContainer as IBitPosition).Height - 2*          ABorder);
+        Reposition(AContainer as INode, TUniVerticalItem, 0, (AContainer as IBitPosition).Height - 2*ABorder);
       end;
   end;
 end;

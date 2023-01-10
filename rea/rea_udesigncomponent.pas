@@ -271,6 +271,9 @@ type
     fPSGridMoverChannel: IPSGridMoverChannel;
     procedure PSGridMoverChannelObserver(const AData: TGridMover);
     function PSGridMoverChannel: IPSGridMoverChannel;
+  private
+    fPSLayoutChannel: IPSLayoutChannel;
+    procedure PSLayoutChannelObserver(const AValue: TLayoutData);
   private type
     TMatrix = array of array of string;
   private
@@ -774,6 +777,23 @@ begin
   Result := fPSGridMoverChannel;
 end;
 
+procedure TDesignComponentGrid.PSLayoutChannelObserver(const AValue: TLayoutData);
+var
+  mNewRowCount: Integer;
+begin
+  if SelfProps.AsInt(cProps.Place) in [cPlace.FixFront, cPlace.FixMiddle, cPlace.FixBack] then
+    Exit;
+  mNewRowCount := (AValue.Height - LaticeRowSize) div (SelfProps.AsInt(cGrid.RowMMHeight) + LaticeRowSize);
+  if mNewRowCount <= 0 then
+    Exit;
+  if RowCount <> mNewRowCount then begin
+    RowCount := mNewRowCount;
+    fSourceRow := fCurrentRow;
+    SentRows(0, RowCount - 1);
+    SentEditChange;
+  end;
+end;
+
 procedure TDesignComponentGrid.PSTextChannelObserver(const AValue: String);
 begin
   if fData[fCurrentRow, fCurrentCol] <> AValue then begin
@@ -1022,6 +1042,8 @@ begin
   fPSGridRecordChannel.Subscribe(PSGridRecordChannelObserver);
   fPSGridMoverChannel := PubSub.Factory.NewDataChannel<TGridMover>;
   fPSGridMoverChannel.Subscribe(PSGridMoverChannelObserver);
+  fPSLayoutChannel := PubSub.Factory.NewDataChannel<TLayoutData>;
+  fPSLayoutChannel.Subscribe(PSLayoutChannelObserver);
 end;
 
 function TDesignComponentGrid.NewComposeProps: IProps;
@@ -1029,7 +1051,8 @@ begin
   Result := inherited NewComposeProps;
   Result
    .SetInt(cProps.Place, cPlace.Elastic)
-   .SetInt(cProps.Layout, cLayout.Vertical);
+   .SetInt(cProps.Layout, cLayout.Vertical)
+   .SetIntf(cGrid.PSLayoutChannel, fPSLayoutChannel);
 end;
 
 function TDesignComponentGrid.DoCompose: IMetaElement;

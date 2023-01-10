@@ -86,6 +86,7 @@ type
     RowOddColor = 'RowOddColor';
     ColEvenColor = 'ColEvenColor';
     ColOddColor = 'ColOddColor';
+    PSLayoutChannel = 'PSLayoutChannel';
   end;
 
   cAction = class(cProps)

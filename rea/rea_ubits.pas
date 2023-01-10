@@ -200,6 +200,7 @@ type
     fFontColor: TColor;
     fBorder: integer;
     fBorderColor: TColor;
+    fPSLayoutChannel: IPSLayoutChannel;
   public
     procedure AfterConstruction; override;
   published
@@ -209,6 +210,7 @@ type
     property FontColor: TColor read fFontColor write fFontColor;
     property Border: integer read fBorder write fBorder;
     property BorderColor: TColor read fBorderColor write fBorderColor;
+    property PSLayoutChannel: IPSLayoutChannel read fPSLayoutChannel write fPSLayoutChannel;
   end;
 
   { TEditBit }
@@ -424,6 +426,8 @@ begin
     mPosition.Left := Left + mPosition.Left + Border;
     mPosition.Top := Top + mPosition.Top + Border;
   end;
+  if PSLayoutChannel <> nil then
+    PSLayoutChannel.Debounce(TLayoutData.Create(Left, Top, Width, Height));
 end;
 
 procedure TStripBit.DoRenderPaint(const ACanvas: TCanvas);
