@@ -22,6 +22,7 @@ type
     class procedure EnumerationValueNotFound(const AClassName, AItemName, AEnum: string);
     class procedure NoClassInCreate;
     class procedure NoObjectInCreate;
+    class procedure NotInterface;
   end;
 
   TRBData = class;
@@ -47,6 +48,7 @@ type
     function GetIsID: Boolean;
     function GetIsInterface: Boolean;
     function GetTypeKind: TTypeKind;
+    function GetGuid: TGuid;
     function GetAsPersist: string; virtual;
     procedure SetAsPersist(AValue: string); virtual;
     function GetAsString: string; virtual;
@@ -75,6 +77,7 @@ type
     property IsID: Boolean read GetIsID;
     property IsInterface: Boolean read GetIsInterface;
     property TypeKind: TTypeKind read GetTypeKind;
+    property Guid: TGuid read GetGuid;
     property AsPersist: string read GetAsPersist write SetAsPersist;
     property AsString: string read GetAsString write SetAsString;
     property AsInteger: integer read GetAsInteger write SetAsInteger;
@@ -412,6 +415,11 @@ begin
   raise ERBException.Create('Empty object when try create RBData');
 end;
 
+class procedure ERBException.NotInterface;
+begin
+  raise ERBException.Create('Property is not of interface type');
+end;
+
 function TRBObjectDataItem.GetAsObject: TObject;
 begin
   Result := GetObjectProp(fParent.fObject, PropInfo);
@@ -596,6 +604,16 @@ end;
 function TRBDataItem.GetTypeKind: TTypeKind;
 begin
   Result := fPropInfo^.PropType^.Kind;
+end;
+
+function TRBDataItem.GetGuid: TGuid;
+var
+  mP: PInterfaceData;
+begin
+  if not IsInterface then
+    ERBException.NotInterface;
+  mP := PInterfaceData(GetTypeData(PropInfo^.PropType));
+  Result := mP.GUID;
 end;
 
 function TRBDataItem.GetAsPersist: string;

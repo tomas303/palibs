@@ -77,13 +77,13 @@ type
   { IPersistManyIntegers }
 
   IPersistManyIntegers = interface(IPersistManyItems<integer>)
-  ['{E50D2C49-26BF-4ABB-92B9-7888A63B19A5}']
+  ['{78980864-72BD-4612-8BA4-9DABCADD6CB1}']
   end;
 
   { IPersistManyStrings }
 
   IPersistManyStrings = interface(IPersistManyItems<string>)
-  ['{E50D2C49-26BF-4ABB-92B9-7888A63B19A5}']
+  ['{BB8DCC21-2A55-4F2D-8AC4-15FF39E3C608}']
   end;
 
   { TSID }

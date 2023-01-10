@@ -23,6 +23,7 @@ type
     function GetIsID: Boolean;
     function GetIsInterface: Boolean;
     function GetTypeKind: TTypeKind;
+    function GetGuid: TGuid;
     function GetAsPersist: string;
     procedure SetAsPersist(AValue: string);
     function GetAsInteger: integer;
@@ -91,8 +92,8 @@ type
     property IsID: Boolean read GetIsID;
     property ClassName: string read GetClassName;
   public
-    constructor Create;
-    destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   end;
 
   { TPersistManyObjects }
@@ -131,15 +132,16 @@ implementation
 
 { TPersistMany<TItem> }
 
-constructor TPersistMany<TItem>.Create;
+procedure TPersistMany<TItem>.AfterConstruction;
 begin
+  inherited AfterConstruction;
   fData := TFPGList<TItem>.Create;
 end;
 
-destructor TPersistMany<TItem>.Destroy;
+procedure TPersistMany<TItem>.BeforeDestruction;
 begin
   FreeAndNil(fData);
-  inherited;
+  inherited BeforeDestruction;
 end;
 
 function TPersistMany<TItem>.GetIsObject: Boolean;
@@ -314,6 +316,11 @@ begin
 end;
 
 function TPersistManyDataItem.GetTypeKind: TTypeKind;
+begin
+
+end;
+
+function TPersistManyDataItem.GetGuid: TGuid;
 begin
 
 end;

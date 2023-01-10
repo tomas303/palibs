@@ -5,12 +5,12 @@ unit tal_uapp;
 interface
 
 uses
-  Classes, SysUtils, trl_dicontainer, trl_irttibroker, trl_ipersist,
+  Classes, SysUtils, trl_dicontainer, trl_irttibroker,
+  trl_ipersist, trl_upersist,
   trl_ilauncher,
   trl_urttibroker,
   trl_isysutils, trl_usysutils,
   trl_upersiststore,
-  tal_uhistorysettings, tal_ihistorysettings,
   rea_ireg, rea_ureg,
   tal_ireg, tal_ureg,
   trl_ireg, trl_ureg,
@@ -34,7 +34,6 @@ type
   protected
     procedure InjectPersistRef(const AItem: IRBDataItem; ADIC: TDICustomContainer);
     procedure RegisterDataClass(ADIC: TDIContainer; AClass: TClass);
-    procedure RegisterHistorySettings(ADIC: TDIContainer; const AStoreID: string = '');
     procedure RegisterPersistCommon(ADIC: TDIContainer);
   protected
     procedure SetUpDataFile;
@@ -103,26 +102,14 @@ begin
   for i := 0 to mRBClass.Count - 1 do begin
     if mRBClass[i].TypeKind = tkClass then begin
       mReg.InjectProp(mRBClass[i].Name, mRBClass[i].AsClass);
+    end
+    else if mRBClass[i].TypeKind = tkInterface then begin
+      mReg.InjectProp(mRBClass[i].Name, mRBClass[i].Guid);
     end;
   end;
   // data envelop for persist class
   mReg := ADIC.Add(TRBData, IRBData, AClass.ClassName);
   mReg.InjectProp('UnderObject', AClass);
-end;
-
-procedure TALApp.RegisterHistorySettings(ADIC: TDIContainer; const AStoreID: string = '');
-var
-  mReg: TDIReg;
-begin
-  mReg := ADIC.Add(THistorySettings, IHistorySettings);
-  mReg.InjectProp('Store', IPersistStore, AStoreID);
-  //
-  RegisterDataClass(ADIC, THistoryDataPosition);
-  RegisterDataClass(ADIC, THistoryDataTexts);
-  RegisterDataClass(ADIC, THistoryDataCheckBoxState);
-  RegisterDataClass(ADIC, THistoryDataIntegers);
-  RegisterDataClass(ADIC, THistoryDataMemo);
-  RegisterDataClass(ADIC, THistoryData);
 end;
 
 procedure TALApp.RegisterPersistCommon(ADIC: TDIContainer);

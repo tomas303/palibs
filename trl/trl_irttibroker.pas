@@ -22,6 +22,7 @@ type
       function GetIsID: Boolean;
       function GetIsInterface: Boolean;
       function GetTypeKind: TTypeKind;
+      function GetGuid: TGuid;
       function GetAsPersist: string;
       procedure SetAsPersist(AValue: string);
       function GetAsInteger: integer;
@@ -48,6 +49,7 @@ type
       property IsID: Boolean read GetIsID;
       property IsInterface: Boolean read GetIsInterface;
       property TypeKind: TTypeKind read GetTypeKind;
+      property Guid: TGuid read GetGuid;
       property AsPersist: string read GetAsPersist write SetAsPersist;
       property AsString: string read GetAsString write SetAsString;
       property AsInteger: integer read GetAsInteger write SetAsInteger;
