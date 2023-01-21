@@ -5,8 +5,7 @@ unit trl_urttibroker;
 interface
 
 uses
-  trl_irttibroker, TypInfo, SysUtils, Classes, StrUtils, fgl, contnrs,
-  trl_ipersist;
+  trl_irttibroker, TypInfo, SysUtils, Classes, StrUtils, fgl, contnrs;
 
 type
 
@@ -221,8 +220,6 @@ type
     function FindItem(const AName: string): IRBDataItem;
     function FindItemIndex(const AName: string): integer;
     function GetUnderObject: TObject;
-    procedure AssignObject(const ASource, ATarget: TObject);
-    procedure Assign(const AData: IRBData);
   public
     constructor Create(AObject: TObject; ASkipUnsupported: Boolean = False); overload;
     constructor Create(AObject: TObject; const APropNameFilter: string); overload;
@@ -650,11 +647,15 @@ begin
 end;
 
 function TRBDataItem.GetIsMemo: Boolean;
+const
+  cMemoStringType = 'TMemoString';
 begin
   Result := SameText(cMemoStringType, fPropInfo^.PropType^.Name);
 end;
 
 function TRBDataItem.GetIsID: Boolean;
+const
+  cIDStringType = 'TIDString';
 begin
   Result := SameText(cIDStringType, fPropInfo^.PropType^.Name);
 end;
@@ -894,56 +895,6 @@ end;
 function TRBData.GetUnderObject: TObject;
 begin
   Result := fObject;
-end;
-
-procedure TRBData.AssignObject(const ASource, ATarget: TObject);
-var
-  mSource, mTarget: IRBData;
-begin
-  if (ASource = nil) or (ATarget = nil) then
-    Exit;
-  mSource := TRBData.Create(ASource);
-  mTarget := TRBData.Create(ATarget);
-  mTarget.Assign(mSource);
-end;
-
-procedure TRBData.Assign(const AData: IRBData);
-var
-  i, j: integer;
-  mSourceMany, mTargetMany: IPersistMany;
-  mSourceRef, mTargetRef: IPersistRef;
-begin
-  for i := 0 to Count - 1 do begin
-    if Items[i].IsInterface and Supports(Items[i].AsInterface, IPersistMany) then
-    begin
-      mSourceMany := AData[i].AsInterface as IPersistMany;
-      mTargetMany := Items[i].AsInterface as IPersistMany;
-      mTargetMany.Count := mSourceMany.Count;
-      for j := 0 to mSourceMany.Count - 1 do
-      begin
-        if Supports(mTargetMany.AsInterface[j], IPersistRef) then
-          (mTargetMany.AsInterface[j] as IPersistRef).Data := (mSourceMany.AsInterface[j] as IPersistRef).Data
-        else
-          mTargetMany.AsPersistData[j].Assign(mSourceMany.AsPersistData[j]);
-      end;
-    end
-    else
-    if Items[i].IsInterface and Supports(Items[i].AsInterface, IPersistRef) then
-    begin
-      mSourceRef := AData[i].AsInterface as IPersistRef;
-      mTargetRef := Items[i].AsInterface as IPersistRef;
-      mTargetRef.Data := mSourceRef.Data;
-    end
-    else
-    if Items[i].IsObject then
-    begin
-      AssignObject(AData[i].AsObject, Items[i].AsObject);
-    end
-    else
-    begin
-      Items[i].AsPersist := AData[i].AsPersist;
-    end;
-  end;
 end;
 
 constructor TRBData.Create(AObject: TObject; ASkipUnsupported: Boolean = False);

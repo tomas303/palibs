@@ -39,6 +39,7 @@ type
     function Locate<I: IUnknown>(const AProps: IProps): I; overload;
     function Locate<I: IUnknown>(const AID: string; const AProps: IProps): I; overload;
     function Locate<I: IUnknown>(const AClass: TClass; const AProps: IProps): I; overload;
+    function LocateC<C: TObject>: C;
   end;
 
 implementation
@@ -82,6 +83,12 @@ function TDIFactory2.Locate<I>(const AClass: TClass; const AProps: IProps): I;
 begin
   Result := Locate<I>(AClass.ClassName, AProps);
 end;
+
+function TDIFactory2.LocateC<C>: C;
+begin
+  Result := C(Container.Locate(C));
+end;
+
 
 { TDIFactory }
 

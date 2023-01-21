@@ -1,11 +1,14 @@
 unit trl_ipersist;
 
 {$mode delphi}{$H+}
+{$modeswitch advancedrecords}
+{$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
 uses
-  Classes, SysUtils, trl_irttibroker;
+  Classes, SysUtils, trl_irttibroker, trl_usystem, fgl;
 
 const
   cMemoStringType = 'TMemoString';
@@ -102,6 +105,106 @@ type
     class operator Explicit(a: TSID): widestring;
     class operator Implicit(a: TSID): widestring;
     class operator Add(const A: string; const B: TSID): string;
+  end;
+
+  { TPersistData }
+  {
+   registrace jen TPlainObject
+
+   objjekty ukladane ve tride se SID
+
+   objekty vlastnene
+      ... primitive (string, integer) ... modelovane jako props TPlainObject, pripoji jednoduchy editor
+      ... podobjekt ... modelovane jako prop typu TPlainObject, pripoojit by se musel mezikanal, ktery rozstreli zmenu
+                        objektu na jeho props (lepsi nez teckov notace)
+      ... kolekce vyse zminenych typu
+
+      list
+      .Data ...   .RB ... jen ObjectData, plain data by mohly mit vlastni implementaci mimo RB ... generickou
+      .count    ... vsichni
+      .insert    ... vsichni
+      .delete    .... vsichni
+      mohl by se pridat i append, persist to bude asi rovnou promitat do db
+
+
+  }
+
+
+  { TData }
+
+  TData<T> = record
+  private
+    fValue: T;
+  public
+    constructor Create(const AValue: T);
+    property Value: T read fValue;
+    class operator Equal(a,b : TData<T>): Boolean;
+  end;
+
+  { TObjectData }
+
+  TObjectData<T: TPlainObject> = record
+  private
+    fValue: TData<T>;
+    function GetValue: T;
+    function GetRB: IRBData;
+  public
+    constructor Create(const AValue: T);
+    property Value: T read GetValue;
+    property RB: IRBData read GetRB;
+    class operator Equal(a,b : TObjectData<T>): Boolean;
+  end;
+
+  { TPersistData }
+
+  TPersistData<T: TPlainObject> = record
+  private
+    fSID: TSID;
+    fValue: TObjectData<T>;
+    function GetValue: T;
+    function GetRB: IRBData;
+  public
+    constructor Create(const AValue: T); overload;
+    constructor Create(const ASID: TSID; const AValue: T); overload;
+    property SID: TSID read fSID write fSID;
+    property Value: T read GetValue;
+    property RB: IRBData read GetRB;
+    class operator Equal(a,b : TPersistData<T>): Boolean;
+  end;
+
+  { IDataList }
+
+  IDataList = interface
+  ['{FC9D0F6B-3AEC-475A-BD72-A8ADEE2C17BA}']
+    function GetData(AIndex: Integer): IRBData;
+    property Data[AIndex: Integer]: IRBData read GetData;
+    function GetCount: Integer;
+    property Count: Integer read GetCount;
+    procedure Delete(APos: Integer);
+    function Insert(APos: Integer): IRBData; overload;
+    function Append: IRBData; overload;
+    procedure Insert(APos: Integer; const AValue: IRBData); overload;
+    procedure Append(const AValue: IRBData); overload;
+  end;
+
+  { IDataList<T> }
+
+  IDataList<T> = interface(IDataList)
+  ['{69B21A4F-FF05-48E6-AF40-3D7191AB15FB}']
+    function GetValue(AIndex: Integer): T;
+    property Value[AIndex: Integer]: T read GetValue;
+    procedure Insert(APos: Integer; const AValue: T); overload;
+    procedure Append(const AValue: T); overload;
+  end;
+
+  IPersistDataListBuilder = interface
+  ['{6653CF3D-A036-41B9-8AB0-0DB21D31EAF6}']
+    procedure Add(const ASID: String; const ARBData: IRBData);
+  end;
+
+  IPersistDataListBuilder<T> = interface(IPersistDataListBuilder)
+  ['{FAEAD920-BE53-4D73-80D9-4A3569AAB698}']
+    function Build: IDataList<T>;
   end;
 
   { ISIDList }
@@ -212,6 +315,7 @@ type
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
     function IsOpened: Boolean;
+    procedure Select(const AClass: string; const AListBuilder: IPersistDataListBuilder);
   end;
 
   { IPersistManyRefs }
@@ -228,6 +332,69 @@ type
   end;
 
 implementation
+
+{ TObjectData }
+
+function TObjectData<T>.GetValue: T;
+begin
+  Result := fValue.Value;
+end;
+
+function TObjectData<T>.GetRB: IRBData;
+begin
+  Result := fValue.Value.RB;
+end;
+
+constructor TObjectData<T>.Create(const AValue: T);
+begin
+  fValue := TData<T>.Create(AValue);
+end;
+
+class operator TObjectData<T>.Equal(a, b: TObjectData<T>): Boolean;
+begin
+  Result := a.Value = b.Value;
+end;
+
+{ TPersistData }
+
+function TPersistData<T>.GetValue: T;
+begin
+  Result := fValue.Value;
+end;
+
+function TPersistData<T>.GetRB: IRBData;
+begin
+  Result := fValue.RB;
+end;
+
+constructor TPersistData<T>.Create(const AValue: T);
+begin
+  fSID.Clear;
+  fValue := TObjectData<T>.Create(AValue);
+end;
+
+constructor TPersistData<T>.Create(const ASID: TSID; const AValue: T);
+begin
+  fSID := ASID;
+  fValue := TObjectData<T>.Create(AValue);
+end;
+
+class operator TPersistData<T>.Equal(a, b: TPersistData<T>): Boolean;
+begin
+  Result := (a.SID = b.SID) and (a.Value = b.Value);
+end;
+
+{ TData }
+
+constructor TData<T>.Create(const AValue: T);
+begin
+  fValue := AValue;
+end;
+
+class operator TData<T>.Equal(a, b: TData<T>): Boolean;
+begin
+  Result := a = b;
+end;
 
 { TSID }
 

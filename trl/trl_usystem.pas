@@ -26,9 +26,12 @@ type
 
   TPlainObject = class(TObject)
   private
+    fRB: IRBData;
     procedure FreePublishedObjects;
   public
+    procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
+    property RB: IRBData read fRB;
   end;
 
 implementation
@@ -37,15 +40,19 @@ implementation
 
 procedure TPlainObject.FreePublishedObjects;
 var
-  mRB: IRBData;
   i: integer;
 begin
-  mRB := TRBData.Create(Self);
-  for i := 0 to mRB.Count - 1 do begin
-    if mRB[i].TypeKind = tkClass then begin
-      mRB[i].AsObject.Free;
+  for i := 0 to RB.Count - 1 do begin
+    if RB[i].TypeKind = tkClass then begin
+      RB[i].AsObject.Free;
     end;
   end;
+end;
+
+procedure TPlainObject.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fRB := TRBData.Create(Self);
 end;
 
 procedure TPlainObject.BeforeDestruction;

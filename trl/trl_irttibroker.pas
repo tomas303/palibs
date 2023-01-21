@@ -76,7 +76,6 @@ type
       function FindItem(const AName: string): IRBDataItem;
       function GetUnderObject: TObject;
       procedure SetUnderObject(AValue: TObject);
-      procedure Assign(const AData: IRBData);
       property Count: integer read GetCount;
       property ClassName: string read GetClassName;
       property ClassType: TClass read GetClassType;

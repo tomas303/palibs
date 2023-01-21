@@ -1,11 +1,14 @@
 unit trl_upersist;
 
 {$mode delphi}{$H+}
+{$modeswitch advancedrecords}
+{$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
 uses
-  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker;
+  Classes, SysUtils, trl_ipersist, fgl, trl_irttibroker, typinfo, trl_urttibroker, trl_usystem;
 
 type
 
@@ -126,6 +129,98 @@ type
     function GetAsString(AIndex: integer): string; override;
     procedure SetAsPersist(AIndex: integer; AValue: string); override;
     procedure SetAsString(AIndex: integer; AValue: string); override;
+  end;
+
+  { TDataList_Primitives }
+
+  TDataList_Primitives<T> = class(TInterfacedObject, IDataList, IDataList<T>)
+  private type
+
+    { TDataList }
+
+    TDataList = class(TFPGList<TData<T>>)
+    end;
+
+  private
+    fList: TDataList;
+  private
+    function GetData(AIndex: Integer): IRBData;
+    function GetValue(AIndex: Integer): T;
+    function GetCount: Integer;
+    procedure Delete(APos: Integer);
+    function Insert(APos: Integer): IRBData; overload;
+    function Append: IRBData; overload;
+    procedure Insert(APos: Integer; const AValue: IRBData); overload;
+    procedure Append(const AValue: IRBData); overload;
+    procedure Insert(APos: Integer; const AValue: T); overload;
+    procedure Append(const AValue: T); overload;
+  end;
+
+  { TDataList_Objects }
+
+  TDataList_Objects<T: TPlainObject> = class(TInterfacedObject, IDataList, IDataList<T>)
+  private type
+
+    { TDataList }
+
+    TDataList = class(TFPGList<TObjectData<T>>)
+    end;
+
+  private
+    fList: TDataList;
+  private
+    function GetData(AIndex: Integer): IRBData;
+    function GetValue(AIndex: Integer): T;
+    function GetCount: Integer;
+    procedure Delete(APos: Integer);
+    function Insert(APos: Integer): IRBData; overload;
+    function Append: IRBData; overload;
+    procedure Insert(APos: Integer; const AValue: IRBData); overload;
+    procedure Append(const AValue: IRBData); overload;
+    procedure Insert(APos: Integer; const AValue: T); overload;
+    procedure Append(const AValue: T); overload;
+  end;
+
+  { TPersistDataList_Objects }
+
+  TPersistDataList_Objects<T: TPlainObject> = class(TInterfacedObject, IDataList, IDataList<T>)
+  private type
+
+    { TDataList }
+
+    TDataList = class(TFPGList<TPersistData<T>>)
+    end;
+
+  private
+    fList: TDataList;
+  private
+    function GetData(AIndex: Integer): IRBData;
+    function GetValue(AIndex: Integer): T;
+    function GetCount: Integer;
+    procedure Delete(APos: Integer);
+    function Insert(APos: Integer): IRBData; overload;
+    function Append: IRBData; overload;
+    procedure Insert(APos: Integer; const AValue: IRBData); overload;
+    procedure Append(const AValue: IRBData); overload;
+    procedure Insert(APos: Integer; const AValue: T); overload;
+    procedure Append(const AValue: T); overload;
+  private
+    procedure Add(const APeristData: TPersistData<T>);
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+  end;
+
+  { TPersistDataListBuilder }
+
+  TPersistDataListBuilder<T: TPlainObject> = class(TInterfacedObject, IPersistDataListBuilder, IPersistDataListBuilder<T>)
+  private
+    fList: TPersistDataList_Objects<T>;
+  private
+    procedure Add(const ASID: String; const ARBData: IRBData);
+    function Build: IDataList<T>;
+  public
+    procedure AfterConstruction; override;
   end;
 
 implementation
@@ -281,6 +376,205 @@ end;
 procedure TPersistManyObjects<TObjItem>.SetAsPersistData(AIndex: integer; AValue: IRBData);
 begin
   AsObject[AIndex] := AValue.UnderObject;
+end;
+
+{ TDataList_Primitives }
+
+function TDataList_Primitives<T>.GetData(AIndex: Integer): IRBData;
+begin
+// later some special implementation ... maybe generic based on T type
+  Result := nil;
+end;
+
+function TDataList_Primitives<T>.GetValue(AIndex: Integer): T;
+begin
+  Result := fList[AIndex].Value;
+end;
+
+function TDataList_Primitives<T>.GetCount: Integer;
+begin
+  Result := fList.Count;
+end;
+
+procedure TDataList_Primitives<T>.Delete(APos: Integer);
+begin
+  fList.Delete(APos);
+end;
+
+function TDataList_Primitives<T>.Insert(APos: Integer): IRBData;
+begin
+  Result := nil;
+  fList.Insert(APos, TData<T>.Create(T(Result[0].AsVariant)));
+end;
+
+function TDataList_Primitives<T>.Append: IRBData;
+begin
+  Result := nil;
+  fList.Add(TData<T>.Create(T(Result[0].AsVariant)));
+end;
+
+procedure TDataList_Primitives<T>.Insert(APos: Integer; const AValue: IRBData);
+begin
+  fList.Insert(APos, TData<T>.Create(T(AValue[0].AsVariant)));
+end;
+
+procedure TDataList_Primitives<T>.Append(const AValue: IRBData);
+begin
+  fList.Add(TData<T>.Create(T(AValue[0].AsVariant)));
+end;
+
+procedure TDataList_Primitives<T>.Insert(APos: Integer; const AValue: T);
+begin
+  fList.Insert(APos, TData<T>.Create(AValue));
+end;
+
+procedure TDataList_Primitives<T>.Append(const AValue: T);
+begin
+  fList.Add(TData<T>.Create(AValue));
+end;
+
+{ TDataList_Objects }
+
+function TDataList_Objects<T>.GetData(AIndex: Integer): IRBData;
+begin
+  Result := fList[AIndex].RB;
+end;
+
+function TDataList_Objects<T>.GetValue(AIndex: Integer): T;
+begin
+  Result := fList[AIndex].Value;
+end;
+
+function TDataList_Objects<T>.GetCount: Integer;
+begin
+  Result := fList.Count;
+end;
+
+procedure TDataList_Objects<T>.Delete(APos: Integer);
+begin
+  fList.Delete(APos);
+end;
+
+function TDataList_Objects<T>.Insert(APos: Integer): IRBData;
+begin
+  Result := TRBData.Create(T.Create);
+  fList.Insert(APos, TObjectData<T>.Create(Result.UnderObject as T));
+end;
+
+function TDataList_Objects<T>.Append: IRBData;
+begin
+  Result := TRBData.Create(T.Create);
+  fList.Add(TObjectData<T>.Create(Result.UnderObject as T));
+end;
+
+procedure TDataList_Objects<T>.Insert(APos: Integer; const AValue: IRBData);
+begin
+  fList.Insert(APos, TObjectData<T>.Create(AValue.UnderObject as T));
+end;
+
+procedure TDataList_Objects<T>.Append(const AValue: IRBData);
+begin
+  fList.Add(TObjectData<T>.Create(AValue.UnderObject as T));
+end;
+
+procedure TDataList_Objects<T>.Insert(APos: Integer; const AValue: T);
+begin
+  fList.Insert(APos, TObjectData<T>.Create(AValue));
+end;
+
+procedure TDataList_Objects<T>.Append(const AValue: T);
+begin
+  fList.Add(TObjectData<T>.Create(AValue));
+end;
+
+{ TPersistDataList_Objects }
+
+function TPersistDataList_Objects<T>.GetData(AIndex: Integer): IRBData;
+begin
+  Result := fList[AIndex].RB;
+end;
+
+function TPersistDataList_Objects<T>.GetValue(AIndex: Integer): T;
+begin
+  Result := fList[AIndex].Value;
+end;
+
+function TPersistDataList_Objects<T>.GetCount: Integer;
+begin
+  Result := fList.Count;
+end;
+
+procedure TPersistDataList_Objects<T>.Delete(APos: Integer);
+begin
+  fList.Delete(APos);
+end;
+
+function TPersistDataList_Objects<T>.Insert(APos: Integer): IRBData;
+begin
+  Result := TRBData.Create(T.Create);
+  fList.Insert(APos, TPersistData<T>.Create(Result.UnderObject as T));
+end;
+
+function TPersistDataList_Objects<T>.Append: IRBData;
+begin
+  Result := TRBData.Create(T.Create);
+  fList.Add(TPersistData<T>.Create(Result.UnderObject as T));
+end;
+
+procedure TPersistDataList_Objects<T>.Insert(APos: Integer; const AValue: IRBData);
+begin
+  fList.Insert(APos, TPersistData<T>.Create(AValue.UnderObject as T));
+end;
+
+procedure TPersistDataList_Objects<T>.Append(const AValue: IRBData);
+begin
+  fList.Add(TPersistData<T>.Create(AValue.UnderObject as T));
+end;
+
+procedure TPersistDataList_Objects<T>.Insert(APos: Integer; const AValue: T);
+begin
+  fList.Insert(APos, TPersistData<T>.Create(AValue));
+end;
+
+procedure TPersistDataList_Objects<T>.Append(const AValue: T);
+begin
+  fList.Add(TPersistData<T>.Create(AValue));
+end;
+
+procedure TPersistDataList_Objects<T>.Add(const APeristData: TPersistData<T>);
+begin
+  fList.Add(APeristData);
+end;
+
+procedure TPersistDataList_Objects<T>.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fList := TDataList.Create;
+end;
+
+procedure TPersistDataList_Objects<T>.BeforeDestruction;
+begin
+  FreeAndNil(fList);
+  inherited BeforeDestruction;
+end;
+
+{ TPersistDataListBuilder }
+
+procedure TPersistDataListBuilder<T>.Add(const ASID: String;
+  const ARBData: IRBData);
+begin
+  fList.Add(TPersistData<T>.Create(ASID, ARBData.UnderObject as T));
+end;
+
+function TPersistDataListBuilder<T>.Build: IDataList<T>;
+begin
+  Result := fList as IDataList<T>;
+end;
+
+procedure TPersistDataListBuilder<T>.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fList := TPersistDataList_Objects<T>.Create;
 end;
 
 { TPersistManyDataItem }

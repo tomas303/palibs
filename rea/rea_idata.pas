@@ -8,7 +8,7 @@ unit rea_idata;
 interface
 
 uses
-  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist, rea_idesigncomponent;
+  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist, rea_idesigncomponent, trl_irttibroker;
 
 type
 
@@ -57,7 +57,7 @@ type
     fDelta: Integer;
     fFromPos: Integer;
     fToPos: Integer;
-    fRef: IPersistRef;
+    fData: IRBData;
     fPos: Integer;
   public
     class function CreateFirst: TCommand; static;
@@ -66,14 +66,14 @@ type
     class function CreatePrior: TCommand; static;
     class function CreateMove(ADelta: Integer): TCommand; static;
     class function CreateInfo(AFromPos, AToPos: Integer): TCommand; static;
-    class function CreateInsert(APos: Integer; const ARef: IPersistRef): TCommand; static;
+    class function CreateInsert(APos: Integer; const AData: IRBData): TCommand; static;
     class function CreateDelete(APos: Integer): TCommand; static;
     class operator equal(a,b: TCommand): Boolean;
     public property Action: TCommandAction read fAction;
     public property Delta: Integer read fDelta;
     public property FromPos: Integer read fFromPos;
     public property ToPos: Integer read fToPos;
-    public property Ref: IPersistRef read fRef;
+    public property Data: IRBData read fData;
     public property Pos: Integer read fPos;
   end;
 
@@ -105,6 +105,7 @@ type
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
+    procedure ConnectList(const AList: IDataList);
   end;
 
 implementation
@@ -184,11 +185,11 @@ begin
   Result.fToPos := AToPos;
 end;
 
-class function TCommand.CreateInsert(APos: Integer; const ARef: IPersistRef): TCommand;
+class function TCommand.CreateInsert(APos: Integer; const AData: IRBData): TCommand;
 begin
   Result.fAction := cmdInsert;
   Result.fPos:=  APos;
-  Result.fRef := ARef;
+  Result.fData := AData;
 end;
 
 class function TCommand.CreateDelete(APos: Integer): TCommand;

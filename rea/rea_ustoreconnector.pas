@@ -56,20 +56,20 @@ type
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
+    procedure ConnectList(const AList: IDataList);
   public
     procedure BeforeDestruction; override;
   protected
     fFactory2: TDIFactory2;
     fPubSub: IPubSub;
     fStore: IPersistStore;
-    fList: IPersistRefList;
-    procedure SetList(AValue: IPersistRefList);
+    //fList: IPersistRefList;
+    fList: IDataList;
     procedure SetPubSub(AValue: IPubSub);
   published
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property PubSub: IPubSub read fPubSub write SetPubSub;
     property Store: IPersistStore read fStore write fStore;
-    property List: IPersistRefList read fList write SetList;
   end;
 
 implementation
@@ -202,10 +202,10 @@ begin
     end;
     TCommandAction.cmdInsert: begin
       if fActualIndex.HasValue then begin
-        fList.Insert(AData.Pos + fActualIndex.Value, AData.Ref);
+        fList.Insert(AData.Pos + fActualIndex.Value, AData.Data);
         fActualIndex := TOptional<Integer>.New(AData.Pos + fActualIndex.Value);
       end else begin
-        fList.Insert(0, AData.Ref);
+        fList.Insert(0, AData.Data);
         fActualIndex := TOptional<Integer>.New(0);
       end;
       fPSPositionChangeChannel.Publish(TPositionChange.New);
@@ -237,18 +237,6 @@ begin
   fPSCommandChannel.Subscribe(PSCommandChannelObserver);
   fPSPositionChangeChannel := fPubSub.Factory.NewDataChannel<TPositionChange>;
   fPSPositionChangeChannel.Publish(TPositionChange.New);
-end;
-
-procedure TStoreConnector.SetList(AValue: IPersistRefList);
-begin
-  if fList = AValue then Exit;
-  fList := AValue;
-  if fList.Count > 0 then begin
-    fActualIndex := TOptional<Integer>.New(0);
-  end else begin
-    fActualIndex := TOptional<Integer>.New;
-  end;
-  PublishActualRecord;
 end;
 
 function TStoreConnector.PSFieldDataChannel: IPSFieldDataChannel;
@@ -341,7 +329,7 @@ begin
     begin
       case x.Action of
         TGridCmdRowAction.cmdNew: begin
-          Result := TCommand.CreateInsert(x.Pos, Factory2.Locate<IPersistRef>(AClass.ClassName));
+          Result := TCommand.CreateInsert(x.Pos, Factory2.Locate<IRBData>(AClass.ClassName));
         end;
         TGridCmdRowAction.cmdDelete: begin
           Result := TCommand.CreateDelete(x.Pos);
@@ -400,6 +388,18 @@ begin
     begin
       Result := AData
     end);
+end;
+
+procedure TStoreConnector.ConnectList(const AList: IDataList);
+begin
+  if fList = AList then Exit;
+  fList := AList;
+  if fList.Count > 0 then begin
+    fActualIndex := TOptional<Integer>.New(0);
+  end else begin
+    fActualIndex := TOptional<Integer>.New;
+  end;
+  PublishActualRecord;
 end;
 
 procedure TStoreConnector.BeforeDestruction;

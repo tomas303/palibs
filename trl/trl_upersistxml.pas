@@ -1,6 +1,9 @@
 unit trl_upersistxml;
 
 {$mode delphi}{$H+}
+{$modeswitch advancedrecords}
+{$ModeSwitch functionreferences}
+{$ModeSwitch anonymousfunctions}
 
 interface
 
@@ -75,6 +78,19 @@ type
     procedure LoadDataItemRef(AStoreEl: TDOMElement; const AValue: IPersistRef);
     procedure LoadDataList(AStoreEl: TDOMElement; ADataItem: IRBDataItem);
     procedure LoadData(AStoreEl: TDOMElement; AData: IRBData);
+    //
+    procedure Read(AStoreEl: TDOMElement; AData: IRBData);
+    procedure ReadList(AStoreEl: TDOMElement; const AName: String; const AList: IDataList);
+    procedure ReadObject(AStoreEl: TDOMElement; const AName: String; AObject: TObject);
+    procedure ReadStream(AStoreEl: TDOMElement; AValue: TStream);
+    function ReadMemo(AStoreEl: TDOMElement; const AName: string): string;
+    function ReadValue(AStoreEl: TDOMElement; const AName: string): string;
+    procedure Write(AStoreEl: TDOMElement; AData: IRBData);
+    procedure WriteList(AStoreEl: TDOMElement; const AName: String; const AList: IDataList);
+    procedure WriteObject(AStoreEl: TDOMElement; const AName: String; AObject: TObject);
+    procedure WriteStream(AStoreEl: TDOMElement; AValue: TStream);
+    procedure WriteMemo(AStoreEl: TDOMElement; const AName, AValue: string);
+    procedure WriteValue(AStoreEl: TDOMElement; const AName, AValue: string);
   protected
     procedure CheckOpen;
     property Doc: TXMLDocument read GetDoc;
@@ -98,6 +114,8 @@ type
     function IsOpened: Boolean;
     procedure Flush;
     function GetSIDs(const AClass: string): ISIDList;
+    //
+    procedure Select(const AClass: string; const AListBuilder: IPersistDataListBuilder);
   published
     property Factory: IPersistFactory read fFactory write fFactory;
     property XMLFile: string read fFile write fFile;
@@ -255,6 +273,103 @@ begin
   end;
 end;
 
+procedure TXmlStore.Write(AStoreEl: TDOMElement; AData: IRBData);
+var
+  i: integer;
+  mDataList: IDataList;
+begin
+  for i := 0 to AData.Count - 1 do begin
+    if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IDataList, mDataList) then
+      WriteList(AStoreEl, AData[i].Name, mDataList)
+    else if AData[i].IsObject and (AData[i].AsObject <> nil) then
+      WriteObject(AStoreEl, AData[i].Name, AData[i].AsObject)
+    else if AData[i].IsMemo then
+      WriteMemo(AStoreEl, AData[i].Name, AData[i].AsPersist)
+    else
+      WriteValue(AStoreEl, AData[i].Name, AData[i].AsPersist);
+  end;
+end;
+
+procedure TXmlStore.WriteList(AStoreEl: TDOMElement; const AName: String; const AList: IDataList);
+var
+  mStoreEl: TDOMElement;
+  mStoreItemEl: TDOMElement;
+  i: integer;
+begin
+  if AList.Count = 0 then
+   Exit;
+  mStoreEl := Doc.CreateElement(AName);
+  AStoreEl.AppendChild(mStoreEl);
+  for i := 0 to AList.Count - 1 do
+  begin
+    mStoreItemEl := Doc.CreateElement(cListItemTag);
+    mStoreEl.AppendChild(mStoreItemEl);
+    Write(mStoreItemEl, AList.Data[i]);
+  end;
+end;
+
+procedure TXmlStore.WriteObject(AStoreEl: TDOMElement; const AName: String; AObject: TObject);
+var
+  mObjStoreEl: TDOMElement;
+  mData: IRBData;
+begin
+  mObjStoreEl := Doc.CreateElement(AName);
+  AStoreEl.AppendChild(mObjStoreEl);
+  if AObject is TStream then
+    WriteStream(mObjStoreEl, AObject as TStream)
+  else begin
+    mData := TRBData.Create(AObject);
+    Write(mObjStoreEl, mData);
+  end;
+end;
+
+procedure TXmlStore.WriteStream(AStoreEl: TDOMElement; AValue: TStream);
+var
+  mMemoNode: TDOMCDATASection;
+  mValue: DOMString;
+  mEncoder: TBase64EncodingStream;
+  mEncoded: TBytesStream;
+begin
+  if AValue <> nil then
+  begin
+    mEncoded := TBytesStream.Create;
+    try
+      mEncoder := TBase64EncodingStream.Create(mEncoded);
+      try
+        AValue.Position := 0;
+        mEncoder.CopyFrom(AValue, AValue.Size);
+      finally
+        mEncoder.Free;
+      end;
+      mValue := TEncoding.ASCII.GetString(mEncoded.Bytes, 0, mEncoded.Size);
+      mMemoNode := Doc.CreateCDATASection(mValue);
+      AStoreEl.AppendChild(mMemoNode);
+    finally
+      mEncoded.Free;
+    end;
+  end;
+end;
+
+procedure TXmlStore.WriteMemo(AStoreEl: TDOMElement; const AName, AValue: string);
+var
+  mStoreEl: TDOMElement;
+  mMemoNode: TDOMCDATASection;
+begin
+  if AValue <> '' then
+  begin
+    mStoreEl := Doc.CreateElement(AName);
+    AStoreEl.AppendChild(mStoreEl);
+    mMemoNode := Doc.CreateCDATASection(AValue);
+    mStoreEl.AppendChild(mMemoNode);
+  end;
+end;
+
+procedure TXmlStore.WriteValue(AStoreEl: TDOMElement; const AName, AValue: string);
+begin
+  if AValue <> '' then
+    AStoreEl.AttribStrings[AName] := AValue;
+end;
+
 procedure TXmlStore.LoadData(AStoreEl: TDOMElement; AData: IRBData);
 var
   i: integer;
@@ -319,6 +434,97 @@ begin
       AData[i].AsPersist := LoadDataItemValue(AStoreEl, AData[i].Name);
     end;
   end;
+end;
+
+procedure TXmlStore.Read(AStoreEl: TDOMElement; AData: IRBData);
+var
+  i: integer;
+  mObjStoreEl: TDOMElement;
+  mData: IRBData;
+  mID: string;
+  mDataList: IDataList;
+begin
+  for i := 0 to AData.Count - 1 do
+  begin
+    if (AData[i].IsInterface) and Supports(AData[i].AsInterface, IDataList, mDataList) then
+      ReadList(AStoreEl, AData[i].Name, mDataList)
+    else if AData[i].IsObject then
+      ReadObject(AStoreEl, AData[i].Name, AData[i].AsObject)
+    else if AData[i].IsMemo then
+      AData[i].AsPersist := ReadMemo(AStoreEl, AData[i].Name)
+    else
+      AData[i].AsPersist := ReadValue(AStoreEl, AData[i].Name);
+  end;
+end;
+
+procedure TXmlStore.ReadList(AStoreEl: TDOMElement; const AName: String; const AList: IDataList);
+var
+  mStoreEl: TDOMElement;
+  mStoreItemEl: TDOMElement;
+  i: integer;
+begin
+  mStoreEl := AStoreEl.FindNode(AName) as TDOMElement;
+  if mStoreEl = nil then
+    Exit;
+  for i := 0 to mStoreEl.ChildNodes.Count - 1 do
+  begin
+    mStoreItemEl := mStoreEl.ChildNodes[i] as TDOMElement;
+    Read(mStoreItemEl, AList.Append);
+  end;
+end;
+
+procedure TXmlStore.ReadObject(AStoreEl: TDOMElement; const AName: String; AObject: TObject);
+var
+  mObjStoreEl: TDOMElement;
+  mData: IRBData;
+begin
+  mObjStoreEl := AStoreEl.FindNode(AName) as TDOMElement;
+  if mObjStoreEl = nil then
+    Exit;
+  if AObject is TStream then
+    ReadStream(mObjStoreEl, AObject as TStream)
+  else begin
+    mData := TRBData.Create(AObject);
+    Read(mObjStoreEl, mData);
+  end;
+end;
+
+procedure TXmlStore.ReadStream(AStoreEl: TDOMElement; AValue: TStream);
+var
+  mMemoNode: TDOMCDATASection;
+  mInstream: TBytesStream;
+  mDecoder: TBase64DecodingStream;
+begin
+  mMemoNode := AStoreEl.ChildNodes[0] as TDOMCDATASection;
+  mInstream := TBytesStream.Create(TEncoding.ASCII.GetBytes(mMemoNode.TextContent));
+  try
+    mDecoder := TBase64DecodingStream.Create(mInstream);
+    try
+      AValue.CopyFrom(mDecoder, mDecoder.Size);
+    finally
+      mDecoder.Free;
+    end;
+  finally
+    mInstream.Free;
+  end;
+end;
+
+function TXmlStore.ReadMemo(AStoreEl: TDOMElement; const AName: string): string;
+var
+  mStoreEl: TDOMElement;
+  mMemoNode: TDOMCDATASection;
+begin
+  Result := '';
+  mStoreEl := FindElement(AStoreEl, './' + AName);
+  if mStoreEl = nil then
+    Exit;
+  mMemoNode := mStoreEl.ChildNodes[0] as TDOMCDATASection;
+  Result := mMemoNode.TextContent;
+end;
+
+function TXmlStore.ReadValue(AStoreEl: TDOMElement; const AName: string): string;
+begin
+  Result := AStoreEl.AttribStrings[AName];
 end;
 
 procedure TXmlStore.CheckOpen;
@@ -637,7 +843,8 @@ var
 begin
   mStoreEl := FindElement(Doc.DocumentElement, './' + AData.ClassName + '/' + cListItemTag + '[@' + cSID + '=''' + ASID + ''']');
   if mStoreEl <> nil then begin
-    LoadData(mStoreEl, AData);
+    //LoadData(mStoreEl, AData);
+    Read(mStoreEl, AData);
   end;
 end;
 
@@ -662,7 +869,8 @@ begin
   end;
   mStoreEl.AttribStrings[cSID] := ASID;
   //
-  SaveData(mStoreEl, AData);
+  //SaveData(mStoreEl, AData);
+  Write(mStoreEl, AData);
 end;
 
 procedure TXmlStore.Delete(const ASID: TSID);
@@ -777,6 +985,24 @@ begin
   for i :=  0 to mClassEl.ChildNodes.Count - 1 do
   begin
     Result[i] := (mClassEl.ChildNodes[i] as TDOMElement).AttribStrings[cSID];
+  end;
+end;
+
+procedure TXmlStore.Select(const AClass: string; const AListBuilder: IPersistDataListBuilder);
+var
+  mClassEl: TDOMElement;
+  mEl: TDOMElement;
+  i: integer;
+  mRBData: IRBData;
+begin
+  mClassEl := GetDataClassEl(AClass, False);
+  if mClassEl = nil then
+    Exit;
+  for i :=  0 to mClassEl.ChildNodes.Count - 1 do begin
+    mEl := mClassEl.ChildNodes[i] as TDOMElement;
+    mRBData := Factory.CreateObject(AClass);
+    LoadData(mEl, mRBData);
+    AListBuilder.Add(mEl.AttribStrings[cSID], mRBData);
   end;
 end;
 

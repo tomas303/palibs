@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="39">
+    <Files Count="40">
       <Item1>
         <Filename Value="trl_dicontainer.pas"/>
         <UnitName Value="trl_dicontainer"/>
@@ -166,6 +166,10 @@
         <Filename Value="trl_funcp.pas"/>
         <UnitName Value="trl_funcp"/>
       </Item39>
+      <Item40>
+        <Filename Value="trl_persist.pas"/>
+        <UnitName Value="trl_persist"/>
+      </Item40>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

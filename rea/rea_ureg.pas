@@ -198,7 +198,6 @@ begin
   Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('PubSub', IPubSub);
   Result.InjectProp('Store', IPersistStore);
-  Result.InjectProp('List', IPersistRefList);
 end;
 
 function TReg.RegisterMorph: TDIReg;

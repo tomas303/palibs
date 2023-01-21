@@ -16,7 +16,8 @@ uses
   trl_ilauncher, trl_usystem, trl_imetaelement, trl_umetaelement, 
   trl_imetaelementfactory, trl_umetaelementfactory, 
   trl_uinterfacedownedobject, trl_ilink, trl_ulink, trl_ireconciler, 
-  trl_ureconciler, trl_usequence, trl_isequence, trl_pubsub, trl_funcp;
+  trl_ureconciler, trl_usequence, trl_isequence, trl_pubsub, trl_funcp, 
+  trl_persist;
 
 implementation
 
