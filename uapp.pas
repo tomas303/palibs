@@ -49,11 +49,11 @@ type
   private
     fName: String;
     fSurename: String;
-    fTags: IDataList<String>;
+//    fTags: IDataList<String>;
   published
     property Name: String read fName write fName;
     property Surename: String read fSurename write fSurename;
-    property Tags: IDataList<String> read fTags write fTags;
+//    property Tags: IDataList<String> read fTags write fTags;
   end;
 
   { IGUIPersons }
@@ -128,12 +128,14 @@ type
     fDataConnector: IDataConnector;
     function NewForm(const ADCs: TArray<IDesignComponent>): IDesignComponentForm;
     function NewPager(const APages: TArray<IDesignComponent>): IDesignComponent;
+    function NewLogButton: IDesignComponentButton;
   private
     fAppSettings: IRBData;
   private
     procedure PSSizeObserver(const AValue: TSizeData);
     procedure PSPositionObserver(const AValue: TPositionData);
     procedure PSCloseProgramObserver;
+    procedure PSShowLogObserver;
   private
     function GetAppSettings: IRBData;
     procedure PublishAppSettings;
@@ -334,6 +336,16 @@ begin
   end;
 end;
 
+function TGUI.NewLogButton: IDesignComponentButton;
+begin
+  Result := Factory2.Locate<IDesignComponentButton>(NewProps
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.PlaceSize, 20)
+    .SetStr(cProps.Text, 'SHOW LOG')
+  );
+  Result.PSClickChannel.Subscribe(PSShowLogObserver);
+end;
+
 procedure TGUI.CreateComponents;
 var
   mPager: IDesignComponent;
@@ -348,7 +360,7 @@ begin
   );
   mPager := NewPager([
     Morph.NewPage('Persons', cLayout.Vertical, [fPersons, Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)]),
-    Morph.NewPage('Test', cLayout.Vertical, [])
+    Morph.NewPage('Test', cLayout.Vertical, [NewLogButton])
   ]);
   fForm := NewForm([mPager]);
 end;
@@ -441,6 +453,11 @@ begin
   Store.Save(fAppSettings);
   Store.Close;
   raise ELaunchStop.Create('');
+end;
+
+procedure TGUI.PSShowLogObserver;
+begin
+  Log.Visible := not Log.Visible;
 end;
 
 function TGUI.GetAppSettings: IRBData;
