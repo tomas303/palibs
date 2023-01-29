@@ -916,7 +916,7 @@ begin
       Result.SetProp(Name(i), mMyProp)
     else if (mTheirProp = nil) then
       Result.SetProp(Name(i), mMyProp)
-    else if (AMode = pdmDifferent) and mTheirProp.Equals(mMyProp) then
+    else if (AMode = pdmDifferent) and not mTheirProp.Equals(mMyProp) then
       Result.SetProp(Name(i), mMyProp);
   end;
   for i := 0 to AProps.Count - 1 do begin
