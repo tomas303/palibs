@@ -9,7 +9,8 @@ interface
 
 uses
   rea_idata, trl_ipersist, trl_irttibroker, trl_pubsub, rea_ibits,
-  trl_funcp, sysutils, rea_idesigncomponent, trl_udifactory;
+  trl_funcp, sysutils, rea_idesigncomponent, trl_udifactory,
+  trl_iminipersist;
 
 type
 
@@ -23,9 +24,11 @@ type
     TAccessor = class(TInterfacedObject, IDataAccessor)
     private
       fData: IRBData;
+      fList: IMiniList;
+      fIndex: Integer;
       function GetValue(const AName: String): String;
     public
-      constructor Create(const AData: IRBData);
+      constructor Create(const AList: IMiniList; AIndex: Integer);
     end;
 
     { TEmptyAccessor }
@@ -55,16 +58,16 @@ type
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
+    procedure RegisterText(const AName: String; const AText: IDesignComponentText);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
-    procedure ConnectList(const AList: IDataList);
+    procedure ConnectList(const AList: IMiniList);
   public
     procedure BeforeDestruction; override;
   protected
     fFactory2: TDIFactory2;
     fPubSub: IPubSub;
     fStore: IPersistStore;
-    //fList: IPersistRefList;
-    fList: IDataList;
+    fList: IMiniList;
     procedure SetPubSub(AValue: IPubSub);
   published
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
@@ -85,12 +88,13 @@ end;
 
 function TStoreConnector.TAccessor.GetValue(const AName: String): String;
 begin
-  Result := fData.ItemByName[AName].AsString;
+  Result := fList.Field[fIndex, AName];
 end;
 
-constructor TStoreConnector.TAccessor.Create(const AData: IRBData);
+constructor TStoreConnector.TAccessor.Create(const AList: IMiniList; AIndex: Integer);
 begin
-  fData := AData;
+  fList := AList;
+  fIndex := AIndex;
 end;
 
 { TStoreConnector }
@@ -98,7 +102,7 @@ end;
 procedure TStoreConnector.PublishActualRecord;
 begin
   if fActualIndex.HasValue then
-    fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fList.Data[fActualIndex.Value])))
+    fPSRecordDataChannel.Publish(TRecordData.Create(0, TAccessor.Create(fList, fActualIndex.Value)))
   else
     fPSRecordDataChannel.Publish(TRecordData.Create(0))
 end;
@@ -143,7 +147,7 @@ begin
   if (AIndex < 0) or (AIndex > fList.Count - 1) then
     Result := TEmptyAccessor.Create
   else
-    Result := TAccessor.Create(fList.Data[AIndex]);
+    Result := TAccessor.Create(fList, AIndex);
 end;
 
 procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData);
@@ -151,9 +155,10 @@ var
   mActualData: IRBData;
 begin
   if fActualIndex.HasValue then begin
-    mActualData := fList.Data[fActualIndex.Value];
-    mActualData.ItemByName[AData.Name].AsString := AData.Value;
-    fStore.Save(mActualData);
+    //mActualData := fList.Data[fActualIndex.Value];
+    //mActualData.ItemByName[AData.Name].AsString := AData.Value;
+    //fStore.Save(mActualData);
+    fList.Field[fActualIndex.Value, AData.Name] := AData.Value;
     PublishActualRecord;
   end;
 end;
@@ -202,10 +207,12 @@ begin
     end;
     TCommandAction.cmdInsert: begin
       if fActualIndex.HasValue then begin
-        fList.Insert(AData.Pos + fActualIndex.Value, AData.Data);
+        //fList.Insert(AData.Pos + fActualIndex.Value, AData.Data);
+        fList.Insert(AData.Pos);
         fActualIndex := TOptional<Integer>.New(AData.Pos + fActualIndex.Value);
       end else begin
-        fList.Insert(0, AData.Data);
+        //fList.Insert(0, AData.Data);
+        fList.Insert(0);
         fActualIndex := TOptional<Integer>.New(0);
       end;
       fPSPositionChangeChannel.Publish(TPositionChange.New);
@@ -213,7 +220,7 @@ begin
     TCommandAction.cmdDelete: begin
       if fActualIndex.HasValue then begin
         mIndex := AData.Pos + fActualIndex.Value;
-        Store.Delete(fList.Data[mIndex]);
+        //Store.Delete(fList.Data[mIndex]);
         fList.Delete(mIndex);
         if fList.Count = 0 then begin
           fActualIndex := TOptional<Integer>.New;
@@ -378,6 +385,27 @@ begin
 
 end;
 
+procedure TStoreConnector.RegisterText(const AName: String; const AText: IDesignComponentText);
+begin
+  fPubSub.Factory.NewDataBridge<String, TFieldData>(
+    AText.PSTextChannel,
+    PSFieldDataChannel,
+    function (const AData: String): TFieldData
+    begin
+      Result := TFieldData.Create(AName, AData);
+    end);
+  fPubSub.Factory.NewDataBridge<TRecordData, String>(
+   PSRecordDataChannel,
+   AText.PSTextChannel,
+   function (const AData: TRecordData): String
+   begin
+     if (AData.Position = 0) and AData.Accessor.HasValue then
+       Result := AData.Accessor.Value[AName]
+     else
+       raise EPubSubBridgeNoWay.Create('');
+   end);
+end;
+
 procedure TStoreConnector.RegisterCommand(const AChannel: IPubSubChannel;
   const AData: TCommand);
 begin
@@ -390,7 +418,7 @@ begin
     end);
 end;
 
-procedure TStoreConnector.ConnectList(const AList: IDataList);
+procedure TStoreConnector.ConnectList(const AList: IMiniList);
 begin
   if fList = AList then Exit;
   fList := AList;

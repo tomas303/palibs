@@ -227,9 +227,21 @@ type
   { TDesignComponentText }
 
   TDesignComponentText = class(TDesignComponent, IDesignComponentText)
+  private
+    fPSTextChannel: IPSTextChannel;
+    procedure PSTextChannelObserver(const AValue: String);
   protected
+    function PSTextChannel: IPSTextChannel;
+  protected
+    procedure InitValues; override;
     function NewComposeProps: IProps; override;
     function DoCompose: IMetaElement; override;
+  protected
+    fText: String;
+    function GetText: String;
+    procedure SetText(AText: String);
+  published
+    property Text: String read GetText write SetText;
   end;
 
   { TDesignComponentGrid }
@@ -541,15 +553,46 @@ end;
 
 { TDesignComponentText }
 
+procedure TDesignComponentText.PSTextChannelObserver(const AValue: String);
+begin
+  fText := AValue;
+end;
+
+function TDesignComponentText.PSTextChannel: IPSTextChannel;
+begin
+  Result := fPSTextChannel;
+end;
+
+procedure TDesignComponentText.InitValues;
+begin
+  inherited InitValues;
+  fPSTextChannel := PubSub.Factory.NewDataChannel<String>;
+  fPSTextChannel.Subscribe(PSTextChannelObserver);
+end;
+
 function TDesignComponentText.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
-  Result.SetStr(cProps.Text, self.SelfProps.AsStr(cProps.Text));
+  Result.SetStr(cProps.Text, Text);
 end;
 
 function TDesignComponentText.DoCompose: IMetaElement;
 begin
   Result := ElementFactory.CreateElement(ITextBit, NewComposeProps);
+end;
+
+function TDesignComponentText.GetText: String;
+begin
+  Result := fText;
+end;
+
+procedure TDesignComponentText.SetText(AText: String);
+begin
+  if AText <> fText then begin
+    fText := AText;
+    if fPSTextChannel <> nil then
+      fPSTextChannel.Publish(fText);
+  end;
 end;
 
 { TDesignComponentEdit }

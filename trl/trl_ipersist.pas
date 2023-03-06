@@ -303,6 +303,9 @@ type
     procedure Load(const ASID: TSID; AData: IRBData);
     procedure Save(const ASID: TSID; AData: IRBData);
     procedure Delete(const ASID: TSID);
+    procedure Save2(AData: IRBData);
+    procedure Delete2(AData: IRBData);
+
 
     //function GetSIDSForClass(const AClass: string): array of ASID;
     function NewSID: TSID;
@@ -316,6 +319,7 @@ type
     function GetSIDs(const AClass: string): ISIDList;
     function IsOpened: Boolean;
     procedure Select(const AClass: string; const AListBuilder: IPersistDataListBuilder);
+    function Select2(const AClass: string): IRBDataEnumerable;
   end;
 
   { IPersistManyRefs }

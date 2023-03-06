@@ -1,6 +1,6 @@
 unit trl_irttibroker;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 
 interface
 
@@ -23,6 +23,7 @@ type
       function GetIsInterface: Boolean;
       function GetTypeKind: TTypeKind;
       function GetGuid: TGuid;
+      function FindAttribute(AClass: TClass): TCustomAttribute;
       function GetAsPersist: string;
       procedure SetAsPersist(AValue: string);
       function GetAsInteger: integer;
@@ -74,6 +75,7 @@ type
       function GetItemIndex(const AName: string): integer;
       function GetItems(AIndex: integer): IRBDataItem;
       function FindItem(const AName: string): IRBDataItem;
+      function FindAttribute(AClass: TClass): TCustomAttribute;
       function GetUnderObject: TObject;
       procedure SetUnderObject(AValue: TObject);
       property Count: integer read GetCount;
@@ -84,6 +86,19 @@ type
       property ItemIndex[const AName: string]: integer read GetItemIndex;
       property UnderObject: TObject read GetUnderObject write SetUnderObject;
     end;
+
+  IRBDataEnumerator = interface
+  ['{4712858E-1354-49D4-B093-558A9DCC94CC}']
+    function MoveNext: Boolean;
+    function GetCurrent: IRBData;
+    property Current: IRBData read GetCurrent;
+  end;
+
+  IRBDataEnumerable = interface
+  ['{BD625D81-2935-466B-8C03-F888346D3CDC}']
+    function GetEnumerator: IRBDataEnumerator;
+  end;
+
 
 implementation
 

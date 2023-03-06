@@ -18,6 +18,7 @@ type
   private
     fPersistMany: IPersistMany;
     fIndex: integer;
+    function FindAttribute(AClass: TClass): TCustomAttribute;
   protected
     function GetName: string;
     function GetClassName: string;
@@ -578,6 +579,11 @@ begin
 end;
 
 { TPersistManyDataItem }
+
+function TPersistManyDataItem.FindAttribute(AClass: TClass): TCustomAttribute;
+begin
+
+end;
 
 function TPersistManyDataItem.GetName: string;
 begin

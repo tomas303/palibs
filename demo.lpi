@@ -76,6 +76,12 @@
         </Win32>
       </Options>
     </Linking>
+    <Other>
+      <CustomOptions Value="-dGUIDEBUG"/>
+      <OtherDefines Count="1">
+        <Define0 Value="GUIDEBUG"/>
+      </OtherDefines>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

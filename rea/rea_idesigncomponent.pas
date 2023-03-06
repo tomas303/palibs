@@ -256,6 +256,9 @@ type
 
   IDesignComponentText = interface(IDesignComponent)
   ['{E5A64708-B673-4284-96B7-F7ACAE44BE0C}']
+    function PSTextChannel: IPSTextChannel;
+    function GetText: String;
+    property Text: String read GetText;
   end;
 
   IDesignComponentButton = interface(IDesignComponent)

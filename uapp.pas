@@ -1,13 +1,13 @@
 unit uapp;
 
-{$mode delphi}{$H+}
+{$mode delphi}{$H+}{$M+}
 {$ModeSwitch functionreferences}
 {$ModeSwitch anonymousfunctions}
 
 interface
 
 uses
-  graphics, tal_uapp,
+  graphics, tal_uapp, typinfo, rtti,
   rea_idesigncomponent, rea_udesigncomponent, rea_ilayout,
   trl_imetaelement, trl_iprops, trl_dicontainer, trl_itree,
   trl_pubsub, rea_ibits, trl_ilauncher,
@@ -16,7 +16,8 @@ uses
   trl_upersistxml,
   rea_idata, sysutils,
   trl_usystem, trl_persist, trl_upersist,
-  trl_udifactory;
+  trl_udifactory,
+  trl_iminipersist, trl_uminipersist;
 
 type
   { TApp }
@@ -43,18 +44,32 @@ type
     property Height: Integer read fHeight write fHeight;
   end;
 
+  { TTag }
+
+  TTag = class
+  private
+    fVal: String;
+  published
+    property Val: String read fVal write fVal;
+  end;
+
   { TPerson }
 
   TPerson = class(TPlainObject)
   private
+    fID: String;
     fName: String;
     fSurename: String;
-//    fTags: IDataList<String>;
+//    fTags: IMiniList<TTag>;
   published
+    [PersistIDAttribute, PersistAUTOAttribute]
+    property ID: String read fID write fID;
     property Name: String read fName write fName;
     property Surename: String read fSurename write fSurename;
-//    property Tags: IDataList<String> read fTags write fTags;
+//    property Tags: IMiniList<TTag> read fTags write fTags;
   end;
+
+  IDataListPersons = IMiniDataList<TPerson>;
 
   { IGUIPersons }
 
@@ -63,9 +78,11 @@ type
     function GetNameEdit: IDesignComponentEdit;
     function GetSurenameEdit: IDesignComponentEdit;
     function GetGrid: IDesignComponentGrid;
+    function GetIDText: IDesignComponentText;
     property NameEdit: IDesignComponentEdit read GetNameEdit;
     property SurenameEdit: IDesignComponentEdit read GetSurenameEdit;
     property Grid: IDesignComponentGrid read GetGrid;
+    property IDText: IDesignComponentText read GetIDText;
   end;
 
   { TGUIPersons }
@@ -77,6 +94,7 @@ type
     fNameEdit: IDesignComponentEdit;
     fSurenameEdit: IDesignComponentEdit;
     fGrid: IDesignComponentGrid;
+    fIDText: IDesignComponentText;
     function ComposeEditRow(const ACaption: String; AEdit: IDesignComponent): IDesignComponent;
   protected
     procedure InitValues; override;
@@ -84,6 +102,7 @@ type
     function GetNameEdit: IDesignComponentEdit;
     function GetSurenameEdit: IDesignComponentEdit;
     function GetGrid: IDesignComponentGrid;
+    function GetIDText: IDesignComponentText;
   protected
     fPSGUIChannel: IPSGUIChannel;
   published
@@ -126,9 +145,11 @@ type
     fCommands: IGUICommands;
     fForm: IDesignComponentForm;
     fDataConnector: IDataConnector;
+    fPersonsData: IMiniDataList<TPerson>;
     function NewForm(const ADCs: TArray<IDesignComponent>): IDesignComponentForm;
     function NewPager(const APages: TArray<IDesignComponent>): IDesignComponent;
     function NewLogButton: IDesignComponentButton;
+    function NewSaveButton: IDesignComponentButton;
   private
     fAppSettings: IRBData;
   private
@@ -136,6 +157,7 @@ type
     procedure PSPositionObserver(const AValue: TPositionData);
     procedure PSCloseProgramObserver;
     procedure PSShowLogObserver;
+    procedure PSSaveDataObserver;
   private
     function GetAppSettings: IRBData;
     procedure PublishAppSettings;
@@ -261,6 +283,12 @@ begin
     .SetInt(cGrid.LaticeColSize, 2)
     .SetInt(cGrid.LaticeRowSize, 2)
     );
+  fIDText := Factory2.Locate<IDesignComponentText>(NewComposeProps
+    .SetStr(cProps.ID, 'person_id')
+    .SetBool(cProps.Flat, True)
+    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
+    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+  );
 end;
 
 function TGUIPersons.DoCompose: IMetaElement;
@@ -272,6 +300,7 @@ begin
   );
   (mBEdit as INode).AddChild(ComposeEditRow('Name', fNameEdit) as INode);
   (mBEdit as INode).AddChild(ComposeEditRow('Surename', fSurenameEdit) as INode);
+  (mBEdit as INode).AddChild(ComposeEditRow('ID', fIDText) as INode);
   mBGridEdit := Factory2.Locate<IDesignComponentHBox>(NewComposeProps
     .SetInt(cProps.BoxLaticeSize, 10)
     .SetBool(cProps.Transparent, True)
@@ -299,6 +328,11 @@ end;
 function TGUIPersons.GetGrid: IDesignComponentGrid;
 begin
   Result := fGrid;
+end;
+
+function TGUIPersons.GetIDText: IDesignComponentText;
+begin
+  Result := fIDText;
 end;
 
 { TGUI }
@@ -346,6 +380,16 @@ begin
   Result.PSClickChannel.Subscribe(PSShowLogObserver);
 end;
 
+function TGUI.NewSaveButton: IDesignComponentButton;
+begin
+  Result := Factory2.Locate<IDesignComponentButton>(NewProps
+    .SetInt(cProps.Place, cPlace.FixFront)
+    .SetInt(cProps.PlaceSize, 20)
+    .SetStr(cProps.Text, 'SAVE')
+  );
+  Result.PSClickChannel.Subscribe(PSSaveDataObserver);
+end;
+
 procedure TGUI.CreateComponents;
 var
   mPager: IDesignComponent;
@@ -360,7 +404,7 @@ begin
   );
   mPager := NewPager([
     Morph.NewPage('Persons', cLayout.Vertical, [fPersons, Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)]),
-    Morph.NewPage('Test', cLayout.Vertical, [NewLogButton])
+    Morph.NewPage('Test', cLayout.Vertical, [NewLogButton, NewSaveButton])
   ]);
   fForm := NewForm([mPager]);
 end;
@@ -371,6 +415,7 @@ begin
   fDataConnector.RegisterEdit('Name', fPersons.NameEdit);
   fDataConnector.RegisterEdit('Surename', fPersons.SurenameEdit);
   fDataConnector.RegisterGrid(TArray<String>.Create('Name', 'Surename'), fPersons.Grid, TPerson);
+  fDataConnector.RegisterText('ID', fPersons.IDText);
   fDataConnector.RegisterCommand(fCommands.First.PSClickChannel, TCommand.CreateFirst);
   fDataConnector.RegisterCommand(fCommands.Last.PSClickChannel, TCommand.CreateLast);
   fDataConnector.RegisterCommand(fCommands.Next.PSClickChannel, TCommand.CreateNext);
@@ -460,6 +505,11 @@ begin
   Log.Visible := not Log.Visible;
 end;
 
+procedure TGUI.PSSaveDataObserver;
+begin
+  fPersonsData.Save;
+end;
+
 function TGUI.GetAppSettings: IRBData;
 var
   mList: IPersistRefList;
@@ -498,7 +548,10 @@ begin
   CreateDataConnectors;
   fAppSettings := GetAppSettings;
   PublishAppSettings;
-  fDataConnector.ConnectList(GetPersons);
+  //fDataConnector.ConnectList(GetPersons);
+  fPersonsData := Factory2.Locate<IDataListPersons>;
+  fPersonsData.Load;
+  fDataConnector.ConnectList(fPersonsData.NewList);
  end;
 
 { TApp }
@@ -526,6 +579,7 @@ begin
   // persist data
   RegisterDataClass(DIC, TAppSettings);
   RegisterDataClass(DIC, TPerson);
+  RegisterDataClass(DIC, TTag);
 
   mReg := DIC.Add(TPersistDataList_Objects<TPerson>, IDataList<TPerson>);
   mReg := DIC.Add(TDataList_Primitives<String>, IDataList<String>);
@@ -533,6 +587,15 @@ begin
 
   mReg := DIC.Add(TPersistRef<TPerson>, IPersistRef, TPerson.ClassName);
   mReg.InjectProp('Store', IPersistStore);
+
+
+  mReg := DIC.Add(TMiniDataList<TPerson>, IDataListPersons);
+  mReg.InjectProp('PubSub', IPubSub);
+  mReg.InjectProp('Device', IPersistStoreDevice, 'xml');
+
+  mReg := DIC.Add(TMiniList<TPerson>, IMiniList<TPerson>);
+  mReg := DIC.Add(TMiniList<TTag>, IMiniList<TTag>);
+
 
   //
   mReg := DIC.Add(TStoreCache);

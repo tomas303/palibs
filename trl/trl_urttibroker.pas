@@ -38,6 +38,7 @@ type
   protected
     property PropInfo: PPropInfo read GetPropInfo;
     property PropName: string read GetPropName;
+    function FindAttribute(AClass: TClass): TCustomAttribute;
   protected
     // IRBDataItem
     function GetName: string;
@@ -220,6 +221,7 @@ type
     function FindItem(const AName: string): IRBDataItem;
     function FindItemIndex(const AName: string): integer;
     function GetUnderObject: TObject;
+    function FindAttribute(AClass: TClass): TCustomAttribute;
   public
     constructor Create(AObject: TObject; ASkipUnsupported: Boolean = False); overload;
     constructor Create(AObject: TObject; const APropNameFilter: string); overload;
@@ -583,6 +585,25 @@ begin
   Result := fPropInfo^.Name;
 end;
 
+function TRBDataItem.FindAttribute(AClass: TClass): TCustomAttribute;
+var
+  i: integer;
+  mAttr: TCustomAttribute;
+  mAttrTable: PAttributeTable;
+begin
+  Result := nil;
+  mAttrTable := PropInfo^.AttributeTable;
+  if mAttrTable = nil then
+    Exit;
+  for i := 0 to mAttrTable^.AttributeCount - 1 do begin
+    mAttr := mAttrTable^.AttributesList[i].AttrProc();
+    if mAttr is AClass then begin
+      Result := mAttr;
+      Exit;
+    end;
+  end;
+end;
+
 procedure TRBDataItem.SetAsPtrInt(AValue: PtrInt);
 begin
   ERBException.UnsupportedDataAccess(PropName);
@@ -895,6 +916,27 @@ end;
 function TRBData.GetUnderObject: TObject;
 begin
   Result := fObject;
+end;
+
+function TRBData.FindAttribute(AClass: TClass): TCustomAttribute;
+var
+  mTypeData: PTypeData;
+  i: integer;
+  mAttr: TCustomAttribute;
+  mAttrTable: PAttributeTable;
+begin
+  Result := nil;
+  mTypeData := GetTypeData(fClass.ClassInfo);
+  mAttrTable := mTypeData^.AttributeTable;
+  if mAttrTable = nil then
+    Exit;
+  for i := 0 to mAttrTable^.AttributeCount - 1 do begin
+    mAttr := mAttrTable^.AttributesList[i].AttrProc();
+    if mAttr is AClass then begin
+      Result := mAttr;
+      Exit;
+    end;
+  end;
 end;
 
 constructor TRBData.Create(AObject: TObject; ASkipUnsupported: Boolean = False);

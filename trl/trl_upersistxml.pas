@@ -11,7 +11,8 @@ uses
   trl_irttibroker, trl_ipersist, trl_ifactory,
   trl_urttibroker,
   DOM, XMLRead, XMLWrite, xpath,
-  SysUtils, fgl, classes, base64;
+  SysUtils, fgl, classes, base64,
+  trl_iminipersist;
 
 const
   cSID = 'SID';
@@ -40,6 +41,23 @@ type
       procedure Save(ADoc: TXMLDocument);
       function New: TSID;
     end;
+
+
+    { TSelector }
+
+    TSelector = class(TInterfacedObject, IRBDataEnumerable, IRBDataEnumerator)
+    private
+      fStore: TXmlStore;
+      fClassEl: TDOMElement;
+      fIndex: Integer;
+      fCurrent: IRBData;
+      function MoveNext: Boolean;
+      function GetCurrent: IRBData;
+      function GetEnumerator: IRBDataEnumerator;
+    public
+      constructor Create(AStore: TXmlStore; AClassEl: TDOMElement);
+    end;
+
 
   private
     const
@@ -91,6 +109,9 @@ type
     procedure WriteStream(AStoreEl: TDOMElement; AValue: TStream);
     procedure WriteMemo(AStoreEl: TDOMElement; const AName, AValue: string);
     procedure WriteValue(AStoreEl: TDOMElement; const AName, AValue: string);
+  private
+    procedure FillAutoFields(const AData: IRBData);
+    function FindStoreEl(const AData: IRBData): TDOMElement;
   protected
     procedure CheckOpen;
     property Doc: TXMLDocument read GetDoc;
@@ -102,7 +123,9 @@ type
     // IPersistStoreDevice
     procedure Load(const ASID: TSID; AData: IRBData);
     procedure Save(const ASID: TSID; AData: IRBData);
+    procedure Save2(AData: IRBData);
     procedure Delete(const ASID: TSID);
+    procedure Delete2(AData: IRBData);
     function NewSID: TSID;
     function GetSIDClass(const ASID: TSID): string;
     procedure Open; overload;
@@ -116,6 +139,8 @@ type
     function GetSIDs(const AClass: string): ISIDList;
     //
     procedure Select(const AClass: string; const AListBuilder: IPersistDataListBuilder);
+    function Select2(const AClass: string): IRBDataEnumerable;
+    //IRBDataEnumerator
   published
     property Factory: IPersistFactory read fFactory write fFactory;
     property XMLFile: string read fFile write fFile;
@@ -139,6 +164,42 @@ type
     class procedure CannotAddItemWithoutSIDToList(const AClass: string);
     class procedure CannotFindReferencedSID(const AOwner: string; ASID: string);
   end;
+
+{ TXmlStore.TSelector }
+
+function TXmlStore.TSelector.MoveNext: Boolean;
+begin
+  fCurrent := nil;
+  Inc(fIndex);
+  Result := (fClassEl <> nil) and (fIndex <= fClassEl.ChildNodes.Count - 1);
+  if not Result then
+    Exit;
+end;
+
+function TXmlStore.TSelector.GetCurrent: IRBData;
+var
+  mEl: TDOMElement;
+begin
+  if fCurrent = nil then begin
+    mEl := fClassEl.ChildNodes[fIndex] as TDOMElement;
+    fCurrent := fStore.Factory.CreateObject(fClassEl.TagName);
+    fStore.LoadData(mEl, fCurrent);
+  end;
+  Result := fCurrent
+end;
+
+function TXmlStore.TSelector.GetEnumerator: IRBDataEnumerator;
+begin
+  Result := Self;
+end;
+
+constructor TXmlStore.TSelector.Create(AStore: TXmlStore; AClassEl: TDOMElement);
+begin
+  inherited Create;
+  fStore := AStore;
+  fClassEl := AClassEl;
+  fIndex := -1;
+end;
 
 { TXmlStore.TSIDManager }
 
@@ -368,6 +429,44 @@ procedure TXmlStore.WriteValue(AStoreEl: TDOMElement; const AName, AValue: strin
 begin
   if AValue <> '' then
     AStoreEl.AttribStrings[AName] := AValue;
+end;
+
+procedure TXmlStore.FillAutoFields(const AData: IRBData);
+var
+  i: Integer;
+  mAttr: TCustomAttribute;
+begin
+  for i := 0 to AData.Count - 1 do begin
+    mAttr := AData[i].FindAttribute(PersistAUTOAttribute);
+    if mAttr <> nil then begin
+      if (AData[i].TypeKind in [tkAString, tkWString]) then begin
+        if AData[i].AsString = '' then
+          AData[i].AsString := TGuid.NewGuid.ToString(True);
+      end
+      else
+        raise Exception.CreateFmt('unsupported auto atribbute %s.%s', [AData.ClassName, AData[i].Name]);
+    end;
+  end;
+end;
+
+function TXmlStore.FindStoreEl(const AData: IRBData): TDOMElement;
+var
+  i: Integer;
+  mAttr: TCustomAttribute;
+begin
+  for i := 0 to AData.Count - 1 do begin
+    mAttr := AData[i].FindAttribute(PersistIDAttribute);
+    if mAttr <> nil then begin
+      case AData[i].TypeKind of
+        tkAString, tkWString:
+          Result := FindElement(fDoc.DocumentElement, './' + AData.ClassName + '/' + cListItemTag + '[@' + AData[i].Name + '=''' + AData[i].AsString + ''']');
+        tkInteger:
+          Result := FindElement(fDoc.DocumentElement, './' + AData.ClassName + '/' + cListItemTag + '[@' + AData[i].Name + '=' + AData[i].AsString + ']');
+      else
+        raise Exception.CreateFmt('unsupported id atribbute %s.%s', [AData.ClassName, AData[i].Name]);
+      end;
+    end;
+  end;
 end;
 
 procedure TXmlStore.LoadData(AStoreEl: TDOMElement; AData: IRBData);
@@ -854,6 +953,7 @@ var
   mStoreEl: TDOMElement;
   mOriginalEl: TDOMElement;
 begin
+  FillAutoFields(AData);
   mClassEl := GetDataClassEl(AData.ClassName, True);
   mStoreEl := Doc.CreateElement(cListItemTag);
   mOriginalEl := FindStoreElForSID(mClassEl, ASID);
@@ -870,6 +970,29 @@ begin
   mStoreEl.AttribStrings[cSID] := ASID;
   //
   //SaveData(mStoreEl, AData);
+  Write(mStoreEl, AData);
+end;
+
+procedure TXmlStore.Save2(AData: IRBData);
+var
+  mClassEl: TDOMElement;
+  mStoreEl: TDOMElement;
+  mOriginalEl: TDOMElement;
+begin
+  FillAutoFields(AData);
+  mClassEl := GetDataClassEl(AData.ClassName, True);
+  mStoreEl := Doc.CreateElement(cListItemTag);
+  mOriginalEl := FindStoreEl(AData);
+  if mOriginalEl <> nil then
+  begin
+    mClassEl.InsertBefore(mStoreEl, mOriginalEl);
+    mOriginalEl.ParentNode.DetachChild(mOriginalEl);
+    mOriginalEl.Free;
+  end
+  else
+  begin
+    mClassEl.AppendChild(mStoreEl);
+  end;
   Write(mStoreEl, AData);
 end;
 
@@ -896,6 +1019,20 @@ begin
   begin
     mStoreEl.ParentNode.DetachChild(mStoreEl);
     mStoreEl.Free;
+  end;
+end;
+
+procedure TXmlStore.Delete2(AData: IRBData);
+var
+  mClassEl: TDOMElement;
+  mStoreEl: TDOMElement;
+  mOriginalEl: TDOMElement;
+begin
+  mOriginalEl := FindStoreEl(AData);
+  if mOriginalEl <> nil then
+  begin
+    mOriginalEl.ParentNode.DetachChild(mOriginalEl);
+    mOriginalEl.Free;
   end;
 end;
 
@@ -1004,6 +1141,11 @@ begin
     LoadData(mEl, mRBData);
     AListBuilder.Add(mEl.AttribStrings[cSID], mRBData);
   end;
+end;
+
+function TXmlStore.Select2(const AClass: string): IRBDataEnumerable;
+begin
+  Result := TSelector.Create(Self, GetDataClassEl(AClass, False));
 end;
 
 constructor TXmlStore.Create(AFactory: IFactory; const AFile: string);
