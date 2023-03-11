@@ -13,7 +13,7 @@ uses
   trl_isysutils, trl_usysutils, trl_iprops, trl_uprops, trl_iinjector, trl_uinjector, trl_itree, trl_utree, trl_ureg, 
   trl_ireg, trl_ilauncher, trl_usystem, trl_imetaelement, trl_umetaelement, trl_imetaelementfactory, 
   trl_umetaelementfactory, trl_uinterfacedownedobject, trl_ilink, trl_ulink, trl_ireconciler, trl_ureconciler, 
-  trl_usequence, trl_isequence, trl_pubsub, trl_funcp, trl_persist, trl_iminipersist, trl_uminipersist;
+  trl_usequence, trl_isequence, trl_pubsub, trl_funcp, trl_iminipersist, trl_uminipersist;
 
 implementation
 

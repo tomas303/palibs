@@ -15,7 +15,7 @@ uses
   trl_upersiststore, trl_ipersist,
   trl_upersistxml,
   rea_idata, sysutils,
-  trl_usystem, trl_persist, trl_upersist,
+  trl_usystem, trl_upersist,
   trl_udifactory,
   trl_iminipersist, trl_uminipersist;
 
@@ -161,21 +161,17 @@ type
   private
     function GetAppSettings: IRBData;
     procedure PublishAppSettings;
-    //function GetPersons: IPersistRefList;
-    function GetPersons: IDataList<TPerson>;
     procedure CreateComponents;
     procedure CreateDataConnectors;
   protected
     function DoCompose: IMetaElement; override;
     procedure InitValues; override;
   protected
-    fStore: IPersistStore;
-    fPersist: TPersist;
+    //fStore: IPersistStore;
     fPersistFactory: IPersistFactory;
     fPSGUIChannel: IPSGUIChannel;
   published
-    property Store: IPersistStore read fStore write fStore;
-    property Persist: TPersist read fPersist write fPersist;
+    //property Store: IPersistStore read fStore write fStore;
     property PersistFactory: IPersistFactory read fPersistFactory write fPersistFactory;
     property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
   end;
@@ -422,65 +418,6 @@ begin
   fDataConnector.RegisterCommand(fCommands.Prior.PSClickChannel, TCommand.CreatePrior);
 end;
 
-function TGUI.GetPersons: IDataList<TPerson>;
-var
-  mPerson: IRBData;
-  i: integer;
-  mP: TPersist;
-  mPSONS: IDataList<TPerson>;
-  mPSON: TPerson;
-  mpd: TPersistData<TPerson>;
-
-begin
-  //Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
-  //if Result.Count = 0 then
-  //begin
-  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //  //mPerson.ItemByName['Name'].AsString := 'John';
-  //  //mPerson.ItemByName['Surename'].AsString := 'Doe';
-  //  //Store.Save(mPerson);
-  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //  //mPerson.ItemByName['Name'].AsString := 'Jim';
-  //  //mPerson.ItemByName['Surename'].AsString := 'Beam';
-  //  //Store.Save(mPerson);
-  //  //mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //  //mPerson.ItemByName['Name'].AsString := 'Anthony';
-  //  //mPerson.ItemByName['Surename'].AsString := 'Hopkins';
-  //  //Store.Save(mPerson);
-  //  for i := 1 to 14 do begin
-  //    mPerson := PersistFactory.Create(IRBData, TPerson.ClassName) as IRBData;
-  //    mPerson.ItemByName['Name'].AsString := 'Name ' + i.ToString;
-  //    mPerson.ItemByName['Surename'].AsString := 'Surename ' + i.ToString;
-  //    Store.Save(mPerson);
-  //  end;
-  //  Result := (Store as IPersistQuery).SelectClass(TPerson.ClassName);
-  //end;
-
-  //mP := Factory2.LocateC<TPersist>;
-  //mPSONS := mP.Select<TPerson>;
-  ////mpd:=mP.New<TPerson>;
-  //for i := 0 to mPSONS.Count - 1 do begin
-  //  mPSON := mPSONS.Value[i];
-  //end;
-
-  if persist = nil then begin
-    raise exception.create('');
-  end;
-  Result := Persist.Select<TPerson>;
-  if Result.Count = 0 then
-  begin
-    for i := 1 to 14 do begin
-      mpd := Persist.New<TPerson>;
-      mpd.Value.Name := 'Name ' + i.ToString;
-      mpd.Value.Surename := 'Surename ' + i.ToString;
-      Persist.Save<TPerson>(mpd);
-    end;
-    Result := Persist.Select<TPerson>;
-  end;
-
-
-end;
-
 procedure TGUI.PSSizeObserver(const AValue: TSizeData);
 begin
   fAppSettings.ItemByName['Width'].AsInteger := AValue.Width;
@@ -495,8 +432,8 @@ end;
 
 procedure TGUI.PSCloseProgramObserver;
 begin
-  Store.Save(fAppSettings);
-  Store.Close;
+  //Store.Save(fAppSettings);
+  //Store.Close;
   raise ELaunchStop.Create('');
 end;
 
@@ -511,22 +448,22 @@ begin
 end;
 
 function TGUI.GetAppSettings: IRBData;
-var
-  mList: IPersistRefList;
+//var
+//  mList: IPersistRefList;
 begin
-  mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
-  if mList.Count = 0 then
-  begin
-    Result := PersistFactory.Create(IRBData, TAppSettings.ClassName) as IRBData;
-    Result.ItemByName['Width'].AsInteger := 600;
-    Result.ItemByName['Height'].AsInteger := 200;
-    Result.ItemByName['Left'].AsInteger := 300;
-    Result.ItemByName['Top'].AsInteger := 400;
-  end
-  else
-  begin
-    Result := mList.Data[0];
-  end;
+  //mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
+  //if mList.Count = 0 then
+  //begin
+  //  Result := PersistFactory.Create(IRBData, TAppSettings.ClassName) as IRBData;
+  //  Result.ItemByName['Width'].AsInteger := 600;
+  //  Result.ItemByName['Height'].AsInteger := 200;
+  //  Result.ItemByName['Left'].AsInteger := 300;
+  //  Result.ItemByName['Top'].AsInteger := 400;
+  //end
+  //else
+  //begin
+  //  Result := mList.Data[0];
+  //end;
 end;
 
 procedure TGUI.PublishAppSettings;
@@ -543,12 +480,11 @@ end;
 procedure TGUI.InitValues;
 begin
   inherited InitValues;
-  Store.Open('/root/demosettings.xml');
+  //Store.Open('/root/demosettings.xml');
   CreateComponents;
   CreateDataConnectors;
   fAppSettings := GetAppSettings;
   PublishAppSettings;
-  //fDataConnector.ConnectList(GetPersons);
   fPersonsData := Factory2.Locate<IDataListPersons>;
   fPersonsData.Load;
   fDataConnector.ConnectList(fPersonsData.NewList);
@@ -560,33 +496,28 @@ procedure TApp.RegisterPersist;
 var
   mReg: TDIReg;
 begin
-  //
-   mReg := DIC.Add(TPersist);
-   mReg.InjectProp('Factory2', TDIFactory2);
-   mReg.InjectProp('Device', IPersistStoreDevice, 'xml');
-  //
   mReg := DIC.Add(TRBData, IRBData);
   //
-  mReg := DIC.Add(TSIDList, ISIDList);
+  //mReg := DIC.Add(TSIDList, ISIDList);
   //
-  mReg := DIC.Add(TPersistRef, IPersistRef);
-  mReg.InjectProp('Store', IPersistStore);
+  //mReg := DIC.Add(TPersistRef, IPersistRef);
+  //mReg.InjectProp('Store', IPersistStore);
   //
-  mReg := DIC.Add(TPersistManyRefs, IPersistManyRefs);
-  mReg.InjectProp('Store', IPersistStore);
+  //mReg := DIC.Add(TPersistManyRefs, IPersistManyRefs);
+  //mReg.InjectProp('Store', IPersistStore);
   //
-  mReg := DIC.Add(TPersistRefList, IPersistRefList);
+  //mReg := DIC.Add(TPersistRefList, IPersistRefList);
   // persist data
   RegisterDataClass(DIC, TAppSettings);
   RegisterDataClass(DIC, TPerson);
   RegisterDataClass(DIC, TTag);
 
-  mReg := DIC.Add(TPersistDataList_Objects<TPerson>, IDataList<TPerson>);
-  mReg := DIC.Add(TDataList_Primitives<String>, IDataList<String>);
+  //mReg := DIC.Add(TPersistDataList_Objects<TPerson>, IDataList<TPerson>);
+  //mReg := DIC.Add(TDataList_Primitives<String>, IDataList<String>);
 
 
-  mReg := DIC.Add(TPersistRef<TPerson>, IPersistRef, TPerson.ClassName);
-  mReg.InjectProp('Store', IPersistStore);
+  //mReg := DIC.Add(TPersistRef<TPerson>, IPersistRef, TPerson.ClassName);
+  //mReg.InjectProp('Store', IPersistStore);
 
 
   mReg := DIC.Add(TMiniDataList<TPerson>, IDataListPersons);
@@ -598,18 +529,16 @@ begin
 
 
   //
-  mReg := DIC.Add(TStoreCache);
-  //
   mReg := DIC.Add(TXmlStore, IPersistStoreDevice, 'xml', ckSingle);
   mReg.InjectProp('Factory', IPersistFactory);
   //
   mReg := DIC.Add(TPersistFactory, IPersistFactory);
   mReg.InjectProp('Container', TDIContainer);
   //
-  mReg := DIC.Add(TPersistStore, IPersistStore, '', ckSingle);
-  mReg.InjectProp('Factory', IPersistFactory);
-  mReg.InjectProp('Device', IPersistStoreDevice, 'xml');
-  mReg.InjectProp('Cache', TStoreCache);
+  //mReg := DIC.Add(TPersistStore, IPersistStore, '', ckSingle);
+  //mReg.InjectProp('Factory', IPersistFactory);
+  //mReg.InjectProp('Device', IPersistStoreDevice, 'xml');
+  //mReg.InjectProp('Cache', TStoreCache);
 end;
 
 procedure TApp.RegisterAppServices;
@@ -622,8 +551,7 @@ begin
   RegApps.RegisterWindowLog;
   RegReact.RegisterCommon;
   mReg := RegReact.RegisterDesignComponent(TGUI, IDesignComponentApp);
-  mReg.InjectProp('Store', IPersistStore);
-  mReg.InjectProp('Persist', TPersist);
+  //mReg.InjectProp('Store', IPersistStore);
   mReg.InjectProp('PersistFactory', IPersistFactory);
   mReg := RegReact.RegisterDesignComponent(TGUIPersons, IGUIPersons);
   mReg := RegReact.RegisterDesignComponent(TGUICommands, IGUICommands);

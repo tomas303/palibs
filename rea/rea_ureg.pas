@@ -197,7 +197,7 @@ begin
   Result := DIC.Add(TStoreConnector, IDataConnector, TStoreConnector.ClassName);
   Result.InjectProp('Factory2', TDIFactory2);
   Result.InjectProp('PubSub', IPubSub);
-  Result.InjectProp('Store', IPersistStore);
+  //Result.InjectProp('Store', IPersistStore);
 end;
 
 function TReg.RegisterMorph: TDIReg;

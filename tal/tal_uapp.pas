@@ -72,17 +72,17 @@ procedure TALApp.InjectPersistRef(const AItem: IRBDataItem; ADIC: TDICustomConta
 var
   mSysUtils: ISysUtils;
 begin
-  if AItem.IsInterface and Supports(AItem.AsInterface, IPersistRef) then
-  begin
-    // IPersistRef need resolve data via Store
-    (AItem.AsInterface as IPersistRef).Store := ADIC.Locate(IPersistStore);
-  end
-  else
-  if AItem.IsInterface and Supports(AItem.AsInterface, IPersistManyRefs) then
-  begin
-    // need to create IPersistRef members
-    (AItem.AsInterface as IPersistManyRefs).Factory := ADIC.Locate(IPersistFactory);
-  end;
+  //if AItem.IsInterface and Supports(AItem.AsInterface, IPersistRef) then
+  //begin
+  //  // IPersistRef need resolve data via Store
+  //  (AItem.AsInterface as IPersistRef).Store := ADIC.Locate(IPersistStore);
+  //end
+  //else
+  //if AItem.IsInterface and Supports(AItem.AsInterface, IPersistManyRefs) then
+  //begin
+  //  // need to create IPersistRef members
+  //  (AItem.AsInterface as IPersistManyRefs).Factory := ADIC.Locate(IPersistFactory);
+  //end;
   if AItem.IsID then begin
     mSysUtils := DIC.Locate(ISysUtils);
     AItem.AsString := mSysUtils.NewGID;
@@ -116,24 +116,24 @@ procedure TALApp.RegisterPersistCommon(ADIC: TDIContainer);
 var
   mReg: TDIReg;
 begin
-  mReg := ADIC.Add(TStoreCache);
+  //mReg := ADIC.Add(TStoreCache);
   //
   mReg := ADIC.Add(TRBData, IRBData);
   //
-  mReg := ADIC.Add(TSIDList, ISIDList);
+  //mReg := ADIC.Add(TSIDList, ISIDList);
   //
-  mReg := ADIC.Add(TPersistRef, IPersistRef);
-  mReg.InjectProp('Store', IPersistStore);
+  //mReg := ADIC.Add(TPersistRef, IPersistRef);
+  //mReg.InjectProp('Store', IPersistStore);
   //
-  mReg := ADIC.Add(TPersistManyRefs, IPersistManyRefs);
-  mReg.InjectProp('Store', IPersistStore);
+  //mReg := ADIC.Add(TPersistManyRefs, IPersistManyRefs);
+  //mReg.InjectProp('Store', IPersistStore);
   //
-  mReg := ADIC.Add(TPersistRefList, IPersistRefList);
+  //mReg := ADIC.Add(TPersistRefList, IPersistRefList);
   //
-  mReg := ADIC.Add(TPersistStore, IPersistStore, '', ckSingle);
-  mReg.InjectProp('Factory', IPersistFactory);
-  mReg.InjectProp('Device', IPersistStoreDevice);
-  mReg.InjectProp('Cache', TStoreCache);
+  //mReg := ADIC.Add(TPersistStore, IPersistStore, '', ckSingle);
+  //mReg.InjectProp('Factory', IPersistFactory);
+  //mReg.InjectProp('Device', IPersistStoreDevice);
+  //mReg.InjectProp('Cache', TStoreCache);
 end;
 
 procedure TALApp.SetUpDataFile;

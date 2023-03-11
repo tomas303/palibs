@@ -66,13 +66,13 @@ type
   protected
     fFactory2: TDIFactory2;
     fPubSub: IPubSub;
-    fStore: IPersistStore;
+    //fStore: IPersistStore;
     fList: IMiniList;
     procedure SetPubSub(AValue: IPubSub);
   published
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property PubSub: IPubSub read fPubSub write SetPubSub;
-    property Store: IPersistStore read fStore write fStore;
+    //property Store: IPersistStore read fStore write fStore;
   end;
 
 implementation
