@@ -53,8 +53,8 @@ type
     function GetCount: Integer;
     function GetField(AIndex: Integer; const AName: String): String;
     procedure SetField(AIndex: Integer; const AName: String; AValue: String);
-    function Insert(APos: Integer): Integer; overload;
-    function Append: Integer; overload;
+    function Insert(APos: Integer): IRBData; overload;
+    function Append: IRBData; overload;
     procedure Delete(APos: Integer);
     property Count: Integer read GetCount;
     property Field[AIndex: Integer; const AName: String]: String read GetField write SetField;

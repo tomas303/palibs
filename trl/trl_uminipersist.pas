@@ -37,8 +37,8 @@ type
     function GetCount: Integer;
     function GetField(AIndex: Integer; const AName: String): String;
     procedure SetField(AIndex: Integer; const AName: String; AValue: String);
-    function Insert(APos: Integer): Integer; overload;
-    function Append: Integer; overload;
+    function Insert(APos: Integer): IRBData; overload;
+    function Append: IRBData; overload;
     procedure Delete(APos: Integer);
     property Count: Integer read GetCount;
     property Field[AIndex: Integer; const AName: String]: String read GetField write SetField;
@@ -102,22 +102,18 @@ begin
   fPSPersistChannel.Publish(TPersistInfo.Create(mData, paChange));
 end;
 
-function TMinilist<T>.Insert(APos: Integer): Integer;
-var
-  mData: IRBData;
+function TMinilist<T>.Insert(APos: Integer): IRBData;
 begin
-  mData := TRBData.Create(T.Create);
-  fList.Insert(APos, mData);
-  fPSPersistChannel.Publish(TPersistInfo.Create(mData, paNew));
+  Result := TRBData.Create(T.Create);
+  fList.Insert(APos, Result);
+  fPSPersistChannel.Publish(TPersistInfo.Create(Result, paNew));
 end;
 
-function TMinilist<T>.Append: Integer;
-var
-  mData: IRBData;
+function TMinilist<T>.Append: IRBData;
 begin
-  mData := TRBData.Create(T.Create);
-  fList.Add(mData);
-  fPSPersistChannel.Publish(TPersistInfo.Create(mData, paNew));
+  Result := TRBData.Create(T.Create);
+  fList.Add(Result);
+  fPSPersistChannel.Publish(TPersistInfo.Create(Result, paNew));
 end;
 
 procedure TMinilist<T>.Delete(APos: Integer);
