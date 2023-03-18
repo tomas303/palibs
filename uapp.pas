@@ -12,7 +12,7 @@ uses
   trl_imetaelement, trl_iprops, trl_dicontainer, trl_itree,
   trl_pubsub, rea_ibits, trl_ilauncher,
   trl_urttibroker, trl_irttibroker,
-  trl_upersiststore, trl_ipersist,
+  trl_ipersist,
   trl_upersistxml,
   rea_idata, sysutils,
   trl_usystem, trl_upersist,

@@ -10,7 +10,6 @@ uses
   trl_ilauncher,
   trl_urttibroker,
   trl_isysutils, trl_usysutils,
-  trl_upersiststore,
   rea_ireg, rea_ureg,
   tal_ireg, tal_ureg,
   trl_ireg, trl_ureg,
