@@ -65,13 +65,11 @@ type
   protected
     fFactory2: TDIFactory2;
     fPubSub: IPubSub;
-    //fStore: IPersistStore;
     fList: IMiniList;
     procedure SetPubSub(AValue: IPubSub);
   published
     property Factory2: TDIFactory2 read fFactory2 write fFactory2;
     property PubSub: IPubSub read fPubSub write SetPubSub;
-    //property Store: IPersistStore read fStore write fStore;
   end;
 
 implementation
@@ -154,9 +152,6 @@ var
   mActualData: IRBData;
 begin
   if fActualIndex.HasValue then begin
-    //mActualData := fList.Data[fActualIndex.Value];
-    //mActualData.ItemByName[AData.Name].AsString := AData.Value;
-    //fStore.Save(mActualData);
     fList.Field[fActualIndex.Value, AData.Name] := AData.Value;
     PublishActualRecord;
   end;
@@ -206,11 +201,9 @@ begin
     end;
     TCommandAction.cmdInsert: begin
       if fActualIndex.HasValue then begin
-        //fList.Insert(AData.Pos + fActualIndex.Value, AData.Data);
         fList.Insert(AData.Pos);
         fActualIndex := TOptional<Integer>.New(AData.Pos + fActualIndex.Value);
       end else begin
-        //fList.Insert(0, AData.Data);
         fList.Insert(0);
         fActualIndex := TOptional<Integer>.New(0);
       end;
@@ -219,7 +212,6 @@ begin
     TCommandAction.cmdDelete: begin
       if fActualIndex.HasValue then begin
         mIndex := AData.Pos + fActualIndex.Value;
-        //Store.Delete(fList.Data[mIndex]);
         fList.Delete(mIndex);
         if fList.Count = 0 then begin
           fActualIndex := TOptional<Integer>.New;
