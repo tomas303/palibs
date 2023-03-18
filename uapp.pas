@@ -434,6 +434,7 @@ end;
 
 procedure TGUI.PSCloseProgramObserver;
 begin
+  fPersonsData.Save;
   StoreDevice.Save2(fAppSettings);
   StoreDevice.Close;
   raise ELaunchStop.Create('');
@@ -447,6 +448,8 @@ end;
 procedure TGUI.PSSaveDataObserver;
 begin
   fPersonsData.Save;
+  StoreDevice.Save2(fAppSettings);
+  StoreDevice.Flush;
 end;
 
 function TGUI.GetAppSettings: IRBData;
