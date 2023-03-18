@@ -7,7 +7,7 @@ unit uapp;
 interface
 
 uses
-  graphics, tal_uapp, typinfo, rtti,
+  graphics, tal_uapp, typinfo,
   rea_idesigncomponent, rea_udesigncomponent, rea_ilayout,
   trl_imetaelement, trl_iprops, trl_dicontainer, trl_itree,
   trl_pubsub, rea_ibits, trl_ilauncher,
@@ -16,8 +16,7 @@ uses
   trl_upersistxml,
   rea_idata, sysutils,
   trl_usystem, trl_upersist,
-  trl_udifactory,
-  trl_iminipersist, trl_uminipersist;
+  trl_udifactory;
 
 type
   { TApp }

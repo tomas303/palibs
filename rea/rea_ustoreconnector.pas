@@ -9,8 +9,7 @@ interface
 
 uses
   rea_idata, trl_ipersist, trl_irttibroker, trl_pubsub, rea_ibits,
-  trl_funcp, sysutils, rea_idesigncomponent, trl_udifactory,
-  trl_iminipersist;
+  trl_funcp, sysutils, rea_idesigncomponent, trl_udifactory;
 
 type
 

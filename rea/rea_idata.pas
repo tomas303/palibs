@@ -8,8 +8,7 @@ unit rea_idata;
 interface
 
 uses
-  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist, rea_idesigncomponent, trl_irttibroker,
-  trl_iminipersist;
+  trl_pubsub, rea_ibits, trl_funcp, trl_ipersist, rea_idesigncomponent, trl_irttibroker;
 
 type
 

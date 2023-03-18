@@ -12,7 +12,7 @@ uses
   trl_urttibroker,
   DOM, XMLRead, XMLWrite, xpath,
   SysUtils, fgl, classes, base64,
-  trl_iminipersist, trl_udifactory;
+  trl_udifactory;
 
 const
   cRoot = 'root';

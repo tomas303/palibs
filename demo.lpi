@@ -37,9 +37,6 @@
       <Item>
         <PackageName Value="tvl"/>
       </Item>
-      <Item>
-        <PackageName Value="trl"/>
-      </Item>
     </RequiredPackages>
     <Units>
       <Unit>
