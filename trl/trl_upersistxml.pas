@@ -44,7 +44,7 @@ type
     fFile: string;
     fDoc: TXMLDocument;
     function GetDoc: TXMLDocument;
-    function GetDataClassEl(const ADataClassName: string; ACanCreate: Boolean): TDOMElement;
+    function FindDataClassEl(const ADataClassName: string; ACanCreate: Boolean): TDOMElement;
     class function FindElement(const AContextEl: TDOMElement; const AXPath: string): TDOMElement;
   strict private
     procedure Read(AStoreEl: TDOMElement; AData: IRBData);
@@ -92,7 +92,6 @@ type
 
   EXMLStore = class(Exception)
   public
-    class procedure ClassNotExists(const AClass: string);
     class procedure MoreObjectWithNameExists(const AClass, AName: string);
   end;
 
@@ -133,11 +132,6 @@ begin
 end;
 
 { EXMLStore }
-
-class procedure EXMLStore.ClassNotExists(const AClass: string);
-begin
-  raise EXMLStore.CreateFmt('Class %s not found in store', [AClass]);
-end;
 
 class procedure EXMLStore.MoreObjectWithNameExists(const AClass, AName: string);
 begin
@@ -273,6 +267,7 @@ var
   i: Integer;
   mAttr: TCustomAttribute;
 begin
+  Result := nil;
   for i := 0 to AData.Count - 1 do begin
     mAttr := AData[i].FindAttribute(PersistIDAttribute);
     if mAttr <> nil then begin
@@ -382,7 +377,7 @@ begin
     raise Exception.Create('already opened');
 end;
 
-function TXmlStore.GetDataClassEl(const ADataClassName: string;
+function TXmlStore.FindDataClassEl(const ADataClassName: string;
   ACanCreate: Boolean): TDOMElement;
 begin
   Result := Doc.DocumentElement.FindNode(ADataClassName) as TDOMElement;
@@ -392,8 +387,7 @@ begin
     begin
       Result := Doc.CreateElement(ADataClassName);
       Doc.DocumentElement.AppendChild(Result);
-    end else
-      EXMLStore.ClassNotExists(ADataClassName);
+    end;
   end;
 end;
 
@@ -418,7 +412,7 @@ var
   mOriginalEl: TDOMElement;
 begin
   FillAutoFields(AData);
-  mClassEl := GetDataClassEl(AData.ClassName, True);
+  mClassEl := FindDataClassEl(AData.ClassName, True);
   mStoreEl := Doc.CreateElement(cListItemTag);
   mOriginalEl := FindStoreEl(AData);
   if mOriginalEl <> nil then
@@ -497,7 +491,7 @@ end;
 
 function TXmlStore.Select2(const AClass: string): IRBDataEnumerable;
 begin
-  Result := TSelector.Create(Self, GetDataClassEl(AClass, False));
+  Result := TSelector.Create(Self, FindDataClassEl(AClass, False));
 end;
 
 destructor TXmlStore.Destroy;

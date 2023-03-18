@@ -33,11 +33,14 @@ type
 
   TAppSettings = class
   private
+    fID: String;
     fTop: Integer;
     fLeft: Integer;
     fWidth: Integer;
     fHeight: Integer;
   published
+    [PersistIDAttribute, PersistAUTOAttribute]
+    property ID: String read fID write fID;
     property Top: Integer read fTop write fTop;
     property Left: Integer read fLeft write fLeft;
     property Width: Integer read fWidth write fWidth;
@@ -167,11 +170,11 @@ type
     function DoCompose: IMetaElement; override;
     procedure InitValues; override;
   protected
-    //fStore: IPersistStore;
+    fStoreDevice: IPersistStoreDevice;
     fPersistFactory: IPersistFactory;
     fPSGUIChannel: IPSGUIChannel;
   published
-    //property Store: IPersistStore read fStore write fStore;
+    property StoreDevice: IPersistStoreDevice read fStoreDevice write fStoreDevice;
     property PersistFactory: IPersistFactory read fPersistFactory write fPersistFactory;
     property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
   end;
@@ -432,8 +435,8 @@ end;
 
 procedure TGUI.PSCloseProgramObserver;
 begin
-  //Store.Save(fAppSettings);
-  //Store.Close;
+  StoreDevice.Save2(fAppSettings);
+  StoreDevice.Close;
   raise ELaunchStop.Create('');
 end;
 
@@ -448,22 +451,19 @@ begin
 end;
 
 function TGUI.GetAppSettings: IRBData;
-//var
-//  mList: IPersistRefList;
+var
+  mEnum: IRBDataEnumerator;
 begin
-  //mList := (Store as IPersistQuery).SelectClass(TAppSettings.ClassName);
-  //if mList.Count = 0 then
-  //begin
-  //  Result := PersistFactory.Create(IRBData, TAppSettings.ClassName) as IRBData;
-  //  Result.ItemByName['Width'].AsInteger := 600;
-  //  Result.ItemByName['Height'].AsInteger := 200;
-  //  Result.ItemByName['Left'].AsInteger := 300;
-  //  Result.ItemByName['Top'].AsInteger := 400;
-  //end
-  //else
-  //begin
-  //  Result := mList.Data[0];
-  //end;
+  mEnum := StoreDevice.Select2(TAppSettings.ClassName).GetEnumerator;
+  if mEnum.MoveNext then
+    Result := mEnum.Current
+  else begin
+    Result := PersistFactory.Create(IRBData, TAppSettings.ClassName) as IRBData;
+    Result.ItemByName['Width'].AsInteger := 600;
+    Result.ItemByName['Height'].AsInteger := 200;
+    Result.ItemByName['Left'].AsInteger := 300;
+    Result.ItemByName['Top'].AsInteger := 400;
+  end;
 end;
 
 procedure TGUI.PublishAppSettings;
@@ -480,7 +480,7 @@ end;
 procedure TGUI.InitValues;
 begin
   inherited InitValues;
-  //Store.Open('/root/demosettings.xml');
+  StoreDevice.Open('/root/demosettings.xml');
   CreateComponents;
   CreateDataConnectors;
   fAppSettings := GetAppSettings;
@@ -551,7 +551,7 @@ begin
   RegApps.RegisterWindowLog;
   RegReact.RegisterCommon;
   mReg := RegReact.RegisterDesignComponent(TGUI, IDesignComponentApp);
-  //mReg.InjectProp('Store', IPersistStore);
+  mReg.InjectProp('StoreDevice', IPersistStoreDevice, 'xml');
   mReg.InjectProp('PersistFactory', IPersistFactory);
   mReg := RegReact.RegisterDesignComponent(TGUIPersons, IGUIPersons);
   mReg := RegReact.RegisterDesignComponent(TGUICommands, IGUICommands);
