@@ -9,7 +9,7 @@ interface
 
 uses
   fgl, trl_irttibroker, trl_urttibroker, sysutils,
-  trl_pubsub, trl_ipersist, trl_dicontainer;
+  trl_pubsub, trl_ipersist, trl_dicontainer, trl_udifactory;
 
 type
 
@@ -47,14 +47,26 @@ type
     function GetCount: Integer;
     function GetField(AIndex: Integer; const AName: String): String;
     procedure SetField(AIndex: Integer; const AName: String; AValue: String);
+    function GetList(AIndex: Integer; const AName: String): IMiniList;
+    procedure SetList(AIndex: Integer; const AName: String; const AValue: IMiniList);
+    function GetData(AIndex: Integer): IRBData;
     function Insert(APos: Integer): IRBData; overload;
     function Append: IRBData; overload;
     procedure Delete(APos: Integer);
     property Count: Integer read GetCount;
     property Field[AIndex: Integer; const AName: String]: String read GetField write SetField;
+    property Data[AIndex: Integer]: IRBData read GetData;
     function GetEnumerator: IRBDataEnumerator;
+    function PSPersistChannel: IPSPersistChannel;
   public
-    constructor Create(const AList: TFPGInterfacedObjectList<IRBData>; const APSPersistChannel: IPSPersistChannel);
+    constructor Create(const AList: TFPGInterfacedObjectList<IRBData>; const APSPersistChannel: IPSPersistChannel;
+      AFactory2: TDIFactory2);
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+  protected
+    fFactory2: TDIFactory2;
+  published
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
   end;
 
 
@@ -83,9 +95,11 @@ type
   protected
     fPubSub: IPubSub;
     fDevice: IPersistStoreDevice;
+    fFactory2: TDIFactory2;
   published
     property PubSub: IPubSub read fPubSub write fPubSub;
     property Device: IPersistStoreDevice read fDevice write fDevice;
+    property Factory2: TDIFactory2 read fFactory2 write fFactory2;
   end;
 
 
@@ -129,21 +143,39 @@ var
 begin
   mData := fList[AIndex];
   mData.ItemByName[AName].AsString := AValue;
-  fPSPersistChannel.Publish(TPersistInfo.Create(mData, paChange));
+  if fPSPersistChannel <> nil then
+    fPSPersistChannel.Publish(TPersistInfo.Create(mData, paChange));
+end;
+
+function TMinilist<T>.GetList(AIndex: Integer; const AName: String): IMiniList;
+begin
+  Result := fList[AIndex].ItemByName[AName].AsInterface as IMiniList;
+end;
+
+procedure TMinilist<T>.SetList(AIndex: Integer; const AName: String; const AValue: IMiniList);
+var
+  mData: IRBData;
+begin
+  mData := fList[AIndex];
+  mData.ItemByName[AName].AsInterface := AValue;
+  if fPSPersistChannel <> nil then
+    fPSPersistChannel.Publish(TPersistInfo.Create(mData, paChange));
 end;
 
 function TMinilist<T>.Insert(APos: Integer): IRBData;
 begin
-  Result := TRBData.Create(T.Create);
+  Result := TRBData.Create(fFactory2.LocateC<T>);
   fList.Insert(APos, Result);
-  fPSPersistChannel.Publish(TPersistInfo.Create(Result, paNew));
+  if fPSPersistChannel <> nil then
+    fPSPersistChannel.Publish(TPersistInfo.Create(Result, paNew));
 end;
 
 function TMinilist<T>.Append: IRBData;
 begin
-  Result := TRBData.Create(T.Create);
+  Result := TRBData.Create(fFactory2.LocateC<T>);
   fList.Add(Result);
-  fPSPersistChannel.Publish(TPersistInfo.Create(Result, paNew));
+  if fPSPersistChannel <> nil then
+    fPSPersistChannel.Publish(TPersistInfo.Create(Result, paNew));
 end;
 
 procedure TMinilist<T>.Delete(APos: Integer);
@@ -152,7 +184,13 @@ var
 begin
   mData := fList[APos];
   fList.Delete(APos);
-  fPSPersistChannel.Publish(TPersistInfo.Create(mData, paDelete));
+  if fPSPersistChannel <> nil then
+    fPSPersistChannel.Publish(TPersistInfo.Create(mData, paDelete));
+end;
+
+function TMinilist<T>.GetData(AIndex: Integer): IRBData;
+begin
+  Result := fList[AIndex];
 end;
 
 function TMinilist<T>.GetEnumerator: IRBDataEnumerator;
@@ -160,11 +198,31 @@ begin
   Result := TMiniListEnumerator.Create(fList);
 end;
 
-constructor TMinilist<T>.Create(const AList: TFPGInterfacedObjectList<IRBData>; const APSPersistChannel: IPSPersistChannel);
+function TMinilist<T>.PSPersistChannel: IPSPersistChannel;
+begin
+  Result := fPSPersistChannel;
+end;
+
+constructor TMinilist<T>.Create(const AList: TFPGInterfacedObjectList<IRBData>; const APSPersistChannel: IPSPersistChannel;
+  AFactory2: TDIFactory2);
 begin
   inherited Create;
   fList := AList;
   fPSPersistChannel := APSPersistChannel;
+  fFactory2 := AFactory2;
+end;
+
+procedure TMinilist<T>.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  if fList = nil then
+    fList := TFPGInterfacedObjectList<IRBData>.Create;
+end;
+
+procedure TMinilist<T>.BeforeDestruction;
+begin
+  FreeAndNil(fList);
+  inherited BeforeDestruction;
 end;
 
 { TMiniDataList }
@@ -210,7 +268,7 @@ var
 begin
   mList := TFPGInterfacedObjectList<IRBData>.Create;
   mList.Assign(fList);
-  Result := TMiniList<T>.Create(mList, fPSPersistChannel);
+  Result := TMiniList<T>.Create(mList, fPSPersistChannel, Factory2);
 end;
 
 function TMiniDataList<T>.NewList(const APredicate: TPersistPredicate): IMiniList<T>;
@@ -223,7 +281,7 @@ begin
     if APredicate(mData) then
       mList.Add(mData);
   end;
-  Result := TMiniList<T>.Create(mList, fPSPersistChannel);
+  Result := TMiniList<T>.Create(mList, fPSPersistChannel, Factory2);
 end;
 
 function TMiniDataList<T>.GetEnumerator: IRBDataEnumerator;

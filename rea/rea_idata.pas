@@ -17,7 +17,9 @@ type
   IDataAccessor = interface
   ['{48A69436-153D-4760-8B77-F0FF3600F8E7}']
     function GetValue(const AName: String): String;
+    function GetList(const AName: String): IMiniList;
     property Value[const AName: String]: String read GetValue; default;
+    property List[const AName: String]: IMiniList read GetList;
   end;
 
   { TFieldData }
@@ -90,10 +92,23 @@ type
     property Delta: TOptional<Integer> read fDelta;
   end;
 
+  { TListChange }
+
+  TListChange = record
+  private
+    fList: IMiniList;
+  public
+    class function New(const AList: IMiniList): TListChange; static;
+    class operator equal(a,b: TListChange): Boolean;
+    property List: IMiniList read fList;
+  end;
+
   IPSFieldDataChannel = IPubSubDataChannel<TFieldData>;
   IPSRecordDataChannel = IPubSubDataChannel<TRecordData>;
   IPSCommandChannel = IPubSubDataChannel<TCommand>;
   IPSPositionChangeChannel = IPubSubDataChannel<TPositionChange>;
+  IPSListChangeChannel = IPubSubDataChannel<TListChange>;
+  IPSSubDataChangeChannel = IPubSubChannel;
 
   IDataConnector = interface
   ['{1653E0AC-C7FC-4773-A921-51DCA67080D9}']
@@ -101,15 +116,29 @@ type
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
+    function PSListChangeChannel: IPSListChangeChannel;
+    function PSSubDataChangeChannel: IPSSubDataChangeChannel;
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterText(const AName: String; const AText: IDesignComponentText);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
+    procedure RegisterConnector(const AName: String; const AConnector: IDataConnector);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
-    procedure ConnectList(const AList: IMiniList);
   end;
 
 implementation
+
+{ TListChange }
+
+class function TListChange.New(const AList: IMiniList): TListChange;
+begin
+  Result.fList := AList;
+end;
+
+class operator TListChange.equal(a, b: TListChange): Boolean;
+begin
+  Result := a.List = b.List;
+end;
 
 { TPositionChange }
 

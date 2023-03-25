@@ -26,6 +26,7 @@ type
       fList: IMiniList;
       fIndex: Integer;
       function GetValue(const AName: String): String;
+      function GetList(const AName: String): IMiniList;
     public
       constructor Create(const AList: IMiniList; AIndex: Integer);
     end;
@@ -35,6 +36,7 @@ type
     TEmptyAccessor = class(TInterfacedObject, IDataAccessor)
     private
       function GetValue(const AName: String): String;
+      function GetList(const AName: String): IMiniList;
     end;
 
   private
@@ -47,19 +49,25 @@ type
     fPSRecordDataChannel: IPSRecordDataChannel;
     fPSCommandChannel: IPSCommandChannel;
     fPSPositionChangeChannel: IPSPositionChangeChannel;
+    fPSListChangeChannel: IPSListChangeChannel;
+    fPSSubDataChangeChannel: IPSSubDataChangeChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
     procedure PSCommandChannelObserver(const AData: TCommand);
+    procedure PSListChangeChannelObserver(const AListChange: TListChange);
+    procedure PSSubDataChangeChannelObserver;
   protected
     function PSFieldDataChannel: IPSFieldDataChannel;
     function PSRecordDataChannel: IPSRecordDataChannel;
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
+    function PSListChangeChannel: IPSListChangeChannel;
+    function PSSubDataChangeChannel: IPSSubDataChangeChannel;
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterGrid(const ANames: TArray<String>; const AGrid: IDesignComponentGrid; const AClass: TClass);
     procedure RegisterText(const AName: String; const AText: IDesignComponentText);
+    procedure RegisterConnector(const AName: String; const AConnector: IDataConnector);
     procedure RegisterCommand(const AChannel: IPubSubChannel; const AData: TCommand);
-    procedure ConnectList(const AList: IMiniList);
   public
     procedure BeforeDestruction; override;
   protected
@@ -81,11 +89,21 @@ begin
   Result := '';
 end;
 
+function TStoreConnector.TEmptyAccessor.GetList(const AName: String): IMiniList;
+begin
+  Result := nil;
+end;
+
 { TStoreConnector.TAccessor }
 
 function TStoreConnector.TAccessor.GetValue(const AName: String): String;
 begin
   Result := fList.Field[fIndex, AName];
+end;
+
+function TStoreConnector.TAccessor.GetList(const AName: String): IMiniList;
+begin
+  Result := fList.List[fIndex, AName];
 end;
 
 constructor TStoreConnector.TAccessor.Create(const AList: IMiniList; AIndex: Integer);
@@ -208,6 +226,7 @@ begin
         fActualIndex := TOptional<Integer>.New(0);
       end;
       fPSPositionChangeChannel.Publish(TPositionChange.New);
+      PublishActualRecord;
     end;
     TCommandAction.cmdDelete: begin
       if fActualIndex.HasValue then begin
@@ -219,8 +238,31 @@ begin
           fActualIndex := TOptional<Integer>.New(fList.Count - 1);
         end;
         fPSPositionChangeChannel.Publish(TPositionChange.New);
+        PublishActualRecord;
       end;
     end;
+  end;
+end;
+
+procedure TStoreConnector.PSListChangeChannelObserver(const AListChange: TListChange);
+begin
+  if fList = AListChange.List then Exit;
+  fList := AListChange.List;
+  if fList.Count > 0 then begin
+    fActualIndex := TOptional<Integer>.New(0);
+  end else begin
+    fActualIndex := TOptional<Integer>.New;
+  end;
+  fPSPositionChangeChannel.Publish(TPositionChange.New);
+  PublishActualRecord;
+end;
+
+procedure TStoreConnector.PSSubDataChangeChannelObserver;
+begin
+  if (fList.PSPersistChannel <> nil) then begin
+    if fActualIndex.HasValue then
+  end else begin
+    PublishActualRecord;
   end;
 end;
 
@@ -235,6 +277,10 @@ begin
   fPSCommandChannel.Subscribe(PSCommandChannelObserver);
   fPSPositionChangeChannel := fPubSub.Factory.NewDataChannel<TPositionChange>;
   fPSPositionChangeChannel.Publish(TPositionChange.New);
+  fPSListChangeChannel := fPubSub.Factory.NewDataChannel<TListChange>;
+  fPSListChangeChannel.Subscribe(PSListChangeChannelObserver);
+  fPSSubDataChangeChannel := fPubSub.Factory.NewChannel;
+  fPSSubDataChangeChannel.Subscribe(PSSubDataChangeChannelObserver);
 end;
 
 function TStoreConnector.PSFieldDataChannel: IPSFieldDataChannel;
@@ -255,6 +301,16 @@ end;
 function TStoreConnector.PSPositionChangeChannel: IPSPositionChangeChannel;
 begin
   Result := fPSPositionChangeChannel;
+end;
+
+function TStoreConnector.PSListChangeChannel: IPSListChangeChannel;
+begin
+  Result := fPSListChangeChannel;
+end;
+
+function TStoreConnector.PSSubDataChangeChannel: IPSSubDataChangeChannel;
+begin
+  Result := fPSSubDataChangeChannel;
 end;
 
 procedure TStoreConnector.RegisterEdit(const AName: String;
@@ -397,6 +453,24 @@ begin
    end);
 end;
 
+procedure TStoreConnector.RegisterConnector(const AName: String; const AConnector: IDataConnector);
+begin
+  fPubSub.Factory.NewDataToNonDataBridge<TRecordData>(
+    AConnector.PSRecordDataChannel,
+    PSSubDataChangeChannel
+  );
+  fPubSub.Factory.NewDataBridge<TRecordData, TListChange>(
+   PSRecordDataChannel,
+   AConnector.PSListChangeChannel,
+   function (const AData: TRecordData): TListChange
+   begin
+     if (AData.Position = 0) and AData.Accessor.HasValue then
+       Result := TListChange.New(AData.Accessor.Value.List[AName])
+     else
+       raise EPubSubBridgeNoWay.Create('');
+   end);
+end;
+
 procedure TStoreConnector.RegisterCommand(const AChannel: IPubSubChannel;
   const AData: TCommand);
 begin
@@ -409,22 +483,12 @@ begin
     end);
 end;
 
-procedure TStoreConnector.ConnectList(const AList: IMiniList);
-begin
-  if fList = AList then Exit;
-  fList := AList;
-  if fList.Count > 0 then begin
-    fActualIndex := TOptional<Integer>.New(0);
-  end else begin
-    fActualIndex := TOptional<Integer>.New;
-  end;
-  PublishActualRecord;
-end;
-
 procedure TStoreConnector.BeforeDestruction;
 begin
   fPSFieldDataChannel.Unsubscribe(PSFieldDataChannelObserver);
   fPSCommandChannel.Unsubscribe(PSCommandChannelObserver);
+  fPSListChangeChannel.Unsubscribe(PSListChangeChannelObserver);
+  fPSSubDataChangeChannel.Unsubscribe(PSSubDataChangeChannelObserver);
   inherited BeforeDestruction;
 end;
 

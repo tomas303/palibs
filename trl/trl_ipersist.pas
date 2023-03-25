@@ -83,12 +83,18 @@ type
     function GetCount: Integer;
     function GetField(AIndex: Integer; const AName: String): String;
     procedure SetField(AIndex: Integer; const AName: String; AValue: String);
+    function GetList(AIndex: Integer; const AName: String): IMiniList;
+    procedure SetList(AIndex: Integer; const AName: String; const AValue: IMiniList);
+    function GetData(AIndex: Integer): IRBData;
     function Insert(APos: Integer): IRBData; overload;
     function Append: IRBData; overload;
     procedure Delete(APos: Integer);
     property Count: Integer read GetCount;
     property Field[AIndex: Integer; const AName: String]: String read GetField write SetField;
+    property List[AIndex: Integer; const AName: String]: IMiniList read GetList write SetList;
+    property Data[AIndex: Integer]: IRBData read GetData;
     function GetEnumerator: IRBDataEnumerator;
+    function PSPersistChannel: IPSPersistChannel;
   end;
 
   IMiniList<T: TObject> = interface(IMiniList)
