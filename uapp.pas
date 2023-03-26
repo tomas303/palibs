@@ -16,7 +16,8 @@ uses
   trl_upersistxml,
   rea_idata, sysutils,
   trl_usystem, trl_upersist,
-  trl_udifactory;
+  trl_udifactory,
+  tvl_itimer;
 
 type
   { TApp }
@@ -83,6 +84,34 @@ type
   end;
 
   TDataListTPersons = class(TMiniDataList<TPerson>, IDataListPersons)
+  end;
+
+  IPSFilterChannel = IPubSubDataChannel<String>;
+
+  IGUIFilter = interface(IDesignComponent)
+  ['{C3211214-1580-4F7C-95C2-634E8E7C3689}']
+    function PSFilterChannel: IPSFilterChannel;
+    function GetFilterEdit: IDesignComponentEdit;
+    property FilterEdit: IDesignComponentEdit read GetFilterEdit;
+  end;
+
+  { TGUIFilter }
+
+  TGUIFilter = class(TDesignComponent, IGUIFilter)
+  strict private
+    fFilterText, fLastTriggeredText: String;
+    fFilterEdit: IDesignComponentEdit;
+    fTimer: ITimer;
+    fPSFilterChannel: IPSFilterChannel;
+    procedure TimerObserver;
+    procedure FilterEditTextChannelObserver(const AText: String);
+    function PSFilterChannel: IPSFilterChannel;
+    function GetFilterEdit: IDesignComponentEdit;
+  protected
+    procedure InitValues; override;
+    function DoCompose: IMetaElement; override;
+  public
+    destructor Destroy; override;
   end;
 
   { IGUIPersons }
@@ -161,6 +190,7 @@ type
   private
     fPersons: IGUIPersons;
     fCommands: IGUICommands;
+    fFilter: IGUIFilter;
     fForm: IDesignComponentForm;
     fDataConnector: IDataConnector;
     fTagsConnector: IDataConnector;
@@ -177,6 +207,7 @@ type
     procedure PSCloseProgramObserver;
     procedure PSShowLogObserver;
     procedure PSSaveDataObserver;
+    procedure PSFilterChannelObserver(const AValue: String);
   private
     function GetAppSettings: IRBData;
     procedure PublishAppSettings;
@@ -196,6 +227,60 @@ type
   end;
 
 implementation
+
+{ TGUIFilter }
+
+procedure TGUIFilter.TimerObserver;
+begin
+  if fLastTriggeredText <> fFilterText then begin
+    fLastTriggeredText := fFilterText;
+    fPSFilterChannel.Publish(fLastTriggeredText);
+  end;
+end;
+
+procedure TGUIFilter.FilterEditTextChannelObserver(const AText: String);
+begin
+  fFilterText := AText;
+  fTimer.Restart;
+end;
+
+procedure TGUIFilter.InitValues;
+begin
+  inherited InitValues;
+  fPSFilterChannel := PubSub.Factory.NewDataChannel<String>;
+  fTimer := Factory2.Locate<ITimer>('filter');
+  fTimer.Subscribe(TimerObserver);
+  fFilterEdit := Factory2.Locate<IDesignComponentEdit>(NewComposeProps
+    .SetStr(cProps.ID, 'filter_edit')
+    .SetBool(cProps.Flat, True)
+    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
+    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    );
+  fFilterEdit.PSTextChannel.Subscribe(FilterEditTextChannelObserver);
+  fTimer.Enabled := True;
+end;
+
+function TGUIFilter.DoCompose: IMetaElement;
+begin
+  Result := Morph.WrapUp(fFilterEdit, 50).Compose;
+end;
+
+function TGUIFilter.PSFilterChannel: IPSFilterChannel;
+begin
+  Result := fPSFilterChannel;
+end;
+
+function TGUIFilter.GetFilterEdit: IDesignComponentEdit;
+begin
+  Result := fFilterEdit;
+end;
+
+destructor TGUIFilter.Destroy;
+begin
+  fTimer.Unsubscribe(TimerObserver);
+  fFilterEdit.PSTextChannel.Unsubscribe(FilterEditTextChannelObserver);
+  inherited Destroy;
+end;
 
 { TGUICommands }
 
@@ -429,6 +514,10 @@ procedure TGUI.CreateComponents;
 var
   mPager: IDesignComponent;
 begin
+  fFilter := Factory2.Locate<IGUIFilter>(NewProps
+   .SetInt(cProps.Color, clLime)
+  );
+  fFilter.PSFilterChannel.Subscribe(PSFilterChannelObserver);
   fPersons := Factory2.Locate<IGUIPersons>(NewProps
    .SetIntf('PSGUIChannel', fPSGUIChannel)
    .SetInt(cProps.Color, clCream)
@@ -438,7 +527,7 @@ begin
    .SetBool(cProps.Transparent, False)
   );
   mPager := NewPager([
-    Morph.NewPage('Persons', cLayout.Vertical, [fPersons, Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)]),
+    Morph.NewPage('Persons', cLayout.Vertical, [fFilter, fPersons, Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)]),
     Morph.NewPage('Test', cLayout.Vertical, [NewLogButton, NewSaveButton])
   ]);
   fForm := NewForm([mPager]);
@@ -492,6 +581,50 @@ begin
   fPersonsData.Save;
   StoreDevice.Save2(fAppSettings);
   StoreDevice.Flush;
+end;
+
+function FilterData(const ALowerText: String; const x: IRBData): Boolean;
+var
+  i: Integer;
+  mList: IMiniList;
+  mData: IRBData;
+begin
+  Result := False;
+  for i := 0 to x.Count - 1 do begin
+    if x.Items[i].IsObject then begin
+      Result := FilterData(ALowerText, TRBData.Create(x.Items[i].AsObject));
+    end
+    else if x.Items[i].IsInterface then begin
+      if Supports(x.Items[i].AsInterface, IMiniList, mList) then begin
+        for mData in mList do begin
+          Result := FilterData(ALowerText, mData);
+          if Result then
+            Break;
+        end;
+      end;
+    end
+    else begin
+      Result := Pos(ALowerText, x.Items[i].AsString.ToLower) > 0;
+    end;
+    if Result then
+      Break;
+  end;
+end;
+
+procedure TGUI.PSFilterChannelObserver(const AValue: String);
+begin
+  if AValue = '' then
+    fDataConnector.PSListChangeChannel.Publish(TListChange.New(fPersonsData.NewList))
+  else
+    fDataConnector.PSListChangeChannel.Publish(TListChange.New(
+      fPersonsData.NewList(
+        function(const x: IRBData): Boolean
+        begin
+          Result := FilterData(AValue.ToLower, x);
+        end
+      )
+    ));
+  PSGUIChannel.Debounce(TGUIData.Create(gaRender));
 end;
 
 function TGUI.GetAppSettings: IRBData;
@@ -570,11 +703,14 @@ begin
   RegReact.RegisterPubSubLauncher;
   RegApps.RegisterWindowLog;
   RegReact.RegisterCommon;
+  RegVL.RegisterTimer(300, 'filter');
+
   mReg := RegReact.RegisterDesignComponent(TGUI, IDesignComponentApp);
   mReg.InjectProp('StoreDevice', IPersistStoreDevice, 'xml');
   mReg.InjectProp('PersistFactory', IPersistFactory);
   mReg := RegReact.RegisterDesignComponent(TGUIPersons, IGUIPersons);
   mReg := RegReact.RegisterDesignComponent(TGUICommands, IGUICommands);
+  mReg := RegReact.RegisterDesignComponent(TGUIFilter, IGUIFilter);
 end;
 
 end.
