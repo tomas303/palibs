@@ -261,6 +261,7 @@ procedure TStoreConnector.PSSubDataChangeChannelObserver;
 begin
   if (fList.PSPersistChannel <> nil) then begin
     if fActualIndex.HasValue then
+      fList.PSPersistChannel.Publish(TPersistInfo.Create(fList.Data[fActualIndex.Value], paChange));
   end else begin
     PublishActualRecord;
   end;
