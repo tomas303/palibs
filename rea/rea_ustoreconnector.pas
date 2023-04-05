@@ -410,6 +410,7 @@ begin
       mVals: TArray<String>;
       i: integer;
     begin
+      mVals := [];
       if x.Accessor.HasValue then begin
         SetLength(mVals, Length(ANames));
         for i := Low(ANames) to High(ANames) do

@@ -244,7 +244,6 @@ procedure TPubSubDataChannel<T>.ExecEvent;
 var
   m: TPair<TCallback, TPubSubKind>;
   mEvent: TEvent;
-  cxxx:string;
 begin
   try
     mEvent := fEvents[0];
