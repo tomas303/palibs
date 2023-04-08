@@ -21,6 +21,9 @@ type
     procedure Subscribe(ACallback: TTimerEvent);
     procedure Unsubscribe(ACallback: TTimerEvent);
     procedure Restart;
+    function GetInterval: integer;
+    procedure SetInterval(AValue: integer);
+    property Interval: integer read GetInterval write SetInterval;
   end;
 
 implementation

@@ -15,6 +15,7 @@ type
   TTimer = class(TInterfacedObject, ITimer)
   private
     fObservers: TFPGList<TTimerEvent>;
+    fInterval: integer;
   protected
     // ITimer
     function GetEnabled: Boolean;
@@ -23,9 +24,10 @@ type
     procedure Subscribe(ACallback: TTimerEvent);
     procedure Unsubscribe(ACallback: TTimerEvent);
     procedure Restart;
+    function GetInterval: integer;
+    procedure SetInterval(AValue: integer);
   protected
     fHandle: THandle;
-    fEnabled: Boolean;
     procedure TimerHandler;
     procedure KillTimer;
     procedure UpdateTimer;
@@ -33,11 +35,8 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
-  protected
-    fInterval: integer;
-    procedure SetInterval(AValue: integer);
   published
-    property Interval: integer read fInterval write SetInterval;
+    property Interval: integer read GetInterval write SetInterval;
   end;
 
 implementation
@@ -48,17 +47,26 @@ procedure TTimer.SetInterval(AValue: integer);
 begin
   if fInterval = AValue then Exit;
   fInterval := AValue;
-  UpdateTimer;
+  if Enabled then
+    UpdateTimer;
+end;
+
+function TTimer.GetInterval: integer;
+begin
+  Result := fInterval;
 end;
 
 function TTimer.GetEnabled: Boolean;
 begin
-  Result := fEnabled;
+  Result := fHandle <> 0;
 end;
 
 procedure TTimer.SetEnabled(AValue: Boolean);
 begin
-  fEnabled := AValue;
+  if AValue then
+    UpdateTimer
+  else
+    KillTimer;
 end;
 
 procedure TTimer.Subscribe(ACallback: TTimerEvent);
@@ -82,15 +90,19 @@ procedure TTimer.TimerHandler;
 var
   o: TTimerEvent;
 begin
-  if Enabled then
-    for o in fObservers do
-      o();
+  for o in fObservers do
+    o();
 end;
 
 procedure TTimer.KillTimer;
+var
+  h: THandle;
 begin
-  if fHandle <> 0 then
-    WidgetSet.DestroyTimer(fHandle);
+  if fHandle <> 0 then begin
+    h := fHandle;
+    fHandle := 0;
+    WidgetSet.DestroyTimer(h);
+  end;
 end;
 
 procedure TTimer.UpdateTimer;

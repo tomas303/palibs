@@ -9,8 +9,8 @@ interface
 uses
   rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, trl_ilog,
-  sysutils, rea_ilayout, Graphics, LCLType, fgl, trl_isequence, rea_irenderer,
-  trl_udifactory, trl_pubsub;
+  sysutils, rea_ilayout, Graphics, LCLType, fgl,
+  trl_udifactory, trl_pubsub, tvl_itimer;
 
 type
 
@@ -371,7 +371,78 @@ type
     property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
   end;
 
+  { TDesignComponentFilter }
+
+  TDesignComponentFilter = class(TDesignComponent, IDesignComponentFilter)
+  strict private
+    fFilterText, fLastTriggeredText: String;
+    fFilterEdit: IDesignComponentEdit;
+    fTimer: ITimer;
+    fPSTextFilterChannel: IPSTextFilterChannel;
+    procedure TimerObserver;
+    procedure FilterEditTextChannelObserver(const AText: String);
+    function PSTextFilterChannel: IPSTextFilterChannel;
+  protected
+    procedure InitValues; override;
+    function DoCompose: IMetaElement; override;
+  public
+    destructor Destroy; override;
+  protected
+    fInterval: Integer;
+  published
+    property Interval: Integer read fInterval write fInterval;
+  end;
+
+
+
 implementation
+
+{ TDesignComponentFilter }
+
+procedure TDesignComponentFilter.TimerObserver;
+begin
+  if fLastTriggeredText <> fFilterText then begin
+    fLastTriggeredText := fFilterText;
+    fPSTextFilterChannel.Publish(fLastTriggeredText);
+  end;
+end;
+
+procedure TDesignComponentFilter.FilterEditTextChannelObserver(const AText: String);
+begin
+  fFilterText := AText;
+  fTimer.Restart;
+end;
+
+function TDesignComponentFilter.PSTextFilterChannel: IPSTextFilterChannel;
+begin
+  Result := fPSTextFilterChannel;
+end;
+
+procedure TDesignComponentFilter.InitValues;
+begin
+  inherited InitValues;
+  fPSTextFilterChannel := PubSub.Factory.NewDataChannel<String>;
+  fTimer := Factory2.Locate<ITimer>(NewProps.SetInt('Interval', fInterval));
+  fTimer.Subscribe(TimerObserver);
+  fFilterEdit := Factory2.Locate<IDesignComponentEdit>(NewComposeProps
+    .SetStr(cProps.ID, ID)
+    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
+    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
+    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    );
+  fFilterEdit.PSTextChannel.Subscribe(FilterEditTextChannelObserver);
+  fTimer.Enabled := True;
+end;
+
+function TDesignComponentFilter.DoCompose: IMetaElement;
+begin
+  Result := fFilterEdit.Compose;
+end;
+
+destructor TDesignComponentFilter.Destroy;
+begin
+  inherited Destroy;
+end;
 
 { TMorph }
 

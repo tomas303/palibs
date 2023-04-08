@@ -8,7 +8,7 @@ unit trl_ipersist;
 interface
 
 uses
-  Classes, SysUtils, trl_irttibroker, trl_usystem, fgl, trl_pubsub;
+  Classes, SysUtils, trl_irttibroker, trl_urttibroker, trl_usystem, fgl, trl_pubsub;
 
 const
   cMemoStringType = 'TMemoString';
@@ -111,7 +111,37 @@ type
     procedure Save;
   end;
 
+function FilterInsensitiveContains(const ALowerText: String; const x: IRBData): Boolean;
+
 implementation
+
+function FilterInsensitiveContains(const ALowerText: String; const x: IRBData): Boolean;
+var
+  i: Integer;
+  mList: IMiniList;
+  mData: IRBData;
+begin
+  Result := False;
+  for i := 0 to x.Count - 1 do begin
+    if x.Items[i].IsObject then begin
+      Result := FilterInsensitiveContains(ALowerText, TRBData.Create(x.Items[i].AsObject));
+    end
+    else if x.Items[i].IsInterface then begin
+      if Supports(x.Items[i].AsInterface, IMiniList, mList) then begin
+        for mData in mList do begin
+          Result := FilterInsensitiveContains(ALowerText, mData);
+          if Result then
+            Break;
+        end;
+      end;
+    end
+    else begin
+      Result := Pos(ALowerText, x.Items[i].AsString.ToLower) > 0;
+    end;
+    if Result then
+      Break;
+  end;
+end;
 
 { PersistAUTOAttribute }
 

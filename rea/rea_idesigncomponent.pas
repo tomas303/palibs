@@ -304,6 +304,16 @@ type
     SwitchSize = cProps.SwitchSize;
   end;
 
+  IPSTextFilterChannel = IPubSubDataChannel<String>;
+
+  { IDesignComponentFilter }
+
+  IDesignComponentFilter = interface(IDesignComponent)
+  ['{6A6B443A-891B-48F1-8D46-F18D8D5B2F5F}']
+    function PSTextFilterChannel: IPSTextFilterChannel;
+  end;
+
+
 const
   cEditHeight = 25;
   cCaptionWidth = 100;

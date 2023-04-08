@@ -21,8 +21,6 @@ type
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
     function RegisterMessageObservable: TDIReg;
-    function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
-      const APaths: array of string): TDIReg;
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;

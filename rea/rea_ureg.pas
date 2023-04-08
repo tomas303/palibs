@@ -37,8 +37,6 @@ type
     function RegisterBitTiler(ATilerClass: TClass; ATilerInterface: TGuid; const ATilerID: string;
       AScaleClass: TClass): TDIReg;
     function RegisterMessageObservable: TDIReg;
-    function RegisterReactComponent(ACompositeClass: TClass; ACompositeInterface: TGuid;
-      const APaths: array of string): TDIReg;
     procedure RegisterScales;
     procedure RegisterCommon;
     function RegisterDesignComponent(AComponentClass: TClass; AComponentInterface: TGuid): TDIReg;
@@ -108,18 +106,6 @@ begin
   Result := DIC.Add(TMessageObservable, IMessageObservable);
 end;
 
-function TReg.RegisterReactComponent(ACompositeClass: TClass;
-  ACompositeInterface: TGuid; const APaths: array of string): TDIReg;
-var
-  mPath: string;
-begin
-  Result := DIC.Add(ACompositeClass, ACompositeInterface);
-  Result.InjectProp('Factory', IDIFactory);
-  Result.InjectProp('ElementFactory', IMetaElementFactory);
-  Result.InjectProp('Log', ILog);
-  Result.InjectProp('SelfPropsMap', IPropsMap, ACompositeClass.ClassName);
-end;
-
 procedure TReg.RegisterScales;
 var
   mReg: TDIReg;
@@ -145,6 +131,7 @@ begin
   RegisterDesignComponent(TDesignComponentVBox, IDesignComponentVBox);
   RegisterDesignComponent(TDesignComponentGrid, IDesignComponentGrid);
   RegisterDesignComponent(TDesignComponentPager, IDesignComponentPager);
+  RegisterDesignComponent(TDesignComponentFilter, IDesignComponentFilter);
   RegisterBitTiler(TDesktopTiler, ITiler, cR_DesktopTiler, TScale);
   RegisterBitContainer(TFormBit, IFormBit, TForm, 'uiform', cR_DesktopTiler);
   RegisterBitContainer(TStripBit, IStripBit, cR_DesktopTiler);

@@ -462,6 +462,7 @@ end;
 procedure TXmlStore.Open(const AStream: TStream);
 begin
   CheckOpen;
+  AStream.Position:=0;
   ReadXMLFile(fDoc, AStream);
 end;
 

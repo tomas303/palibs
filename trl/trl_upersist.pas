@@ -142,6 +142,8 @@ var
   mData: IRBData;
 begin
   mData := fList[AIndex];
+  if mData.ItemByName[AName].AsString = AValue then
+    Exit;
   mData.ItemByName[AName].AsString := AValue;
   if fPSPersistChannel <> nil then
     fPSPersistChannel.Publish(TPersistInfo.Create(mData, paChange));
