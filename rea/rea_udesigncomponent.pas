@@ -839,7 +839,6 @@ procedure TDesignComponentGrid.PSGridRecordChannelObserver(
 begin
   if AData.Data.HasValue then begin
     ChangeRowData(AData.Pos + fSourceRow, AData.Data.Value);
-    SentEditChange;
     SentGUIRender;
   end else begin
     EraseRowData(AData.Pos + fSourceRow);
@@ -882,7 +881,6 @@ begin
   end else begin
     fSourceRow := fCurrentRow;
     SentRows(0, RowCount - 1);
-    SentEditChange;
   end;
 end;
 
@@ -1036,7 +1034,9 @@ end;
 
 procedure TDesignComponentGrid.SentEditChange;
 begin
-  fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
+  if fEdit.Text <> fData[fCurrentRow, fCurrentCol] then begin
+    fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
+  end;
 end;
 
 procedure TDesignComponentGrid.SentRows(AFrom, ATo: Integer);

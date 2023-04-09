@@ -394,13 +394,13 @@ begin
       end;
     end);
 
-  //fPubSub.Factory.NewDataBridge<TGridCmdField, TFieldData>(
-  //  AGrid.PSGridCmdFieldChannel,
-  //  PSFieldDataChannel,
-  //  function (const x: TGridCmdField): TFieldData
-  //  begin
-  //    Result := TFieldData.Create(ANames[x.Col], x.Value);
-  //  end);
+  fPubSub.Factory.NewDataBridge<TGridCmdField, TFieldData>(
+    AGrid.PSGridCmdFieldChannel,
+    PSFieldDataChannel,
+    function (const x: TGridCmdField): TFieldData
+    begin
+      Result := TFieldData.Create(ANames[x.Col], x.Value);
+    end);
 
   fPubSub.Factory.NewDataBridge<TRecordData, TGridRecord>(
     PSRecordDataChannel,
