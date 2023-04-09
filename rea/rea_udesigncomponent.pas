@@ -425,10 +425,11 @@ begin
   fTimer := Factory2.Locate<ITimer>(NewProps.SetInt('Interval', fInterval));
   fTimer.Subscribe(TimerObserver);
   fFilterEdit := Factory2.Locate<IDesignComponentEdit>(NewComposeProps
-    .SetStr(cProps.ID, ID)
-    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
-    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
-    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    .SetStr(cEdit.ID, ID)
+    .SetBool(cEdit.Flat, SelfProps.AsBool(cEdit.Flat))
+    .SetBool(cEdit.TabStop, SelfProps.AsBool(cEdit.TabStop))
+    .SetBool(cEdit.Transparent, SelfProps.AsBool(cEdit.Transparent))
+    .SetInt(cEdit.Color, SelfProps.AsInt(cEdit.Color))
     );
   fFilterEdit.PSTextChannel.Subscribe(FilterEditTextChannelObserver);
   fTimer.Enabled := True;
@@ -702,6 +703,7 @@ procedure TDesignComponentEdit.DoStartingValues;
 begin
   inherited DoStartingValues;
   SelfProps.SetBool(cProps.Flat, True);
+  SelfProps.SetBool(cEdit.TabStop, True);
 end;
 
 procedure TDesignComponentEdit.InitValues;
@@ -718,9 +720,10 @@ function TDesignComponentEdit.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
   Result
-    .SetStr(cProps.Text, Text)
-    .SetBool(cProps.Focused, fIsFocused)
-    .SetBool(cProps.Flat, SelfProps.AsBool(cProps.Flat))
+    .SetStr(cEdit.Text, Text)
+    .SetBool(cEdit.Focused, fIsFocused)
+    .SetBool(cEdit.Flat, SelfProps.AsBool(cEdit.Flat))
+    .SetBool(cEdit.TabStop, SelfProps.AsBool(cEdit.TabStop))
     .SetIntf(cEdit.PSTextChannel, PSTextChannel)
     .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel)
     .SetIntf(cEdit.PSFocusChannel, PSFocusChannel)

@@ -251,6 +251,7 @@ type
     fText: string;
     fFocused: Boolean;
     fFlat: Boolean;
+    fTabStop: Boolean;
     fPSTextChannel: IPSTextChannel;
     fPSKeyDownChannel: IPSKeyChannel;
     fPSFocusChannel: IPSFocusChannel;
@@ -258,6 +259,7 @@ type
     property Text: string read fText write fText;
     property Focused: Boolean read fFocused write fFocused;
     property Flat: Boolean read fFlat write fFlat;
+    property TabStop: Boolean read fTabStop write fTabStop;
     property PSTextChannel: IPSTextChannel read fPSTextChannel write SetPSTextChannel;
     property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
     property PSFocusChannel: IPSFocusChannel read fPSFocusChannel write SetPSFocusChannel;
@@ -778,6 +780,7 @@ begin
     AsEdit.SetFocus;
     AsEdit.SelLength := 0;
   end;
+  AsEdit.TabStop := TabStop;
 end;
 
 procedure TEditBit.EnableNotifiers;
