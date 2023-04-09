@@ -71,6 +71,7 @@ type
 
   cButton = class(cProps)
   public const
+    FocusColor = 'FocusColor';
     PSClickChannel = 'PSClickChannel';
   end;
 

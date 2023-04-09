@@ -1424,18 +1424,19 @@ end;
 procedure TDesignComponentButton.DoStartingValues;
 begin
   inherited DoStartingValues;
-  SelfProps.SetInt(cProps.FontDirection, cFontDirection.Horizontal);
+  SelfProps.SetInt(cButton.FontDirection, cFontDirection.Horizontal);
+  SelfProps.SetInt(cButton.FocusColor, clYellow);
 end;
 
 function TDesignComponentButton.NewComposeProps: IProps;
 begin
   Result := inherited NewComposeProps;
   Result
-    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
-    .SetInt(cProps.Place, cPlace.Elastic)
-    .SetInt(cProps.FontDirection, SelfProps.AsInt(cProps.FontDirection))
-    .SetStr(cProps.Text, SelfProps.AsStr(cProps.Text))
+    .SetInt(cButton.Color, SelfProps.AsInt(cButton.Color))
+    .SetInt(cButton.Place, cPlace.Elastic)
+    .SetInt(cButton.FontDirection, SelfProps.AsInt(cButton.FontDirection))
+    .SetInt(cButton.FocusColor, SelfProps.AsInt(cButton.FocusColor))
+    .SetStr(cButton.Text, SelfProps.AsStr(cButton.Text))
     .SetIntf(cButton.PSClickChannel, PSClickChannel);
 end;
 

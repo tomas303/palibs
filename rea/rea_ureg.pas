@@ -10,7 +10,7 @@ uses
   rea_ilayout, rea_ulayout,
   rea_ibits, rea_ubits,
   rea_irenderer, rea_urenderer,
-  Forms, StdCtrls,
+  Forms, StdCtrls, ExtCtrls,
   trl_iprops,
   trl_imetaelementfactory,
   trl_ireconciler,
@@ -138,7 +138,7 @@ begin
   RegisterBitTerminus(TEditBit, IEditBit, TEdit, 'uiedit');
   RegisterBitTerminus(TMemoBit, IMemoBit, TMemo, 'uimemo');
   RegisterBitTerminus(TTextBit, ITextBit, TLabel, 'uitext');
-  RegisterBitTerminus(TButtonBit, IButtonBit, TLabel, 'uibutton');
+  RegisterBitTerminus(TButtonBit, IButtonBit, TPanel, 'uibutton');
   RegisterScales;
   RegisterMessageObservable;
   RegisterRenderer;

@@ -7,7 +7,8 @@ interface
 
 uses
   SysUtils, rea_ibits, Controls, trl_idifactory, forms, trl_itree,
-  StdCtrls, trl_iprops, Graphics, trl_ilog,
+  StdCtrls, ExtCtrls, LCLType,
+  trl_iprops, Graphics, trl_ilog,
   rea_ilayout, tvl_ucontrolbinder,
   LMessages, Classes, fgl;
 
@@ -333,13 +334,19 @@ type
   TButtonBit = class(TBit, IButtonBit)
   private
     fClickEnabled: Boolean;
+    fCNKeyDown: IMessageObservable;
+    fLMSetFocus: IMessageObservable;
+    fLMKillFocus: IMessageObservable;
+    procedure CNKeyDownObserver(AMessage: TLMessage);
+    procedure LMSetFocusObserver(AMessage: TLMessage);
+    procedure LMKillFocusObserver(AMessage: TLMessage);
     procedure OnClick(Sender: TObject);
     procedure PSClickChannelObserver;
     procedure SetPSClickChannel(AValue: IPSClickChannel);
     procedure PSClickChannelConnect;
     procedure PSClickChannelDisconnect;
   protected
-    function AsButton: TLabel;
+    function AsButton: TPanel;
   protected
     procedure DoRender; override;
     procedure EnableNotifiers; override;
@@ -351,12 +358,14 @@ type
     fText: string;
     fFontDirection: Integer;
     fFontColor: TColor;
+    fFocusColor: TColor;
     fPSClickChannel: IPSClickChannel;
     fTransparent: Boolean;
   published
     property Text: string read fText write fText;
     property FontDirection: integer read fFontDirection write fFontDirection;
     property FontColor: TColor read fFontColor write fFontColor;
+    property FocusColor: TColor read fFocusColor write fFocusColor;
     property Transparent: Boolean read fTransparent write fTransparent;
     property PSClickChannel: IPSClickChannel read fPSClickChannel write SetPSClickChannel;
   end;
@@ -526,6 +535,15 @@ begin
   if fPSClickChannel <> nil then
   begin
     AsButton.OnClick := OnClick;
+    fCNKeyDown := NewMessageObservable(CN_KeyDown);
+    fCNKeyDown.Bind(AsButton);
+    fCNKeyDown.Subscribe(CNKeyDownObserver);
+    fLMSetFocus := NewMessageObservable(LM_SETFOCUS);
+    fLMSetFocus.Bind(AsButton);
+    fLMSetFocus.Subscribe(LMSetFocusObserver);
+    fLMKillFocus := NewMessageObservable(LM_KILLFOCUS);
+    fLMKillFocus.Bind(AsButton);
+    fLMKillFocus.Subscribe(LMKillFocusObserver);
     fPSClickChannel.Subscribe(PSClickChannelObserver);
     fClickEnabled := True;
   end;
@@ -536,14 +554,48 @@ begin
   if fPSClickChannel <> nil then
   begin
     AsButton.OnClick := nil;
+    fCNKeyDown.Unbind;
+    fCNKeyDown.Unsubscribe(CNKeyDownObserver);
+    fCNKeyDown := nil;
+    fLMSetFocus.Unbind;
+    fLMSetFocus.Unsubscribe(LMSetFocusObserver);
+    fLMSetFocus := nil;
+    fLMKillFocus.Unbind;
+    fLMKillFocus.Unsubscribe(LMKillFocusObserver);
+    fLMKillFocus := nil;
     fPSClickChannel.Unsubscribe(PSClickChannelObserver);
     fClickEnabled := False;
   end;
 end;
 
-function TButtonBit.AsButton: TLabel;
+function TButtonBit.AsButton: TPanel;
 begin
-  Result := AsControl as TLabel;
+  Result := AsControl as TPanel;
+end;
+
+procedure TButtonBit.CNKeyDownObserver(AMessage: TLMessage);
+begin
+  if fClickEnabled then begin
+    if TLMKeyDown(AMessage).CharCode in [VK_RETURN, VK_SPACE] then begin
+     PSClickChannel.Publish;
+    end;
+  end;
+end;
+
+procedure TButtonBit.LMSetFocusObserver(AMessage: TLMessage);
+begin
+  AsButton.Color := FocusColor;
+  AsButton.BevelInner := bvLowered;
+  AsButton.BevelOuter := bvRaised;
+  AsButton.BevelWidth := 1;
+end;
+
+procedure TButtonBit.LMKillFocusObserver(AMessage: TLMessage);
+begin
+  AsButton.Color := Color;
+  AsButton.BevelInner := bvNone;
+  AsButton.BevelOuter := bvNone;
+  AsButton.BevelWidth := 0;
 end;
 
 procedure TButtonBit.OnClick(Sender: TObject);
@@ -563,10 +615,11 @@ begin
   AsButton.Caption := Text;
   AsButton.AutoSize := False;
   AsButton.Alignment := taCenter;
-  AsButton.Layout := tlCenter;
   AsButton.Font.Quality := fqCleartype;
   AsButton.Font.Color := FontColor;
-  AsButton.Transparent := Transparent;
+  AsButton.BorderStyle := bsNone;
+  AsButton.TabStop := True;
+  AsButton.BevelWidth := 0;
   case FontDirection of
     cFontDirection.VertLeft:
       AsButton.Font.Orientation := 900;
