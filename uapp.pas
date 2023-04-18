@@ -108,34 +108,6 @@ type
   TDataListTPersons = class(TMiniDataList<TPerson>, IDataListPersons)
   end;
 
-  IPSFilterChannel = IPubSubDataChannel<String>;
-
-  IGUIFilter = interface(IDesignComponent)
-  ['{C3211214-1580-4F7C-95C2-634E8E7C3689}']
-    function PSFilterChannel: IPSFilterChannel;
-    function GetFilterEdit: IDesignComponentEdit;
-    property FilterEdit: IDesignComponentEdit read GetFilterEdit;
-  end;
-
-  { TGUIFilter }
-
-  TGUIFilter = class(TDesignComponent, IGUIFilter)
-  strict private
-    fFilterText, fLastTriggeredText: String;
-    fFilterEdit: IDesignComponentEdit;
-    fTimer: ITimer;
-    fPSFilterChannel: IPSFilterChannel;
-    procedure TimerObserver;
-    procedure FilterEditTextChannelObserver(const AText: String);
-    function PSFilterChannel: IPSFilterChannel;
-    function GetFilterEdit: IDesignComponentEdit;
-  protected
-    procedure InitValues; override;
-    function DoCompose: IMetaElement; override;
-  public
-    destructor Destroy; override;
-  end;
-
   { IGUIPersons }
 
   IGUIPersons = interface(IDesignComponent)
@@ -212,7 +184,7 @@ type
   private
     fPersons: IGUIPersons;
     fCommands: IGUICommands;
-    fFilter: IGUIFilter;
+    fFilter: IDesignComponentFilter;
     fForm: IDesignComponentForm;
     fDataConnector: IDataConnector;
     fTagsConnector: IDataConnector;
@@ -229,7 +201,8 @@ type
     procedure PSCloseProgramObserver;
     procedure PSShowLogObserver;
     procedure PSSaveDataObserver;
-    procedure PSFilterChannelObserver(const AValue: String);
+    procedure PSFilterTextChannelObserver(const AValue: String);
+    procedure PSKeyDownChannelObserver(const AValue: TKeyData);
   private
     function GetAppSettings: IRBData;
     procedure PublishAppSettings;
@@ -249,60 +222,6 @@ type
   end;
 
 implementation
-
-{ TGUIFilter }
-
-procedure TGUIFilter.TimerObserver;
-begin
-  if fLastTriggeredText <> fFilterText then begin
-    fLastTriggeredText := fFilterText;
-    fPSFilterChannel.Publish(fLastTriggeredText);
-  end;
-end;
-
-procedure TGUIFilter.FilterEditTextChannelObserver(const AText: String);
-begin
-  fFilterText := AText;
-  fTimer.Restart;
-end;
-
-procedure TGUIFilter.InitValues;
-begin
-  inherited InitValues;
-  fPSFilterChannel := PubSub.Factory.NewDataChannel<String>;
-  fTimer := Factory2.Locate<ITimer>('filter');
-  fTimer.Subscribe(TimerObserver);
-  fFilterEdit := Factory2.Locate<IDesignComponentEdit>(NewComposeProps
-    .SetStr(cProps.ID, 'filter_edit')
-    .SetBool(cProps.Flat, True)
-    .SetBool(cProps.Transparent, SelfProps.AsBool(cProps.Transparent))
-    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
-    );
-  fFilterEdit.PSTextChannel.Subscribe(FilterEditTextChannelObserver);
-  fTimer.Enabled := True;
-end;
-
-function TGUIFilter.DoCompose: IMetaElement;
-begin
-  Result := Morph.WrapUp(fFilterEdit, 50).Compose;
-end;
-
-function TGUIFilter.PSFilterChannel: IPSFilterChannel;
-begin
-  Result := fPSFilterChannel;
-end;
-
-function TGUIFilter.GetFilterEdit: IDesignComponentEdit;
-begin
-  Result := fFilterEdit;
-end;
-
-destructor TGUIFilter.Destroy;
-begin
-  fTimer.Unsubscribe(TimerObserver);
-  fFilterEdit.PSTextChannel.Unsubscribe(FilterEditTextChannelObserver);
-  inherited Destroy;
-end;
 
 { TGUICommands }
 
@@ -492,6 +411,7 @@ begin
   Result.PSSizeChannel.Subscribe(PSSizeObserver);
   Result.PSPositionChannel.Subscribe(PSPositionObserver);
   Result.PSCloseChannel.Subscribe(PSCloseProgramObserver);
+  Result.PSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
   for mDC in ADCs do begin
     (Result as INode).AddChild(mDC as INode);
   end;
@@ -536,10 +456,11 @@ procedure TGUI.CreateComponents;
 var
   mPager: IDesignComponent;
 begin
-  fFilter := Factory2.Locate<IGUIFilter>(NewProps
-   .SetInt(cProps.Color, clLime)
+  fFilter := Factory2.Locate<IDesignComponentFilter>(NewProps
+    .SetInt(cProps.Color, clLime)
+    .SetInt('Interval', 300)
   );
-  fFilter.PSFilterChannel.Subscribe(PSFilterChannelObserver);
+  fFilter.PSTextFilterChannel.Subscribe(PSFilterTextChannelObserver);
   fPersons := Factory2.Locate<IGUIPersons>(NewProps
    .SetIntf('PSGUIChannel', fPSGUIChannel)
    .SetInt(cProps.Color, clCream)
@@ -549,7 +470,14 @@ begin
    .SetBool(cProps.Transparent, False)
   );
   mPager := NewPager([
-    Morph.NewPage('Persons', cLayout.Vertical, [fFilter, fPersons, Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)]),
+    Morph.NewPage('Persons',
+      cLayout.Vertical,
+      [
+       Morph.WrapInStrip(fFilter, 25, cPlace.FixFront),
+       fPersons,
+       Morph.WrapInStrip(fCommands, 25, cPlace.FixBack)
+      ]
+    ),
     Morph.NewPage('Test', cLayout.Vertical, [NewLogButton, NewSaveButton])
   ]);
   fForm := NewForm([mPager]);
@@ -633,7 +561,7 @@ begin
   end;
 end;
 
-procedure TGUI.PSFilterChannelObserver(const AValue: String);
+procedure TGUI.PSFilterTextChannelObserver(const AValue: String);
 begin
   if AValue = '' then
     fDataConnector.PSListChangeChannel.Publish(TListChange.New(fPersonsData.NewList))
@@ -647,6 +575,15 @@ begin
       )
     ));
   PSGUIChannel.Debounce(TGUIData.Create(gaRender));
+end;
+
+procedure TGUI.PSKeyDownChannelObserver(const AValue: TKeyData);
+begin
+  case AValue.ControlKey of
+    ckF2: if AValue.NoModifier then fPersons.Grid.InsertRecord;
+    ckF7: if AValue.NoModifier then fFilter.PSFocusChannel.Publish(TFocusData.Create(Self, True));
+    ckF8: if AValue.NoModifier then fPersons.Grid.DeleteRecord;
+  end;
 end;
 
 function TGUI.GetAppSettings: IRBData;
@@ -732,7 +669,6 @@ begin
   mReg.InjectProp('PersistFactory', IPersistFactory);
   mReg := RegReact.RegisterDesignComponent(TGUIPersons, IGUIPersons);
   mReg := RegReact.RegisterDesignComponent(TGUICommands, IGUICommands);
-  mReg := RegReact.RegisterDesignComponent(TGUIFilter, IGUIFilter);
 end;
 
 end.

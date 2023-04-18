@@ -65,7 +65,8 @@ type
   end;
 
 
-  TControlKey = (ckUnknown, ckEnter, ckLeft, ckRight, ckUp, ckDown, ckTab, ckEsc, ckPgUp, ckPgDown, ckInsert, ckDelete);
+  TControlKey = (ckUnknown, ckEnter, ckLeft, ckRight, ckUp, ckDown, ckTab, ckEsc, ckPgUp, ckPgDown, ckInsert, ckDelete,
+    ckF1, ckF2, ckF3, ckF4, ckF5, ckF6, ckF7, ckF8, ckF9, ckF10, ckF11, ckF12);
 
   { TKeyData }
 
@@ -76,15 +77,18 @@ type
     fShift: Boolean;
     fCtrl: Boolean;
     fMeta: Boolean;
+    function DecodeControlKey(Key: Word): TControlKey;
   public
     constructor Create(ControlKey: TControlKey); overload;
     constructor Create(ControlKey: TControlKey; ShiftState: TShiftState); overload;
+    constructor Create(Key: Word; ShiftState: TShiftState); overload;
     constructor Create(AMsg: TLMKey); overload;
     function ControlKey: TControlKey;
     function Alt: Boolean;
     function Shift: Boolean;
     function Ctrl: Boolean;
     function Meta: Boolean;
+    function NoModifier: Boolean;
     class operator equal(a,b: TKeyData): Boolean;
     class operator notequal(a,b: TKeyData): Boolean;
   end;
@@ -223,6 +227,37 @@ end;
 
 { TKeyData }
 
+function TKeyData.DecodeControlKey(Key: Word): TControlKey;
+begin
+  case Key of
+    VK_RETURN: Result := ckEnter;
+    VK_LEFT: Result := ckLeft;
+    VK_RIGHT: Result := ckRight;
+    VK_UP: Result := ckUp;
+    VK_DOWN: Result := ckDown;
+    VK_TAB: Result := ckTab;
+    VK_ESCAPE: Result := ckEsc;
+    VK_PRIOR: Result := ckPgUp;
+    VK_NEXT: Result := ckPgDown;
+    VK_INSERT: Result := ckInsert;
+    VK_DELETE: Result := ckDelete;
+    VK_F1: Result := ckF1;
+    VK_F2: Result := ckF2;
+    VK_F3: Result := ckF3;
+    VK_F4: Result := ckF4;
+    VK_F5: Result := ckF5;
+    VK_F6: Result := ckF6;
+    VK_F7: Result := ckF7;
+    VK_F8: Result := ckF8;
+    VK_F9: Result := ckF9;
+    VK_F10: Result := ckF10;
+    VK_F11: Result := ckF11;
+    VK_F12: Result := ckF12;
+  else
+    Result := ckUnknown;
+  end;
+end;
+
 constructor TKeyData.Create(ControlKey: TControlKey);
 begin
   Create(ControlKey, []);
@@ -237,26 +272,18 @@ begin
   Self.fMeta := ssMeta in ShiftState;
 end;
 
-constructor TKeyData.Create(AMsg: TLMKey);
-var
-  mControlKey: TControlKey;
+constructor TKeyData.Create(Key: Word; ShiftState: TShiftState);
 begin
-  case AMsg.CharCode of
-    VK_RETURN: mControlKey := ckEnter;
-    VK_LEFT: mControlKey := ckLeft;
-    VK_RIGHT: mControlKey := ckRight;
-    VK_UP: mControlKey := ckUp;
-    VK_DOWN: mControlKey := ckDown;
-    VK_TAB: mControlKey := ckTab;
-    VK_ESCAPE: mControlKey := ckEsc;
-    VK_PRIOR: mControlKey := ckPgUp;
-    VK_NEXT: mControlKey := ckPgDown;
-    VK_INSERT: mControlKey := ckInsert;
-    VK_DELETE: mControlKey := ckDelete;
-  else
-    mControlKey := ckUnknown;
-  end;
-  Create(mControlKey, MsgKeyDataToShiftState(AMsg.KeyData));
+  Create(DecodeControlKey(Key));
+  Self.fAlt := ssAlt in ShiftState;
+  Self.fCtrl := ssCtrl in ShiftState;
+  Self.fShift := ssShift in ShiftState;
+  Self.fMeta := ssMeta in ShiftState;
+end;
+
+constructor TKeyData.Create(AMsg: TLMKey);
+begin
+  Create(DecodeControlKey(AMsg.CharCode), MsgKeyDataToShiftState(AMsg.KeyData));
 end;
 
 function TKeyData.ControlKey: TControlKey;
@@ -282,6 +309,14 @@ end;
 function TKeyData.Meta: Boolean;
 begin
   Result := fMeta;
+end;
+
+function TKeyData.NoModifier: Boolean;
+begin
+  Result := not Ctrl
+    and not Alt
+    and not Shift
+    and not Meta;
 end;
 
 class operator TKeyData.equal(a, b: TKeyData): Boolean;

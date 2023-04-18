@@ -118,6 +118,9 @@ type
   private
     fPSActivateChannel: IPSActivateChannel;
     function PSActivateChannel: IPSActivateChannel;
+  private
+    fPSKeyDownChannel: IPSKeyChannel;
+    function PSKeyDownChannel: IPSKeyChannel;
   protected
     procedure DoStartingValues; override;
     procedure InitValues; override;
@@ -404,6 +407,7 @@ type
     procedure TimerObserver;
     procedure FilterEditTextChannelObserver(const AText: String);
     function PSTextFilterChannel: IPSTextFilterChannel;
+    function PSFocusChannel: IPSFocusChannel;
   protected
     procedure InitValues; override;
     function DoCompose: IMetaElement; override;
@@ -438,6 +442,11 @@ end;
 function TDesignComponentFilter.PSTextFilterChannel: IPSTextFilterChannel;
 begin
   Result := fPSTextFilterChannel;
+end;
+
+function TDesignComponentFilter.PSFocusChannel: IPSFocusChannel;
+begin
+  Result := fFilterEdit.PSFocusChannel;
 end;
 
 procedure TDesignComponentFilter.InitValues;
@@ -954,7 +963,11 @@ end;
 
 procedure TDesignComponentGrid.PSFocusChannelObserver(const AValue: TFocusData);
 begin
-  fEditFocused := AValue.Focused;
+  if fEditFocused <> AValue.Focused then begin
+    fEditFocused := AValue.Focused;
+    if fEditFocused and (ColCount > 1) and (fCurrentCol = ColCount - 1) and (AValue.Source <> Self) then
+      MoveHorizontally(-MaxInt);
+  end;
 end;
 
 procedure TDesignComponentGrid.MoveVertically(ADelta: Integer);
@@ -1045,6 +1058,8 @@ end;
 procedure TDesignComponentGrid.InsertRecord;
 begin
   PSGridCmdRowChannel.Publish(TGridCmdRow.Create(fCurrentRow - fSourceRow, cmdNew));
+  MoveHorizontally(-MaxInt);
+  fEdit.PSFocusChannel.Publish(TFocusData.Create(Self, True));
 end;
 
 procedure TDesignComponentGrid.DeleteRecord;
@@ -1251,6 +1266,11 @@ begin
   Result := fPSActivateChannel;
 end;
 
+function TDesignComponentForm.PSKeyDownChannel: IPSKeyChannel;
+begin
+  Result := fPSKeyDownChannel;
+end;
+
 procedure TDesignComponentForm.DoStartingValues;
 begin
   inherited DoStartingValues;
@@ -1271,6 +1291,7 @@ begin
   fPSPositionChannel.Subscribe(PSPositionChannelObserver);
   fPSCloseChannel := PubSub.Factory.NewChannel;
   fPSActivateChannel := PubSub.Factory.NewChannel;
+  fPSKeyDownChannel := PubSub.Factory.NewDataChannel<TKeyData>;
 end;
 
 function TDesignComponentForm.NewComposeProps: IProps;
@@ -1282,6 +1303,7 @@ begin
   .SetIntf(cForm.PSSizeChannel, PSSizeChannel)
   .SetIntf(cForm.PSPositionChannel, PSPositionChannel)
   .SetIntf(cForm.PSActivateChannel, PSActivateChannel)
+  .SetIntf(cForm.PSKeyDownChannel, PSKeyDownChannel)
 end;
 
 function TDesignComponentForm.DoCompose: IMetaElement;

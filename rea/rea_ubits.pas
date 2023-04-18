@@ -179,6 +179,12 @@ type
     procedure SetPSActivateChannel(AValue: IPSActivateChannel);
     procedure PSActivateChannelConnect;
     procedure PSActivateChannelDisconnect;
+  private
+    procedure OnKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure PSKeyDownChannelObserver(const AValue: TKeyData);
+    procedure SetPSKeyDownChannel(AValue: IPSKeyChannel);
+    procedure PSKeyDownChannelConnect;
+    procedure PSKeyDownChannelDisconnect;
   protected
     function AsForm: TCustomForm;
     procedure ResetScroll;
@@ -197,6 +203,7 @@ type
     fPSSizeChannel: IPSSizeChannel;
     fPSPositionChannel: IPSPositionChannel;
     fPSActivateChannel: IPSActivateChannel;
+    fPSKeyDownChannel: IPSKeyChannel;
   published
     property Tiler: ITiler read fTiler write fTiler;
     property Title: string read fTitle write fTitle;
@@ -204,6 +211,7 @@ type
     property PSSizeChannel: IPSSizeChannel read fPSSizeChannel write SetPSSizeChannel;
     property PSPositionChannel: IPSPositionChannel read fPSPositionChannel write SetPSPositionChannel;
     property PSActivateChannel: IPSActivateChannel read fPSActivateChannel write SetPSActivateChannel;
+    property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
   end;
 
   { TStripBit }
@@ -640,7 +648,7 @@ begin
   AsButton.Font.Quality := fqCleartype;
   AsButton.Font.Color := FontColor;
   AsButton.BorderStyle := bsNone;
-  AsButton.TabStop := True;
+  AsButton.TabStop := False;
   AsButton.BevelWidth := 0;
   case FontDirection of
     cFontDirection.VertLeft:
@@ -1263,6 +1271,43 @@ begin
   end;
 end;
 
+procedure TFormBit.OnKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  PSKeyDownChannel.Publish(TKeyData.Create(Key, Shift));
+end;
+
+procedure TFormBit.PSKeyDownChannelObserver(const AValue: TKeyData);
+begin
+
+end;
+
+procedure TFormBit.SetPSKeyDownChannel(AValue: IPSKeyChannel);
+begin
+  PSKeyDownChannelDisconnect;
+  fPSKeyDownChannel := AValue;
+  PSKeyDownChannelConnect;
+end;
+
+procedure TFormBit.PSKeyDownChannelConnect;
+begin
+  if fPSKeyDownChannel <> nil then
+  begin
+    AsForm.KeyPreview := True;
+    AsForm.OnKeyDown := OnKeyDown;
+    fPSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
+  end;
+end;
+
+procedure TFormBit.PSKeyDownChannelDisconnect;
+begin
+  if fPSKeyDownChannel <> nil then
+  begin
+    AsForm.KeyPreview := False;
+    AsForm.OnKeyDown := nil;
+    fPSKeyDownChannel.Unsubscribe(PSKeyDownChannelObserver);
+  end;
+end;
+
 function TFormBit.AsForm: TCustomForm;
 begin
   Result := AsControl as TCustomForm;
@@ -1358,6 +1403,7 @@ begin
   PSSizeChannelDisonnect;
   PSPositionChannelDisconnect;
   PSActivateChannelDisconnect;
+  PSKeyDownChannelDisconnect;
   inherited BeforeDestruction;
 end;
 

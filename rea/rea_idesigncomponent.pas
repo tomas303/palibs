@@ -89,6 +89,7 @@ type
     PSSizeChannel = 'PSSizeChannel';
     PSPositionChannel = 'PSPositionChannel';
     PSActivateChannel = 'PSActivateChannel';
+    PSKeyDownChannel = 'PSKeyDownChannel';
   end;
 
   cButton = class(cProps)
@@ -258,6 +259,7 @@ type
     function PSSizeChannel: IPSSizeChannel;
     function PSPositionChannel: IPSPositionChannel;
     function PSActivateChannel: IPSActivateChannel;
+    function PSKeyDownChannel: IPSKeyChannel;
   end;
 
   IDesignComponentEdit = interface(IDesignComponent)
@@ -310,6 +312,8 @@ type
     function PSGridCmdFieldChannel: IPSGridCmdFieldChannel;
     function PSGridRecordChannel: IPSGridRecordChannel;
     function PSGridMoverChannel: IPSGridMoverChannel;
+    procedure InsertRecord;
+    procedure DeleteRecord;
   end;
 
   IPSPagerChannel = IPubSubDataChannel<Integer>;
@@ -335,6 +339,7 @@ type
   IDesignComponentFilter = interface(IDesignComponent)
   ['{6A6B443A-891B-48F1-8D46-F18D8D5B2F5F}']
     function PSTextFilterChannel: IPSTextFilterChannel;
+    function PSFocusChannel: IPSFocusChannel;
   end;
 
 
