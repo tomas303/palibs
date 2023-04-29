@@ -131,6 +131,7 @@ type
   IPSPositionChangeChannel = IPubSubDataChannel<TPositionChange>;
   IPSListChangeChannel = IPubSubDataChannel<TListChange>;
   IPSSubDataChangeChannel = IPubSubChannel;
+  IPSDataChangeChannel = IPubSubChannel;
 
   IDataConnector = interface
   ['{1653E0AC-C7FC-4773-A921-51DCA67080D9}']
@@ -140,6 +141,7 @@ type
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     function PSListChangeChannel: IPSListChangeChannel;
     function PSSubDataChangeChannel: IPSSubDataChangeChannel;
+    function PSDataChangeChannel: IPSDataChangeChannel;
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
     procedure RegisterText(const AName: String; const AText: IDesignComponentText);

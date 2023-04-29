@@ -72,6 +72,7 @@ type
     fPSCommandChannel: IPSCommandChannel;
     fPSPositionChangeChannel: IPSPositionChangeChannel;
     fPSListChangeChannel: IPSListChangeChannel;
+    fPSDataChangeChannel: IPSDataChangeChannel;
     fPSSubDataChangeChannel: IPSSubDataChangeChannel;
     procedure PSFieldDataChannelObserver(const AData: TFieldData);
     procedure PSCommandChannelObserver(const AData: TCommand);
@@ -83,6 +84,7 @@ type
     function PSCommandChannel: IPSCommandChannel;
     function PSPositionChangeChannel: IPSPositionChangeChannel;
     function PSListChangeChannel: IPSListChangeChannel;
+    function PSDataChangeChannel: IPSDataChangeChannel;
     function PSSubDataChangeChannel: IPSSubDataChangeChannel;
     procedure RegisterEdit(const AName: String; const AEdit: IDesignComponentEdit);
     procedure RegisterMemo(const AName: String; const AEdit: IDesignComponentMemo);
@@ -188,12 +190,13 @@ begin
 end;
 
 procedure TStoreConnector.PSFieldDataChannelObserver(const AData: TFieldData);
-var
-  mActualData: IRBData;
 begin
   if fActualIndex.HasValue then begin
-    fList.Field[fActualIndex.Value, AData.Name] := AData.Value;
-    PublishActualRecord;
+    if fList.Field[fActualIndex.Value, AData.Name] <> AData.Value then begin
+      fList.Field[fActualIndex.Value, AData.Name] := AData.Value;
+      PublishActualRecord;
+      PSDataChangeChannel.Publish;
+    end;
   end;
 end;
 
@@ -302,6 +305,7 @@ begin
   fPSPositionChangeChannel.Publish(TPositionChange.New);
   fPSListChangeChannel := fPubSub.Factory.NewDataChannel<TListChange>;
   fPSListChangeChannel.Subscribe(PSListChangeChannelObserver);
+  fPSDataChangeChannel := fPubSub.Factory.NewChannel;
   fPSSubDataChangeChannel := fPubSub.Factory.NewChannel;
   fPSSubDataChangeChannel.Subscribe(PSSubDataChangeChannelObserver);
 end;
@@ -329,6 +333,11 @@ end;
 function TStoreConnector.PSListChangeChannel: IPSListChangeChannel;
 begin
   Result := fPSListChangeChannel;
+end;
+
+function TStoreConnector.PSDataChangeChannel: IPSDataChangeChannel;
+begin
+  Result := fPSDataChangeChannel;
 end;
 
 function TStoreConnector.PSSubDataChangeChannel: IPSSubDataChangeChannel;
@@ -479,8 +488,8 @@ end;
 
 procedure TStoreConnector.RegisterConnector(const AName: String; const AConnector: IDataConnector);
 begin
-  fPubSub.Factory.NewDataToNonDataBridge<TRecordData>(
-    AConnector.PSRecordDataChannel,
+  fPubSub.Factory.NewBridge(
+    AConnector.PSDataChangeChannel,
     PSSubDataChangeChannel
   );
   fPubSub.Factory.NewDataBridge<TRecordData, TListChange>(

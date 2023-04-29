@@ -270,6 +270,9 @@ begin
       end;
     paChange:
       begin
+        i := fDeletes.IndexOf(AInfo.Data);
+        if i > -1 then
+          Exit;
         i := fNews.IndexOf(AInfo.Data);
         if i > -1 then
           Exit;
@@ -282,6 +285,12 @@ begin
         i := fDeletes.IndexOf(AInfo.Data);
         if i = -1 then
           fDeletes.Add(AInfo.Data);
+        i := fNews.IndexOf(AInfo.Data);
+        if i > -1 then
+          fNews.Delete(i);
+        i := fChanges.IndexOf(AInfo.Data);
+        if i > -1 then
+          fChanges.Delete(i);
       end;
   end;
 end;
