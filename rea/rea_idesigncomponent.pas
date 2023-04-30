@@ -112,6 +112,9 @@ type
     ColEvenColor = 'ColEvenColor';
     ColOddColor = 'ColOddColor';
     PSLayoutChannel = 'PSLayoutChannel';
+    FocusRowColor = 'FocusRowColor';
+    EditBorder = 'EditBorder';
+    EditBorderColor = 'EditBorderColor';
   end;
 
   cAction = class(cProps)

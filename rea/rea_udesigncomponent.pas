@@ -342,6 +342,7 @@ type
     function LaticeColProps: IProps;
     function LaticeRowProps: IProps;
     function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
+    function ComposeEdit: IMetaElement;
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
@@ -1110,13 +1111,20 @@ begin
     .SetInt(cProps.Layout, cLayout.Horizontal)
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.PlaceSize, SelfProps.AsInt(cGrid.RowMMHeight));
-  if Row mod 2 = 1 then begin
+  if (Row = fCurrentRow) then begin
+    mProp := SelfProps.PropByName[cGrid.FocusRowColor];
+  end
+  else if Row mod 2 = 1 then begin
     mProp := SelfProps.PropByName[cGrid.RowOddColor];
   end else begin
     mProp := SelfProps.PropByName[cGrid.RowEvenColor];
   end;
-  if mProp <> nil then
+  if mProp = nil then begin
+    mProp := SelfProps.PropByName[cGrid.Color];
+  end;
+  if mProp <> nil then begin
     Result.SetInt(cProps.Color, mProp.AsInteger).SetBool(cProps.Transparent, False);
+  end;
 end;
 
 function TDesignComponentGrid.MakeRow(Row: integer): TMetaElementArray;
@@ -1127,7 +1135,7 @@ begin
   SetLength(Result, ColCount);
   for i := 0 to ColCount - 1 do
     if (Row = fCurrentRow) and (i = fCurrentCol) then begin
-      Result[i] := fEdit.Compose
+      Result[i] := ComposeEdit
     end else begin
       Result[i] := ElementFactory.CreateElement(ITextBit, ColProps(Row, i));
     end;
@@ -1177,13 +1185,35 @@ begin
   end;
 end;
 
+function TDesignComponentGrid.ComposeEdit: IMetaElement;
+var
+  mEdit: IDesignComponent;
+begin
+  mEdit := Factory2.Locate<IDesignComponentStrip>(NewProps
+    .SetInt(cEdit.Border, SelfProps.AsInt(cGrid.EditBorder))
+    .SetInt(cEdit.BorderColor, SelfProps.AsInt(cGrid.EditBorderColor))
+  );
+  (mEdit as INode).AddChild(fEdit as INode);
+  Result := mEdit.Compose;
+end;
+
 procedure TDesignComponentGrid.InitValues;
+var
+  mProp: IProp;
+  mEdColor: TColor;
 begin
   inherited InitValues;
+  mProp := SelfProps.PropByName[cGrid.FocusRowColor];
+  if mProp = nil then
+    mProp := SelfProps.PropByName[cGrid.Color];
+  if mProp = nil then
+    mEdColor := clFuchsia
+  else
+    mEdColor:= mProp.AsInteger;
   fEdit := Factory2.Locate<IDesignComponentEdit>(
     NewProps
-    .SetBool(cProps.Flat, True)
-    .SetInt(cProps.Color, SelfProps.AsInt(cProps.Color))
+    .SetBool(cEdit.Flat, True)
+    .SetInt(cEdit.Color, mEdColor)
   );
   fEdit.PSTextChannel.Subscribe(PSTextChannelObserver);
   fEdit.PSKeyDownChannel.Subscribe(PSKeyDownChannelObserver);
