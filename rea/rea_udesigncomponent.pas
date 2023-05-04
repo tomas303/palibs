@@ -361,10 +361,10 @@ type
     property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
     property RowCount: Integer read fRowCount write SetRowCount;
     property ColCount: Integer read fColCount write SetColCount;
-    property LaticeColColor: integer read fLaticeColColor write fLaticeColColor;
-    property LaticeRowColor: integer read fLaticeRowColor write fLaticeRowColor;
-    property LaticeColSize: integer read fLaticeColSize write fLaticeColSize;
-    property LaticeRowSize: integer read fLaticeRowSize write fLaticeRowSize;
+    property LaticeColColor: Integernteger read fLaticeColColor write fLaticeColColor;
+    property LaticeRowColor: Integernteger read fLaticeRowColor write fLaticeRowColor;
+    property LaticeColSize: Integer read fLaticeColSize write fLaticeColSize;
+    property LaticeRowSize: Integer read fLaticeRowSize write fLaticeRowSize;
   end;
 
   { TDesignComponentPager }
@@ -736,6 +736,7 @@ begin
   inherited DoStartingValues;
   SelfProps.SetBool(cProps.Flat, True);
   SelfProps.SetBool(cEdit.TabStop, True);
+  SelfProps.SetStr(cEdit.PasswordChar, '');
 end;
 
 procedure TDesignComponentEdit.InitValues;
@@ -756,6 +757,7 @@ begin
     .SetBool(cEdit.Focused, fIsFocused)
     .SetBool(cEdit.Flat, SelfProps.AsBool(cEdit.Flat))
     .SetBool(cEdit.TabStop, SelfProps.AsBool(cEdit.TabStop))
+    .SetStr(cEdit.PasswordChar, SelfProps.AsStr(cEdit.PasswordChar))
     .SetIntf(cEdit.PSTextChannel, PSTextChannel)
     .SetIntf(cEdit.PSKeyDownChannel, PSKeyDownChannel)
     .SetIntf(cEdit.PSFocusChannel, PSFocusChannel)

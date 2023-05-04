@@ -283,6 +283,7 @@ type
     fFocused: Boolean;
     fFlat: Boolean;
     fTabStop: Boolean;
+    fPasswordChar: String;
     fPSTextChannel: IPSTextChannel;
     fPSKeyDownChannel: IPSKeyChannel;
     fPSFocusChannel: IPSFocusChannel;
@@ -291,6 +292,7 @@ type
     property Focused: Boolean read fFocused write fFocused;
     property Flat: Boolean read fFlat write fFlat;
     property TabStop: Boolean read fTabStop write fTabStop;
+    property PasswordChar: String read fPasswordChar write fPasswordChar;
     property PSTextChannel: IPSTextChannel read fPSTextChannel write SetPSTextChannel;
     property PSKeyDownChannel: IPSKeyChannel read fPSKeyDownChannel write SetPSKeyDownChannel;
     property PSFocusChannel: IPSFocusChannel read fPSFocusChannel write SetPSFocusChannel;
@@ -857,6 +859,10 @@ begin
   AsEdit.Color := Color;
   AsEdit.Font.Color := TextColor;
   AsEdit.Text := Text;
+  if PasswordChar <> '' then
+    AsEdit.PasswordChar := PasswordChar[1]
+  else
+    AsEdit.PasswordChar := #0;
   AsEdit.Show;
   if Focused then begin
     Focused := False;

@@ -78,6 +78,7 @@ type
   cEdit = class(cProps)
   public const
     TabStop = 'TabStop';
+    PasswordChar = 'PasswordChar';
     PSTextChannel = 'PSTextChannel';
     PSKeyDownChannel = 'PSKeyDownChannel';
     PSFocusChannel = 'PSFocusChannel';
