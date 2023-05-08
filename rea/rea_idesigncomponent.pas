@@ -30,7 +30,7 @@ unit rea_idesigncomponent;
 interface
 
 uses
-  trl_imetaelement, trl_iprops, trl_pubsub, rea_ibits, nullable, trl_funcp;
+  trl_imetaelement, trl_iprops, trl_pubsub, rea_ibits, rea_ichannels, nullable, trl_funcp;
 
 type
 
@@ -271,6 +271,7 @@ type
     function PSTextChannel: IPSTextChannel;
     function PSKeyDownChannel: IPSKeyChannel;
     function PSFocusChannel: IPSFocusChannel;
+    function PSSecretChannel: IPSSecretChannel;
     function GetText: String;
     property Text: String read GetText;
   end;
@@ -316,6 +317,7 @@ type
     function PSGridCmdFieldChannel: IPSGridCmdFieldChannel;
     function PSGridRecordChannel: IPSGridRecordChannel;
     function PSGridMoverChannel: IPSGridMoverChannel;
+    function PSSecretChannel: IPSSecretChannel;
     procedure InsertRecord;
     procedure DeleteRecord;
   end;

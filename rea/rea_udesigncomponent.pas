@@ -29,7 +29,8 @@ unit rea_udesigncomponent;
 interface
 
 uses
-  rea_idesigncomponent, trl_usystem, trl_imetaelement, trl_imetaelementfactory,
+  rea_idesigncomponent, rea_ichannels,
+  trl_usystem, trl_imetaelement, trl_imetaelementfactory,
   trl_iprops, rea_ibits, trl_itree, trl_idifactory, trl_ilog,
   sysutils, rea_ilayout, Graphics, LCLType, fgl,
   trl_udifactory, trl_pubsub, tvl_itimer;
@@ -152,10 +153,14 @@ type
     fIsFocused: Boolean;
     fPSFocusChannel: IPSFocusChannel;
     procedure PSFocusChannelObserver(const AValue: TFocusData);
+  private
+    fPSSecretChannel: IPSSecretChannel;
+    procedure PSSecretChannelObserver(const AValue: TSecretData);
   protected
     function PSTextChannel: IPSTextChannel;
     function PSKeyDownChannel: IPSKeyChannel;
     function PSFocusChannel: IPSFocusChannel;
+    function PSSecretChannel: IPSSecretChannel;
   protected
     procedure DoStartingValues; override;
     procedure InitValues; override;
@@ -311,8 +316,13 @@ type
   private
     fPSLayoutChannel: IPSLayoutChannel;
     procedure PSLayoutChannelObserver(const AValue: TLayoutData);
+  private
+    fPSSecretChannel: IPSSecretChannel;
+    function PSSecretChannel: IPSSecretChannel;
+    procedure PSSecretChannelObserver(const AValue: TSecretData);
   private type
-    TMatrix = array of array of string;
+    TMatrix = array of array of String;
+    TColsHideText = array of Boolean;
   private
     fSourceRow: Integer;
     fData: TMatrix;
@@ -320,6 +330,7 @@ type
     fCurrentCol: Integer;
     fEdit: IDesignComponentEdit;
     fEditFocused: Boolean;
+    fColsHideText: TColsHideText;
     procedure PSTextChannelObserver(const AValue: String);
     procedure PSKeyDownChannelObserver(const AValue: TKeyData);
     procedure PSFocusChannelObserver(const AValue: TFocusData);
@@ -343,6 +354,7 @@ type
     function LaticeRowProps: IProps;
     function Latice(AElements: TMetaElementArray; ALaticeEl: TGuid; ALaticeProps: IProps): TMetaElementArray;
     function ComposeEdit: IMetaElement;
+    function RenderText(Row, Col: integer): String;
   protected
     procedure InitValues; override;
     function NewComposeProps: IProps; override;
@@ -361,8 +373,8 @@ type
     property PSGUIChannel: IPSGUIChannel read fPSGUIChannel write fPSGUIChannel;
     property RowCount: Integer read fRowCount write SetRowCount;
     property ColCount: Integer read fColCount write SetColCount;
-    property LaticeColColor: Integernteger read fLaticeColColor write fLaticeColColor;
-    property LaticeRowColor: Integernteger read fLaticeRowColor write fLaticeRowColor;
+    property LaticeColColor: Integer read fLaticeColColor write fLaticeColColor;
+    property LaticeRowColor: Integer read fLaticeRowColor write fLaticeRowColor;
     property LaticeColSize: Integer read fLaticeColSize write fLaticeColSize;
     property LaticeRowSize: Integer read fLaticeRowSize write fLaticeRowSize;
   end;
@@ -706,6 +718,14 @@ begin
   fText := AValue;
 end;
 
+procedure TDesignComponentEdit.PSSecretChannelObserver(const AValue: TSecretData);
+begin
+  if AValue.Visible then
+    SelfProps.SetStr(cEdit.PasswordChar, #0)
+  else
+    SelfProps.SetStr(cEdit.PasswordChar, '*');
+end;
+
 procedure TDesignComponentEdit.PSFocusChannelObserver(const AValue: TFocusData);
 begin
   fIsFocused := AValue.Focused;
@@ -724,6 +744,11 @@ end;
 function TDesignComponentEdit.PSFocusChannel: IPSFocusChannel;
 begin
   Result := fPSFocusChannel;
+end;
+
+function TDesignComponentEdit.PSSecretChannel: IPSSecretChannel;
+begin
+  Result := fPSSecretChannel;
 end;
 
 function TDesignComponentEdit.GetText: String;
@@ -747,6 +772,8 @@ begin
   fPSKeyDownChannel := PubSub.Factory.NewDataChannel<TKeyData>;
   fPSFocusChannel := PubSub.Factory.NewDataChannel<TFocusData>;
   fPSFocusChannel.Subscribe(PSFocusChannelObserver);
+  fPSSecretChannel := PubSub.Factory.NewDataChannel<TSecretData>;
+  fPSSecretChannel.Subscribe(PSSecretChannelObserver);
 end;
 
 function TDesignComponentEdit.NewComposeProps: IProps;
@@ -943,6 +970,18 @@ begin
   end;
 end;
 
+function TDesignComponentGrid.PSSecretChannel: IPSSecretChannel;
+begin
+  Result := fPSSecretChannel;
+end;
+
+procedure TDesignComponentGrid.PSSecretChannelObserver(const AValue: TSecretData);
+begin
+  fColsHideText[AValue.Info] := not AValue.Visible;
+  if fCurrentCol = AValue.Info then
+    fEdit.PSSecretChannel.Publish(TSecretData.Create(not fColsHideText[fCurrentCol]));
+end;
+
 procedure TDesignComponentGrid.PSTextChannelObserver(const AValue: String);
 begin
   if fData[fCurrentRow, fCurrentCol] <> AValue then begin
@@ -1077,6 +1116,7 @@ end;
 
 procedure TDesignComponentGrid.SentEditChange;
 begin
+  fEdit.PSSecretChannel.Publish(TSecretData.Create(not fColsHideText[fCurrentCol]));
   if fEdit.Text <> fData[fCurrentRow, fCurrentCol] then begin
     fEdit.PSTextChannel.Publish(fData[fCurrentRow, fCurrentCol]);
   end;
@@ -1093,7 +1133,7 @@ var
 begin
   Result := NewProps
     .SetInt(cProps.Place, cPlace.Elastic)
-    .SetStr(cProps.Text, fData[Row, Col])
+    .SetStr(cProps.Text, RenderText(Row, Col))
     .SetInt(cProps.Border, 0)
     .SetInt(cProps.TextColor, SelfProps.AsInt(cProps.TextColor));
   if Row mod 2 = 1 then
@@ -1199,6 +1239,13 @@ begin
   Result := mEdit.Compose;
 end;
 
+function TDesignComponentGrid.RenderText(Row, Col: integer): String;
+begin
+  Result := fData[Row, Col];
+  if (Result <> '---') and fColsHideText[Col] then
+    Result := '< secret >';
+end;
+
 procedure TDesignComponentGrid.InitValues;
 var
   mProp: IProp;
@@ -1230,6 +1277,8 @@ begin
   fPSGridMoverChannel.Subscribe(PSGridMoverChannelObserver);
   fPSLayoutChannel := PubSub.Factory.NewDataChannel<TLayoutData>;
   fPSLayoutChannel.Subscribe(PSLayoutChannelObserver);
+  fPSSecretChannel := PubSub.Factory.NewDataChannel<TSecretData>;
+  fPSSecretChannel.Subscribe(PSSecretChannelObserver);
 end;
 
 function TDesignComponentGrid.NewComposeProps: IProps;
@@ -1259,6 +1308,7 @@ begin
   if fColCount = AValue then Exit;
   fColCount := AValue;
   SetLength(fData, RowCount, ColCount);
+  SetLength(fColsHideText, ColCount);
 end;
 
 { TDesignComponentForm }

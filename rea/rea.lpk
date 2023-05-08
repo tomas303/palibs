@@ -62,6 +62,10 @@
         <Filename Value="rea_ustoreconnector.pas"/>
         <UnitName Value="rea_ustoreconnector"/>
       </Item>
+      <Item>
+        <Filename Value="rea_ichannels.pas"/>
+        <UnitName Value="rea_ichannels"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

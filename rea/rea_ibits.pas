@@ -23,6 +23,8 @@
 unit rea_ibits;
 
 {$mode delphi}{$H+}
+{$modeswitch typehelpers}
+{$modeswitch multihelpers}
 {$modeswitch advancedrecords}
 
 interface
